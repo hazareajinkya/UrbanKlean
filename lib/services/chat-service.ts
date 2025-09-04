@@ -1,0 +1,58 @@
+import { arrayUnion, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  generateDefaultSession,
+  IChatMessage,
+  ISession,
+} from "../types/session";
+import { db } from "../clients/firebase";
+import { UIDataTypes, UIMessagePart, UITools } from "ai";
+
+class ChatService {
+  async createSession(wid: string, aid: string) {
+    const session = generateDefaultSession(wid, aid);
+    localStorage.setItem("session_id", session.id);
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
+
+  async getSession(sid: string, aid: string) {
+    const docRef = doc(db, `agents/${aid}/sessions/${sid}`);
+    const snap = await getDoc(docRef);
+    return snap.data() as ISession;
+  }
+
+  async saveMessage(aid: string, sid: string, message: IChatMessage) {
+    const ref = doc(db, `agents/${aid}/sessions/${sid}`);
+    const cleanMessage = cleanMessageForSaving(message);
+
+    await updateDoc(ref, {
+      messages: arrayUnion(cleanMessage),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+}
+
+const chatService = new ChatService();
+export default chatService;
+
+const cleanMessageForSaving = (message: IChatMessage) => {
+  // Remove undefined fields from message before saving
+  const cleanMessage = Object.fromEntries(
+    Object.entries(message).filter(([_, value]) => value !== undefined)
+  ) as IChatMessage;
+
+  // Clean the parts array if it exists
+  if (cleanMessage.parts) {
+    const parts = cleanMessage.parts
+      .map((part) => {
+        return Object.fromEntries(
+          Object.entries(part).filter(([_, value]) => value !== undefined)
+        );
+      })
+      .filter((part) => Object.keys(part).length > 0); // Remove empty parts
+
+    cleanMessage.parts = parts as UIMessagePart<UIDataTypes, UITools>[];
+  }
+
+  return cleanMessage;
+};

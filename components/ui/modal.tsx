@@ -26,7 +26,7 @@ export default function Modal({
   clickOutsideToClose = true,
   size = "lg",
   children,
-  className = "bg-white dark:bg-black rounded-2xl p-6",
+  className = "max-w-lg bg-white dark:bg-black rounded-2xl p-6",
 }: IModal) {
   return (
     <>
@@ -60,7 +60,7 @@ export default function Modal({
                 leaveTo="opacity-0 scale-95"
               >
                 <DialogPanel
-                  className={`w-full max-w-${size} transform overflow-hidden text-left align-middle shadow-xl transition-all ${className} `}
+                  className={`w-full transform overflow-hidden text-left align-middle shadow-xl transition-all ${className} `}
                 >
                   {children}
                 </DialogPanel>

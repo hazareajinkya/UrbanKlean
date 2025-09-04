@@ -26,7 +26,10 @@ class UserService {
   }
 
   async updateUser(email: string, updates: Partial<IUser>) {
-    await updateDoc(doc(db, `users/${email}`), updates);
+    await updateDoc(doc(db, `users/${email}`), {
+      ...updates,
+      updateAt: new Date().toISOString(),
+    });
   }
 }
 

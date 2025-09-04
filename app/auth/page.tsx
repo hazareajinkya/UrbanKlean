@@ -48,7 +48,7 @@ const Spinner = () => {
 };
 
 const SignedIn = () => {
-  const { user, isLoading } = useCurrentUser();
+  const { data: user, isLoading } = useCurrentUser();
   const { signOutUser } = useAuthActions();
 
   console.log("user: ", user);

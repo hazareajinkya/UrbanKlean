@@ -8,27 +8,21 @@ export const useCurrentUser = () => {
   const { data: session } = useSession();
   const email = session?.user?.email ?? "";
 
-  const user = useQuery({
+  const query = useQuery({
     queryKey: userKey(email),
     queryFn: () => userService.getUser(email),
-    enabled: !!email,
   });
 
   return {
-    ...user,
-    user: user.data,
+    user: query.data,
+    ...query,
   };
 };
 
 export const useUser = (email: string) => {
-  const user = useQuery({
+  return useQuery({
     queryKey: userKey(email),
     queryFn: () => userService.getUser(email),
     enabled: !!email,
   });
-
-  return {
-    ...user,
-    user: user.data,
-  };
 };
