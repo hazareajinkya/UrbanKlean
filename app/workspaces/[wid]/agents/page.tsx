@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { formatDate } from "@/lib/utils";
@@ -34,8 +35,8 @@ export default function AgentsPage() {
   const [agentName, setAgentName] = useState("");
   const [deletingAgent, setDeletingAgent] = useState<IAgent>();
 
-  const { agents, isLoading } = useAgents();
-  const { createAgent, deleteAgent } = useAgentActions();
+  const { agents, isLoading } = useAgents(wid);
+  const { createAgent, deleteAgent } = useAgentActions(wid);
 
   const handleCreateAgent = () => {
     if (!agentName.trim()) return;
@@ -84,7 +85,7 @@ export default function AgentsPage() {
           </div>
         </div>
         <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
+          {[...Array(2)].map((_, i) => (
             <Card key={i} className="animate-pulse group p-4">
               <CardContent className="px-0">
                 <div className="flex items-center gap-4">
@@ -266,12 +267,17 @@ export default function AgentsPage() {
         isLoading={createAgent.isPending}
       />
 
-      <DeleteAgentModal
+      <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={confirmDeleteAgent}
-        agent={deletingAgent}
+        title="Delete Agent"
+        description={`Are you sure you want to delete "${deletingAgent?.customization.name}"?`}
+        warningMessage="This action cannot be undone. All conversations and settings associated with this agent will be permanently removed."
+        confirmText="Delete Agent"
+        cancelText="Cancel"
         isLoading={deleteAgent.isPending}
+        variant="destructive"
       />
     </div>
   );
@@ -342,69 +348,6 @@ const CreateAgentModal = ({
             </Button>
           </div>
         </form>
-      </div>
-    </Modal>
-  );
-};
-
-interface DeleteAgentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  agent: IAgent | undefined;
-  isLoading: boolean;
-}
-
-const DeleteAgentModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  agent,
-  isLoading,
-}: DeleteAgentModalProps) => {
-  if (!agent) return null;
-
-  return (
-    <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-0">
-          <h3 className="text-lg font-medium text-red-600">Delete Agent</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete{" "}
-            <strong>"{agent.customization.name}"</strong>?
-          </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
-              ⚠️ This action cannot be undone. All conversations and settings
-              associated with this agent will be permanently removed.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={onConfirm}
-            disabled={isLoading}
-            variant="destructive"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Delete Agent
-          </Button>
-        </div>
       </div>
     </Modal>
   );

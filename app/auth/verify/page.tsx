@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthActions } from "../../../lib/hooks/user/use-auth-actions";
+import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
 
 export default function VerifyEmail() {
   const router = useRouter();

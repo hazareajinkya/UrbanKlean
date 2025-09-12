@@ -14,6 +14,16 @@ import {
   HomeIcon,
   MessageSquare,
   ChevronLeft,
+  GitBranch,
+  Workflow,
+  Cog,
+  Settings2,
+  ChartNoAxesGantt,
+  ListStart,
+  ListTree,
+  ListEnd,
+  ListCheck,
+  History,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -22,7 +32,9 @@ import Link from "next/link";
 import {
   OverviewTab,
   ChatTab,
+  ChatHistoryTab,
   AppearanceTab,
+  WorkflowTab,
   SettingsTab,
   WidgetTab,
 } from "@/components/agent";
@@ -70,8 +82,10 @@ export default function AgentPage() {
   const tabs = [
     { id: "overview", label: "Overview", icon: HomeIcon },
     { id: "chat", label: "Chat", icon: MessageSquare },
+    { id: "chat-history", label: "Chat History", icon: MessageCircle },
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "workflow", label: "Workflows", icon: ListTree },
+    { id: "settings", label: "Settings", icon: Settings2 },
     { id: "widget", label: "Widget", icon: Code },
   ];
 
@@ -129,7 +143,9 @@ export default function AgentPage() {
       <div>
         {tab === "overview" && <OverviewTab agent={agent} />}
         {tab === "chat" && <ChatTab agent={agent} />}
+        {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
         {tab === "appearance" && <AppearanceTab agent={agent} />}
+        {tab === "workflow" && <WorkflowTab agent={agent} />}
         {tab === "settings" && <SettingsTab agent={agent} />}
         {tab === "widget" && <WidgetTab agent={agent} wid={wid} aid={aid} />}
       </div>

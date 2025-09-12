@@ -30,6 +30,10 @@ export const getaid = () => {
   return window.location.pathname.split("/")[4] as string;
 };
 
+export const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 export const getContrastingColor = (hexColor: string) => {
   // Remove the hash if present
   const hex = hexColor.replace("#", "");

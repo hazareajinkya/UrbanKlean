@@ -9,6 +9,7 @@ import { IAgent } from "@/lib/types/agent";
 import { Palette, Bot, Save, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
+import { getwid } from "@/lib/utils";
 
 interface AppearanceTabProps {
   agent: IAgent;
@@ -23,7 +24,8 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     agent.customization.primaryColor
   );
 
-  const { updateAgent } = useAgentActions();
+  const wid = getwid();
+  const { updateAgent } = useAgentActions(wid);
 
   const handleSave = () => {
     updateAgent.mutate({

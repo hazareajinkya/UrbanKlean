@@ -4,14 +4,14 @@ import { toast } from "sonner";
 import { handleError } from "@/lib/utils";
 import { agentKey, agentsKey } from "./use-agent";
 
-export const useAgentActions = () => {
+export const useAgentActions = (wid: string) => {
   const qc = useQueryClient();
 
   const createAgent = useMutation({
-    mutationFn: agentService.createAgent,
+    mutationFn: (name: string) => agentService.createAgent({ wid, name }),
     onSuccess: (data, variables) => {
       toast.success("Agent created successfully");
-      qc.invalidateQueries({ queryKey: agentsKey() });
+      qc.invalidateQueries({ queryKey: agentsKey(wid) });
     },
     onError: handleError,
   });
@@ -21,7 +21,7 @@ export const useAgentActions = () => {
     onSuccess: (data, variables) => {
       toast.success("Agent updated successfully");
       qc.invalidateQueries({ queryKey: agentKey(variables.aid) });
-      qc.invalidateQueries({ queryKey: agentsKey() });
+      qc.invalidateQueries({ queryKey: agentsKey(wid) });
     },
     onError: handleError,
   });
@@ -30,7 +30,7 @@ export const useAgentActions = () => {
     mutationFn: agentService.deleteAgent,
     onSuccess: (_, variables) => {
       toast.success(`Agent deleted successfully`);
-      qc.invalidateQueries({ queryKey: agentsKey() });
+      qc.invalidateQueries({ queryKey: agentsKey(wid) });
     },
     onError: handleError,
   });

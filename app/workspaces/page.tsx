@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { useCurrentUser } from "@/lib/hooks/auth/use-user";
 import { useWorkspaces } from "@/lib/hooks/workspace/use-workspace";
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
@@ -213,12 +214,17 @@ export default function WorkspacesPage() {
         editingWorkspace={editingWorkspace}
       />
 
-      <DeleteWorkspaceModal
+      <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={confirmDeleteWorkspace}
-        workspace={deletingWorkspace}
+        title="Delete Workspace"
+        description={`Are you sure you want to delete "${deletingWorkspace?.name}"?`}
+        warningMessage="This action cannot be undone. All data associated with this workspace will be permanently removed."
+        confirmText="Delete Workspace"
+        cancelText="Cancel"
         isLoading={deleteWorkspace.isPending}
+        variant="destructive"
       />
     </div>
   );
@@ -295,68 +301,6 @@ const WorkspaceModal = ({
             </Button>
           </div>
         </form>
-      </div>
-    </Modal>
-  );
-};
-
-interface DeleteWorkspaceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  workspace: IWorkspace | undefined;
-  isLoading: boolean;
-}
-
-const DeleteWorkspaceModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  workspace,
-  isLoading,
-}: DeleteWorkspaceModalProps) => {
-  if (!workspace) return undefined;
-
-  return (
-    <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between mb-0">
-          <h3 className="text-lg font-medium text-red-600">Delete Workspace</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete <strong>"{workspace.name}"</strong>?
-          </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800">
-              ⚠️ This action cannot be undone. All data associated with this
-              workspace will be permanently removed.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={onConfirm}
-            disabled={isLoading}
-            variant="destructive"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Delete Workspace
-          </Button>
-        </div>
       </div>
     </Modal>
   );

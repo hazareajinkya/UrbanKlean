@@ -16,11 +16,10 @@ export async function POST(
 
     if (!wid) return errorResponse("Workspace ID is required", 400);
 
-    const { content, tid } = await validateRequestBody(request);
+    const { content } = await validateRequestBody(request);
 
     const { chunkSize, points } = await knowledgeService.embedText(
       wid,
-      tid,
       content
     );
 

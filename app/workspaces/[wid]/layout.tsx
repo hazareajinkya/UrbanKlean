@@ -26,6 +26,7 @@ import {
   Users,
   FileText,
   LogOut,
+  Zap,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -82,6 +83,11 @@ const navigation = [
     title: "Knowledge Base",
     href: "/knowledge",
     icon: FileText,
+  },
+  {
+    title: "Actions",
+    href: "/actions",
+    icon: Zap,
   },
   {
     title: "Members",

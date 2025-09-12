@@ -9,20 +9,21 @@ import { useTextKnowledge } from "@/lib/hooks/knowledge/use-knowledge-base";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
 import { useParams } from "next/navigation";
 import { v4 } from "uuid";
+import { Save, Loader2, FileText } from "lucide-react";
 
 export default function TextTab() {
   const [textContent, setTextContent] = useState("");
 
   const { wid } = useParams() as { wid: string };
-  const { data: textKnowledge } = useTextKnowledge(wid);
+  const { data: textKnowledge, isLoading } = useTextKnowledge(wid);
   const { embedAndSaveText } = useKnowledgeActions();
 
-  const handleSaveText = () => {
+  const handleSaveText = async () => {
     if (!textContent.trim()) return;
 
     const tid = textKnowledge?.id ?? v4();
 
-    embedAndSaveText.mutate({ wid, tid, content: textContent });
+    await embedAndSaveText.mutateAsync({ wid, tid, content: textContent });
   };
 
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -35,50 +36,54 @@ export default function TextTab() {
     }
   }, [textKnowledge]);
 
+  if (isLoading) {
+    return (
+      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-2">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
+        <p className="text-sm text-gray-800">Loading text content...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Text</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="text-content" className="text-sm font-medium">
-              Add text content to your knowledge base
-            </label>
-            <Textarea
-              id="text-content"
-              placeholder="Enter your text content here..."
-              className="min-h-[400px] resize-y"
-              value={textContent}
-              onChange={handleTextChange}
-            />
-          </div>
-          {textKnowledge?.content && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Current Knowledge Base Content
-              </label>
-              <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm text-muted-foreground">
-                  {textKnowledge.chunkSize} chunks indexed
-                </p>
-                <p className="text-sm mt-1 line-clamp-3">
-                  {textKnowledge.content.substring(0, 200)}...
-                </p>
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-lg font-medium ">Text</h4>
+              <p className="text-sm text-muted-foreground">
+                Add your knowledge content as plain text
+              </p>
             </div>
-          )}
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSaveText}
-              disabled={!textContent.trim() || embedAndSaveText.isPending}
-            >
-              {embedAndSaveText.isPending ? "Saving..." : "Save Text"}
-            </Button>
+            <div>
+              <Button
+                onClick={handleSaveText}
+                disabled={!textContent.trim() || embedAndSaveText.isPending}
+                variant="outline"
+              >
+                {embedAndSaveText.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save Text
+              </Button>
+            </div>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
+
+      <div className="">
+        <Textarea
+          id="text-content"
+          placeholder="Enter your text content here..."
+          className="min-h-[400px] resize-y max-h-[70vh] overflow-y-auto bg-white"
+          value={textContent}
+          onChange={handleTextChange}
+          disabled={embedAndSaveText.isPending}
+        />
+      </div>
     </div>
   );
 }

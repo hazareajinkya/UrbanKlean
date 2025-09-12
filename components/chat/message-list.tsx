@@ -82,10 +82,17 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                           return (
                             <div
                               className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
-                                isCalling
-                                  ? "px-0 py-0"
-                                  : "px-3 py-1.5 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                                isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
                               }`}
+                              style={{
+                                backgroundColor: isCalling
+                                  ? "transparent"
+                                  : `${brandColor}10`,
+                                borderColor: isCalling
+                                  ? "transparent"
+                                  : `${brandColor}40`,
+                                color: isCalling ? brandColor : brandColor,
+                              }}
                               key={index}
                             >
                               {isCalling ? (
@@ -93,9 +100,18 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                                   key={`${part.state}-calling`}
                                   className="flex gap-2 items-center animate-in fade-in "
                                 >
-                                  <Globe className="w-4 h-4 text-blue-500 animate-bounce" />
+                                  <Globe
+                                    className="w-4 h-4 animate-bounce"
+                                    style={{ color: brandColor }}
+                                  />
                                   <TextShimmer
-                                    className="text-sm md:text-base [--base-color:theme(colors.blue.600)] [--base-gradient-color:theme(colors.blue.200)] dark:[--base-color:theme(colors.blue.700)] dark:[--base-gradient-color:theme(colors.blue.400)]"
+                                    className="text-sm md:text-base"
+                                    style={
+                                      {
+                                        "--base-color": brandColor,
+                                        "--base-gradient-color": `${brandColor}80`,
+                                      } as React.CSSProperties
+                                    }
                                     duration={1.5}
                                     spread={1.5}
                                   >

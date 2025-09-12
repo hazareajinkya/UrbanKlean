@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import workspaceService from "@/lib/services/workspace-service";
 import { toast } from "sonner";
 import { handleError } from "@/lib/utils";
-import { workspaceKey, workspacesKey } from "./use-workspace";
+import { workspaceKey } from "./use-workspace";
 import { userKey } from "../auth/use-user";
 import { IWorkspace } from "@/lib/types/workspace";
 import { auth } from "@/lib/clients/firebase";

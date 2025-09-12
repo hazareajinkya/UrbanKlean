@@ -12,11 +12,9 @@ import {
 
 import { db } from "../clients/firebase";
 import { generateDefaultAgent, IAgent } from "../types/agent";
-import { getwid } from "../utils";
 
 class AgentService {
-  async createAgent(name: string) {
-    const wid = getwid();
+  async createAgent({ wid, name }: { wid: string; name: string }) {
     const agent = generateDefaultAgent(wid, name);
     await setDoc(doc(db, `agents/${agent.id}`), agent);
     return agent;

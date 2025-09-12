@@ -17,6 +17,7 @@ import { Settings, Save, FileText, Brain, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
+import { getwid } from "@/lib/utils";
 
 interface SettingsTabProps {
   agent: IAgent;
@@ -29,7 +30,8 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
   );
   const [systemPrompt, setSystemPrompt] = useState(agent.settings.systemPrompt);
 
-  const { updateAgent } = useAgentActions();
+  const wid = getwid();
+  const { updateAgent } = useAgentActions(wid);
 
   const handleSave = () => {
     updateAgent.mutate({

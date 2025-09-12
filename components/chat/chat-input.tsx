@@ -28,7 +28,7 @@ export const ChatInput = ({
   handleInputChange,
   status,
 }: ChatInputProps) => {
-  const isLoading = status !== "ready";
+  const isLoading = status !== "ready" && status !== "error";
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e, {});
@@ -73,7 +73,7 @@ export const ChatInput = ({
               </div>
 
               {/* Send/Stop Button */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 ">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

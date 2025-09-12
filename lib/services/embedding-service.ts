@@ -1,13 +1,12 @@
 import { embed, embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
-import { embeddingModel } from "../constants";
+import { embeddingConfig, voyage } from "../constants";
 
 class EmbeddingService {
   async createEmbeddingMany(texts: string[]) {
     const embeddings = await embedMany({
-      // model: openai.embedding(embeddingModel),
-      model: google.textEmbedding("gemini-embedding-001"),
+      model: embeddingConfig.model,
       values: texts,
     });
 
@@ -19,7 +18,7 @@ class EmbeddingService {
 
   async createEmbedding(text: string): Promise<number[]> {
     const { embedding } = await embed({
-      model: google.textEmbedding("gemini-embedding-001"),
+      model: embeddingConfig.model,
       value: text,
     });
 

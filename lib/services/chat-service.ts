@@ -1,4 +1,15 @@
-import { arrayUnion, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import {
   generateDefaultSession,
   IChatMessage,
@@ -29,6 +40,18 @@ class ChatService {
       messages: arrayUnion(cleanMessage),
       updatedAt: new Date().toISOString(),
     });
+  }
+
+  subscribeToAgentSessions(
+    aid: string,
+    callback: (sessions: ISession[]) => void
+  ) {
+    const ref = collection(db, `agents/${aid}/sessions`);
+    const q = query(ref, orderBy("updatedAt", "desc"), limit(10));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      callback(snapshot.docs.map((doc) => doc.data() as ISession));
+    });
+    return unsubscribe;
   }
 }
 
