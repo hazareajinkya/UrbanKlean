@@ -60,6 +60,10 @@ export async function POST(req: Request) {
 
       const hasMsgRead = status === "read";
       console.log("message status: ", status);
+
+      if (value.statuses[0].errors) {
+        console.error("WhatsApp status error: ", value.statuses[0].errors);
+      }
     }
 
     return NextResponse.json(
