@@ -84,3 +84,10 @@ class Latency {
 }
 
 export const latency = new Latency();
+
+export const normEmail = (e?: string) =>
+  e ? e.trim().toLowerCase() : undefined;
+export const normPhone = (p?: string) =>
+  p ? p.replace(/[^\d+]/g, "").replace(/^00/, "+") : undefined;
+export const normWord = (s: string) => s.trim().toLowerCase(); // for tags/interests
+export const normNote = (s: string) => s.trim();

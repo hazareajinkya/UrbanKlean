@@ -4,6 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import { PAGE_ACCESS_TOKEN, WA_PHONE_ID } from "../constants";
 
 // Create axios instance with default configuration
 const axiosClient: AxiosInstance = axios.create({
@@ -11,6 +12,20 @@ const axiosClient: AxiosInstance = axios.create({
   timeout: 120000, // 2 minutes
   headers: {
     "Content-Type": "application/json",
+  },
+});
+
+export const waclient = axios.create({
+  baseURL: `https://graph.facebook.com/v22.0/${WA_PHONE_ID}`,
+  headers: {
+    Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+  },
+});
+
+export const waMediaClient = axios.create({
+  baseURL: `https://graph.facebook.com/v22.0`,
+  headers: {
+    Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
   },
 });
 

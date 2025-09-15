@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { ChatStatus } from "ai";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { IAgent } from "@/lib/types/agent";
-import { Globe } from "lucide-react";
+import { Globe, User } from "lucide-react";
 
 interface MessageListProps {
   agent: IAgent;
@@ -125,6 +125,66 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                                 >
                                   <Globe className="w-4 h-4" />
                                   Searched knowledge
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        if (part.type === "tool-collectInformation") {
+                          // const toolStatus = part.toolInvocation.state;
+                          // const toolName = part.toolInvocation.toolName;
+                          const isCalling = part.state !== "output-available";
+                          // const { displayName, Icon } = getToolDisplayName(
+                          //   toolName,
+                          //   toolStatus
+                          // );
+                          return (
+                            <div
+                              className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
+                                isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
+                              }`}
+                              style={{
+                                backgroundColor: isCalling
+                                  ? "transparent"
+                                  : `${brandColor}10`,
+                                borderColor: isCalling
+                                  ? "transparent"
+                                  : `${brandColor}40`,
+                                color: isCalling ? brandColor : brandColor,
+                              }}
+                              key={index}
+                            >
+                              {isCalling ? (
+                                <div
+                                  key={`${part.state}-calling`}
+                                  className="flex gap-2 items-center animate-in fade-in "
+                                >
+                                  <User
+                                    className="w-4 h-4 animate-bounce"
+                                    style={{ color: brandColor }}
+                                  />
+                                  <TextShimmer
+                                    className="text-sm md:text-base"
+                                    style={
+                                      {
+                                        "--base-color": brandColor,
+                                        "--base-gradient-color": `${brandColor}80`,
+                                      } as React.CSSProperties
+                                    }
+                                    duration={1.5}
+                                    spread={1.5}
+                                  >
+                                    Personalizing response...
+                                  </TextShimmer>
+                                </div>
+                              ) : (
+                                <div
+                                  key={`${part.state}-output-available`}
+                                  className="flex items-center gap-2 text-sm md:text-sm"
+                                >
+                                  <User className="w-4 h-4" />
+                                  Personalized response
                                 </div>
                               )}
                             </div>

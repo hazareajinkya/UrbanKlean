@@ -3,6 +3,7 @@ import {
   getDownloadURL,
   ref,
   StorageReference,
+  uploadBytes,
   uploadBytesResumable,
 } from "firebase/storage";
 import { storage } from "../clients/firebase";
@@ -44,6 +45,12 @@ class StorageService {
 
       await this.deleteStoredFile(storagePath);
     }
+  }
+
+  async uploadB(ref: any, arrayBuffer: ArrayBuffer, metadata: any) {
+    await uploadBytes(ref, arrayBuffer, metadata);
+
+    return await getDownloadURL(ref);
   }
 }
 

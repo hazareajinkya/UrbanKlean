@@ -398,6 +398,249 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* About Us Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                About Us
+              </h2>
+              <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+                Meet the team behind SuperCX.ai—the problem-solvers who design
+                how your customer experience feels in every interaction.
+              </p>
+            </div>
+
+            {/* Hrushikesh Kuklare Profile */}
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 md:p-12 shadow-lg border border-gray-200 mb-12">
+              <div className="grid md:grid-cols-2 gap-8 items-start">
+                {/* Profile Image Placeholder */}
+                <div className="flex justify-center md:justify-start">
+                  <div className="w-48 h-48 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-6xl font-bold shadow-lg">
+                    HK
+                  </div>
+                </div>
+
+                {/* Profile Content */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                      About the Co‑founder — Hrushikesh Kuklare
+                    </h3>
+                    <p className="text-lg text-gray-700 leading-relaxed">
+                      Hrushikesh Kuklare is the problem‑solver who designs how
+                      SuperCX.ai feels in your customer's hands. He brings the
+                      energy of a technologist and the eye of a designer—equal
+                      parts engineering depth and user‑experience craft—so every
+                      interaction is fast, intuitive, and remarkably human.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900 mb-3">
+                      The spark
+                    </h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      The story is delightfully unexpected. While tinkering with
+                      ways technology might help him "bulk up" despite an
+                      overactive metabolism, his phone rang—Manish was ready to
+                      launch SuperCX.ai. The clarity of that vision, paired with
+                      a track record of building and shipping, turned curiosity
+                      into conviction: together, they would create a SaaS
+                      product that makes every customer touchpoint intentional,
+                      elegant, and measurably superior.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* What he builds */}
+              <div className="mt-12">
+                <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  What he builds
+                </h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <h5 className="font-semibold text-gray-800 mb-1">
+                          Flutter and web, end‑to‑end
+                        </h5>
+                        <p className="text-gray-600 text-sm">
+                          From Flutter apps to modern web experiences,
+                          Hrushikesh engineers smooth, reliable products that
+                          load quickly and feel effortless.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <h5 className="font-semibold text-gray-800 mb-1">
+                          Backend integration and development
+                        </h5>
+                        <p className="text-gray-600 text-sm">
+                          Clean interfaces meet robust backends—so actions like
+                          order lookups, returns, and scheduling just work.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <h5 className="font-semibold text-gray-800 mb-1">
+                          UI/UX, React.js, Next.js
+                        </h5>
+                        <p className="text-gray-600 text-sm">
+                          Minimal, strategic interfaces that guide users without
+                          friction, with front‑end performance that keeps pace
+                          with real‑time CX.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                      <div>
+                        <h5 className="font-semibold text-gray-800 mb-1">
+                          Architecture for the long run
+                        </h5>
+                        <p className="text-gray-600 text-sm">
+                          Clean patterns, future‑proof foundations, and
+                          animations that serve clarity, not just motion.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Philosophy */}
+              <div className="mt-12">
+                <h4 className="text-xl font-bold text-gray-900 mb-6">
+                  His product philosophy
+                </h4>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Target className="h-8 w-8 text-white" />
+                    </div>
+                    <h5 className="font-bold text-gray-900 mb-2">
+                      Minimal beats messy
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      Do less, but do it with intention. Every screen, state,
+                      and message earns its place.
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="h-8 w-8 text-white" />
+                    </div>
+                    <h5 className="font-bold text-gray-900 mb-2">
+                      Strategy over noise
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      Design choices tie directly to business outcomes—faster
+                      resolutions, fewer tickets, higher satisfaction.
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Star className="h-8 w-8 text-white" />
+                    </div>
+                    <h5 className="font-bold text-gray-900 mb-2">
+                      Quality as a habit
+                    </h5>
+                    <p className="text-gray-600 text-sm">
+                      Robust, optimized, and maintainable builds that make
+                      scaling calm and predictable.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Why SuperCX.ai */}
+              <div className="mt-12">
+                <h4 className="text-xl font-bold text-gray-900 mb-4">
+                  Why SuperCX.ai
+                </h4>
+                <p className="text-gray-700 leading-relaxed mb-6">
+                  Inspired by Manish's vision—and the momentum of a builder who
+                  consistently turns ideas into operating companies—Hrushikesh
+                  set out to craft a High‑EQ AI experience that feels human
+                  while delivering measurable business results. He codes empathy
+                  into the seams: tone that adapts to mood, flows that prefer
+                  exchanges over refunds, and interfaces that surface the right
+                  action at the right moment. The bar he sets is simple:
+                  five‑star service, every time.
+                </p>
+
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200">
+                  <h5 className="font-bold text-gray-900 mb-4">
+                    What this means for you
+                  </h5>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Heart className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="text-gray-700 text-sm font-medium">
+                        Superior, intentional UX that customers trust and
+                        remember
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Zap className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="text-gray-700 text-sm font-medium">
+                        Faster, cleaner paths to resolution that lower costs and
+                        lift margins
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <TrendingUp className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="text-gray-700 text-sm font-medium">
+                        A product you can scale confidently—feature by feature,
+                        channel by channel
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote */}
+              <div className="mt-12 text-center">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-gray-200">
+                  <blockquote className="text-lg md:text-xl text-gray-700 italic leading-relaxed mb-4">
+                    "I believe in minimal, strategic, and quality work rather
+                    than quantity. I build products with a smooth user
+                    experience, animations, and clean architecture to ensure
+                    they're robust, optimized, highly maintainable, and
+                    future‑proof for adding new features."
+                  </blockquote>
+                  <cite className="text-gray-600 font-medium">
+                    — Hrushikesh Kuklare, Co‑founder & CTO
+                  </cite>
+                </div>
+                <p className="text-gray-700 mt-6 leading-relaxed">
+                  At SuperCX.ai, Hrushikesh turns that belief into your
+                  advantage—transforming complex workflows into calm,
+                  empathetic, brand‑true experiences that keep customers coming
+                  back.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Who SuperCX.ai Is For Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">

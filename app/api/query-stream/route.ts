@@ -20,6 +20,7 @@ import actionService from "@/lib/services/action-service";
 import axios from "axios";
 import workspaceService from "@/lib/services/workspace-service";
 import workflowservice from "@/lib/services/workflow-service";
+import { collectInformation } from "@/lib/tools/collect-info";
 
 export async function POST(req: Request) {
   try {
@@ -125,14 +126,24 @@ export async function POST(req: Request) {
       model,
       system: `You're general assistant can do anything. Always respond in proper formatting emapthatically humanly possible with feelings and in as little words as possible.
 
+      Don't answer users any kind of questions until you name and email from the user using the collectInformation tool this is required You will be punished if you give answers without getting their name and email first and then only answer whatever user is asking
+
       If you have user name use that in conversation whenever possible and use it empathetic nice way
-      You will first collect a lead from the user using the collectLead tool and then only answer whatever user is asking
+
+      Use tool collectInformation everytime when the user shares durable info worth remembering. (identity + interests + preferences + tags/notes)
+      Gather as much information as you can from user using this tool so that we can personalize it using this 
+      Try to use this tool collectInformation frequently to make we are being up to date with users 
+      Gather information on every users message and add it to using collectInformation tool so 0
 
       Whenver user ask something that u don't know use searchKnowledge tool to search the knowledge base .
       Use searchKnowledge tool to search the knowledge base .
 
       These are workflow that u should keep in mind 
       There's trigger when u feel like that trigger statisfy then follow the instructions
+
+      Use following ids only for tool calls NEVER I SAY NEVER SHARE ids with user its PI data
+      Workspace id (wid) is ${agent.wid}
+      Agent id (aid) is ${agent.id}
 
       PREFER WORKFLOW OVER ANYTHING EVEN TOOL IF IT STATSIFY IN WORKFLOW FOLLOW THAT ONLY
       ${workflowstext}
@@ -142,20 +153,77 @@ export async function POST(req: Request) {
       `,
       messages: convertToModelMessages(messages),
       stopWhen: stepCountIs(5),
-
       tools: {
         ...customTools,
-        collectLead: {
-          name: "Lead generation",
-          description: "Collect a lead from the user",
-          inputSchema: z.object({
-            name: z.string(),
-            email: z.string(),
-          }),
-          execute: async ({ name, email, phone, message }) => {
-            console.log("collectLead: ", name, email, phone, message);
-          },
-        },
+        collectInformation,
+        // collectLead: {
+        //   name: "Collect Lead",
+        //   description:
+        //     "Create or update a CRM lead from the current chat/voice context. Use when the user shares contact info OR asks for pricing/demo/integration OR shares info valuable for long-term follow-up.",
+        //   inputSchema: z.object({
+        //     name: z.string().optional().describe("User's name if provided"),
+        //     email: z
+        //       .string()
+        //       .email()
+        //       .optional()
+        //       .describe("User's email address if provided"),
+        //     phone: z
+        //       .string()
+        //       .optional()
+        //       .describe("User's phone number if provided"),
+        //     company: z
+        //       .string()
+        //       .optional()
+        //       .describe("User's company name if provided"),
+        //     notes: z
+        //       .string()
+        //       .optional()
+        //       .describe(
+        //         "Additional notes or valuable information about the user"
+        //       ),
+        //     source: z
+        //       .string()
+        //       .optional()
+        //       .describe("How the user found out about the service"),
+        //   }),
+        //   execute: async ({ name, email, phone, company, notes, source }) => {
+        //     try {
+        //       console.log("Collecting lead: ", {
+        //         name,
+        //         email,
+        //         phone,
+        //         company,
+        //         notes,
+        //         source,
+        //       });
+
+        //       // Filter out undefined values
+        //       const leadData = Object.fromEntries(
+        //         Object.entries({
+        //           name,
+        //           email,
+        //           phone,
+        //           company,
+        //           notes,
+        //           source,
+        //         }).filter(([_, value]) => value !== undefined)
+        //       );
+
+        //       // Store lead data using a service (you'll need to implement this)
+        //       // For now, just log the data - replace with actual storage logic
+        //       console.log("Lead data collected: ", leadData);
+
+        //       return `Thank you! I've saved your information: ${Object.entries(
+        //         leadData
+        //       )
+        //         .map(([key, value]) => `${key}: ${value}`)
+        //         .join(", ")}`;
+        //     } catch (error) {
+        //       console.error("Error collecting lead: ", error);
+        //       throw new Error("Failed to collect lead information");
+        //     }
+        //   },
+        // },
         searchKnowledge: {
           name: "Search knowledge",
           description: "Search the knowledge base",

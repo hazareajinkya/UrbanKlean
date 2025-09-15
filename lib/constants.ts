@@ -11,3 +11,9 @@ export const embeddingConfig = {
   dimension: 1024,
   distance: "Cosine" as "Cosine" | "Euclid" | "Dot" | "Manhattan",
 };
+
+export const WA_WINDOW_EXPIRATION_HOURS = 24;
+export const WA_PHONE_ID = "757524910784767";
+
+export const PAGE_ACCESS_TOKEN =
+  "EAALyuiJEEXcBPeufwgbePTgZASxnG9vuMBkwMTBzZBXL5ZCpVDejMwXDla4KfekDPjRwj9kvoaJKF9Lc1Rd6hJuyGLZAGlVNPMT4bOXPk7oBhGdhDMFaCzIpcH5wpTmcZAW4usGwLCbizBTCdbY4QZB9Vd4r91IAXaEkzBnez9wcJspdvZBDjDr6ZCRjPop3f9fuLn9ugmklr3dp9ZBNDu9NZB1VZCXwjQNcsjKmgnjV8IZAKpZBXfgZDZD";

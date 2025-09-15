@@ -9,8 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Component Showcase",
-  description: "A comprehensive collection of available shadcn/ui components",
+  title: "Supercx - Conversation AI for magical customer experience",
+  description:
+    "Transform your customer support with Supercx's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
 };
 
 export default function RootLayout({
