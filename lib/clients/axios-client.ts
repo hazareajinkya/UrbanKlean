@@ -16,14 +16,14 @@ const axiosClient: AxiosInstance = axios.create({
 });
 
 export const waclient = axios.create({
-  baseURL: `https://graph.facebook.com/v22.0/${WA_PHONE_ID}`,
+  baseURL: `https://graph.facebook.com/v23.0/${WA_PHONE_ID}`,
   headers: {
     Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
   },
 });
 
 export const waMediaClient = axios.create({
-  baseURL: `https://graph.facebook.com/v22.0`,
+  baseURL: `https://graph.facebook.com/v23.0`,
   headers: {
     Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
   },
