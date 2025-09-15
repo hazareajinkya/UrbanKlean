@@ -82,7 +82,7 @@ export async function GET(req: Request) {
   const challenge = searchParams.get("hub.challenge");
   console.log(mode, token, challenge);
 
-  if (mode === "subscribe" && token === "dawa") {
+  if (mode === "subscribe" && token === process.env.WA_VERIFY_TOKEN) {
     console.log(req);
     return new Response(challenge, { status: 200 });
   } else {
