@@ -20,8 +20,7 @@ export async function POST(
 
     const { baseUrl, urls } = await validateRequestBody(request);
 
-    // const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl-webhook`;
-    const webhookUrl = `https://jar-bunny-independence-limiting.trycloudflare.com/api/firecrawl-webhook`;
+    const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl-webhook`;
 
     const result = await firecrawl.scrape(baseUrl, {
       formats: [],
