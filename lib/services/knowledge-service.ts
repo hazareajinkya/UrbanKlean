@@ -4,8 +4,11 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  increment,
   query,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import qdClient from "../clients/qdrant-client";
@@ -25,8 +28,16 @@ import { embeddingConfig } from "../constants";
 import { chunkPdfContent, chunkText } from "./chunker-service";
 import storageService from "./storage-service";
 import { DocumentMetadata } from "@mendable/firecrawl-js";
+import axiosClient from "../clients/axios-client";
 
 class KnowledgeService {
+  async scrapeWebsite(wid: string, url: string) {
+    const response = await axiosClient.get(
+      `/api/embeddings/${wid}/web/get-urls?url=${encodeURIComponent(url)}`
+    );
+    return response.data.data.result;
+  }
+
   async checkCollection(wid: string) {
     try {
       const result = await qdClient.collectionExists(wid);
@@ -140,28 +151,20 @@ class KnowledgeService {
   }
 
   async deleteWebKnowledge(wid: string, uid: string) {
-    const webKnowledge = await this.getWebKnowledge(wid);
-    if (!webKnowledge?.urls) return;
+    try {
+      const webKnowledge = await this.getUrlKnowledge(wid, uid);
+      if (!webKnowledge) return;
 
-    const urlToDelete = webKnowledge.urls.find((url) => url.id === uid);
-    if (!urlToDelete) return;
+      if (webKnowledge.points.length > 0)
+        await qdClient.delete(wid, { points: webKnowledge.points });
 
-    // Delete from Qdrant vector database
-    await qdClient.delete(wid, { points: urlToDelete.points });
-    console.log("urlToDelete: ", urlToDelete);
-
-    // Remove from Firestore document
-    const updatedUrls = webKnowledge.urls.filter((url) => url.id !== uid);
-
-    await setDoc(
-      doc(db, `workspaces/${wid}/knowledge/web`),
-      {
-        urls: updatedUrls,
-        chunkSize: webKnowledge.chunkSize,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: false }
-    );
+      await deleteDoc(
+        doc(db, `workspaces/${wid}/knowledge/web/default/${uid}`)
+      );
+    } catch (error: any) {
+      console.log("error: ", error);
+      console.log("error.data: ", error.data);
+    }
   }
 
   async savePDFKnowledge(
@@ -190,60 +193,112 @@ class KnowledgeService {
   }
 
   async embedWeb(wid: string, content: string, metadata: IWebPropsMetadata) {
-    if (!metadata) throw new Error("Metadata is required");
-    const webKnowledge = await knowledgeService.getUrlKnowledge(
-      wid,
-      metadata.url as string
-    );
-    const chunks = await chunkText(content);
-    const chunkTexts = chunks.map((chunk) => chunk.pageContent);
-    const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
+    try {
+      if (!metadata) throw new Error("Metadata is required");
+      const webKnowledge = await knowledgeService.getUrlKnowledgeByUrl(
+        wid,
+        metadata.url as string
+      );
+      const chunks = await chunkText(content);
+      const chunkTexts = chunks.map((chunk) => chunk.pageContent);
+      const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
 
-    if (webKnowledge)
-      await qdClient.delete(wid, { points: webKnowledge.points });
+      if (webKnowledge)
+        await qdClient.delete(wid, { points: webKnowledge.points });
 
-    const points = embeddings.map((embedding) => {
+      const points = embeddings.map((embedding) => {
+        return {
+          id: v4(),
+          vector: embedding.embedding,
+          payload: {
+            text: embedding.text,
+            title: metadata.title,
+            url: metadata.url,
+            source: "web",
+          },
+        };
+      });
+
+      await qdClient.upsert(wid, { points: points });
       return {
-        id: v4(),
-        vector: embedding.embedding,
-        payload: {
-          text: embedding.text,
-          title: metadata.title,
-          url: metadata.url,
-          source: "web",
-        },
+        chunks: embeddings,
+        points: points.map((point) => point.id),
+        chunkSize: embeddings.length,
       };
-    });
-
-    await qdClient.upsert(wid, { points: points });
-    return {
-      chunks: embeddings,
-      points: points.map((point) => point.id),
-      chunkSize: embeddings.length,
-    };
+    } catch (error: any) {
+      console.log("error: ", error);
+      console.log("error.data: ", error?.data);
+      return { chunks: [], points: [], chunkSize: 0 };
+    }
   }
 
-  async saveWebKnowledge(
+  async startedCrawl(wid: string, baseUrl: string, title: string) {
+    const id = v4();
+    await setDoc(
+      doc(db, `workspaces/${wid}/knowledge/web/default/${id}`),
+      {
+        id,
+        wid,
+        title,
+        baseUrl,
+        urls: [],
+        points: [],
+        status: "training",
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+    return id;
+  }
+
+  async compeletedTraining(wid: string, docId: string) {
+    await updateDoc(
+      doc(db, `workspaces/${wid}/knowledge/web/default/${docId}`),
+      {
+        status: "trained",
+        updatedAt: new Date().toISOString(),
+      }
+    );
+  }
+  async saveSingleUrlKnowledge(
     wid: string,
     metadata: IWebPropsMetadata,
     points: string[],
     chunkSize: number
   ) {
     const data = generateDefaultWebKnowledge(
+      v4(),
       wid,
       metadata.title,
       metadata.url,
+      [metadata],
+      chunkSize,
       points
     );
 
     await setDoc(
-      doc(db, `workspaces/${wid}/knowledge/web`),
-      {
-        chunkSize: chunkSize,
-        urls: arrayUnion(data),
-        updatedAt: new Date().toISOString(),
-      },
+      doc(db, `workspaces/${wid}/knowledge/web/default/${data.id}`),
+      data,
       { merge: true }
+    );
+    return data;
+  }
+
+  async saveMultiUrlKnowledge(
+    wid: string,
+    docId: string,
+    metadata: IWebPropsMetadata,
+    points: string[],
+    chunkSize: number
+  ) {
+    await updateDoc(
+      doc(db, `workspaces/${wid}/knowledge/web/default/${docId}`),
+      {
+        urls: arrayUnion(metadata),
+        chunkSize: increment(chunkSize),
+        points: arrayUnion(...points),
+        updatedAt: new Date().toISOString(),
+      }
     );
   }
 
@@ -273,16 +328,30 @@ class KnowledgeService {
   }
 
   async getWebKnowledge(wid: string) {
-    const snap = await getDoc(doc(db, `workspaces/${wid}/knowledge/web`));
-    const data = snap.data() as IWebKnowledge;
-    return data ?? null;
+    const snaps = await getDocs(
+      query(collection(db, `workspaces/${wid}/knowledge/web/default`))
+    );
+    const data = snaps.docs.map((doc) => doc.data() as IWebKnowledge);
+    return data ?? [];
   }
 
-  async getUrlKnowledge(wid: string, url: string) {
-    const snap = await getDoc(doc(db, `workspaces/${wid}/knowledge/web`));
+  async getUrlKnowledge(wid: string, id: string) {
+    const snap = await getDoc(
+      doc(db, `workspaces/${wid}/knowledge/web/default/${id}`)
+    );
     const data = snap.data() as IWebKnowledge;
-    const urlKnowledge = data?.urls.find((item) => item.url === url);
-    return urlKnowledge ?? null;
+    return data;
+  }
+
+  async getUrlKnowledgeByUrl(wid: string, url: string) {
+    const snaps = await getDocs(
+      query(
+        collection(db, `workspaces/${wid}/knowledge/web/default`),
+        where("baseUrl", "==", url)
+      )
+    );
+    const data = snaps.docs.map((doc) => doc.data() as IWebKnowledge)[0];
+    return data;
   }
 }
 

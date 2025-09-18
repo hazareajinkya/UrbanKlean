@@ -7,6 +7,7 @@ import {
 } from "@/lib/types/api-response";
 import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { NextRequest } from "next/server";
+import { v4 } from "uuid";
 import z from "zod";
 
 export async function POST(
@@ -31,16 +32,13 @@ export async function POST(
       title: result.metadata?.title ?? "",
     };
 
-    result.markdown;
-    result.metadata;
-
     const { chunkSize, points } = await knowledgeService.embedWeb(
       wid,
       content,
       me
     );
 
-    await knowledgeService.saveWebKnowledge(wid, me, points, chunkSize);
+    await knowledgeService.saveSingleUrlKnowledge(wid, me, points, chunkSize);
 
     return successResponse(
       { wid, url, status: "trained" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChatRequestOptions, DefaultChatTransport, UIMessage } from "ai";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -25,9 +25,13 @@ import { getContrastingColor } from "@/lib/utils";
 
 export default function ChatPage() {
   const { aid } = useParams() as { aid: string };
+  const searchParams = useSearchParams();
   const [input, setInput] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
+
+  // Check if running in widget mode
+  const isWidget = searchParams.get("widget") === "true";
 
   const { agent } = useAgent(aid);
   const { session } = useSession(aid);
@@ -106,10 +110,33 @@ export default function ChatPage() {
     }
   };
 
+  // Add widget-specific styles and effects
+  useEffect(() => {
+    if (isWidget) {
+      // Notify parent window that widget is ready
+      window.parent.postMessage({ type: "SUPERCX_WIDGET_READY" }, "*");
+
+      // Add widget-specific styling
+      document.body.style.margin = "0";
+      document.body.style.padding = "0";
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.margin = "";
+        document.body.style.padding = "";
+        document.body.style.overflow = "";
+      };
+    }
+  }, [isWidget]);
+
   if (!agent) return <div>Agent not found</div>;
   return (
-    <div className="h-full flex flex-col max-w-4xl mx-auto overflow-hidden bg-white relative">
-      <ChatHeader agent={agent!} />
+    <div
+      className={`h-full flex flex-col overflow-hidden bg-white relative ${
+        isWidget ? "h-screen" : "max-w-4xl mx-auto"
+      }`}
+    >
+      <ChatHeader agent={agent!} isWidget={isWidget} />
 
       <div className="flex-1 overflow-y-auto" ref={messageListRef}>
         <MessageList agent={agent!} messages={messages} status={status} />
@@ -123,7 +150,9 @@ export default function ChatPage() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-20 right-4 z-10"
+            className={`absolute z-10 ${
+              isWidget ? "bottom-16 right-2" : "bottom-20 right-4"
+            }`}
           >
             <Button
               onClick={scrollToBottom}
@@ -151,6 +180,7 @@ export default function ChatPage() {
         handleSubmit={handleChatSubmit}
         handleInputChange={(e) => setInput(e.target.value)}
         status={status}
+        isWidget={isWidget}
       />
     </div>
   );

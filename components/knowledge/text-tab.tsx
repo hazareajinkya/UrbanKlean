@@ -36,15 +36,6 @@ export default function TextTab() {
     }
   }, [textKnowledge]);
 
-  if (isLoading) {
-    return (
-      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
-        <p className="text-sm text-gray-800">Loading text content...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <Card>

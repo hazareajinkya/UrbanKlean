@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { IAgent } from "@/lib/types/agent";
-import { Globe, Copy, Check } from "lucide-react";
+import { Globe, Copy, Check, ExternalLink, TestTube } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 interface WidgetTabProps {
   agent: IAgent;
@@ -17,8 +18,14 @@ interface WidgetTabProps {
 export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
   const [copied, setCopied] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const embedCode = `<script src="${baseUrl}/api/widget/${aid}/script"></script>`;
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-domain.com";
+  const embedCode = `<script 
+  src="${baseUrl}/api/widget/${aid}"
+  async>
+</script>`;
 
   const handleCopyCode = async () => {
     try {
@@ -32,6 +39,37 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Test Widget Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="w-5 h-5" />
+            Test Your Widget
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Test your widget in a simulated environment before embedding it on
+            your website.
+          </p>
+          <div className="flex gap-3">
+            <Link href={`/widget-test/${aid}`} target="_blank">
+              <Button className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Open Widget Test
+              </Button>
+            </Link>
+            <Link href={`/chat/${aid}`} target="_blank">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                View Chat Page
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Embed Code Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -51,7 +89,7 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
                 value={embedCode}
                 readOnly
                 className="font-mono text-sm bg-muted/50 resize-none"
-                rows={3}
+                rows={4}
               />
               <Button
                 size="sm"
@@ -69,6 +107,29 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
           </div>
 
           <div>
+            <h4 className="font-medium mb-2">Configuration</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <strong>Agent ID:</strong> {aid}
+              </div>
+              <div className="flex items-center gap-2">
+                <strong>Primary Color:</strong>
+                <div
+                  className="w-4 h-4 rounded border border-gray-300"
+                  style={{ backgroundColor: agent.customization.primaryColor }}
+                />
+                {agent.customization.primaryColor}
+              </div>
+              <div>
+                <strong>Bot Name:</strong> {agent.customization.name}
+              </div>
+              <div>
+                <strong>Bot Icon:</strong> {agent.customization.botIcon}
+              </div>
+            </div>
+          </div>
+
+          <div>
             <h4 className="font-medium mb-2">Quick Setup</h4>
             <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
               <li>Copy the embed code above</li>
@@ -76,37 +137,50 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
                 Paste it before the closing &lt;/body&gt; tag of your website
               </li>
               <li>The chat widget will automatically appear on your site</li>
-              <li>Test the integration to ensure it's working properly</li>
+              <li>Use the test page above to verify functionality</li>
             </ol>
           </div>
+        </CardContent>
+      </Card>
 
-          <div>
-            <h4 className="font-medium mb-2">Widget Features</h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Full chat interface</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Iframe-based (secure)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Mobile responsive</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>All agent features</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Knowledge base</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Workflows & actions</span>
-              </div>
+      {/* Features & Capabilities */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Widget Features</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Floating chat button</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Modal chat interface</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Mobile responsive</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Custom branding</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Secure iframe embedding</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Cross-browser compatible</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Knowledge base access</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Workflow integration</span>
             </div>
           </div>
 
@@ -121,71 +195,70 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
               <Badge variant="outline">Next.js</Badge>
               <Badge variant="outline">Squarespace</Badge>
               <Badge variant="outline">Wix</Badge>
+              <Badge variant="outline">Webflow</Badge>
+              <Badge variant="outline">Custom Sites</Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* How It Works */}
       <Card>
         <CardHeader>
-          <CardTitle>Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg p-4 bg-muted/20">
-            <div className="text-sm text-muted-foreground mb-2">
-              Your widget will appear as a floating chat button in the
-              bottom-right corner of your website.
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>Chat button appears in bottom-right corner</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm mt-1">
-              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-              <span>Clicking opens the full chat interface in iframe</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm mt-1">
-              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-              <span>All your agent's features are available</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm mt-1">
-              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-              <span>Mobile: full-screen experience</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Advanced Configuration</CardTitle>
+          <CardTitle>How It Works</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h4 className="font-medium mb-2">How It Works</h4>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                The widget uses an iframe to embed your full chat interface
-                directly into any website. This approach provides:
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              The widget creates a floating chat button on your website that
+              opens your full chat interface in a secure iframe modal when
+              clicked.
+            </p>
+
+            <div className="grid gap-3">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  1
+                </div>
+                <div>
+                  <strong>Script loads:</strong> Widget script loads
+                  asynchronously without affecting page performance
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  2
+                </div>
+                <div>
+                  <strong>Button appears:</strong> Floating chat button appears
+                  in bottom-right corner with your branding
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  3
+                </div>
+                <div>
+                  <strong>Chat opens:</strong> Click opens full chat interface
+                  in secure iframe modal
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  4
+                </div>
+                <div>
+                  <strong>Full features:</strong> Users access all agent
+                  capabilities including knowledge base and workflows
+                </div>
+              </div>
+            </div>
+
+            <div className="border-l-4 border-blue-200 pl-4 bg-blue-50 p-3 rounded-r">
+              <p className="text-blue-800 font-medium">
+                💡 Benefits: Complete functionality, secure isolation, easy
+                maintenance, and consistent experience across all platforms
               </p>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>
-                  <strong>Complete functionality:</strong> All features from
-                  your chat page work in the widget
-                </li>
-                <li>
-                  <strong>Security:</strong> Iframe isolation prevents conflicts
-                  with the host website
-                </li>
-                <li>
-                  <strong>Easy maintenance:</strong> Updates to your chat
-                  automatically appear in the widget
-                </li>
-                <li>
-                  <strong>Consistent experience:</strong> Users get the same
-                  interface across all platforms
-                </li>
-              </ul>
             </div>
           </div>
         </CardContent>

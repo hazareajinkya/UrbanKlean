@@ -19,6 +19,7 @@ interface ChatInputProps {
     options: ChatRequestOptions
   ) => void;
   status: ChatStatus;
+  isWidget?: boolean;
 }
 
 export const ChatInput = ({
@@ -27,6 +28,7 @@ export const ChatInput = ({
   handleSubmit,
   handleInputChange,
   status,
+  isWidget = false,
 }: ChatInputProps) => {
   const isLoading = status !== "ready" && status !== "error";
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,12 +45,12 @@ export const ChatInput = ({
   };
 
   return (
-    <div className="p-2 pt-3 ">
-      <div className="w-full mx-auto">
+    <>
+      <div className="p-2 pt-3">
         <div className="flex items-end gap-3">
           <div
             className={cn(
-              `flex-1 border-1 relative rounded-xl transition-all duration-200 focus-within:ring-2 focus-within:border-color-[${agent.customization.primaryColor}]`
+              `flex-1 border-1 relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:border-color-[${agent.customization.primaryColor}]`
             )}
             style={
               {
@@ -58,16 +60,16 @@ export const ChatInput = ({
           >
             <form
               onSubmit={handleFormSubmit}
-              className="flex items-end gap-2 p-2"
+              className="flex items-end gap-2 p-1 "
             >
               {/* Textarea */}
-              <div className="flex-1 relative">
+              <div className="w-full lex-1 relative">
                 <Textarea
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder={"Type your message here..."}
-                  className="w-full min-h-[32px] max-h-[200px] resize-none rounded-2xl border-0 bg-transparent text-base leading-relaxed transition-all duration-200 focus:ring-0 focus:border-0 focus:outline-none focus-visible:ring-0 shadow-none"
+                  className="text-sm md:text-base p-1 pl-1.5 rounded-none md:p-2 w-full min-h-[32px] max-h-[200px] resize-none border-0 bg-transparent leading-relaxed transition-all duration-200 focus:ring-0 focus:border-0 focus:outline-none focus-visible:ring-0 shadow-none"
                   rows={1}
                 />
               </div>
@@ -81,7 +83,6 @@ export const ChatInput = ({
                 >
                   <Button
                     type={isLoading ? "button" : "submit"}
-                    size="icon"
                     variant={isLoading ? "ghost" : "default"}
                     onClick={isLoading ? () => {} : undefined}
                     disabled={isLoading || !input.trim()}
@@ -98,13 +99,13 @@ export const ChatInput = ({
                             ),
                     }}
                     className={clsx(
-                      "w-10 h-10 rounded-full transition-colors disabled:opacity-50"
+                      "md:w-10 md:h-10 w-8 h-8 rounded-full transition-colors disabled:opacity-50"
                     )}
                   >
                     {isLoading ? (
-                      <Square className="h-10 w-10 animate-[spin_2s_linear_infinite] fill-black" />
+                      <Square className="md:h-10 md:w-10 h-8 w-8 animate-[spin_2s_linear_infinite] fill-black" />
                     ) : (
-                      <ArrowUp className="h-5 w-5" />
+                      <ArrowUp className="md:h-5 md:w-5 scale-110 " />
                     )}
                   </Button>
                 </motion.div>
@@ -113,6 +114,10 @@ export const ChatInput = ({
           </div>
         </div>
       </div>
-    </div>
+
+      <div className="py-2 text-center text-xs text-muted-foreground">
+        Powered by Supercx.ai
+      </div>
+    </>
   );
 };

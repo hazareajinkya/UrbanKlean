@@ -23,5 +23,6 @@ export const useWebKnowledge = (wid: string) => {
   return useQuery({
     queryKey: webKnowledgeKey(wid),
     queryFn: () => knowledgeService.getWebKnowledge(wid),
+    staleTime: 1000 * 30,
   });
 };

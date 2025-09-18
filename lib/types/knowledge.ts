@@ -1,6 +1,6 @@
 import { v4 } from "uuid";
 
-export type ITrainingStatus = "pending" | "trained" | "failed";
+export type ITrainingStatus = "pending" | "trained" | "failed" | "training";
 
 export interface ITextKnowledge {
   id: string;
@@ -27,17 +27,18 @@ export interface IPdfKnowledge {
 }
 
 export interface IWebKnowledge {
+  id: string;
+  wid: string;
+  title: string;
   urls: {
-    id: string;
-    wid: string;
-    title: string;
     url: string;
-    points: string[];
-    updatedAt: string;
-    status: ITrainingStatus;
+    title: string;
   }[];
-  chunkSize: number;
+  points: string[];
+  baseUrl: string;
   updatedAt: string;
+  status: ITrainingStatus;
+  chunkSize: number;
 }
 
 export interface IWebPropsMetadata {
@@ -81,18 +82,26 @@ export const generateDefaultPdfKnowledge = (
 };
 
 export const generateDefaultWebKnowledge = (
+  id: string,
   wid: string,
   title: string,
-  url: string,
+  baseUrl: string,
+  urls: {
+    url: string;
+    title: string;
+  }[],
+  chunkSize: number,
   points: string[]
-): IWebKnowledge["urls"][number] => {
+): IWebKnowledge => {
   return {
-    id: v4(),
+    id,
     wid,
     title,
-    url,
+    baseUrl,
+    urls,
     points,
     updatedAt: new Date().toISOString(),
     status: "trained",
+    chunkSize,
   };
 };
