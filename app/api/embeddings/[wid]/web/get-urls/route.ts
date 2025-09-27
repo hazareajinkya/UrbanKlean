@@ -9,10 +9,7 @@ import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { NextRequest } from "next/server";
 import z from "zod";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ url: string }> }
-) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get("url");
