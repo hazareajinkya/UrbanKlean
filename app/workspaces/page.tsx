@@ -284,7 +284,7 @@ const WorkspaceModal = ({
             <Input
               id="workspaceName"
               type="text"
-              placeholder="Supercx"
+              placeholder="Humanly Clear"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
               className="mt-2"

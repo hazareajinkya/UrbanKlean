@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Supercx - Conversation AI for magical customer experience",
+  title: "Humanly Clear - Conversation AI for magical customer experience",
   description:
-    "Transform your customer support with Supercx's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
+    "Transform your customer support with Humanly Clear's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
 };
 
 export default function RootLayout({

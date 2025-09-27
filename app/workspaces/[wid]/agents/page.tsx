@@ -73,45 +73,11 @@ export default function AgentsPage() {
     setDeletingAgent(undefined);
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-4">
-        <div className="flex gap-4 justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-medium">Agents</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your AI agents here.
-            </p>
-          </div>
-        </div>
-        <div className="space-y-3">
-          {[...Array(2)].map((_, i) => (
-            <Card key={i} className="animate-pulse group p-4">
-              <CardContent className="px-0">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-gray-200 rounded-full flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-1/6"></div>
-                        <div className="h-3 bg-gray-200 rounded w-2/6"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4">
-      <div className="flex gap-4 justify-between mb-8">
+    <div className="p-4 ">
+      <div className="flex gap-4 items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-medium">Agents</h1>
+          <h1 className="text-xl ">Agents</h1>
           <p className="text-sm text-muted-foreground">
             Manage your AI agents here.
           </p>
@@ -122,12 +88,14 @@ export default function AgentsPage() {
         </Button>
       </div>
 
-      {agents && agents.length > 0 ? (
+      {isLoading ? (
+        <AgentListSkeleton />
+      ) : agents && agents.length > 0 ? (
         <div className="space-y-3">
           {agents.map((agent) => (
             <Card
               key={agent.id}
-              className="group p-4 cursor-pointer "
+              className="group p-4 cursor-pointer animate-in fade-in duration-200"
               onClick={() =>
                 router.push(`/workspaces/${wid}/agents/${agent.id}`)
               }
@@ -135,7 +103,7 @@ export default function AgentsPage() {
               <CardContent className="px-0">
                 <div className="flex items-center gap-4">
                   <div
-                    className="overflow-hidden pt-2 h-12 w-12 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0"
+                    className="overflow-hidden h-12 w-12 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0"
                     style={{
                       backgroundColor: agent.customization.primaryColor,
                     }}
@@ -352,3 +320,32 @@ const CreateAgentModal = ({
     </Modal>
   );
 };
+
+const AgentListSkeleton = () => (
+  <div className="space-y-3">
+    {[...Array(2)].map((_, i) => (
+      <Card key={i} className="p-4 animate-pulse">
+        <CardContent className="px-0">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-primary/20 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="h-4 bg-primary/15 rounded w-32 mb-2"></div>
+                  <div className="h-3 bg-primary/10 rounded w-48"></div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-16 bg-primary/10 rounded-full"></div>
+                  <div className="h-8 w-16 bg-primary/10 rounded-full"></div>
+                  <div className="h-8 w-16 bg-primary/10 rounded-full"></div>
+                  <div className="h-8 w-16 bg-primary/10 rounded-full"></div>
+                  <div className="h-8 w-8 bg-primary/15 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+);

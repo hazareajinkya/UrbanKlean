@@ -1,0 +1,131 @@
+import { NextResponse } from "next/server";
+import waParser from "@/lib/services/whatsapp/wa-webhook-parser";
+import { IWAContact } from "@/lib/types/wa-api";
+import { IWAMessage } from "@/lib/types/wa-api";
+import waService from "@/lib/services/whatsapp/wa-service";
+import waBotService from "@/lib/services/whatsapp/wa-bot-service";
+import instaParser from "@/lib/services/instagram/insta-webhook-parser";
+import instaService from "@/lib/services/instagram/insta-service";
+import { FB_ID, INSTA_ID } from "@/lib/constants";
+import messengerParser from "@/lib/services/messenger/messenger-webhook-parser";
+import messengerService from "@/lib/services/messenger/messenger-service";
+import channelService from "@/lib/services/channel-service";
+import { successResponse } from "@/lib/types/api-response";
+
+// Function to send a text message
+export const maxDuration = 60;
+
+export async function POST(req: Request) {
+  try {
+    console.log("POST request received");
+    const body = await req.json();
+
+    // const value = body.entry[0].changes[0].value;
+    console.log("body: ", body);
+
+    console.log("value: ", body.entry[0].messaging[0]);
+
+    const msg = messengerParser.parseTextMessage(body);
+
+    if (msg.from === FB_ID) {
+      return NextResponse.json(
+        { message: "Webhook received and processed successfully" },
+        { status: 200 }
+      );
+    }
+
+    console.log("msg: ", msg);
+
+    const agentId = await channelService.resolveAgent(msg.to, "messenger");
+
+    if (!agentId) {
+      console.log(
+        `Unable to resovle agent for ${msg.to} with provider messenger`
+      );
+
+      return successResponse(200, "Processed message ");
+    }
+
+    const { success, message: ans } = await waBotService.generateResponse(
+      msg,
+      msg.to,
+      msg.from,
+      "messenger"
+    );
+    if (success) {
+      await messengerService.sendTextMessage(msg.from, ans ?? "placeholder");
+    }
+
+    //Is WA Message
+    // if (value.messages) {
+    //   const msgType = body.entry[0].changes[0].value.messages[0].type;
+
+    //   let parsed: {
+    //     contact: IWAContact;
+    //     msg: IWAMessage;
+    //   } | null = null;
+
+    //   if (msgType === "text") {
+    //     parsed = waParser.parseTextMessage(body);
+    //   } else if (msgType === "image") {
+    //     parsed = await waParser.parseImageMessage(body);
+    //   }
+
+    //   if (!parsed) return;
+
+    //   const query =
+    //     msgType === "image" ? parsed.msg.image?.url : parsed.msg.text;
+
+    //   console.log("user query: ", query);
+    //   await waService.sendTypingIndicator(parsed.msg.id);
+
+    //   const ans = await waBotService.generateResponse(
+    //     parsed.msg,
+    //     parsed.contact.waId
+    //   );
+
+    //   await waService.sendWATextMessage(
+    //     parsed.contact.waId,
+    //     ans ?? "placeholder"
+    //   );
+    // }
+    // //Status update
+    // else if (value.statuses) {
+    //   const status = value.statuses[0].status;
+    //   const msgId = value.statuses[0].id;
+    //   const phone = value.statuses[0].recipient_id;
+
+    //   const hasMsgRead = status === "read";
+    //   console.log("message status:", status);
+
+    //   if (value.statuses[0].errors) {
+    //     console.error("WhatsApp status error: ", value.statuses[0].errors);
+    //   }
+    // }
+
+    return NextResponse.json(
+      { message: "Webhook received and message resent successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error processing Instagram webhook:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 200 }
+    );
+  }
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const mode = searchParams.get("hub.mode");
+  const token = searchParams.get("hub.verify_token");
+  const challenge = searchParams.get("hub.challenge");
+  console.log(mode, token, challenge);
+
+  if (mode === "subscribe" && token === process.env.MESSENGER_VERIFY_TOKEN) {
+    return new Response(challenge, { status: 200 });
+  } else {
+    return new Response("Verification failed", { status: 403 });
+  }
+}

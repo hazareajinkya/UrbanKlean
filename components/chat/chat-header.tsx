@@ -32,15 +32,26 @@ export const ChatHeader = ({
 
   return (
     <div
-      className="bg-gradient-to-r text-white px-4 pr-2 py-3"
+      className="px-4 pr-2 py-3"
       style={{
-        backgroundColor: brandColor,
+        backgroundColor: `${brandColor}`,
         color: fontColor,
       }}
     >
       <div className="flex items-center justify-between">
-        {/* Logo/Title */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {agent.customization.botIcon && (
+            <div
+              className="w-6 h-6 overflow-hidden rounded-full"
+              style={{ backgroundColor: brandColor }}
+            >
+              <img
+                src={agent.customization.botIcon}
+                alt="Agent avatar"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+          )}
           <h1 className="text-xl font-semibold">{agent.customization.name}</h1>
         </div>
 

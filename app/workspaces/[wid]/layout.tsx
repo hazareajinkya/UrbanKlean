@@ -1,22 +1,6 @@
 "use client";
 import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
 import { useCurrentUser } from "@/lib/hooks/auth/use-user";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +11,33 @@ import {
   FileText,
   LogOut,
   Zap,
+  ChartArea,
+  ChartBar,
+  BookOpen,
+  Sparkles,
+  ChartBarStacked,
+  Menu,
+  X,
+  ChartNoAxesColumn,
+  ChartNoAxesColumnIncreasing,
+  ChartColumn,
+  ChartColumnBig,
+  ChartColumnIncreasing,
+  AudioWaveform,
+  Waves,
+  UserCog,
+  Book,
+  BookText,
+  Workflow,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  ChevronLeft,
+  Rss,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function WorkspaceLayout({
   children,
@@ -38,6 +46,7 @@ export default function WorkspaceLayout({
 }) {
   const { wid } = useParams() as { wid: string };
   const { workspace, isLoading } = useWorkspace(wid);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   if (isLoading) {
     return (
@@ -51,38 +60,63 @@ export default function WorkspaceLayout({
   }
 
   return (
-    <SidebarProvider>
-      <WorkspaceSidebar workspace={workspace} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-sidebar-border" />
-            <h1 className="text-lg font-semibold">{workspace?.name}</h1>
-          </div>
+    <div className="flex h-screen bg-background">
+      {/* Mobile sidebar overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <WorkspaceSidebar
+        workspace={workspace}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(true)}
+            className="lg:hidden"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+          <h1 className="text- font-mdium">{workspace?.name || "Workspace"}</h1>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
-      </SidebarInset>
-      <SidebarRail />
-    </SidebarProvider>
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
   );
 }
 
 const navigation = [
   {
     title: "Dashboard",
-    href: "",
-    icon: LayoutDashboard,
+    href: "/dashboard",
+    icon: ChartColumnIncreasing,
+  },
+
+  {
+    title: "Knowledge Base",
+    href: "/knowledge",
+    icon: Book,
   },
   {
     title: "Agents",
     href: "/agents",
-    icon: Bot,
+    icon: Waves,
   },
   {
-    title: "Knowledge Base",
-    href: "/knowledge",
-    icon: FileText,
+    title: "Channels",
+    href: "/channels",
+    icon: Rss,
   },
   {
     title: "Actions",
@@ -98,55 +132,155 @@ const navigation = [
 
 interface WorkspaceSidebarProps {
   workspace: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onToggle: () => void;
 }
 
-const WorkspaceSidebar = ({ workspace }: WorkspaceSidebarProps) => {
+const WorkspaceSidebar = ({
+  workspace,
+  isOpen,
+  onClose,
+  onToggle,
+}: WorkspaceSidebarProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSignOut = () => {
     // Add sign out logic here
     router.push("/auth");
   };
 
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-3">
-          <h2 className="text-lg font-semibold truncate">{workspace?.name}</h2>
-        </div>
-      </SidebarHeader>
+    <aside
+      className={`
+        fixed lg:static inset-y-0 left-0 z-10 bg-card border-r border-border
+        flex flex-col transform transition-all duration-200 ease-in-out lg:translate-x-0
+        ${isCollapsed ? "w-16" : "w-64"}
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 h-12 border-b border-border">
+        <Link
+          href="/workspaces"
+          className="px-4  flex justify-between items-center gap-1 min-w-0 flex-1"
+        >
+          {!isCollapsed && (
+            <>
+              <h2 className="font-medium truncate">Humanly Clear</h2>
+              <img
+                // src={"/temp-logo-transparent.png"}
+                src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
+                className="w-6 h-6 rounded-md"
+              />
+            </>
+          )}
+          {isCollapsed && (
+            <div className="flex justify-center w-full">
+              <img
+                src={"/temp-logo-transparent.png"}
+                className="w-8 h-8 rounded-md"
+              />
+            </div>
+          )}
+        </Link>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigation.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={`/workspaces/${wid}${item.href}`}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="lg:hidden h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="flex items-center gap-2 px-2 py-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.photoUrl} />
-                <AvatarFallback>
-                  {user?.name?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+      {/* Navigation */}
+      <div className="flex-1 px-3 py-4">
+        <nav className={`${isCollapsed ? "space-y-2" : "space-y-1"}`}>
+          {navigation.map((item) => {
+            const href = `/workspaces/${wid}${item.href}`;
+            const isActive = pathname.includes(href);
+
+            return (
+              <Link
+                key={item.title}
+                href={href}
+                onClick={onClose}
+                className={`
+                  flex items-center rounded-lg text-sm font-medium gap-3 px-3 py-2
+                  transition-colors duration-200 hover:bg-accent hover:text-primary
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-neutral-600 -foreground hover:text-primary"
+                  }
+                  ${isCollapsed ? "justify-center" : ""}
+                `}
+                title={isCollapsed ? item.title : undefined}
+              >
+                <item.icon
+                  className={`h-4 w-4 shrink-0 ${
+                    isCollapsed ? "h-4.5 w-4.5" : ""
+                  }`}
+                />
+                {!isCollapsed && (
+                  <span className="line-clamp-1 overflow-hidden truncate">
+                    {item.title}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Collapse Toggle */}
+      <div className="border-t border-border p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleToggleCollapse}
+          className={`
+            w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/50 
+            transition-colors duration-200 text-muted-foreground hover:text-primary
+            ${isCollapsed ? "justify-center" : "justify-between"}
+          `}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {!isCollapsed && <span className="text-sm">Collapse</span>}
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border p-4">
+        <div
+          className={`
+          flex items-center rounded-lg hover:bg-accent/50 transition-colors duration-200 gap-3
+          ${isCollapsed ? "justify-center" : ""}
+        `}
+        >
+          <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
+            <AvatarImage src={user?.photoUrl} alt={user?.name} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          {!isCollapsed && (
+            <>
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-sm font-medium truncate">
                   {user?.name || "User"}
@@ -159,14 +293,15 @@ const WorkspaceSidebar = ({ workspace }: WorkspaceSidebarProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+            </>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 };

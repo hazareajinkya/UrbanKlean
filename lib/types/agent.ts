@@ -6,6 +6,7 @@ export interface IAgent {
   wid: string;
 
   customization: IAgentChatCustomization;
+  channels: string[];
   settings: IAgentSettings;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +31,7 @@ export const generateDefaultAgent = (wid: string, name: string): IAgent => {
     id: id,
     wid: wid,
 
+    channels: [],
     customization: {
       name: name,
       greetingMessage: "Hello, how can I help you today?",

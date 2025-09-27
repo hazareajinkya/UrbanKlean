@@ -1,5 +1,7 @@
 import { IWAContact, IWAMessage } from "@/lib/types/wa-api";
 import waService from "./wa-service";
+import { UIMessage } from "ai";
+import { IChatMessage } from "@/lib/types/session";
 
 class WAWebhookParser {
   parseTextMessage(body: any): {

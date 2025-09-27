@@ -63,12 +63,12 @@ export default function DocumentsTab() {
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
+    <div className="space-y-4 m-4">
+      <Card className="py-4 bg-card ">
+        <CardHeader className="px-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-lg font-medium">Documents</h4>
+              <h4 className="text-l font-mdium">Documents</h4>
               <p className="text-sm text-muted-foreground">
                 Upload PDF documents to build your knowledge base
               </p>
@@ -112,70 +112,73 @@ export default function DocumentsTab() {
           </p>
         </div>
       )}
-      {isLoading ? (
-        <DocumentListSkeleton />
-      ) : (
-        <>
-          {!pdfKnowledge?.files || pdfKnowledge.files.length === 0 ? (
-            <Card>
-              <CardContent>
+      <Card className="py-0">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <DocumentListSkeleton />
+          ) : (
+            <>
+              {!pdfKnowledge?.files || pdfKnowledge.files.length === 0 ? (
                 <div className="text-center py-8">
-                  {/* <FileText className="" /> */}
                   <PDFIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
                     No documents uploaded yet. <br /> Upload your first PDF to
                     get started.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-          ) : null}
+              ) : null}
 
-          {pdfKnowledge?.files && pdfKnowledge.files.length > 0 && (
-            <div className="space-y-4">
-              {/* <h3 className="text-lg font-medium">Uploaded Documents</h3> */}
-              <div className="space-y-3">
-                {pdfKnowledge.files.map((file) => (
-                  <Card key={file.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <PDFIcon className="w-8 h-8 text-muted-foreground" />
-                        <div>
-                          <p className="mb-0.5">{file.docName}</p>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            {file.metadata?.size && (
-                              <>
-                                <span>
-                                  {formatFileSize(file.metadata.size)}
-                                </span>
-                                <span>•</span>
-                              </>
-                            )}
-                            <span>{formatDate(file.updatedAt)}</span>
+              {pdfKnowledge?.files && pdfKnowledge.files.length > 0 && (
+                <>
+                  {pdfKnowledge.files.map((file, index) => (
+                    <div
+                      key={file.id}
+                      className={`py-3.5 px-5 border-b ${
+                        index === pdfKnowledge.files.length - 1
+                          ? "border-b-0"
+                          : "border-b"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <PDFIcon className="w-8 h-8 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm mb-0.5">{file.docName}</p>
+                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                              {file.metadata?.size && (
+                                <>
+                                  <span>
+                                    {formatFileSize(file.metadata.size)}
+                                  </span>
+                                  <span>•</span>
+                                </>
+                              )}
+                              <span>{formatDate(file.updatedAt)}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="bg-green-50 text-green-600 text-xs px-3 py-1 rounded-full border border-green-200 ">
-                          {capitalize(file.status)}
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-green-50 text-green-600 text-xs px-3 py-1 rounded-full border border-green-200 ">
+                            {capitalize(file.status)}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeletePdf(file)}
+                            disabled={deletePdf.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeletePdf(file)}
-                          disabled={deletePdf.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </>
+              )}
+            </>
           )}
-        </>
-      )}
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationDialog
@@ -196,15 +199,19 @@ export default function DocumentsTab() {
 
 const DocumentListSkeleton = () => {
   return (
-    <div className="space-y-4">
+    <div className="">
       {[...Array(2)].map((_, i) => (
-        <Card key={i} className="p-4">
+        <div key={i} className="p-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
               <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-5 w-48" />
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-1 rounded-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -212,7 +219,7 @@ const DocumentListSkeleton = () => {
               <Skeleton className="h-8 w-8" />
             </div>
           </div>
-        </Card>
+        </div>
       ))}
     </div>
   );

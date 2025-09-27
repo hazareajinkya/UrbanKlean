@@ -103,8 +103,8 @@ class PeopleService {
     return { personId, existing: !!personSnap };
   }
 
-  async updatePerson(wid: string, persondId: string, data: Partial<IPerson>) {
-    const personRef = doc(db, `workspaces/${wid}/people/${persondId}`);
+  async updatePerson(wid: string, personId: string, data: Partial<IPerson>) {
+    const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
 
     const update: Record<string, any> = { updatedAt: new Date().toISOString() };
 
@@ -156,7 +156,14 @@ class PeopleService {
     }
 
     await updateDoc(personRef, update);
-    return update;
+    const person = await this.getPerson(wid, personId);
+    return person;
+  }
+
+  async getPerson(wid: string, personId: string) {
+    const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
+    const snap = await getDoc(personRef);
+    return snap.data() as IPerson;
   }
 }
 

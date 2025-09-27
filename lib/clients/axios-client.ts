@@ -4,7 +4,14 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { PAGE_ACCESS_TOKEN, WA_PHONE_ID } from "../constants";
+import {
+  FB_ID,
+  FB_PAGE_ACCESS_TOKEN,
+  INSTA_ID,
+  INSTA_PAGE_ACCESS_TOKEN,
+  PAGE_ACCESS_TOKEN,
+  WA_PHONE_ID,
+} from "../constants";
 
 // Create axios instance with default configuration
 const axiosClient: AxiosInstance = axios.create({
@@ -26,6 +33,20 @@ export const waMediaClient = axios.create({
   baseURL: `https://graph.facebook.com/v23.0`,
   headers: {
     Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+  },
+});
+
+export const instaClient = axios.create({
+  baseURL: `https://graph.instagram.com/v23.0/${INSTA_ID}`,
+  headers: {
+    Authorization: `Bearer ${INSTA_PAGE_ACCESS_TOKEN}`,
+  },
+});
+
+export const messengerClient = axios.create({
+  baseURL: `https://graph.facebook.com/v23.0/${FB_ID}`,
+  headers: {
+    Authorization: `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
   },
 });
 

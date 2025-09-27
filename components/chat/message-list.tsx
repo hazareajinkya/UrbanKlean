@@ -1,24 +1,40 @@
 "use client";
 
 import { Streamdown } from "streamdown";
-import { UIMessage } from "@ai-sdk/react";
-import { getContrastingColor } from "@/lib/utils";
+import { UIMessage } from "ai";
+import {
+  formatDate,
+  formatDateTime,
+  formatTime,
+  getContrastingColor,
+} from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 import { ChatStatus } from "ai";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { IAgent } from "@/lib/types/agent";
-import { Globe, User } from "lucide-react";
+import {
+  Copy,
+  CopyPlus,
+  Globe,
+  MessageSquareWarning,
+  ThumbsDownIcon,
+  ThumbsUp,
+  User,
+} from "lucide-react";
+import { IChatMessage } from "@/lib/types/session";
+import { Button } from "../ui/button";
 
 interface MessageListProps {
   agent: IAgent;
-  messages: UIMessage[];
+  messages: IChatMessage[];
   status: ChatStatus;
 }
 
 export const MessageList = ({ messages, status, agent }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const previousMessageCountRef = useRef(messages.length);
   const showLoadingIndicator = status === "submitted";
 
@@ -32,15 +48,22 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
     if (hasNewMessage && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "end",
+        block: "start",
       });
     }
 
     previousMessageCountRef.current = currentMessageCount;
   }, [messages]);
 
+  const suggestions = [
+    "Track Order",
+    "Size guide",
+    "Return policy",
+    "Shipping information",
+  ];
+
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto p-4 ">
       <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
         {messages.map((message, index) => {
           const isLastAssistantMessage =
@@ -69,16 +92,8 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                   {message.role === "assistant" ? (
                     <>
                       {message.parts?.map((part, index) => {
-                        console.log("part: ", part);
-
                         if (part.type === "tool-searchKnowledge") {
-                          // const toolStatus = part.toolInvocation.state;
-                          // const toolName = part.toolInvocation.toolName;
                           const isCalling = part.state !== "output-available";
-                          // const { displayName, Icon } = getToolDisplayName(
-                          //   toolName,
-                          //   toolStatus
-                          // );
                           return (
                             <div
                               className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
@@ -132,13 +147,8 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                         }
 
                         if (part.type === "tool-collectInformation") {
-                          // const toolStatus = part.toolInvocation.state;
-                          // const toolName = part.toolInvocation.toolName;
                           const isCalling = part.state !== "output-available";
-                          // const { displayName, Icon } = getToolDisplayName(
-                          //   toolName,
-                          //   toolStatus
-                          // );
+
                           return (
                             <div
                               className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
@@ -198,67 +208,22 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                                 key={index}
                               >
                                 <Streamdown
-                                // remarkPlugins={[remarkGfm, remarkToc]}
-                                // rehypePlugins={[rehypeRaw]}
-                                // components={{
-                                //   code: ({ children, className }) => (
-                                //     <CodeBlock
-                                //       value={children as string}
-                                //       language={
-                                //         className?.split("-")[1] || "js"
-                                //       }
-                                //     />
-                                //   ),
-                                //   pre: ({ children }) => (
-                                //     <div className="bg-secondary p-2 rounded-lg">
-                                //       {children}
-                                //     </div>
-                                //   ),
-                                //   a: ({ href, children }) => (
-                                //     <a
-                                //       href={href}
-                                //       target="_blank"
-                                //       rel="noopener noreferrer"
-                                //       className="text-primary hover:text-primary/80 transition-colors"
-                                //     >
-                                //       {children}
-                                //     </a>
-                                //   ),
-                                // }}
+                                  components={{
+                                    a: ({ href, children }) => (
+                                      <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-medium text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-2"
+                                      >
+                                        {children}
+                                      </a>
+                                    ),
+                                  }}
                                 >
                                   {part.text}
                                 </Streamdown>
                               </div>
-                              {/* {isLastAssistantMessage &&
-                                suggestions.length > 0 && (
-                                  <div className="mt-4">
-                                    <div
-                                      className="flex flex-wrap gap-2"
-                                      key={`suggestions-${suggestions.length}`}
-                                    >
-                                      {suggestions.map(
-                                        (suggestion, suggestionIndex) => (
-                                          <motion.button
-                                            key={`${suggestionIndex}-${suggestion}`}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{
-                                              duration: 0.2,
-                                              delay: suggestionIndex * 0.06,
-                                              ease: "easeOut",
-                                            }}
-                                            onClick={() =>
-                                              onSuggestionClick?.(suggestion)
-                                            }
-                                            className="px-3 py-1.5 md:px-3 md:py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-full transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer slide-in-from-bottom "
-                                          >
-                                            {suggestion}
-                                          </motion.button>
-                                        )
-                                      )}
-                                    </div>
-                                  </div>
-                                )} */}
                             </div>
                           );
                         }
@@ -278,51 +243,74 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                 </div>
               </div>
 
-              <div className={`${isLastAssistantMessage && heightClass}`}></div>
+              {isLastAssistantMessage && (
+                <div
+                  className={`flex items-center gap-4 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2`}
+                >
+                  <p className="text-left flex-1  text-xs text-muted-foreground">
+                    {formatDateTime(message.metadata?.createdAt ?? "")}
+                  </p>
+                </div>
+              )}
+
+              {/* {isLastAssistantMessage && suggestions.length > 0 && (
+                <div className="mt-2">
+                  <div
+                    className="flex flex-wrap gap-2"
+                    key={`suggestions-${suggestions.length}`}
+                  >
+                    {suggestions.map((suggestion, suggestionIndex) => (
+                      <motion.button
+                        key={`${suggestionIndex}-${suggestion}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: suggestionIndex * 0.06,
+                          ease: "easeOut",
+                        }}
+                        onClick={() => onSuggestionClick?.(suggestion)}
+                        className="px-3 py-1.5 md:px-3 md:py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer slide-in-from-bottom "
+                      >
+                        {suggestion}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              )} */}
             </div>
           );
         })}
 
         {showLoadingIndicator && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 10,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -10,
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-            className="flex justify-start "
-          >
+          <div className={"flex justify-start"}>
             <div
-              className={`max-w-[75%] ${heightClass} py-0 text-foreground rounded-lg`}
+              className={clsx(
+                "max-w-[90%] md:max-w-[75%] leading-7",
+                assistantMessageStyle({
+                  id: "loading",
+                  role: "assistant",
+                  parts: [{ type: "text", text: "" }],
+                } as UIMessage),
+                "px-3 py-3"
+              )}
             >
-              <TextShimmer
-                className="text-sm md:text-base leading-loose"
-                style={
-                  {
-                    "--base-color": brandColor,
-                    "--base-gradient-color": "#eeeeee", // 20% opacity
-                  } as React.CSSProperties
-                }
-                duration={1.5}
-                spread={1.5}
-              >
-                Generating response...
-              </TextShimmer>
+              <div className="flex gap-1.5 py-1">
+                <div className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500" />
+                <div
+                  className="w-1.5 h-1.5 rounded-full  animate-bounce bg-neutral-500"
+                  style={{ animationDelay: "0.13s" }}
+                />
+                <div
+                  className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
+                  style={{ animationDelay: "0.3s" }}
+                />
+              </div>
             </div>
-          </motion.div>
+          </div>
         )}
-        <div ref={messagesEndRef} className="h-1" />
+
+        <div ref={messagesEndRef} className={heightClass}></div>
       </div>
     </div>
   );

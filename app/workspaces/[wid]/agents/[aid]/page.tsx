@@ -24,6 +24,11 @@ import {
   ListEnd,
   ListCheck,
   History,
+  RefreshCcw,
+  GalleryVerticalEnd,
+  MessageSquareMore,
+  MessagesSquare,
+  Play,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -38,6 +43,7 @@ import {
   SettingsTab,
   WidgetTab,
 } from "@/components/agent";
+import clsx from "clsx";
 
 export default function AgentPage() {
   const router = useRouter();
@@ -81,8 +87,8 @@ export default function AgentPage() {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: HomeIcon },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "chat-history", label: "Chat History", icon: MessageCircle },
+    { id: "chat", label: "Playground", icon: Play },
+    { id: "chat-history", label: "History", icon: MessagesSquare },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "workflow", label: "Workflows", icon: ListTree },
     { id: "settings", label: "Settings", icon: Settings2 },
@@ -90,15 +96,15 @@ export default function AgentPage() {
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       {/* Tab Navigation with Back Button */}
-      <div className="flex justify-between items-center mb-6 border-b">
-        <div className="flex gap-2 items-center">
+      <div className="flex justify-between border-b bg-card p-1 items-center mb-4 animate-in slide-in-from-left-5 fade-in">
+        <div className="flex gap-1 items-center">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/workspaces/${wid}/agents`)}
-            className="p-2 mr-2 text-muted-foreground"
+            className="p-2 text-muted-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
             Back
@@ -108,11 +114,12 @@ export default function AgentPage() {
             <Link
               key={tabItem.id}
               href={`/workspaces/${wid}/agents/${aid}?tab=${tabItem.id}`}
-              className={`flex items-center gap-2 px-4 py-2 text-sm rounded-t-md transition-colors ${
+              className={clsx(
+                "flex items-center gap-2 px-3.5 py-2 g-secondary text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary",
                 tab === tabItem.id
-                  ? "bg-background border-b-2 border-primary text-primary"
+                  ? "text-primary "
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
               <tabItem.icon className="w-4 h-4" />
               {tabItem.label}
@@ -140,7 +147,7 @@ export default function AgentPage() {
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="px-4">
         {tab === "overview" && <OverviewTab agent={agent} />}
         {tab === "chat" && <ChatTab agent={agent} />}
         {tab === "chat-history" && <ChatHistoryTab agent={agent} />}

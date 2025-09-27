@@ -1,10 +1,11 @@
+import { getLocalSession } from "@/components/chat/chat-utils";
 import chatService from "@/lib/services/chat-service";
 import { useQuery } from "@tanstack/react-query";
 
 export const sessionKey = (sid: string) => ["sessions", sid];
 
 export const useSession = (aid: string) => {
-  const sid = localStorage.getItem("session_id") ?? undefined;
+  const sid = getLocalSession(aid);
 
   const query = useQuery({
     queryKey: sessionKey(sid!),

@@ -19,16 +19,16 @@ export default function KnowledgeBasePage() {
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       {/* Tab Navigation */}
-      <div className="flex gap-2 items-center mb-6 border-b">
+      <div className="flex w-full bg-card p-1 border-b rounded-ull  gap-0 items-center animate-in fade-in slide-in-from-left-2 duration-300 -z-20">
         {tabs.map((tabItem) => (
           <Link
             key={tabItem.id}
             href={`/workspaces/${wid}/knowledge?tab=${tabItem.id}`}
-            className={`flex items-center gap-2 px-4 py-2 text-sm rounded-t-md transition-colors ${
+            className={`flex font-medium rounded-md items-center gap-2 px-3 py-2 text-sm hover:bg-secondary hover:text-primary transition-colors ${
               tab === tabItem.id
-                ? "bg-background border-b-2 border-primary text-primary"
+                ? "bg-primay/10 border-b-0 border-primary text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -39,7 +39,7 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="px-0">
         {tab === "website" && <WebsiteTab />}
         {tab === "documents" && <DocumentsTab />}
         {tab === "text" && <TextTab />}

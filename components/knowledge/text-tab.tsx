@@ -37,12 +37,12 @@ export default function TextTab() {
   }, [textKnowledge]);
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
+    <div className="space-y-4 m-4">
+      <Card className="py-4 bg-card ">
+        <CardHeader className="px-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-lg font-medium ">Text</h4>
+              <h4 className="text-g font-mdium ">Text</h4>
               <p className="text-sm text-muted-foreground">
                 Add your knowledge content as plain text
               </p>
@@ -69,7 +69,7 @@ export default function TextTab() {
         <Textarea
           id="text-content"
           placeholder="Enter your text content here..."
-          className="min-h-[400px] resize-y max-h-[70vh] overflow-y-auto bg-white"
+          className="min-h-[400px] resize-y max-h-[70vh] overflow-y-auto bg-white rounded-xl"
           value={textContent}
           onChange={handleTextChange}
           disabled={embedAndSaveText.isPending}

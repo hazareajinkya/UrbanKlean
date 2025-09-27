@@ -79,7 +79,7 @@ export default function WebsiteTab() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 m-4">
       <UrlInputModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -91,11 +91,11 @@ export default function WebsiteTab() {
         onAddMultipleUrls={handleAddMultipleUrls}
       />
 
-      <Card>
-        <CardHeader>
+      <Card className="py-4 bg-card ">
+        <CardHeader className="px-4 ">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-lg font-medium">Website</h4>
+              <h4 className="text-l font-mdium">Website</h4>
               <p className="text-sm text-muted-foreground">
                 Add websites to scrape and include in your knowledge base
               </p>
@@ -134,77 +134,78 @@ export default function WebsiteTab() {
           </p>
         </div>
       )}
-      {isLoading ? (
-        <WebsiteListSkeleton />
-      ) : (
-        <>
-          {!webKnowledge || webKnowledge.length === 0 ? (
-            <Card>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Globe className="mx-auto h-8w w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    No websites added yet. <br /> Add your first website to get
-                    started.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {webKnowledge && webKnowledge.length > 0 && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                {webKnowledge.map((website) => (
-                  <Card key={website.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 ">
-                        <Globe className="w-5 h-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-mdium mb-0.5">{website.title}</p>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <a
-                              href={website.baseUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-blue-600 hover:underline"
-                            >
-                              {website.baseUrl}
-                            </a>
-                            <span>•</span>
-                            <span>{formatDate(website.updatedAt)}</span>
-                            <span>•</span>
-                            <span>{website.urls.length} urls</span>
-                          </div>
+      <Card className="py-0 bg-card">
+        {isLoading ? (
+          <WebsiteListSkeleton />
+        ) : (
+          <CardContent className="p-0">
+            {!webKnowledge || webKnowledge.length === 0 ? (
+              <div className="text-center py-8">
+                <Globe className="mx-auto h-8w w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  No websites added yet. <br /> Add your first website to get
+                  started.
+                </p>
+              </div>
+            ) : (
+              webKnowledge.map((website, index) => (
+                <div
+                  key={website.id}
+                  className={`py-3.5 px-5 border-b ${
+                    index === webKnowledge.length - 1
+                      ? "border-b-0"
+                      : "border-b"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 ">
+                      <Globe className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-mdium mb-0.5">
+                          {website.title}
+                        </p>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <a
+                            href={website.baseUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-blue-600 hover:underline"
+                          >
+                            {website.baseUrl}
+                          </a>
+                          <span>•</span>
+                          <span>{formatDate(website.updatedAt)}</span>
+                          <span>•</span>
+                          <span>{website.urls.length} urls</span>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className={clsx(
-                            "bg-green-50 text-green-600 text-xs px-3 py-1 rounded-full border border-green-200",
-                            website.status === "training" &&
-                              "bg-yellow-50 text-yellow-600 text-xs px-3 py-1 rounded-full border border-yellow-200"
-                          )}
-                        >
-                          {capitalize(website.status)}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteWebsite(website)}
-                          disabled={deleteWebsite.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={clsx(
+                          "bg-green-50 text-green-600 text-xs px-3 py-1 rounded-full border border-green-200",
+                          website.status === "training" &&
+                            "bg-yellow-50 text-yellow-600 text-xs px-3 py-1 rounded-full border border-yellow-200"
+                        )}
+                      >
+                        {capitalize(website.status)}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteWebsite(website)}
+                        disabled={deleteWebsite.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        )}
+      </Card>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationDialog
@@ -225,15 +226,19 @@ export default function WebsiteTab() {
 
 const WebsiteListSkeleton = () => {
   return (
-    <div className="space-y-4">
+    <div className="">
       {[...Array(2)].map((_, i) => (
-        <Card key={i} className="p-4">
+        <div key={i} className="p-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Skeleton className="h-6 w-6 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
               <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-64" />
+                <Skeleton className="h-5 w-48" />
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-1 rounded-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -241,7 +246,7 @@ const WebsiteListSkeleton = () => {
               <Skeleton className="h-8 w-8" />
             </div>
           </div>
-        </Card>
+        </div>
       ))}
     </div>
   );

@@ -3,6 +3,7 @@ import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 import { toast } from "sonner";
+import { NextRequest } from "next/server";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,8 +14,18 @@ export function handleError(error: Error) {
   toast.error(error.message);
 }
 
-export function formatDate(date: string) {
+export function formatDate(date?: string) {
+  if (!date) return "";
   return format(new Date(date), "dd MMM yyyy");
+}
+
+export function formatTime(date?: string) {
+  if (!date) return "";
+  return format(new Date(date), "hh:mm a");
+}
+export function formatDateTime(date?: string) {
+  if (!date) return "";
+  return format(new Date(date), "dd MMM yyyy hh:mm a");
 }
 
 export const getRandomAvatar = (num?: number) => {
@@ -91,3 +102,9 @@ export const normPhone = (p?: string) =>
   p ? p.replace(/[^\d+]/g, "").replace(/^00/, "+") : undefined;
 export const normWord = (s: string) => s.trim().toLowerCase(); // for tags/interests
 export const normNote = (s: string) => s.trim();
+
+export const getProtocol = (req: NextRequest) => {
+  const isLocalhost = req.nextUrl.origin.includes("localhost");
+  const protocol = isLocalhost ? "http:" : "https:";
+  return protocol;
+};

@@ -51,15 +51,13 @@ const SignedIn = () => {
   const { data: user, isLoading } = useCurrentUser();
   const { signOutUser } = useAuthActions();
 
-  console.log("user: ", user);
-
   return (
     <>
       <CardHeader className="text-center w-full mt-8">
         <CardTitle className="flex flex-row items-center justify-center gap-3 text-xl">
           <span className="">🎬</span>
           <span className="bg-gradient-to-r from-primary to-blue-800 font-semibold bg-clip-text text-transparent">
-            Supercx
+            Humanly Clear
           </span>
         </CardTitle>
       </CardHeader>
@@ -122,24 +120,50 @@ const SignInForm = () => {
 
   return (
     <>
-      <CardHeader className="text-center w-full mt-8">
+      <CardHeader className="text-center w-full mt-8 gap-0">
         <CardTitle className="flex flex-col items-center justify-center gap-2 text-2xl">
-          <div className="relative w-16 h-16 mb-2 mx-auto">
+          <div className="relative w-16 h-16 mx-auto">
             <img
-              src="https://cdn.dribbble.com/userupload/16425717/file/original-ec88bbd43469f7bf95bdfc2495cb75db.jpg?resize=400x0"
+              src="/temp-logo-filled.jpg"
               alt=""
               className="h-full w-full object-cover rounded-md"
             />
           </div>
-          <span className="bg-gradient-to-r from-primary to-blue-800 bg-clip-text text-transparent font-bold text-2xl">
-            Supercx
+          <span className="bg-gradient-to-r from-neutral-800 to-blue-800 bg-clip-text text-transparent font-bold text-2xl">
+            Humanly Clear
           </span>
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          Enabling better customer experience
+          Turn questions into profit
         </CardDescription>
       </CardHeader>
       <CardContent className="w-full ">
+        <Button
+          variant="outline"
+          type="button"
+          className="w-full gap-2"
+          disabled={signInGoogle.isPending}
+          onClick={handleGoogleSignIn}
+          size={"lg"}
+        >
+          {signInGoogle.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <GoogleLogo />
+          )}
+          Sign in with Google
+        </Button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-gray-50 px-2 text-gray-500">
+              Or continue with
+            </span>
+          </div>
+        </div>
         <form onSubmit={handleEmailSignIn} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -170,31 +194,6 @@ const SignInForm = () => {
             Send Sign In Link
           </Button>
         </form>
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-gray-50 px-2 text-gray-500">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          type="button"
-          className="w-full gap-2"
-          disabled={signInGoogle.isPending}
-          onClick={handleGoogleSignIn}
-          size={"lg"}
-        >
-          {signInGoogle.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <GoogleLogo />
-          )}
-          Sign in with Google
-        </Button>
       </CardContent>
       <CardFooter className="flex justify-center mb-6">
         <p className="text-xs max-w-[250px] text-center text-muted-foreground">

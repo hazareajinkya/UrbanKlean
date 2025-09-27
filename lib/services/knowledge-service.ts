@@ -194,6 +194,7 @@ class KnowledgeService {
 
   async embedWeb(wid: string, content: string, metadata: IWebPropsMetadata) {
     try {
+      await this.checkCollection(wid);
       if (!metadata) throw new Error("Metadata is required");
       const webKnowledge = await knowledgeService.getUrlKnowledgeByUrl(
         wid,

@@ -36,11 +36,11 @@ export default function ActionsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-medium">Actions</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl ">Actions</h1>
+          <p className="text-sm text-muted-foreground">
             Manage your custom API actions
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function ActionsPage() {
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add API Action
+          Add Action
         </Button>
       </div>
 

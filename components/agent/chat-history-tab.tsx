@@ -17,7 +17,8 @@ import clsx from "clsx";
 import { UIMessage } from "ai";
 import { Streamdown } from "streamdown";
 import { useHistoryStore } from "@/lib/stores/history-store";
-import { Loader2 } from "lucide-react";
+import { Globe, Loader2, MailIcon } from "lucide-react";
+import { InstagramIcon, MessengerIcon, WAIcon } from "@/lib/logos";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -71,7 +72,7 @@ const assistantMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tl-2xl "
+      ? "rounded-b-2xl rounded-tr-2xl "
       : "rounded-2xl"
   );
 
@@ -80,7 +81,7 @@ const userMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-3 py-1 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tr-2xl"
+      ? "rounded-b-2xl rounded-tl-2xl"
       : "rounded-2xl"
   );
 
@@ -112,6 +113,7 @@ const SessionList = ({
         dataLength={nChats}
         scrollableTarget="scrollableDiv"
         scrollThreshold={0.8}
+        className="bg-secondary"
         next={() => {
           fetchNextSessions(agent.id);
         }}
@@ -127,22 +129,46 @@ const SessionList = ({
           </div>
         }
       >
-        {sessions?.map((session) => (
-          <div
-            key={session.id}
-            className={`px-4 transition-all duration-100 cursor-pointer py-3 border-b ${
-              currentSession?.id === session.id ? "bg-primary/10" : ""
-            }`}
-            onClick={() => setcurrentSession(session)}
-          >
-            <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
-              Visitor-{session.id.split("-")[0]}
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              {formatDate(session.updatedAt)}
-            </p>
-          </div>
-        ))}
+        {sessions?.map((session) => {
+          const channel = session.channel;
+          return (
+            <div
+              key={session.id}
+              className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3 border-b ${
+                currentSession?.id === session.id
+                  ? "bg-card border-l-2 border-b-0 border-primary"
+                  : ""
+              }`}
+              onClick={() => setcurrentSession(session)}
+            >
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
+                  {channel === "web" ? "Visitor" : "WA"}-
+                  {session.id.split("-")[0]}
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(session.updatedAt)}
+                </p>
+              </div>
+
+              <div>
+                {channel === "web" ? (
+                  <Globe className="size-4.5" />
+                ) : channel === "whatsapp" ? (
+                  <WAIcon className="size-5" />
+                ) : channel === "instagram" ? (
+                  <InstagramIcon className="size-4.5" />
+                ) : channel === "messenger" ? (
+                  <MessengerIcon className="size-4.5" />
+                ) : channel === "email" ? (
+                  <MailIcon className="size-4.5" />
+                ) : (
+                  <></>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </InfiniteScroll>
     </div>
   );
@@ -188,7 +214,7 @@ const HistoryMessageList = ({
               <div
                 key={index}
                 className={`flex ${
-                  message.role === "assistant" ? "justify-end" : "justify-start"
+                  message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 <div

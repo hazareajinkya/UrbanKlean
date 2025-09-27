@@ -139,6 +139,26 @@ class WaService {
       };
     }
   }
+
+  async sendTypingIndicator(messageId: string): Promise<{ success: boolean }> {
+    const payload = {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: messageId,
+      typing_indicator: {
+        type: "text",
+      },
+    };
+
+    try {
+      const response = await waclient.post("/messages", payload);
+      console.log("Typing indicator sent successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error sending typing indicator:", error);
+      throw new Error("Failed to send typing indicator");
+    }
+  }
 }
 
 const waService = new WaService();

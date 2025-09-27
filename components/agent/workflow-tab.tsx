@@ -132,8 +132,8 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
       {/* Header with Add Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-medium">Workflows</h2>
-          <p className="text-muted-foreground mt-0.5">
+          <h2 className="text-lg font-medium">Workflows</h2>
+          <p className="text-sm text-muted-foreground ">
             Automate tasks and create custom workflows for your agent
           </p>
         </div>

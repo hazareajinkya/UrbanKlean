@@ -18,6 +18,7 @@ import { useState } from "react";
 import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface SettingsTabProps {
   agent: IAgent;
@@ -69,115 +70,114 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
     },
   ];
 
+  const router = useRouter();
+
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* AI Model Configuration */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
+      <div className="">
+        <Card className="gap-0 pb-0">
+          <CardHeader className="border-b pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5" />
                 Model Configuration
               </CardTitle>
               <Button
                 onClick={handleSave}
                 size={"sm"}
+                className="rounded-full px-4"
                 disabled={updateAgent.isPending}
               >
-                {updateAgent.isPending ? (
+                {updateAgent.isPending && (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4 " />
                 )}
-                Save Changes
+                Save
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <Label htmlFor="model">AI Model</Label>
-                <Select value={model} onValueChange={setModel}>
-                  <SelectTrigger className="mt-2 w-full">
-                    <SelectValue placeholder="Select AI model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {models.map((modelOption) => (
-                      <SelectItem
-                        key={modelOption.value}
-                        value={modelOption.value}
-                      >
-                        <div className="flex items-center gap-2">
-                          {modelOption.provider === "openai" ? (
-                            <OpenAIIcon className="w-4 h-4" />
-                          ) : (
-                            <GoogleLogo className="w-4 h-4" />
-                          )}
-                          {modelOption.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 col-span-1 h-max">
+            <div className="col-span-1 py-6 md:border-r">
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="model">AI Model</Label>
+                    <Select value={model} onValueChange={setModel}>
+                      <SelectTrigger className="mt-2 w-full">
+                        <SelectValue placeholder="Select AI model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {models.map((modelOption) => (
+                          <SelectItem
+                            key={modelOption.value}
+                            value={modelOption.value}
+                          >
+                            <div className="flex items-center gap-2">
+                              {modelOption.provider === "openai" ? (
+                                <OpenAIIcon className="w-4 h-4" />
+                              ) : (
+                                <GoogleLogo className="w-4 h-4" />
+                              )}
+                              {modelOption.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <Label htmlFor="temperature">Temperature ({temperature})</Label>
-                <Input
-                  id="temperature"
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={temperature}
-                  onChange={(e) => setTemperature(e.target.value)}
-                  className="mt-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Conservative (0)</span>
-                  <span>Balanced (0.5)</span>
-                  <span>Creative (1)</span>
+                  <div>
+                    <Label htmlFor="temperature">
+                      Temperature ({temperature})
+                    </Label>
+                    <Input
+                      id="temperature"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={temperature}
+                      onChange={(e) => setTemperature(e.target.value)}
+                      className="mt-2"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Conservative (0)</span>
+                      <span>Balanced (0.5)</span>
+                      <span>Creative (1)</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-4 text-center">
+                      Lower values make responses more focused and
+                      deterministic.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4 text-center">
-                  Lower values make responses more focused and deterministic.
-                </p>
-              </div>
+              </CardContent>
             </div>
-          </CardContent>
+
+            {/* System Prompt */}
+            <div className="col-span-2 py-6">
+              <CardContent>
+                <div>
+                  <Label htmlFor="systemPrompt">System Prompt</Label>
+                  <Textarea
+                    id="systemPrompt"
+                    value={systemPrompt}
+                    onChange={(e) => setSystemPrompt(e.target.value)}
+                    placeholder="Enter instructions that define how your agent should behave..."
+                    rows={8}
+                    className="mt-2 min-h-[150px] max-h-[62vh]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    This prompt defines your agent's personality, knowledge, and
+                    behavior. Be specific about how the agent should respond to
+                    different types of questions.
+                  </p>
+                </div>
+              </CardContent>
+            </div>
+          </div>
         </Card>
       </div>
-
-      {/* System Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            System Prompt
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label htmlFor="systemPrompt">
-              Instructions for Agent Behavior
-            </Label>
-            <Textarea
-              id="systemPrompt"
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              placeholder="Enter instructions that define how your agent should behave..."
-              rows={8}
-              className="mt-2"
-            />
-            <p className="text-sm text-muted-foreground mt-1">
-              This prompt defines your agent's personality, knowledge, and
-              behavior. Be specific about how the agent should respond to
-              different types of questions.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-# SuperCX Chat Widget Integration Guide
+# Humanly Clear Chat Widget Integration Guide
 
 Easily add a chat widget to your website with just a single script tag.
 
@@ -7,19 +7,17 @@ Easily add a chat widget to your website with just a single script tag.
 Add the following script tag to your website's HTML:
 
 ```html
-<script 
-  src="https://your-domain.com/api/widget/YOUR_AGENT_ID"
-  async>
-</script>
+<script src="https://your-domain.com/api/widget/YOUR_AGENT_ID" async></script>
 ```
 
-Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your SuperCX domain.
+Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your Humanly Clear domain.
 
 ## Automatic Configuration
 
 The widget automatically uses your agent's configuration including:
+
 - Primary brand color
-- Chat assistant name  
+- Chat assistant name
 - Bot icon/avatar
 - Greeting messages
 - Knowledge base content
@@ -45,7 +43,7 @@ SuperCXWidget.toggle();
 
 // Check if widget is open
 if (SuperCXWidget.isOpen()) {
-  console.log('Widget is currently open');
+  console.log("Widget is currently open");
 }
 ```
 
@@ -80,6 +78,7 @@ The widget automatically inherits your agent's customization settings, but you c
 ## Mobile Experience
 
 On mobile devices (screen width < 480px), the widget automatically:
+
 - Opens in fullscreen mode for better usability
 - Prevents background scrolling when open
 - Optimizes touch interactions
@@ -94,24 +93,27 @@ On mobile devices (screen width < 480px), the widget automatically:
 ## Troubleshooting
 
 ### Widget not appearing
+
 1. Check that the script is loading without errors in browser console
 2. Verify your agent ID is correct
 3. Ensure your domain is whitelisted (if applicable)
 
 ### Styling issues
+
 1. Check for CSS conflicts with your existing styles
 2. Use more specific CSS selectors if needed
 3. Use `!important` sparingly for critical overrides
 
 ### Performance concerns
+
 1. The widget script is optimized and loads asynchronously
 2. Chat interface loads only when user opens the widget
 3. Consider loading the script after your main content
 
 ## Support
 
-For technical support or feature requests, please contact your SuperCX administrator.
+For technical support or feature requests, please contact your Humanly Clear administrator.
 
 ---
 
-*This widget is powered by SuperCX - Advanced conversational AI platform.*
+_This widget is powered by Humanly Clear - Advanced conversational AI platform._

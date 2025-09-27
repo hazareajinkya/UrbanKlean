@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { Square, ArrowUp, Send } from "lucide-react";
 import { ChatRequestOptions, ChatStatus } from "ai";
 import { IAgent } from "@/lib/types/agent";
+import Link from "next/link";
 
 interface ChatInputProps {
   agent: IAgent;
@@ -46,7 +47,7 @@ export const ChatInput = ({
 
   return (
     <>
-      <div className="p-2 pt-3">
+      <div className="px-3 pb-0 pt-3">
         <div className="flex items-end gap-3">
           <div
             className={cn(
@@ -115,9 +116,21 @@ export const ChatInput = ({
         </div>
       </div>
 
-      <div className="py-2 text-center text-xs text-muted-foreground">
-        Powered by Supercx.ai
-      </div>
+      <Link
+        href={"https://humanly-clear.ai"}
+        target="_blank"
+        className="pt-2.5 pb-2.5 text-center text-xs text-muted-foreground flex justify-center items-center gap-1"
+      >
+        Powered by{" "}
+        {/* <img
+          // src={"/temp-logo-transparent.png"}
+          src={
+            "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
+          }
+          className="w-4 h-4 mr-0.5 ml-1"
+        /> */}
+        <p className="font-medium text-lack"> Humanly Clear</p>
+      </Link>
     </>
   );
 };

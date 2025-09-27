@@ -3,9 +3,7 @@ import { z } from "zod";
 import peopleService from "../services/people-service";
 
 const PersonInfo = z.object({
-  // If you already know the personId, pass it. Otherwise it will be located by email/phone or created.
-  wid: z.string().describe("workspace id"),
-  personId: z.string().optional(),
+  personId: z.string().optional().describe("Get it from context personId "),
   channel: z
     .enum(["web", "whatsapp", "instagram", "email", "voice", "other"])
     .optional(),
@@ -31,35 +29,47 @@ const PersonInfo = z.object({
   notes: z.string().optional(),
 });
 
-export const collectInformation = tool({
-  name: "Collect Information",
-  description:
-    "Always include the user's name and email when calling this tool, asking for them politely if missing. " +
-    "Upsert a single person object (identity + interests + preferences + tags/notes) into Firestore. Use whenever the user shares durable info worth remembering.",
-  inputSchema: PersonInfo,
+export const collectInformation = (wid: string) =>
+  tool({
+    name: "Collect Information",
+    description:
+      "Always include the user's name and email when calling this tool, asking for them politely if missing. " +
+      "Upsert a single person object (identity + interests + preferences + tags/notes) into Firestore. Use whenever the user shares durable info worth remembering.",
+    inputSchema: PersonInfo,
 
-  execute: async (params) => {
-    const { personId, existing } = await peopleService.identifyPerson({
-      wid: params.wid,
-      email: params.email,
-      phone: params.phone,
-      name: params.name,
-      externalIds: params.externalIds,
-    });
+    execute: async (params) => {
+      console.log("collecting information: ", params);
 
-    console.log("personId: ", personId);
-    console.log("existing: ", existing);
+      let personId = params.personId;
+      if (!personId) {
+        const result = await peopleService.identifyPerson({
+          wid: wid,
+          email: params.email,
+          phone: params.phone,
+          name: params.name,
+          externalIds: params.externalIds,
+        });
 
-    console.log("data: ", params);
+        console.log("personId: ", result.personId);
+        console.log("existing: ", result.existing);
+        console.log("data: ", params);
+        personId = result.personId;
+      }
 
-    const update = await peopleService.updatePerson(
-      params.wid,
-      personId,
-      params as Partial<IPerson>
-    );
+      const update = await peopleService.updatePerson(
+        wid,
+        personId,
+        params as Partial<IPerson>
+      );
 
-    return `PersonId: ${personId}, user information that you could use for personalization but never share it with user directly: ${JSON.stringify(
-      update
-    )}`;
-  },
-});
+      console.log(
+        `user information that you should use for personalization but never share it with user directly: ${JSON.stringify(
+          update
+        )}`
+      );
+
+      return `User information that you should use for personalization but never share it with user directly: ${JSON.stringify(
+        update
+      )}`;
+    },
+  });

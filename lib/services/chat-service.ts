@@ -17,11 +17,25 @@ import {
 } from "../types/session";
 import { db } from "../clients/firebase";
 import { UIDataTypes, UIMessagePart, UITools } from "ai";
+import { saveLocalSession } from "@/components/chat/chat-utils";
 
 class ChatService {
   async createSession(wid: string, aid: string) {
-    const session = generateDefaultSession(wid, aid);
-    localStorage.setItem("session_id", session.id);
+    const session = generateDefaultSession(wid, aid, "web");
+    saveLocalSession(aid, session.id);
+
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
+
+  async createWASession(
+    wid: string,
+    aid: string,
+    waPhoneId: string,
+    personId: string
+  ) {
+    const session = generateDefaultSession(wid, aid, "whatsapp", waPhoneId);
+    session.personId = personId;
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }

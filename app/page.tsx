@@ -30,9 +30,9 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <section className="relative overflow-hidden bg-gradient-to-br from-neutral-100 to-lime-100">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10" />
         <div className="container mx-auto px-4 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
@@ -45,31 +45,26 @@ export default function LandingPage() {
             </Badge>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 mb-6">
-              Turn customer questions into{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                profit
+            <h1 className="text-4xl md:text-6xl lg:text-7xl leading-20 font-bold tracking-tight text-gray-900 mb-6">
+              Turn customer questions{" "}
+              <span className="bg-gradient-to-r from-neutral-900 to-green-700 bg-clip-text text-transparent">
+                into profit
               </span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
               The world's first and only Done‑For‑You High‑EQ AI for customer
               experience. Live in minutes. Kind, on‑brand, and action‑ready.
             </p>
 
             {/* Support line */}
-            <p className="text-lg text-gray-500 mb-10 max-w-2xl mx-auto">
-              Powered by EFRO (Empathy‑First Revenue Orchestration) and CXE
-              (Customer Experience Enhancement) tools. White‑Glove Service
-              available for premium clients.
-            </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Button
                 size="lg"
-                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="text-lg px-8 py-6 bg-gradient-to-r transition-colors duration-500 from-neutral-900 to-green-700 hover:from-neutral-900 hover:to-green-500"
               >
                 Start your 30‑day pilot
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -83,6 +78,12 @@ export default function LandingPage() {
                 Watch a 5‑minute demo
               </Button>
             </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+              Powered by EFRO (Empathy‑First Revenue Orchestration) and CXE
+              (Customer Experience Enhancement) tools. White‑Glove Service
+              available for premium clients.
+            </p>
 
             {/* Proof strip */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200">
@@ -113,7 +114,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why teams choose SuperCX.ai over other tools
+                Why teams choose Humanly Clear over other tools
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                 Superior customer experience that feels human and helpful
@@ -221,7 +222,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="mt-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why teams switch to SuperCX.ai
+                Why teams switch to Humanly Clear
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -257,7 +258,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Why We Built SuperCX.ai Section */}
+      {/* Why We Built Humanly Clear Section */}
       <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -267,8 +268,8 @@ export default function LandingPage() {
 
             <div className="bg-white rounded-2xl p-8 md:p-12 shadow-lg border border-gray-200 mb-12">
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8">
-                We built SuperCX.ai because "just another chatbot" doesn't move
-                the needle. You need AI that's kind, accurate, and
+                We built Humanly Clear because "just another chatbot" doesn't
+                move the needle. You need AI that's kind, accurate, and
                 action‑ready—set up for you, tuned to your voice, and measured
                 in profit. That's why we created the world's first Done‑For‑You
                 High‑EQ AI, powered by EFRO (Empathy‑First Revenue
@@ -407,8 +408,8 @@ export default function LandingPage() {
                 About Us
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-                Meet the team behind SuperCX.ai—the problem-solvers who design
-                how your customer experience feels in every interaction.
+                Meet the team behind Humanly Clear—the problem-solvers who
+                design how your customer experience feels in every interaction.
               </p>
             </div>
 
@@ -430,10 +431,11 @@ export default function LandingPage() {
                     </h3>
                     <p className="text-lg text-gray-700 leading-relaxed">
                       Hrushikesh Kuklare is the problem‑solver who designs how
-                      SuperCX.ai feels in your customer's hands. He brings the
-                      energy of a technologist and the eye of a designer—equal
-                      parts engineering depth and user‑experience craft—so every
-                      interaction is fast, intuitive, and remarkably human.
+                      Humanly Clear feels in your customer's hands. He brings
+                      the energy of a technologist and the eye of a
+                      designer—equal parts engineering depth and user‑experience
+                      craft—so every interaction is fast, intuitive, and
+                      remarkably human.
                     </p>
                   </div>
 
@@ -445,11 +447,11 @@ export default function LandingPage() {
                       The story is delightfully unexpected. While tinkering with
                       ways technology might help him "bulk up" despite an
                       overactive metabolism, his phone rang—Manish was ready to
-                      launch SuperCX.ai. The clarity of that vision, paired with
-                      a track record of building and shipping, turned curiosity
-                      into conviction: together, they would create a SaaS
-                      product that makes every customer touchpoint intentional,
-                      elegant, and measurably superior.
+                      launch Humanly Clear. The clarity of that vision, paired
+                      with a track record of building and shipping, turned
+                      curiosity into conviction: together, they would create a
+                      SaaS product that makes every customer touchpoint
+                      intentional, elegant, and measurably superior.
                     </p>
                   </div>
                 </div>
@@ -563,10 +565,10 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Why SuperCX.ai */}
+              {/* Why Humanly Clear */}
               <div className="mt-12">
                 <h4 className="text-xl font-bold text-gray-900 mb-4">
-                  Why SuperCX.ai
+                  Why Humanly Clear
                 </h4>
                 <p className="text-gray-700 leading-relaxed mb-6">
                   Inspired by Manish's vision—and the momentum of a builder who
@@ -630,7 +632,7 @@ export default function LandingPage() {
                   </cite>
                 </div>
                 <p className="text-gray-700 mt-6 leading-relaxed">
-                  At SuperCX.ai, Hrushikesh turns that belief into your
+                  At Humanly Clear, Hrushikesh turns that belief into your
                   advantage—transforming complex workflows into calm,
                   empathetic, brand‑true experiences that keep customers coming
                   back.
@@ -641,7 +643,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Who SuperCX.ai Is For Section */}
+      {/* Who Humanly Clear Is For Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -650,7 +652,7 @@ export default function LandingPage() {
                 If you serve customers, we serve you.
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-                SuperCX.ai is a 24/7 teammate that answers with empathy and
+                Humanly Clear is a 24/7 teammate that answers with empathy and
                 takes the right actions. Whether you're a solo founder or a
                 global enterprise, our Done‑For‑You High‑EQ AI (with optional
                 White‑Glove Service) fits your stack and your standards.
@@ -1082,7 +1084,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why teams choose SuperCX.ai
+                Why teams choose Humanly Clear
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -1315,7 +1317,7 @@ export default function LandingPage() {
                 Frequently Asked Questions
               </h2>
               <p className="text-xl text-gray-600">
-                Everything you need to know about SuperCX.ai
+                Everything you need to know about Humanly Clear
               </p>
             </div>
 
@@ -1326,10 +1328,10 @@ export default function LandingPage() {
                 className="border border-gray-200 rounded-lg px-6"
               >
                 <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-blue-600">
-                  What is SuperCX.ai, in simple words?
+                  What is Humanly Clear, in simple words?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 pt-2">
-                  SuperCX.ai is a smart helper for your business. It answers
+                  Humanly Clear is a smart helper for your business. It answers
                   customers kindly, solves common problems on the spot, and
                   shows you how much time and money it saves. It's the world's
                   first Done‑For‑You High‑EQ AI—so we set it up for you, in your
@@ -1346,9 +1348,9 @@ export default function LandingPage() {
                   How is this different from "just a chatbot"?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 pt-2">
-                  Most chat tools only talk. SuperCX.ai talks and does. It looks
-                  up orders, creates return labels, changes appointments, and
-                  sends updates—safely. Fewer back‑and‑forths means quicker
+                  Most chat tools only talk. Humanly Clear talks and does. It
+                  looks up orders, creates return labels, changes appointments,
+                  and sends updates—safely. Fewer back‑and‑forths means quicker
                   solutions, lower costs, and better profits.
                 </AccordionContent>
               </AccordionItem>
@@ -1678,7 +1680,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="mt-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why SuperCX.ai delivers results
+                Why Humanly Clear delivers results
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -1746,7 +1748,7 @@ export default function LandingPage() {
             {/* Global Benefits Recap */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-6">
-                Why teams choose SuperCX.ai
+                Why teams choose Humanly Clear
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">

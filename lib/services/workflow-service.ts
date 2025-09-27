@@ -53,8 +53,11 @@ class WorkflowService {
   }
 
   async getWorkflows(aid: string) {
+    console.log("aid: ", aid);
+
     const docRef = collection(db, `agents/${aid}/workflows`);
     const docSnap = await getDocs(docRef);
+
     return docSnap.docs.map((doc) => doc.data() as IWorkflow);
   }
 }

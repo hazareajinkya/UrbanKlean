@@ -16,12 +16,14 @@ import chatService from "@/lib/services/chat-service";
 import {
   defaultAImessage,
   defaultUserMessage,
+  IChatMessage,
   ISession,
 } from "@/lib/types/session";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowDownNarrowWide, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getContrastingColor } from "@/lib/utils";
+import z from "zod";
 
 export default function ChatPage() {
   const { aid } = useParams() as { aid: string };
@@ -50,8 +52,10 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, aimsg]);
     },
     onFinish: (messages) => {
-      const aimsg = messages.message;
-      console.log("aimsg: ", aimsg);
+      messages.message.metadata = { createdAt: new Date().toISOString() };
+      const aimsg = messages.message as IChatMessage;
+      const prevMessages = messages.messages.slice(0, -1);
+      setMessages([...prevMessages, aimsg]);
 
       chatService.saveMessage(aid, session!.id, aimsg);
     },
@@ -67,7 +71,10 @@ export default function ChatPage() {
     if (!input.trim() || !aid || !agent) return;
 
     const msg = defaultUserMessage(input);
-    sendMessage({ text: input });
+    sendMessage({
+      text: input,
+      metadata: { createdAt: new Date().toISOString() },
+    });
     chatService.saveMessage(aid, session!.id, msg);
     setInput("");
   };
@@ -139,7 +146,11 @@ export default function ChatPage() {
       <ChatHeader agent={agent!} isWidget={isWidget} />
 
       <div className="flex-1 overflow-y-auto" ref={messageListRef}>
-        <MessageList agent={agent!} messages={messages} status={status} />
+        <MessageList
+          agent={agent!}
+          messages={messages as IChatMessage[]}
+          status={status}
+        />
       </div>
 
       {/* Scroll to bottom button */}
@@ -151,7 +162,7 @@ export default function ChatPage() {
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
             className={`absolute z-10 ${
-              isWidget ? "bottom-16 right-2" : "bottom-20 right-4"
+              isWidget ? "bottom-24 right-4" : "bottom-24 right-4"
             }`}
           >
             <Button
@@ -159,14 +170,6 @@ export default function ChatPage() {
               size="icon"
               variant={"outline"}
               className="w-8 h-8 text-muted-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-              style={
-                {
-                  // color: agent.customization.primaryColor + "90",
-                  // backgroundColor: getContrastingColor(
-                  //   agent.customization.primaryColor
-                  // ),
-                }
-              }
             >
               <ArrowDown className="w-3 h-3" />
             </Button>

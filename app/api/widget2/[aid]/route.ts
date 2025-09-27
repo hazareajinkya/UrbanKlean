@@ -5,10 +5,10 @@ import { join } from "path";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { aid: string } }
+  { params }: { params: Promise<{ aid: string }> }
 ) {
   try {
-    const { aid } = params;
+    const { aid } = await params;
 
     if (!aid) {
       return NextResponse.json(

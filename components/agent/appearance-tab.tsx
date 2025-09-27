@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IAgent } from "@/lib/types/agent";
-import { Palette, Bot, Save, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Palette, Bot, Save, Loader2, Upload, Building } from "lucide-react";
+import { useRef, useState } from "react";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
+import storageService from "@/lib/services/storage-service";
+import { toast } from "sonner";
 
 interface AppearanceTabProps {
   agent: IAgent;
@@ -23,45 +25,97 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const [primaryColor, setPrimaryColor] = useState(
     agent.customization.primaryColor
   );
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wid = getwid();
   const { updateAgent } = useAgentActions(wid);
 
-  const handleSave = () => {
-    updateAgent.mutate({
-      aid: agent.id,
-      updates: {
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      let botIconUrl = agent.customization.botIcon;
+      botIconUrl = (await uploadLogo()) || botIconUrl;
+
+      const updates = {
         customization: {
           ...agent.customization,
           name,
           greetingMessage,
           primaryColor,
+          botIcon: botIconUrl,
         },
-      },
-    });
+      };
+
+      updateAgent.mutate(
+        { aid: agent.id, updates },
+        {
+          onSuccess: () => {
+            setLogoFile(null);
+            setLogoPreview(null);
+          },
+          onSettled: () => {
+            setIsSaving(false);
+          },
+        }
+      );
+    } catch (error) {
+      toast.error("Failed to upload logo");
+      console.error(error);
+      setIsSaving(false);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const uploadLogo = async () => {
+    if (logoFile) {
+      const res = await storageService.uploadFile(
+        logoFile,
+        `w/${wid}/agents/${agent.id}/logo`,
+        logoFile.name
+      );
+      const url = res.downloadURL;
+      if (logoPreview) {
+        URL.revokeObjectURL(logoPreview);
+      }
+      return url;
+    }
+    return null;
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Agent Appearance Card */}
-      <Card>
-        <CardHeader>
+      <Card className="py-4">
+        <CardHeader className="">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Palette className="w-5 h-5" />
               Agent Appearance
             </CardTitle>
             <Button
               onClick={handleSave}
               size={"sm"}
-              disabled={updateAgent.isPending}
+              className="rounded-full"
+              disabled={isSaving || updateAgent.isPending}
             >
-              {updateAgent.isPending ? (
+              {isSaving || updateAgent.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 " />
-              )}
-              Save Changes
+              ) : null}
+              Save
             </Button>
           </div>
         </CardHeader>
@@ -114,33 +168,39 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
             {/* Avatar Section */}
             <div className="border-t pt-6">
               <div>
-                <Label>Avatar</Label>
+                <Label>Brand Logo</Label>
                 <div className="mt-2 flex items-center gap-4">
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center text-white overflow-hidden"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    {agent.customization.botIcon ? (
+                    {logoPreview || agent.customization.botIcon ? (
                       <img
-                        src={agent.customization.botIcon}
+                        src={logoPreview || agent.customization.botIcon}
                         alt="Agent avatar"
-                        className="w-14 h-14"
+                        className="w-14 h-14 object-cover"
                       />
                     ) : (
-                      <Bot className="w-8 h-8" />
+                      <Building className="w-8 h-8" />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">
-                      Avatar customization coming soon
-                    </p>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="image/*"
+                    />
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled
+                      onClick={handleUploadClick}
+                      disabled={isSaving || updateAgent.isPending}
                       className="mt-2"
                     >
-                      Upload New Avatar
+                      <Upload className="w-4 h-4 mr-1" />
+                      Upload Logo
                     </Button>
                   </div>
                 </div>
@@ -163,9 +223,9 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  {agent.customization.botIcon ? (
+                  {logoPreview || agent.customization.botIcon ? (
                     <img
-                      src={agent.customization.botIcon}
+                      src={logoPreview || agent.customization.botIcon}
                       alt="Agent avatar"
                       className="w-8 h-8"
                     />

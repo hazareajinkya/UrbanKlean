@@ -1,25 +1,36 @@
 import { UIMessage } from "@ai-sdk/react";
 import { v4 } from "uuid";
+import { IChannelProvider } from "./channel";
 
 export interface ISession {
   id: string;
   aid: string;
   wid: string;
-  channel: "web" | "whatsapp";
+  personId?: string;
+  channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface IChatMessage extends UIMessage {}
+export interface IChatMessage extends UIMessage {
+  metadata: {
+    createdAt: string;
+  };
+}
 
-export const generateDefaultSession = (wid: string, aid: string): ISession => {
+export const generateDefaultSession = (
+  wid: string,
+  aid: string,
+  channel: "web" | "whatsapp",
+  id?: string
+): ISession => {
   return {
-    id: v4(),
+    id: id ?? v4(),
     aid,
     wid,
-    channel: "web",
+    channel,
     status: "open",
     messages: [],
     createdAt: new Date().toISOString(),
@@ -31,6 +42,9 @@ export const defaultAImessage = (msg: string): IChatMessage => {
   return {
     id: v4(),
     role: "assistant",
+    metadata: {
+      createdAt: new Date().toISOString(),
+    },
     parts: [
       {
         type: "text",
@@ -40,10 +54,13 @@ export const defaultAImessage = (msg: string): IChatMessage => {
   };
 };
 
-export const defaultUserMessage = (msg: string): IChatMessage => {
+export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
   return {
-    id: v4(),
+    id: id ?? v4(),
     role: "user",
+    metadata: {
+      createdAt: new Date().toISOString(),
+    },
     parts: [
       {
         type: "text",
