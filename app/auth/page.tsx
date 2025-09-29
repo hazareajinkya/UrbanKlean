@@ -57,7 +57,7 @@ const SignedIn = () => {
         <CardTitle className="flex flex-row items-center justify-center gap-3 text-xl">
           <span className="">🎬</span>
           <span className="bg-gradient-to-r from-primary to-blue-800 font-semibold bg-clip-text text-transparent">
-            Humanly Clear
+            Delightfulcx
           </span>
         </CardTitle>
       </CardHeader>
@@ -130,16 +130,16 @@ const SignInForm = () => {
             />
           </div>
           <span className="bg-gradient-to-r from-neutral-800 to-blue-800 bg-clip-text text-transparent font-bold text-2xl">
-            Humanly Clear
+            Delightfulcx
           </span>
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Turn questions into profit
         </CardDescription>
       </CardHeader>
-      <CardContent className="w-full ">
+      <CardContent className="w-full mt-4">
         <Button
-          variant="outline"
+          variant="default"
           type="button"
           className="w-full gap-2"
           disabled={signInGoogle.isPending}
@@ -154,7 +154,7 @@ const SignInForm = () => {
           Sign in with Google
         </Button>
 
-        <div className="relative my-6">
+        <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
           </div>
@@ -183,7 +183,7 @@ const SignInForm = () => {
             type="submit"
             className="w-full"
             disabled={sendLoginEmail.isPending}
-            variant={"default"}
+            variant={"outline"}
             size={"lg"}
           >
             {sendLoginEmail.isPending ? (

@@ -23,7 +23,7 @@ export interface IChatMessage extends UIMessage {
 export const generateDefaultSession = (
   wid: string,
   aid: string,
-  channel: "web" | "whatsapp",
+  channel: IChannelProvider,
   id?: string
 ): ISession => {
   return {

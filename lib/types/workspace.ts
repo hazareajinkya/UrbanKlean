@@ -3,6 +3,7 @@ import { v4 } from "uuid";
 export interface IWorkspace {
   id: string;
   name: string;
+  description: string;
   thumbnail: string;
   ownerId: string;
   createdAt: string;
@@ -14,6 +15,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
   return {
     id: id,
     name: "",
+    description: "",
     ownerId: "",
     thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),

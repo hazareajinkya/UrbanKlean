@@ -1,5 +1,7 @@
 import { v4 } from "uuid";
 import { getRandomAvatar } from "../utils";
+import { generateDefaultSystemPrompt } from "@/prompts/system-prompt";
+import { IWorkspace } from "./workspace";
 
 export interface IAgent {
   id: string;
@@ -25,7 +27,11 @@ export interface IAgentChatCustomization {
   primaryColor: string;
 }
 
-export const generateDefaultAgent = (wid: string, name: string): IAgent => {
+export const generateDefaultAgent = (
+  wid: string,
+  name: string,
+  workspace: IWorkspace
+): IAgent => {
   const id = v4();
   return {
     id: id,
@@ -35,13 +41,17 @@ export const generateDefaultAgent = (wid: string, name: string): IAgent => {
     customization: {
       name: name,
       greetingMessage: "Hello, how can I help you today?",
-      botIcon: getRandomAvatar(),
-      primaryColor: `#1e40ff`,
+      botIcon:
+        "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6",
+      primaryColor: `#640d5f`,
     },
     settings: {
       temperature: 0.5,
-      model: "gpt-4.1-mini",
-      systemPrompt: "",
+      model: "gemini-2.5-flash",
+      systemPrompt: generateDefaultSystemPrompt(
+        workspace.name,
+        workspace.description
+      ),
     },
 
     createdAt: new Date().toISOString(),

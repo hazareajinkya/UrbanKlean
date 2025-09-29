@@ -18,6 +18,7 @@ import {
 import { db } from "../clients/firebase";
 import { UIDataTypes, UIMessagePart, UITools } from "ai";
 import { saveLocalSession } from "@/components/chat/chat-utils";
+import { IChannelProvider } from "../types/channel";
 
 class ChatService {
   async createSession(wid: string, aid: string) {
@@ -32,9 +33,10 @@ class ChatService {
     wid: string,
     aid: string,
     waPhoneId: string,
-    personId: string
+    personId: string,
+    provider: IChannelProvider
   ) {
-    const session = generateDefaultSession(wid, aid, "whatsapp", waPhoneId);
+    const session = generateDefaultSession(wid, aid, provider, waPhoneId);
     session.personId = personId;
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;

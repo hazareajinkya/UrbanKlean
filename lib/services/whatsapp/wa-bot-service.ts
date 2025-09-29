@@ -37,7 +37,7 @@ class WABotService {
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      let session = await this.getOrCreateSession(waPhoneId, agent);
+      let session = await this.getOrCreateSession(waPhoneId, agent, channel);
 
       const query = waMsg.text ?? "";
       const userMsg = defaultUserMessage(query, waMsg.id);
@@ -63,11 +63,7 @@ class WABotService {
       const messages = convertToModelMessages(chatHistory);
 
       const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(
-        agent,
-        query,
-        channel as "chat" | "whatsapp" | "instagram"
-      );
+      const systemPrompt = await getSystemPrompt(agent, query, channel);
 
       const result = await generateText({
         model,
@@ -92,7 +88,11 @@ class WABotService {
     }
   }
 
-  async getOrCreateSession(waPhoneId: string, agent: IAgent) {
+  async getOrCreateSession(
+    waPhoneId: string,
+    agent: IAgent,
+    channel: IChannelProvider
+  ) {
     let session = await chatService.getSession(waPhoneId, agent.id);
     if (!session) {
       const { personId } = await peopleService.identifyPerson({
@@ -105,7 +105,8 @@ class WABotService {
         agent.wid,
         agent.id,
         waPhoneId,
-        personId
+        personId,
+        channel
       );
     }
     return session;

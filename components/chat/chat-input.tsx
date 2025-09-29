@@ -117,7 +117,7 @@ export const ChatInput = ({
       </div>
 
       <Link
-        href={"https://humanly-clear.ai"}
+        href={"/"}
         target="_blank"
         className="pt-2.5 pb-2.5 text-center text-xs text-muted-foreground flex justify-center items-center gap-1"
       >
@@ -129,7 +129,7 @@ export const ChatInput = ({
           }
           className="w-4 h-4 mr-0.5 ml-1"
         /> */}
-        <p className="font-medium text-lack"> Humanly Clear</p>
+        <p className="font-medium text-lack"> Delightfulcx</p>
       </Link>
     </>
   );

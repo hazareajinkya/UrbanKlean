@@ -30,10 +30,19 @@ class WorkspaceService {
     return snap.data() as IWorkspace;
   }
 
-  async createWorkspace({ name, ownerId }: { name: string; ownerId: string }) {
+  async createWorkspace({
+    name,
+    description,
+    ownerId,
+  }: {
+    name: string;
+    description: string;
+    ownerId: string;
+  }) {
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
+    workspace.description = description;
     workspace.ownerId = ownerId;
     //create workspace
     await setDoc(doc(db, `workspaces/${wid}`), workspace);

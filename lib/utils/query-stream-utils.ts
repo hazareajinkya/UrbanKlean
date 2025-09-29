@@ -3,9 +3,10 @@ import { IAgent } from "../types/agent";
 import { google } from "@ai-sdk/google";
 import workflowservice from "../services/workflow-service";
 import {
-  defaultSystemPrompt,
+  coreSystemPrompt,
   identityCollectionPrompt,
 } from "@/prompts/system-prompt";
+import { IChannelProvider } from "../types/channel";
 
 export const getModel = (agent: IAgent) => {
   let model = openai("gpt-4.1-mini");
@@ -21,14 +22,16 @@ export const getModel = (agent: IAgent) => {
 export const getSystemPrompt = async (
   agent: IAgent,
   query: string,
-  channel: "chat" | "whatsapp" | "instagram" | "messenger"
+  channel: IChannelProvider
 ) => {
   const workflowstext = await retrieveWorkflow(agent.id, query);
 
   return `
-  ${defaultSystemPrompt}
+  ${agent.settings.systemPrompt}
 
-  ${channel === "chat" && identityCollectionPrompt}
+  ${coreSystemPrompt}
+
+  ${channel === "web" && identityCollectionPrompt}
 
   ${
     (channel === "instagram" || channel === "messenger") &&
@@ -42,13 +45,10 @@ export const getSystemPrompt = async (
 
   PREFER WORKFLOW OVER ANYTHING EVEN TOOL IF IT STATSIFY IN WORKFLOW FOLLOW THAT ONLY
 
-
   ## Context
   - Channel:${channel}
 
 `;
-
-  // ${agent.settings.systemPrompt}
 };
 
 export const retrieveWorkflow = async (aid: string, query: string) => {

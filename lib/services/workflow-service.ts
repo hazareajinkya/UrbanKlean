@@ -36,16 +36,6 @@ class WorkflowService {
     });
   }
 
-  async deleteWorkflow({
-    aid,
-    workflowId,
-  }: {
-    aid: string;
-    workflowId: string;
-  }) {
-    await deleteDoc(doc(db, `agents/${aid}/workflows/${workflowId}`));
-  }
-
   async getWorkflow(aid: string, workflowId: string) {
     const docRef = doc(db, `agents/${aid}/workflows/${workflowId}`);
     const docSnap = await getDoc(docRef);
@@ -59,6 +49,16 @@ class WorkflowService {
     const docSnap = await getDocs(docRef);
 
     return docSnap.docs.map((doc) => doc.data() as IWorkflow);
+  }
+
+  async deleteWorkflow({
+    aid,
+    workflowId,
+  }: {
+    aid: string;
+    workflowId: string;
+  }) {
+    await deleteDoc(doc(db, `agents/${aid}/workflows/${workflowId}`));
   }
 }
 

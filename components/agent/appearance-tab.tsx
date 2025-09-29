@@ -12,6 +12,7 @@ import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
 import storageService from "@/lib/services/storage-service";
 import { toast } from "sonner";
+import { ChatPreview } from "@/components/chat/chat-preview";
 
 interface AppearanceTabProps {
   agent: IAgent;
@@ -100,7 +101,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Agent Appearance Card */}
-      <Card className="py-4">
+      <Card className="py-4 h-max">
         <CardHeader className="">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -215,36 +216,14 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
         <CardHeader>
           <CardTitle>Live Preview</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  {logoPreview || agent.customization.botIcon ? (
-                    <img
-                      src={logoPreview || agent.customization.botIcon}
-                      alt="Agent avatar"
-                      className="w-8 h-8"
-                    />
-                  ) : (
-                    <Bot className="w-5 h-5" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-medium">{name || "Agent Name"}</h3>
-                  <p className="text-sm text-muted-foreground">Online</p>
-                </div>
-              </div>
-              <div className="bg-gray-100 rounded-lg p-3">
-                <p className="text-sm">
-                  {greetingMessage || "Hello! How can I help you today?"}
-                </p>
-              </div>
-            </div>
-          </div>
+        <CardContent className="p-6 pt-2">
+          <ChatPreview
+            agent={agent}
+            previewName={name}
+            previewGreeting={greetingMessage}
+            previewPrimaryColor={primaryColor}
+            previewBotIcon={logoPreview || agent.customization.botIcon}
+          />
         </CardContent>
       </Card>
     </div>

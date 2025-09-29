@@ -100,7 +100,7 @@ const SessionList = ({
   const hasMore = useHistoryStore((state) => state.hasMore);
   const fetchNextSessions = useHistoryStore((state) => state.fetchNextSessions);
   return (
-    <div className="">
+    <div className="bg-secondary h-full">
       <div className="h-14 border-b bg-gray-100 px-4 y-4 grid place-items-center">
         <div className="w-full">
           <p className="text-sm">History</p>
@@ -143,8 +143,18 @@ const SessionList = ({
             >
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
-                  {channel === "web" ? "Visitor" : "WA"}-
-                  {session.id.split("-")[0]}
+                  {channel === "web"
+                    ? "Visitor"
+                    : channel === "messenger"
+                    ? "FB"
+                    : channel === "instagram"
+                    ? "IG"
+                    : channel === "email"
+                    ? "Email"
+                    : channel === "whatsapp"
+                    ? "WA"
+                    : "API"}
+                  -{session.id.split("-")[0]}
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(session.updatedAt)}

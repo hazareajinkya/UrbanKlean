@@ -63,15 +63,19 @@ export default function ActionsPage() {
           {actions.map((action) => (
             <Card key={action.id} className="hover:shadow-md transition-shadow">
               <CardContent className="space-y-0 pt-0">
-                {/* <div className="mb-4 min-w-max w-14 h-14 bg-black rounded-lg grid place-items-center text-white font-medium text-sm">
-                  API
-                </div> */}
-                <div className="flex gap-2 items-center justify-between">
+                <div className="mb-4 flex gap-2 items-center justify-between">
                   <div>
                     <p className="font-mediu">{action.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {action.description}
                     </p>
+                  </div>
+                  <div className="">
+                    <img
+                      src="/api-logo.png"
+                      alt="API Logo"
+                      className="w-8 h-8 rounded-sm object-cover"
+                    />
                   </div>
 
                   {/* <div className="uppercase text-xs text-muted-foreground bg-muted px-2 rounded-sm py-0.5">

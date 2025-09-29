@@ -1,4 +1,4 @@
-# Humanly Clear Chat Widget Integration Guide
+# Delightfulcx Chat Widget Integration Guide
 
 Easily add a chat widget to your website with just a single script tag.
 
@@ -10,7 +10,7 @@ Add the following script tag to your website's HTML:
 <script src="https://your-domain.com/api/widget/YOUR_AGENT_ID" async></script>
 ```
 
-Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your Humanly Clear domain.
+Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your Delightfulcx domain.
 
 ## Automatic Configuration
 
@@ -112,8 +112,8 @@ On mobile devices (screen width < 480px), the widget automatically:
 
 ## Support
 
-For technical support or feature requests, please contact your Humanly Clear administrator.
+For technical support or feature requests, please contact your Delightfulcx administrator.
 
 ---
 
-_This widget is powered by Humanly Clear - Advanced conversational AI platform._
+_This widget is powered by Delightfulcx - Advanced conversational AI platform._

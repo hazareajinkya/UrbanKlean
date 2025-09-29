@@ -22,6 +22,7 @@ export default function WorkspacesPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [workspaceName, setWorkspaceName] = useState("");
+  const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [editingWorkspace, setEditingWorkspace] = useState<IWorkspace>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingWorkspace, setDeletingWorkspace] = useState<IWorkspace>();
@@ -37,7 +38,11 @@ export default function WorkspacesPage() {
     if (!workspaceName.trim() || !user?.email) return;
 
     createWorkspace.mutate(
-      { name: workspaceName.trim(), ownerId: user.email },
+      {
+        name: workspaceName.trim(),
+        description: workspaceDescription.trim(),
+        ownerId: user.email,
+      },
       { onSuccess: () => handleCloseModal() }
     );
   };
@@ -48,7 +53,10 @@ export default function WorkspacesPage() {
     updateWorkspace.mutate(
       {
         wid: editingWorkspace.id,
-        updates: { name: workspaceName.trim(), ownerId: user.email },
+        updates: {
+          name: workspaceName.trim(),
+          description: workspaceDescription.trim(),
+        },
       },
       { onSuccess: () => handleCloseModal() }
     );
@@ -65,12 +73,14 @@ export default function WorkspacesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setWorkspaceName("");
+    setWorkspaceDescription("");
     setEditingWorkspace(undefined);
   };
 
   const handleEditWorkspace = (workspace: IWorkspace) => {
     setEditingWorkspace(workspace);
     setWorkspaceName(workspace.name);
+    setWorkspaceDescription(workspace.description);
     setIsModalOpen(true);
   };
 
@@ -101,6 +111,7 @@ export default function WorkspacesPage() {
   const openCreateModal = () => {
     setEditingWorkspace(undefined);
     setWorkspaceName("");
+    setWorkspaceDescription("");
     setIsModalOpen(true);
   };
 
@@ -205,6 +216,8 @@ export default function WorkspacesPage() {
         onClose={handleCloseModal}
         workspaceName={workspaceName}
         setWorkspaceName={setWorkspaceName}
+        workspaceDescription={workspaceDescription}
+        setWorkspaceDescription={setWorkspaceDescription}
         onSubmit={handleSubmit}
         isLoading={
           editingWorkspace
@@ -235,6 +248,8 @@ interface WorkspaceModalProps {
   onClose: () => void;
   workspaceName: string;
   setWorkspaceName: (name: string) => void;
+  workspaceDescription: string;
+  setWorkspaceDescription: (description: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
   editingWorkspace: IWorkspace | undefined;
@@ -245,6 +260,8 @@ const WorkspaceModal = ({
   onClose,
   workspaceName,
   setWorkspaceName,
+  workspaceDescription,
+  setWorkspaceDescription,
   onSubmit,
   isLoading,
   editingWorkspace,
@@ -284,9 +301,22 @@ const WorkspaceModal = ({
             <Input
               id="workspaceName"
               type="text"
-              placeholder="Humanly Clear"
+              placeholder="Delightfulcx"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="workspaceDescription">
+              What your company does in one line?
+            </Label>
+            <Input
+              id="workspaceDescription"
+              type="text"
+              placeholder="e.g. We help businesses automate their customer support"
+              value={workspaceDescription}
+              onChange={(e) => setWorkspaceDescription(e.target.value)}
               className="mt-2"
             />
           </div>

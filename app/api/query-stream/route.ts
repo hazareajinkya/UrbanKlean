@@ -25,7 +25,7 @@ import { IAgent } from "@/lib/types/agent";
 import { IAction } from "@/lib/types/actions";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import {
-  defaultSystemPrompt,
+  coreSystemPrompt,
   experimentalSystemPrompt,
 } from "@/prompts/system-prompt";
 import { executeAPIAction } from "@/lib/utils/api-actions-utils";
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const lastMessage = getLastMessage(messages);
     const actions = await actionService.getActions(agent.wid);
     const customTools = getCustomTools(actions);
-    const systemPrompt = await getSystemPrompt(agent, lastMessage, "chat");
+    const systemPrompt = await getSystemPrompt(agent, lastMessage, "web");
 
     const result = streamText({
       model,
