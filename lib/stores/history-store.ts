@@ -16,6 +16,9 @@ import { create } from "zustand";
 import { db } from "../clients/firebase";
 import { ISession } from "../types/session";
 import chatService from "../services/chat-service";
+import peopleService from "../services/people-service";
+import { IPerson } from "../types/person";
+import { getwid } from "../utils";
 
 export const useHistoryStore = create<IHistoryStore>((set, get) => ({
   nChats: 0,
@@ -23,6 +26,7 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
   history: [],
   nextQuery: null,
   unsubscribe: null,
+  persons: {},
   setnChats: (nChats: number) => set({ nChats }),
   sethasMore: (hasMore: boolean) => set({ hasMore }),
 
@@ -47,6 +51,12 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       const sessions = snapshot.docs.map((doc) => doc.data() as ISession);
       const lastVisible = snapshot.docs[snapshot.docs.length - 1];
       const next = buildQuery(aid, true, lastVisible);
+
+      const personIds = sessions
+        .map((session) => session.personId)
+        .filter((id) => id !== undefined);
+      get().getPersonsInfo(personIds);
+
       set({
         history: sessions,
         nextQuery: next,
@@ -57,6 +67,19 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     get().getChatsCount(qWithoutLimits);
 
     set({ unsubscribe: newUnsubscribe });
+  },
+
+  getPersonsInfo: async (ids: string[]) => {
+    const wid = getwid();
+
+    const people = await peopleService.getPersons(wid, ids);
+
+    const map = people.reduce((acc, person) => {
+      acc[person.id] = person;
+      return acc;
+    }, {} as Record<string, IPerson>);
+
+    set({ persons: { ...get().persons, ...map } });
   },
 
   unsubscribeFromSessions: () => {
@@ -77,6 +100,12 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
 
       let data = snaps.docs.map((doc) => doc.data()) as ISession[];
       const updatedHistory = [...get().history, ...data];
+
+      const personIds = data
+        .map((session) => session.personId)
+        .filter((id) => id !== undefined);
+      get().getPersonsInfo(personIds);
+
       set({ history: updatedHistory });
 
       const qWithoutLimits = buildQuery(aid, false);
@@ -98,11 +127,13 @@ export interface IHistoryStore {
   hasMore: boolean;
   nextQuery: Query<DocumentData> | null;
   history: ISession[];
+  persons: Record<string, IPerson>;
   unsubscribe: (() => void) | null;
   setnChats: (nChats: number) => void;
   sethasMore: (hasMore: boolean) => void;
   getChatsCount: (query: Query) => Promise<void>;
 
+  getPersonsInfo: (ids: string[]) => Promise<void>;
   fetchNextSessions: (aid: string) => Promise<void>;
 
   subscribeToSessions: (aid: string) => void;

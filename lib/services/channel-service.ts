@@ -71,6 +71,31 @@ class ChannelService {
     if (channels.length === 0) return null;
     return channels[0]?.assignedAgentId;
   }
+
+  async getChannelDirectly(channelId: string) {
+    const q = query(
+      collectionGroup(db, "channels"),
+      where("id", "==", channelId)
+    );
+    const snaps = await getDocs(q);
+    const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
+    if (channels.length === 0) return null;
+    return channels[0];
+  }
+
+  async unassignAgentFromChannel(
+    wid: string,
+    channelId: string,
+    agentId: string
+  ) {
+    await updateDoc(doc(db, `workspaces/${wid}/channels/${channelId}`), {
+      assignedAgentId: "",
+    });
+
+    await updateDoc(doc(db, `agents/${agentId}`), {
+      channels: arrayRemove(channelId),
+    });
+  }
 }
 
 const channelService = new ChannelService();

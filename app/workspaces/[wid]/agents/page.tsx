@@ -21,6 +21,7 @@ import {
   Palette,
   Settings,
   Code,
+  Waves,
 } from "lucide-react";
 import { IAgent } from "@/lib/types/agent";
 import Link from "next/link";
@@ -218,9 +219,17 @@ export default function AgentsPage() {
         </div>
       ) : (
         <div className="text-center py-12 h-[60vh] flex flex-col items-center justify-center">
-          <div className="text-muted-foreground mb-4">No agents found</div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="w-4 h-4" />
+          <div className="w-16 h-16 rounded-full bg-card flex items-center justify-center mb-4">
+            <Waves className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium mb-1">
+            Create your first AI agent
+          </h3>
+          <div className="text-muted-foreground mb-6 max-w-md">
+            To start automating conversations and tasks.
+          </div>
+          <Button onClick={() => setIsCreateModalOpen(true)} size="lg">
+            <Plus className="w-4 h-4 " />
             Create Your First Agent
           </Button>
         </div>

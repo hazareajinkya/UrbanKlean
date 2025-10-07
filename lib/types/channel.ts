@@ -16,6 +16,7 @@ export type IChannelProvider =
   | "whatsapp"
   | "instagram"
   | "messenger"
+  | "slack"
   | "email"
   | "web";
 

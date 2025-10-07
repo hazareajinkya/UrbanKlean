@@ -1,4 +1,5 @@
-interface IPerson {
+export interface IPerson {
+  id: string;
   name: string;
   emails: string[];
   phones: string[];

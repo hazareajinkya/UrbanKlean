@@ -1,7 +1,16 @@
 import { UIMessage } from "@ai-sdk/react";
 import { v4 } from "uuid";
 import { IChannelProvider } from "./channel";
-
+import {
+  DynamicToolCall,
+  Tool,
+  ToolCallOptions,
+  ToolSet,
+  TypedToolCall,
+  UIDataTypes,
+  UIMessagePart,
+  UITools,
+} from "ai";
 export interface ISession {
   id: string;
   aid: string;
@@ -54,6 +63,21 @@ export const defaultAImessage = (msg: string): IChatMessage => {
   };
 };
 
+export const defaultToolMessage = (call: {
+  toolCallId: string;
+  toolName: string;
+  input: any;
+  output?: any;
+}): UIMessagePart<UIDataTypes, UITools> => {
+  return {
+    type: "dynamic-tool",
+    toolCallId: call.toolCallId,
+    toolName: call.toolName,
+    state: "output-available",
+    input: call.input,
+    output: call.output,
+  };
+};
 export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
   return {
     id: id ?? v4(),

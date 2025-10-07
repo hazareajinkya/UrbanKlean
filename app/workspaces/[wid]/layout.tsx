@@ -34,6 +34,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Rss,
+  BookOpenIcon,
+  BookOpenText,
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -186,8 +188,8 @@ const WorkspaceSidebar = ({
           {isCollapsed && (
             <div className="flex justify-center w-full">
               <img
-                src={"/temp-logo-transparent.png"}
-                className="w-8 h-8 rounded-md"
+                src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
+                className="w-6 h-6 rounded-md"
               />
             </div>
           )}

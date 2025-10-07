@@ -10,6 +10,8 @@ import {
   INSTA_ID,
   INSTA_PAGE_ACCESS_TOKEN,
   PAGE_ACCESS_TOKEN,
+  SLACK_CLIENT_ID,
+  SLACK_CLIENT_SECRET,
   WA_PHONE_ID,
 } from "../constants";
 
@@ -47,6 +49,13 @@ export const messengerClient = axios.create({
   baseURL: `https://graph.facebook.com/v23.0/${FB_ID}`,
   headers: {
     Authorization: `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
+  },
+});
+
+export const slackClient = axios.create({
+  baseURL: "https://slack.com/api",
+  headers: {
+    "Content-Type": "application/json",
   },
 });
 

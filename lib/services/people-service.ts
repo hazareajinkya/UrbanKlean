@@ -16,6 +16,7 @@ import { db } from "../clients/firebase";
 import { normEmail, normNote, normPhone, normWord } from "../utils";
 import { kMaxLength } from "buffer";
 import { v4 } from "uuid";
+import { IPerson } from "../types/person";
 
 class PeopleService {
   async identifyPerson({
@@ -86,6 +87,7 @@ class PeopleService {
     const personRef = doc(peopleCol, personId);
 
     const update: Record<string, any> = {
+      id: personId,
       ...(name ? { name } : {}),
       ...(emailN ? { emails: arrayUnion(emailN) } : {}),
       ...(phoneN ? { phones: arrayUnion(phoneN) } : {}),
@@ -164,6 +166,15 @@ class PeopleService {
     const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
     const snap = await getDoc(personRef);
     return snap.data() as IPerson;
+  }
+
+  async getPersons(wid: string, personIds: string[]) {
+    const q = query(
+      collection(db, `workspaces/${wid}/people`),
+      where("id", "in", personIds)
+    );
+    const snaps = await getDocs(q);
+    return snaps.docs.map((doc) => doc.data() as IPerson);
   }
 }
 

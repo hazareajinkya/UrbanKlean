@@ -127,9 +127,9 @@ export const ChatInput = ({
           src={
             "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
           }
-          className="w-4 h-4 mr-0.5 ml-1"
+          className="w-4 h-4 mr-0.5 ml-0.5"
         /> */}
-        <p className="font-medium text-lack"> Delightfulcx</p>
+        <p className="font-medium "> Delightful cx</p>
       </Link>
     </>
   );

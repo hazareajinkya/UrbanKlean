@@ -16,7 +16,7 @@ import { Loader2, Mail } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/auth/use-user";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
 import { useState } from "react";
-import { GoogleLogo } from "@/lib/logos";
+import { GoogleColorLessLogo, GoogleLogo } from "@/lib/logos";
 
 export default function AuthPage() {
   const { data: session, status } = useSession();
@@ -120,11 +120,12 @@ const SignInForm = () => {
 
   return (
     <>
-      <CardHeader className="text-center w-full mt-8 gap-0">
+      <CardHeader className="text-center w-full mt-16 gap-0">
         <CardTitle className="flex flex-col items-center justify-center gap-2 text-2xl">
           <div className="relative w-16 h-16 mx-auto">
             <img
-              src="/temp-logo-filled.jpg"
+              // src="/temp-logo-filled.jpg"
+              src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
               alt=""
               className="h-full w-full object-cover rounded-md"
             />
@@ -149,7 +150,7 @@ const SignInForm = () => {
           {signInGoogle.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <GoogleLogo />
+            <GoogleColorLessLogo className="" />
           )}
           Sign in with Google
         </Button>

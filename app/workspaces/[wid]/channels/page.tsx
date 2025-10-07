@@ -16,9 +16,11 @@ import {
   FB_REDIRECT_URI,
   INSTAGRAM_APP_ID,
   INSTAGRAM_REDIRECT_URI,
+  SLACK_CLIENT_ID,
+  SLACK_REDIRECT_URI,
 } from "@/lib/constants";
 import { useAgents } from "@/lib/hooks/agent/use-agent";
-import { InstagramIcon, MessengerIcon, WAIcon } from "@/lib/logos";
+import { InstagramIcon, MessengerIcon, WAIcon, SlackLogo } from "@/lib/logos";
 import { IAgent } from "@/lib/types/agent";
 import { IChannel } from "@/lib/types/channel";
 import { getwid } from "@/lib/utils";
@@ -67,6 +69,25 @@ const ChannelsPage = () => {
     window.open(url, "_blank");
   };
 
+  const handleConnectSlack = () => {
+    // Minimal scopes for app mentions only
+    const scopes = [
+      "app_mentions:read", // Read mentions of the app
+      "chat:write", // Send messages to respond to mentions
+      "channels:read",
+      "channels:history", // Read message history in public channels
+      "groups:history", // Read message history in private channels
+      "im:history", // Read message history in direct messages
+      "mpim:history", // Read message history in group direct messages
+      "team:read", // Read team information
+    ].join(",");
+
+    const url = `https://slack.com/oauth/v2/authorize?client_id=${SLACK_CLIENT_ID}&scope=${scopes}&redirect_uri=${SLACK_REDIRECT_URI}&state=${wid}`;
+
+    console.log("Slack OAuth URL:", url);
+    window.open(url, "_blank");
+  };
+
   return (
     <div className="p-4">
       <div className="mb-6">
@@ -87,6 +108,14 @@ const ChannelsPage = () => {
         <Button onClick={handleConnectFB} variant="outline" className="bg-card">
           <MessengerIcon className="w-5 h-5" />
           <span>Connect Facebook</span>
+        </Button>
+        <Button
+          onClick={handleConnectSlack}
+          variant="outline"
+          className="bg-card"
+        >
+          <SlackLogo className="w-5 h-5" />
+          <span>Connect Slack</span>
         </Button>
       </div>
 
@@ -112,6 +141,9 @@ const ChannelsPage = () => {
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
               <WAIcon className="w-6 h-6 text-muted-foreground" />
             </div>
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <SlackLogo className="w-6 h-6 text-muted-foreground" />
+            </div>
           </div>
           <h3 className="text-lg font-medium mb-2">No channels connected</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm">
@@ -127,7 +159,8 @@ const ChannelsPage = () => {
 export default ChannelsPage;
 
 const ChannelCard = ({ channel }: { channel: IChannel }) => {
-  const { disconnectChannel, assignChannelToAgent } = useChannelActions();
+  const { disconnectChannel, assignChannelToAgent, unassignChannelFromAgent } =
+    useChannelActions();
   const { data: agents } = useAgents(getwid());
   const [showAgentSelect, setShowAgentSelect] = useState(false);
 
@@ -156,6 +189,17 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     if (channel.provider === "whatsapp") {
       return <WAIcon className="w-5 h-5 text-primary" />;
     }
+    if (channel.provider === "slack") {
+      return info.teamIcon ? (
+        <img
+          src={info.teamIcon}
+          className="w-11 h-11 text-primary object-cover rounded-md"
+          alt={info.teamName}
+        />
+      ) : (
+        <SlackLogo className="w-5 h-5 text-primary" />
+      );
+    }
   };
 
   const titleText = () => {
@@ -168,6 +212,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     if (channel.provider === "whatsapp") {
       return info.name;
     }
+    if (channel.provider === "slack") {
+      return info.teamName || "Slack Workspace";
+    }
   };
 
   const descriptionText = () => {
@@ -176,6 +223,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     }
     if (channel.provider === "messenger") {
       return "Facebook Page";
+    }
+    if (channel.provider === "slack") {
+      return `@${info.bot_user_id || "slack-bot"}`;
     }
   };
 
@@ -201,10 +251,10 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
 
   const handleUnassignAgent = () => {
     // You'll need to implement unassign functionality in your service
-    assignChannelToAgent.mutate({
+    unassignChannelFromAgent.mutate({
       wid,
       channelId: channel.id,
-      agentId: "",
+      agentId: channel.assignedAgentId,
     });
   };
 
@@ -328,6 +378,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
             <MessengerIcon className="w-4 h-4" />
           )}
           {channel.provider === "whatsapp" && <WAIcon className="w-4 h-4" />}
+          {channel.provider === "slack" && <SlackLogo className="w-4 h-4" />}
         </div>
       </CardFooter>
     </Card>

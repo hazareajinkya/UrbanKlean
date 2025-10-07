@@ -1,9 +1,11 @@
 import { tool } from "ai";
 import { z } from "zod";
 import peopleService from "../services/people-service";
+import { IPerson } from "../types/person";
 
 const PersonInfo = z.object({
   personId: z.string().optional().describe("Get it from context personId "),
+
   channel: z
     .enum(["web", "whatsapp", "instagram", "email", "voice", "other"])
     .optional(),

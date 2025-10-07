@@ -69,6 +69,19 @@ class ChatService {
     });
     return unsubscribe;
   }
+
+  async createSlackSession(
+    wid: string,
+    aid: string,
+    sessionId: string,
+    personId: string,
+    channel: IChannelProvider
+  ) {
+    const session = generateDefaultSession(wid, aid, channel, sessionId);
+    session.personId = personId;
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
 }
 
 const chatService = new ChatService();

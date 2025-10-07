@@ -31,6 +31,29 @@ export const useChannelActions = () => {
     },
   });
 
+  const unassignChannelFromAgent = useMutation({
+    mutationFn: async ({
+      wid,
+      channelId,
+      agentId,
+    }: {
+      wid: string;
+      channelId: string;
+      agentId: string;
+    }) => {
+      await channelService.unassignAgentFromChannel(wid, channelId, agentId);
+    },
+    onSuccess: (_, variables) => {
+      const { wid } = variables;
+      toast.success("Channel unassigned from agent successfully");
+      qc.invalidateQueries({ queryKey: channelsKey(wid) });
+    },
+    onError: (error: Error) => {
+      console.log("error: ", error);
+      toast.error(error.message);
+    },
+  });
+
   const disconnectChannel = useMutation({
     mutationFn: async ({
       wid,
@@ -57,5 +80,5 @@ export const useChannelActions = () => {
     },
   });
 
-  return { disconnectChannel, assignChannelToAgent };
+  return { disconnectChannel, assignChannelToAgent, unassignChannelFromAgent };
 };

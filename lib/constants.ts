@@ -37,6 +37,19 @@ export const INSTAGRAM_REDIRECT_URI =
   process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ??
   "http://localhost:3000/api/oauth/instagram";
 
+// Slack OAuth Configuration
+export const SLACK_APP_ID = process.env.NEXT_PUBLIC_SLACK_APP_ID ?? "";
+export const SLACK_CLIENT_ID = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID ?? "";
+export const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET ?? "";
+export const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET ?? "";
+export const SLACK_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_SLACK_REDIRECT_URI ??
+  "http://localhost:3000/api/oauth/slack";
+
+// Slack webhook verification
+export const SLACK_WEBHOOK_VERIFY_TOKEN =
+  process.env.SLACK_WEBHOOK_VERIFY_TOKEN ?? "";
+
 // "EAASlSFQSI7wBPktYHjZBGXkzsY1hZCrqglpwSdJJva0o1ydYZA8mJ4NIoKtwZC3zPBqroPhZC73tDQ4aTRpQZCiuSOMdtAQkZBO2M2eKbmHaiB6KaZCByhloqgUxY25ZAJEVMYCp6AYaQYgt6BO1da3RniKb1OFRXCp4HlRIHGyS0qR3OYnu861XSOHOocDhHYZADnw5mzDAp3SmHsJEhy1psqjSt4PRU6YAGIZCDr6fg2yODWC7wZDZD";
 // "EAASlSFQSI7wBPraYhlTb5ZCJkkJHpvLCmiJyw9KeOeXw519QJ0KJpdxnrxHDVGudVkZBvS3bTDs8wAHjRw08iiGxcKhQoTlTPFSKcjZCb4PmFM05mqy6axtMsfQZBhQMbfDjMlnuNJzy8s8rTkz2WG7ktzpZAkuF5GlLqjqfxMfOFXgfjYXZBrjVsl9xBclS6uZBB25TSqpucJf65lTsy7XXVXq4jHFNXiCXwfkShOK8CFHgBMZD";
 // "EAASlSFQSI7wBO9ooSFqNikeRq5DxwFz48nj9MinVmCFlnE8cg1UN26jW2mIb5bZB2sqWD0BHXwv2X4TXSF6OY44thQcUZChKockexxgKfTb8EZBVykh3tTyzFbqbMaFESu0Gt2wTDyY1bGuyTLucj8S58MMxcGn2jd2lA4ZB6fZCVG8U9V1HDeuvx61mzBkPlFwZDZD";
