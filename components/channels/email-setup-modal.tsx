@@ -199,7 +199,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                   ) : (
                     <RefreshCcw className="size-4" />
                   )}
-                  Resend Email
+                  Resend
                 </Button>
                 <Button
                   onClick={handleVerifiedEmail}
