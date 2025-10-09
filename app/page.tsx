@@ -115,8 +115,8 @@ export default function LandingPage() {
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl tracking-tight font-medium  text-gray-900 mb-4">
                 {/* Superior customer experience */}
-                Why teams choose Delightfulcx
-                {/* Why teams choose Delightfulcx over other tools */}
+                Why teams choose Magical CX
+                {/* Why teams choose Magical CX over other tools */}
               </h2>
               <p className="text-2xl mx-auto font-medium trackingtight text-muted-foreground -600 max-w-3xl ">
                 Superior customer experience that feels human and helpful
@@ -224,7 +224,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="mt-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why teams switch to Delightfulcx
+                Why teams switch to Magical CX
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -260,7 +260,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Why We Built Delightfulcx Section */}
+      {/* Why We Built Magical CX Section */}
       <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -270,8 +270,8 @@ export default function LandingPage() {
 
             <div className="bg-white rounded-2xl p-8 md:p-12 shadow-lg border border-gray-200 mb-12">
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8">
-                We built Delightfulcx because "just another chatbot" doesn't
-                move the needle. You need AI that's kind, accurate, and
+                We built Magical CX because "just another chatbot" doesn't move
+                the needle. You need AI that's kind, accurate, and
                 action‑ready—set up for you, tuned to your voice, and measured
                 in profit. That's why we created the world's first Done‑For‑You
                 High‑EQ AI, powered by EFRO (Empathy‑First Revenue
@@ -410,7 +410,7 @@ export default function LandingPage() {
                 About Us
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-                Meet the team behind Delightfulcx—the problem-solvers who design
+                Meet the team behind Magical CX—the problem-solvers who design
                 how your customer experience feels in every interaction.
               </p>
             </div>
@@ -433,7 +433,7 @@ export default function LandingPage() {
                     </h3>
                     <p className="text-lg text-gray-700 leading-relaxed">
                       Hrushikesh Kuklare is the problem‑solver who designs how
-                      Delightfulcx feels in your customer's hands. He brings the
+                      Magical CX feels in your customer's hands. He brings the
                       energy of a technologist and the eye of a designer—equal
                       parts engineering depth and user‑experience craft—so every
                       interaction is fast, intuitive, and remarkably human.
@@ -445,14 +445,14 @@ export default function LandingPage() {
                       The spark
                     </h4>
                     <p className="text-gray-700 leading-relaxed">
-                      The story is delightfully unexpected. While tinkering with
+                      The story is magically unexpected. While tinkering with
                       ways technology might help him "bulk up" despite an
                       overactive metabolism, his phone rang—Manish was ready to
-                      launch Delightfulcx. The clarity of that vision, paired
-                      with a track record of building and shipping, turned
-                      curiosity into conviction: together, they would create a
-                      SaaS product that makes every customer touchpoint
-                      intentional, elegant, and measurably superior.
+                      launch Magical CX. The clarity of that vision, paired with
+                      a track record of building and shipping, turned curiosity
+                      into conviction: together, they would create a SaaS
+                      product that makes every customer touchpoint intentional,
+                      elegant, and measurably superior.
                     </p>
                   </div>
                 </div>
@@ -566,10 +566,10 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Why Delightfulcx */}
+              {/* Why Magical CX */}
               <div className="mt-12">
                 <h4 className="text-xl font-bold text-gray-900 mb-4">
-                  Why Delightfulcx
+                  Why Magical CX
                 </h4>
                 <p className="text-gray-700 leading-relaxed mb-6">
                   Inspired by Manish's vision—and the momentum of a builder who
@@ -633,7 +633,7 @@ export default function LandingPage() {
                   </cite>
                 </div>
                 <p className="text-gray-700 mt-6 leading-relaxed">
-                  At Delightfulcx, Hrushikesh turns that belief into your
+                  At Magical CX, Hrushikesh turns that belief into your
                   advantage—transforming complex workflows into calm,
                   empathetic, brand‑true experiences that keep customers coming
                   back.
@@ -644,7 +644,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Who Delightfulcx Is For Section */}
+      {/* Who Magical CX Is For Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -653,7 +653,7 @@ export default function LandingPage() {
                 If you serve customers, we serve you.
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-                Delightfulcx is a 24/7 teammate that answers with empathy and
+                Magical CX is a 24/7 teammate that answers with empathy and
                 takes the right actions. Whether you're a solo founder or a
                 global enterprise, our Done‑For‑You High‑EQ AI (with optional
                 White‑Glove Service) fits your stack and your standards.
@@ -1085,7 +1085,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why teams choose Delightfulcx
+                Why teams choose Magical CX
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -1318,7 +1318,7 @@ export default function LandingPage() {
                 Frequently Asked Questions
               </h2>
               <p className="text-xl text-gray-600">
-                Everything you need to know about Delightfulcx
+                Everything you need to know about Magical CX
               </p>
             </div>
 
@@ -1329,10 +1329,10 @@ export default function LandingPage() {
                 className="border border-gray-200 rounded-lg px-6"
               >
                 <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-blue-600">
-                  What is Delightfulcx, in simple words?
+                  What is Magical CX, in simple words?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 pt-2">
-                  Delightfulcx is a smart helper for your business. It answers
+                  Magical CX is a smart helper for your business. It answers
                   customers kindly, solves common problems on the spot, and
                   shows you how much time and money it saves. It's the world's
                   first Done‑For‑You High‑EQ AI—so we set it up for you, in your
@@ -1349,9 +1349,9 @@ export default function LandingPage() {
                   How is this different from "just a chatbot"?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 pt-2">
-                  Most chat tools only talk. Delightfulcx talks and does. It
-                  looks up orders, creates return labels, changes appointments,
-                  and sends updates—safely. Fewer back‑and‑forths means quicker
+                  Most chat tools only talk. Magical CX talks and does. It looks
+                  up orders, creates return labels, changes appointments, and
+                  sends updates—safely. Fewer back‑and‑forths means quicker
                   solutions, lower costs, and better profits.
                 </AccordionContent>
               </AccordionItem>
@@ -1681,7 +1681,7 @@ export default function LandingPage() {
             {/* Benefits Summary */}
             <div className="mt-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Why Delightfulcx delivers results
+                Why Magical CX delivers results
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">
@@ -1749,7 +1749,7 @@ export default function LandingPage() {
             {/* Global Benefits Recap */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-6">
-                Why teams choose Delightfulcx
+                Why teams choose Magical CX
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-3">

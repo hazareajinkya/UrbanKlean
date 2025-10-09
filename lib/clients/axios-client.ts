@@ -59,6 +59,15 @@ export const slackClient = axios.create({
   },
 });
 
+export const postmarkClient = axios.create({
+  baseURL: "https://api.postmarkapp.com",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Postmark-Account-Token": process.env.POSTMARK_ACCOUNT_TOKEN ?? "",
+  },
+});
+
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

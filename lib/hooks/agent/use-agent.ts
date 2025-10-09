@@ -9,6 +9,7 @@ export const useAgents = (wid: string) => {
 
   const query = useQuery({
     queryKey: agentsKey(wid),
+
     queryFn: () =>
       agentService.fetchAgents(wid).then((agents) => {
         agents.map((agent) => qc.setQueryData(agentKey(agent.id), agent));

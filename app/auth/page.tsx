@@ -57,7 +57,7 @@ const SignedIn = () => {
         <CardTitle className="flex flex-row items-center justify-center gap-3 text-xl">
           <span className="">🎬</span>
           <span className="bg-gradient-to-r from-primary to-blue-800 font-semibold bg-clip-text text-transparent">
-            Delightfulcx
+            Magical CX
           </span>
         </CardTitle>
       </CardHeader>
@@ -131,7 +131,7 @@ const SignInForm = () => {
             />
           </div>
           <span className="bg-gradient-to-r from-neutral-800 to-blue-800 bg-clip-text text-transparent font-bold text-2xl">
-            Delightfulcx
+            Magical CX
           </span>
         </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">

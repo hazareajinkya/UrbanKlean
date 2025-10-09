@@ -129,7 +129,7 @@ export const ChatInput = ({
           }
           className="w-4 h-4 mr-0.5 ml-0.5"
         /> */}
-        <p className="font-medium "> Delightful cx</p>
+        <p className="font-medium "> Magical CX</p>
       </Link>
     </>
   );

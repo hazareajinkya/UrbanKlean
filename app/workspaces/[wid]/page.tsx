@@ -1,16 +1,8 @@
-export default async function WorkspacePage({
-  params,
-}: {
-  params: Promise<{ wid: string }>;
-}) {
-  const { wid } = await params;
+"use client";
+import { redirect, useParams } from "next/navigation";
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-muted-foreground">
-        Welcome to your workspace dashboard.
-      </p>
-    </div>
-  );
+export default function WorkspacePage() {
+  const { wid } = useParams() as { wid: string };
+  redirect(`/workspaces/${wid}/dashboard`);
+  return null;
 }

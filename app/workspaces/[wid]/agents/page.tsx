@@ -33,6 +33,7 @@ export default function AgentsPage() {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const [agentName, setAgentName] = useState("");
   const [deletingAgent, setDeletingAgent] = useState<IAgent>();
 

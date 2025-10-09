@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import EmailSetupModal from "@/components/channels/email-setup-modal";
 import { useChannelActions } from "@/hooks/channels/use-channel-actions";
 import { useChannels } from "@/hooks/channels/use-channels";
 import {
@@ -20,7 +21,13 @@ import {
   SLACK_REDIRECT_URI,
 } from "@/lib/constants";
 import { useAgents } from "@/lib/hooks/agent/use-agent";
-import { InstagramIcon, MessengerIcon, WAIcon, SlackLogo } from "@/lib/logos";
+import {
+  InstagramIcon,
+  MessengerIcon,
+  WAIcon,
+  SlackLogo,
+  EmailIcon,
+} from "@/lib/logos";
 import { IAgent } from "@/lib/types/agent";
 import { IChannel } from "@/lib/types/channel";
 import { getwid } from "@/lib/utils";
@@ -43,6 +50,7 @@ const ChannelsPage = () => {
   const { wid } = useParams() as { wid: string };
 
   const { channels, isLoading } = useChannels(wid);
+  const [isEmailSetupModalOpen, setIsEmailSetupModalOpen] = useState(false);
 
   const handleConnectInstagram = () => {
     const clientId = INSTAGRAM_APP_ID;
@@ -83,9 +91,11 @@ const ChannelsPage = () => {
     ].join(",");
 
     const url = `https://slack.com/oauth/v2/authorize?client_id=${SLACK_CLIENT_ID}&scope=${scopes}&redirect_uri=${SLACK_REDIRECT_URI}&state=${wid}`;
-
-    console.log("Slack OAuth URL:", url);
     window.open(url, "_blank");
+  };
+
+  const handleConnectEmail = () => {
+    setIsEmailSetupModalOpen(true);
   };
 
   return (
@@ -116,6 +126,14 @@ const ChannelsPage = () => {
         >
           <SlackLogo className="w-5 h-5" />
           <span>Connect Slack</span>
+        </Button>
+        <Button
+          onClick={handleConnectEmail}
+          variant="outline"
+          className="bg-card"
+        >
+          <EmailIcon className="w-5 h-5" />
+          <span>Connect Email</span>
         </Button>
       </div>
 
@@ -151,6 +169,13 @@ const ChannelsPage = () => {
             from one place.
           </p>
         </div>
+      )}
+
+      {isEmailSetupModalOpen && (
+        <EmailSetupModal
+          isOpen={isEmailSetupModalOpen}
+          closeModal={() => setIsEmailSetupModalOpen(false)}
+        />
       )}
     </div>
   );

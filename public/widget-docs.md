@@ -1,4 +1,4 @@
-# Delightfulcx Chat Widget Integration Guide
+# MagicalCX Chat Widget Integration Guide
 
 Easily add a chat widget to your website with just a single script tag.
 
@@ -10,7 +10,7 @@ Add the following script tag to your website's HTML:
 <script src="https://your-domain.com/api/widget/YOUR_AGENT_ID" async></script>
 ```
 
-Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your Delightfulcx domain.
+Replace `YOUR_AGENT_ID` with your actual agent ID and `your-domain.com` with your MagicalCX domain.
 
 ## Automatic Configuration
 
@@ -112,8 +112,8 @@ On mobile devices (screen width < 480px), the widget automatically:
 
 ## Support
 
-For technical support or feature requests, please contact your Delightfulcx administrator.
+For technical support or feature requests, please contact your MagicalCX administrator.
 
 ---
 
-_This widget is powered by Delightfulcx - Advanced conversational AI platform._
+_This widget is powered by MagicalCX - Advanced conversational AI platform._
