@@ -65,6 +65,7 @@ export const postmarkClient = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
     "X-Postmark-Account-Token": process.env.POSTMARK_ACCOUNT_TOKEN ?? "",
+    "X-Postmark-Server-Token": process.env.POSTMARK_SERVER_TOKEN ?? "",
   },
 });
 

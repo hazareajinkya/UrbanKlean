@@ -34,6 +34,19 @@ export const getSystemPrompt = async (
   ${channel === "web" && identityCollectionPrompt}
 
   ${
+    channel === "email" &&
+    `
+    When replying as an email, ensure that your output is well-formatted for email clients:
+    - Use polite greetings and formal closings (e.g., "Hello," and "Best regards,").
+    - Clearly organize content with paragraphs and plain text line breaks.
+    - If referencing the user's inquiry, include context from their message as appropriate.
+    - Stay concise, clear, and professional.
+    - Respond directly to the points or questions raised in the email.
+    - Avoid using HTML or markdown formatting unless otherwise instructed; plain text is preferred for compatibility.
+    `
+  }
+
+  ${
     (channel === "instagram" || channel === "messenger") &&
     ` VERY IMPORTANT IF CHANNEL IS INSTAGRAM OR MESSENGER THEN OUTPUT TEXT LENGTH SHOULD BE LESS THAN 900 CHARACTERS `
   }

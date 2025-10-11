@@ -211,6 +211,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
         />
       );
     }
+    if (channel.provider === "email") {
+      return <EmailIcon className="w-5 h-5 text-primary" />;
+    }
     if (channel.provider === "whatsapp") {
       return <WAIcon className="w-5 h-5 text-primary" />;
     }
@@ -237,6 +240,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     if (channel.provider === "whatsapp") {
       return info.name;
     }
+    if (channel.provider === "email") {
+      return info.name;
+    }
     if (channel.provider === "slack") {
       return info.teamName || "Slack Workspace";
     }
@@ -248,6 +254,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     }
     if (channel.provider === "messenger") {
       return "Facebook Page";
+    }
+    if (channel.provider === "email") {
+      return info.email;
     }
     if (channel.provider === "slack") {
       return `@${info.bot_user_id || "slack-bot"}`;
@@ -293,7 +302,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
 
           <div className="flex-1">
             <h3 className="font-medium text-sm mb-0.5">{titleText()}</h3>
-            <p className="text-xs text-muted-foreground capitalize">
+            <p className="text-xs text-muted-foreground ">
               {descriptionText()}
             </p>
             {assignedAgent && (
@@ -399,6 +408,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
           {channel.provider === "instagram" && (
             <InstagramIcon className="w-4 h-4" />
           )}
+          {channel.provider === "email" && <EmailIcon className="w-4 h-4" />}
           {channel.provider === "messenger" && (
             <MessengerIcon className="w-4 h-4" />
           )}

@@ -48,7 +48,7 @@ export const useEmailActions = () => {
   const checkIfEmailVerified = useMutation({
     mutationFn: async ({ signatureId }: { signatureId: string }) => {
       const data = await getSignatureDetails(signatureId);
-      return data.confirmed;
+      return data;
     },
     onError: (error: Error) => {
       console.log("error: ", error);

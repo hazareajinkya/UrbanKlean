@@ -10,6 +10,12 @@ import {
   useEmailActions,
 } from "@/lib/hooks/email/use-email-actions";
 import { toast } from "sonner";
+import { generateDefaultChannel } from "@/lib/types/channel";
+import channelService from "@/lib/services/channel-service";
+import { getwid } from "@/lib/utils";
+import { useChannelActions } from "@/hooks/channels/use-channel-actions";
+import { useQueryClient } from "@tanstack/react-query";
+import { channelsKey } from "@/hooks/channels/use-channels";
 
 interface EmailSetupModalProps {
   isOpen: boolean;
@@ -25,6 +31,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
     localStorage.getItem("signatureId") ?? ""
   );
 
+  const qc = useQueryClient();
   const {
     sendVerificationEmail,
     resendVerificationEmail,
@@ -58,15 +65,39 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
   const handleVerifiedEmail = async () => {
     const sid = localStorage.getItem("signatureId");
     if (!sid) return;
-    const isVerified = await checkIfEmailVerified.mutateAsync({
+    const data = await checkIfEmailVerified.mutateAsync({
       signatureId: sid,
     });
 
-    if (isVerified) {
+    if (data.confirmed) {
+      ///save email channel
+      await createEmailChannel(data);
       closeModal();
     } else {
       toast.warning("You haven't verified your email yet");
     }
+  };
+
+  const createEmailChannel = async (data: any) => {
+    const metadata = {
+      id: data.emailAddress,
+      email: data.emailAddress,
+      name: data.name,
+      signatureId: data.signatureId,
+      domain: data.domain,
+      replyToEmail: data.replyToEmail,
+      returnPathDomain: data.returnPathDomain,
+    };
+    const creds = { signatureId: data.signatureId };
+    const emailChannel = generateDefaultChannel(
+      data.emailAddress,
+      "email",
+      creds,
+      metadata
+    );
+
+    await channelService.addChannel(getwid(), emailChannel);
+    qc.invalidateQueries({ queryKey: channelsKey(getwid()) });
   };
 
   useEffect(() => {
