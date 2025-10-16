@@ -9,9 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Magical CX - Conversation AI for magical customer experience",
+  title: "Magical CX - Conversational AI for magical customer experience",
   description:
-    "Transform your customer support with Magical CX's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
+    "MagicalCX.ai is in the business of making your business successful and profitable—by improving your customers’ experience. We help you sell more, keep more, and spend less. We make your operations simpler, your teams more efficient, and your brand feel warm, effortless, and magical.",
+
+  // "Transform your customer support with Magical CX's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
 };
 
 export default function RootLayout({

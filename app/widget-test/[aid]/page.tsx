@@ -285,7 +285,9 @@ export default function WidgetTestPage() {
         async
         // strategy="lazyOnload"
         onLoad={() => {
-          console.log("SuperCX Widget loaded successfully in test environment");
+          console.log(
+            "Magical CX Widget loaded successfully in test environment"
+          );
         }}
       />
     </div>

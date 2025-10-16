@@ -47,14 +47,14 @@ export async function GET(
     // Inject agent configuration into the script
     const configInjection = `
 // Agent-specific configuration injected by server
-window.SUPERCX_AGENT_CONFIG = ${JSON.stringify(agentConfig, null, 2)};
+window.MAGICALCX_AGENT_CONFIG = ${JSON.stringify(agentConfig, null, 2)};
 `;
 
     // Insert the configuration at the very beginning of the script
     widgetScript = configInjection + widgetScript;
 
     // The getWidgetConfig function already handles the injected config
-    // No need to modify it since we updated the function to check for window.SUPERCX_AGENT_CONFIG
+    // No need to modify it since we updated the function to check for window.MAGICALCX_AGENT_CONFIG
 
     // Set appropriate headers
     const response = new NextResponse(widgetScript, {

@@ -56,3 +56,24 @@ export const SLACK_WEBHOOK_VERIFY_TOKEN =
 // "EAASlSFQSI7wBPVN7IMwMK8fupZAviZBZAkARaRONGoxcmimOZAMUGgMRxCPQFMNZBzdL8HiEGQVeSCzZAMg1fwZAc7cckAa7pohu4gLLiq0kVU3WWXI9EDNZBsQ9Fi4hzhODavJW2IDB4fzDoawkCtP7ReGOHApwhXLma9dNdWeISjtUyjXtsrZBts1UfDBd05QgcqccsZCAgupqoOXF3uywnZBMscD05otNZCn9wBgTN4pRrSUPhAZDZD";
 // "EAALyuiJEEXcBPd6xZCavU8AsMZAGDUoDZBuAZC3c6ORQer0ZB99vbP61ZBHJWP3scJz69XDhOicY0AecT5vWXZC0vcZAjZCvWqSv7jPNX0TZCGVGynCWwdZCq3SAr35mGzcqeA3lYlYaMRJNgpvXuq7ORZBZBhFgmvA0QcTHXsL6RUA7BQWbJTSVZBYYnanS3d9YAzbpFTkwZDZD";
 // "EAALyuiJEEXcBPeufwgbePTgZASxnG9vuMBkwMTBzZBXL5ZCpVDejMwXDla4KfekDPjRwj9kvoaJKF9Lc1Rd6hJuyGLZAGlVNPMT4bOXPk7oBhGdhDMFaCzIpcH5wpTmcZAW4usGwLCbizBTCdbY4QZB9Vd4r91IAXaEkzBnez9wcJspdvZBDjDr6ZCRjPop3f9fuLn9ugmklr3dp9ZBNDu9NZB1VZCXwjQNcsjKmgnjV8IZAKpZBXfgZDZD";
+
+// API Configs
+
+export const waconf = {
+  version: "v23.0",
+  phoneID: WA_PHONE_ID,
+  accessToken: process.env.WA_ACCESS_TOKEN,
+  expirationWindow: WA_WINDOW_EXPIRATION_HOURS,
+};
+
+export const instaconf = {
+  version: "v23.0",
+  id: INSTA_ID,
+  accessToken: process.env.INSTA_IG_ACCESS_TOKEN,
+};
+
+export const fbconf = {
+  version: "v23.0",
+  id: FB_ID,
+  accessToken: process.env.FB_MESSENGER_ACCESS_TOKEN,
+};

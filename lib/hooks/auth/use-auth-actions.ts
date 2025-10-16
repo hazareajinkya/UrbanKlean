@@ -15,6 +15,8 @@ import { signIn, signOut } from "next-auth/react";
 import { auth } from "@/lib/clients/firebase";
 import { handleError } from "@/lib/utils";
 
+// do something of ur own
+
 export const useAuthActions = () => {
   const signInGoogle = useMutation({
     mutationFn: async () => {

@@ -36,7 +36,13 @@ class PostmarkBotService {
       if (!agent) throw this.ERROR_MESSAGE;
 
       let session = await this.getOrCreateSession(email, agent, channel);
+
+      // Format textBody to preserve intended line breaks and structure
+      //   const query = (postmarkMsg.textBody ?? "").replace(/\r\n|\r|\n/g, "\n");
       const query = postmarkMsg.textBody ?? "";
+
+      console.log("postmarkMsg: ", postmarkMsg.textBody);
+      console.log("query: ", query);
       const userMsg = defaultUserMessage(query, postmarkMsg.id);
 
       const person = await peopleService.getPerson(
@@ -72,7 +78,7 @@ class PostmarkBotService {
           searchKnowledge: searchKnowledge(agent),
         },
       });
-      //   //save ai message
+      //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
       console.log("ai response: ", result.text);
@@ -92,7 +98,7 @@ class PostmarkBotService {
     if (!session) {
       const { personId } = await peopleService.identifyPerson({
         wid: agent.wid,
-        phone: email,
+        email: email,
         externalIds: { email: email },
       });
 

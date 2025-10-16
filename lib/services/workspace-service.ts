@@ -129,11 +129,12 @@ class WorkspaceService {
   async addMember(
     wid: string,
     userEmail: string,
-    status: "invite" | "accepted" | "default"
+    role: "owner" | "admin" | "member" = "member",
+    status: "invite" | "accepted" | "default" = "default"
   ) {
     const data = {
       status: status,
-      role: "owner",
+      role: role,
       email: userEmail,
     };
 

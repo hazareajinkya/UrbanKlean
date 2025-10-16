@@ -33,13 +33,13 @@ The widget exposes a global API for programmatic control:
 
 ```javascript
 // Open the chat widget
-SuperCXWidget.open();
+MagicalCXWidget.open();
 
 // Close the chat widget
-SuperCXWidget.close();
+MagicalCXWidget.close();
 
 // Toggle the chat widget
-SuperCXWidget.toggle();
+MagicalCXWidget.toggle();
 
 // Check if widget is open
 if (SuperCXWidget.isOpen()) {

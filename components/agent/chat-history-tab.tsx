@@ -20,6 +20,7 @@ import { useHistoryStore } from "@/lib/stores/history-store";
 import { Globe, Loader2, MailIcon, User } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { IPerson } from "@/lib/types/person";
+import { useSearchParams } from "next/navigation";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -28,6 +29,8 @@ interface ChatHistoryTabProps {
 export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
   const [sessions, setsessions] = useState<ISession[]>();
   const [currentSession, setcurrentSession] = useState<ISession>();
+
+  const searchParams = useSearchParams();
 
   const history = useHistoryStore((state) => state.history);
   const subscribeToHistory = useHistoryStore(
@@ -304,11 +307,15 @@ const HistoryMessageList = ({
                       }
                     })
                   ) : message.role === "user" ? (
-                    message.parts?.map((part, partIndex) => (
-                      <div key={partIndex} className="text-sm">
-                        {part.type === "text" && part.text}
-                      </div>
-                    ))
+                    <div className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose ">
+                      {message.parts?.map((part, partIndex) => (
+                        <div key={partIndex} className="">
+                          <Streamdown>
+                            {part.type === "text" ? part.text ?? "" : ""}
+                          </Streamdown>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <></>
                   )}

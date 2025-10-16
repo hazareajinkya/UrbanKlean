@@ -12,7 +12,10 @@ import {
   PAGE_ACCESS_TOKEN,
   SLACK_CLIENT_ID,
   SLACK_CLIENT_SECRET,
+  waconf,
   WA_PHONE_ID,
+  fbconf,
+  instaconf,
 } from "../constants";
 
 // Create axios instance with default configuration
@@ -25,30 +28,30 @@ const axiosClient: AxiosInstance = axios.create({
 });
 
 export const waclient = axios.create({
-  baseURL: `https://graph.facebook.com/v23.0/${WA_PHONE_ID}`,
+  baseURL: `https://graph.facebook.com/${waconf.version}/${waconf.phoneID}`,
   headers: {
-    Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${waconf.accessToken}`,
   },
 });
 
 export const waMediaClient = axios.create({
-  baseURL: `https://graph.facebook.com/v23.0`,
+  baseURL: `https://graph.facebook.com/${waconf.version}`,
   headers: {
-    Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${waconf.accessToken}`,
   },
 });
 
 export const instaClient = axios.create({
-  baseURL: `https://graph.instagram.com/v23.0/${INSTA_ID}`,
+  baseURL: `https://graph.instagram.com/${instaconf.version}/${instaconf.id}`,
   headers: {
-    Authorization: `Bearer ${INSTA_PAGE_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${instaconf.accessToken}`,
   },
 });
 
 export const messengerClient = axios.create({
-  baseURL: `https://graph.facebook.com/v23.0/${FB_ID}`,
+  baseURL: `https://graph.facebook.com/${fbconf.version}/${fbconf.id}`,
   headers: {
-    Authorization: `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${fbconf.accessToken}`,
   },
 });
 
@@ -66,6 +69,14 @@ export const postmarkClient = axios.create({
     Accept: "application/json",
     "X-Postmark-Account-Token": process.env.POSTMARK_ACCOUNT_TOKEN ?? "",
     "X-Postmark-Server-Token": process.env.POSTMARK_SERVER_TOKEN ?? "",
+  },
+});
+
+export const resendClient = axios.create({
+  baseURL: "https://api.resend.com",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${process.env.RESEND_API_KEY ?? ""}`,
   },
 });
 

@@ -121,7 +121,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (isWidget) {
       // Notify parent window that widget is ready
-      window.parent.postMessage({ type: "SUPERCX_WIDGET_READY" }, "*");
+      window.parent.postMessage({ type: "MAGICALCX_WIDGET_READY" }, "*");
 
       // Add widget-specific styling
       document.body.style.margin = "0";

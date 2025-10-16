@@ -53,8 +53,7 @@ export async function POST(req: Request) {
       attachmentCount: postmarkParser.getAttachmentCount(body),
     });
 
-    // TODO: Implement email processing logic
-    // Uncomment and customize the following code based on your needs:
+    // Check if the email needs to be replied or not by checking
 
     // Step 2: Generate AI response using your bot service
     const { success, message: ans } = await postmarkBotService.generateResponse(
