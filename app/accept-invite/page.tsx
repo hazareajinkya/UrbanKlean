@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/auth/use-user";
 import { useMemberActions } from "@/lib/hooks/members/use-member-actions";
@@ -16,7 +16,7 @@ import {
 import { Loader2, CheckCircle, XCircle, Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useCurrentUser();
@@ -186,5 +186,31 @@ export default function AcceptInvitePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <div>
+                  <h2 className="text-lg font-semibold">Loading...</h2>
+                  <p className="text-sm text-gray-600">
+                    Please wait while we load your invitation...
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <AcceptInviteContent />
+    </Suspense>
   );
 }
