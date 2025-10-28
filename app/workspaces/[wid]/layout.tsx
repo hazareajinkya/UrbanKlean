@@ -5,41 +5,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Loader2,
-  LayoutDashboard,
-  Bot,
   Users,
-  FileText,
   LogOut,
   Zap,
-  ChartArea,
-  ChartBar,
-  BookOpen,
-  Sparkles,
-  ChartBarStacked,
   Menu,
   X,
-  ChartNoAxesColumn,
-  ChartNoAxesColumnIncreasing,
-  ChartColumn,
-  ChartColumnBig,
   ChartColumnIncreasing,
-  AudioWaveform,
   Waves,
-  UserCog,
   Book,
-  BookText,
-  Workflow,
-  ChevronDown,
-  ChevronUp,
   ChevronRight,
   ChevronLeft,
   Rss,
-  BookOpenIcon,
-  BookOpenText,
+  Camera,
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Modal from "@/components/ui/modal";
+import { IUser } from "@/lib/types/user";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useUserActions } from "@/lib/hooks/auth/use-user-actions";
 
 export default function WorkspaceLayout({
   children,
@@ -81,7 +67,7 @@ export default function WorkspaceLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
+        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
           <Button
             variant="ghost"
             size="sm"
@@ -139,25 +125,26 @@ interface WorkspaceSidebarProps {
   onToggle: () => void;
 }
 
-const WorkspaceSidebar = ({
-  workspace,
-  isOpen,
-  onClose,
-  onToggle,
-}: WorkspaceSidebarProps) => {
+const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isModalOpen, setIsModelOpen] = useState(false);
 
   const handleSignOut = () => {
-    // Add sign out logic here
     router.push("/auth");
   };
 
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+  const handleModalOpen = () => {
+    setIsModelOpen(true);
+  };
+  const handleModalClose = () => {
+    setIsModelOpen(false);
   };
 
   return (
@@ -271,18 +258,24 @@ const WorkspaceSidebar = ({
       <div className="border-t border-border p-4">
         <div
           className={`
-          flex items-center rounded-lg hover:bg-accent/50 transition-colors duration-200 gap-3
+          flex items-center rounded-lg hover:bg-accent/50 transition-colors duration-200 gap-3 w-full
           ${isCollapsed ? "justify-center" : ""}
         `}
         >
-          <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
-            <AvatarImage src={user?.photoUrl} alt={user?.name} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          {!isCollapsed && (
-            <>
+          <div
+            className={`flex items-center gap-3 ${
+              !isCollapsed && "flex-1"
+            } min-w-0 cursor-pointer`}
+            onClick={handleModalOpen}
+          >
+            <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
+              <AvatarImage src={user?.photoUrl} alt={user?.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+
+            {!isCollapsed && (
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-sm font-medium truncate">
                   {user?.name || "User"}
@@ -291,19 +284,170 @@ const WorkspaceSidebar = ({
                   {user?.email}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                aria-label="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
+            )}
+          </div>
+          {!isCollapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
+      <UserProfileModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        user={user}
+      />
     </aside>
+  );
+};
+
+interface UserProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: IUser | undefined;
+}
+
+const UserProfileModal = ({ isOpen, onClose, user }: UserProfileModalProps) => {
+  const { updateProfile } = useUserActions();
+  const [name, setName] = useState<string>(user?.name ?? "");
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(user?.name ?? "");
+      setFile(null);
+      setPreviewUrl(undefined);
+    }
+  }, [isOpen, user?.name]);
+
+  const handleChooseFile = () => {
+    console.log("test");
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+    if (f) setPreviewUrl(URL.createObjectURL(f));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile.mutateAsync({ name, file });
+    onClose();
+  };
+
+  const isLoading = updateProfile.isPending;
+
+  return (
+    <Modal isOpen={isOpen} closeModal={onClose} size="md">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Profile Information</h3>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="size-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Photo</Label>
+          <div className="flex gap-4 items-center">
+            <Avatar
+              className="h-20 w-20 ring-2 ring-border shrink-0 relative"
+              onClick={() => !isLoading && handleChooseFile()}
+            >
+              <div
+                className={`w-20 h-10 bottom-0 text-white absolute flex justify-center items-center transition-opacity duration-200 opacity-0 ${
+                  isLoading
+                    ? "cursor-not-allowed "
+                    : "hover:bg-black/50  hover:opacity-100 cursor-pointer"
+                }  `}
+              >
+                <Camera />
+              </div>
+              <AvatarImage
+                src={previewUrl || user?.photoUrl}
+                alt={user?.name}
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col justify-between text-sm">
+              <div className="">
+                <a
+                  onClick={() => !isLoading && handleChooseFile()}
+                  className={`text-green-500 hover:underline cursor-pointer ${
+                    isLoading && "cursor-not-allowed"
+                  }`}
+                >
+                  Update
+                </a>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <p className="text-muted-foreground">
+                Recommended: Square JPG/PNG, at least 1000px per side.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Name *</Label>
+          <Input
+            value={name}
+            required
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Email</Label>
+          <h4
+            className="text-muted-foreground cursor-not-allowed"
+            aria-readonly
+          >
+            {user?.email}
+          </h4>
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading || name === ""}
+            className="gap-2"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Save
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
