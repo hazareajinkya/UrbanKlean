@@ -15,6 +15,7 @@ import { generateDefaultWorkspace, IWorkspace } from "../types/workspace";
 import userService from "./user-service";
 import agentService from "./agent-service";
 import storageService from "./storage-service";
+import axiosClient from "../clients/axios-client";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -173,6 +174,7 @@ class WorkspaceService {
 
     // delete Qdrant collection
     try {
+      await axiosClient.delete(`/api/embeddings/${wid}/qdrant-delete`);
     } catch (err) {
       throw new Error(`Failed to delete Qdrant collection.`);
     }
