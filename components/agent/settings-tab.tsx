@@ -19,6 +19,7 @@ import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { Slider } from "@/components/ui/slider";
 
 interface SettingsTabProps {
   agent: IAgent;
@@ -26,9 +27,7 @@ interface SettingsTabProps {
 
 export default function SettingsTab({ agent }: SettingsTabProps) {
   const [model, setModel] = useState(agent.settings.model);
-  const [temperature, setTemperature] = useState(
-    agent.settings.temperature.toString()
-  );
+  const [temperature, setTemperature] = useState(agent.settings.temperature);
   const [systemPrompt, setSystemPrompt] = useState(agent.settings.systemPrompt);
 
   const wid = getwid();
@@ -41,7 +40,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
         settings: {
           ...agent.settings,
           model,
-          temperature: parseFloat(temperature),
+          temperature: temperature,
           systemPrompt,
         },
       },
@@ -130,20 +129,20 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                     <Label htmlFor="temperature">
                       Temperature ({temperature})
                     </Label>
-                    <Input
-                      id="temperature"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={temperature}
-                      onChange={(e) => setTemperature(e.target.value)}
-                      className="mt-2"
+                    <Slider
+                      value={[temperature]}
+                      onValueChange={(value) => {
+                        if (value.length > 0) setTemperature(value[0]);
+                      }}
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      className="mt-4"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Conservative (0)</span>
-                      <span>Balanced (0.5)</span>
-                      <span>Creative (1)</span>
+                    <div className="grid grid-cols-3 justify-between text-xs text-muted-foreground mt-2">
+                      <span className="mr-auto">Conservative (0)</span>
+                      <span className="mx-auto">Balanced (0.5)</span>
+                      <span className="ml-auto">Creative (1)</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-4 text-center">
                       Lower values make responses more focused and
