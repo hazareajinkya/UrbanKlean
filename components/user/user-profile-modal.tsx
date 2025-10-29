@@ -1,5 +1,5 @@
 "use client";
-import { useUserActions } from "@/lib/hooks/auth/use-user-actions";
+import { useUserActions } from "@/lib/hooks/user/use-user-actions";
 import { IUser } from "@/lib/types/user";
 import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/ui/modal";
@@ -66,7 +66,7 @@ const UserProfileForm = ({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile.mutateAsync({ name, file });
+    await updateProfile.mutateAsync({ name, file: file ?? undefined });
     onClose();
   };
   const isLoading = updateProfile.isPending;

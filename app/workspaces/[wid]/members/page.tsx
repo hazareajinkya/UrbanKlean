@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useMembers } from "@/lib/hooks/members/use-members";
 import { useMemberActions } from "@/lib/hooks/members/use-member-actions";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

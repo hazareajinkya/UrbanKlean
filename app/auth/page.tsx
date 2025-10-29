@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, Mail } from "lucide-react";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
 import { useState } from "react";
 import { GoogleColorLessLogo, GoogleLogo } from "@/lib/logos";

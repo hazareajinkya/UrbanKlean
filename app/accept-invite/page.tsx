@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useMemberActions } from "@/lib/hooks/members/use-member-actions";
 import workspaceService from "@/lib/services/workspace-service";
 import { Button } from "@/components/ui/button";

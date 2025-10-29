@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useWorkspaces } from "@/lib/hooks/workspace/use-workspace";
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
 import { IUserWorkspace } from "@/lib/types/user";

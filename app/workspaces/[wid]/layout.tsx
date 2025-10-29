@@ -1,6 +1,6 @@
 "use client";
 import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,16 +16,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Rss,
-  Camera,
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import Modal from "@/components/ui/modal";
-import { IUser } from "@/lib/types/user";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useUserActions } from "@/lib/hooks/auth/use-user-actions";
+import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
 
 export default function WorkspaceLayout({
