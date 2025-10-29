@@ -1,45 +1,26 @@
 "use client";
 import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
-import { useCurrentUser } from "@/lib/hooks/auth/use-user";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Loader2,
-  LayoutDashboard,
-  Bot,
   Users,
-  FileText,
   LogOut,
   Zap,
-  ChartArea,
-  ChartBar,
-  BookOpen,
-  Sparkles,
-  ChartBarStacked,
   Menu,
   X,
-  ChartNoAxesColumn,
-  ChartNoAxesColumnIncreasing,
-  ChartColumn,
-  ChartColumnBig,
   ChartColumnIncreasing,
-  AudioWaveform,
   Waves,
-  UserCog,
   Book,
-  BookText,
-  Workflow,
-  ChevronDown,
-  ChevronUp,
   ChevronRight,
   ChevronLeft,
   Rss,
-  BookOpenIcon,
-  BookOpenText,
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import UserProfileModal from "@/components/user/user-profile-modal";
 
 export default function WorkspaceLayout({
   children,
@@ -81,7 +62,7 @@ export default function WorkspaceLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
+        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
           <Button
             variant="ghost"
             size="sm"
@@ -139,27 +120,27 @@ interface WorkspaceSidebarProps {
   onToggle: () => void;
 }
 
-const WorkspaceSidebar = ({
-  workspace,
-  isOpen,
-  onClose,
-  onToggle,
-}: WorkspaceSidebarProps) => {
+const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isModalOpen, setIsModelOpen] = useState(false);
 
   const handleSignOut = () => {
-    // Add sign out logic here
     router.push("/auth");
   };
 
   const handleToggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
-
+  const handleModalOpen = () => {
+    setIsModelOpen(true);
+  };
+  const handleModalClose = () => {
+    setIsModelOpen(false);
+  };
   return (
     <aside
       className={`
@@ -271,18 +252,24 @@ const WorkspaceSidebar = ({
       <div className="border-t border-border p-4">
         <div
           className={`
-          flex items-center rounded-lg hover:bg-accent/50 transition-colors duration-200 gap-3
+          flex items-center rounded-lg hover:bg-accent/50 transition-colors duration-200 gap-3 w-full
           ${isCollapsed ? "justify-center" : ""}
         `}
         >
-          <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
-            <AvatarImage src={user?.photoUrl} alt={user?.name} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          {!isCollapsed && (
-            <>
+          <div
+            className={`flex items-center gap-3 ${
+              !isCollapsed && "flex-1"
+            } min-w-0 cursor-pointer`}
+            onClick={handleModalOpen}
+          >
+            <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
+              <AvatarImage src={user?.photoUrl} alt={user?.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+
+            {!isCollapsed && (
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="text-sm font-medium truncate">
                   {user?.name || "User"}
@@ -291,19 +278,26 @@ const WorkspaceSidebar = ({
                   {user?.email}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
-                aria-label="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
+            )}
+          </div>
+          {!isCollapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
+      <UserProfileModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        user={user}
+      />
     </aside>
   );
 };

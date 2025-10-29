@@ -3,7 +3,7 @@ import workspaceService from "@/lib/services/workspace-service";
 import { toast } from "sonner";
 import { handleError } from "@/lib/utils";
 import { workspaceKey } from "./use-workspace";
-import { userKey } from "../auth/use-user";
+import { userKey } from "../user/use-user";
 import { IWorkspace } from "@/lib/types/workspace";
 import { auth } from "@/lib/clients/firebase";
 
