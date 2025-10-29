@@ -139,7 +139,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                       step={0.1}
                       className="mt-4"
                     />
-                    <div className="grid grid-cols-3 justify-between text-xs text-muted-foreground mt-2">
+                    <div className="grid grid-cols-3 justify-between text-xs text-muted-foreground mt-3">
                       <span className="mr-auto">Conservative (0)</span>
                       <span className="mx-auto">Balanced (0.5)</span>
                       <span className="ml-auto">Creative (1)</span>
