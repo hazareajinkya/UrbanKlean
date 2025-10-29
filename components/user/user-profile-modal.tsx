@@ -1,7 +1,7 @@
 "use client";
 import { useUserActions } from "@/lib/hooks/auth/use-user-actions";
 import { IUser } from "@/lib/types/user";
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2, X } from "lucide-react";
@@ -39,13 +39,13 @@ export default function UserProfileModal({
   );
 }
 
-const UserProfileForm = memo(function UserProfileForm({
+const UserProfileForm = ({
   user,
   onClose,
 }: {
   user: IUser;
   onClose: () => void;
-}) {
+}) => {
   const { updateProfile } = useUserActions();
   const [name, setName] = useState(user.name ?? "");
   const [file, setFile] = useState<File | null>(null);
@@ -56,22 +56,19 @@ const UserProfileForm = memo(function UserProfileForm({
     setName(user.name ?? "");
     setFile(null);
     setPreviewUrl(undefined);
-  }, [user.name]);
+  }, []);
 
   const handleChooseFile = () => fileInputRef.current?.click();
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
     if (f) setPreviewUrl(URL.createObjectURL(f));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateProfile.mutateAsync({ name, file });
     onClose();
   };
-
   const isLoading = updateProfile.isPending;
 
   return (
@@ -156,4 +153,4 @@ const UserProfileForm = memo(function UserProfileForm({
       </div>
     </form>
   );
-});
+};
