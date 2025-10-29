@@ -22,19 +22,26 @@ export default function UserProfileModal({
 }: UserProfileModalProps) {
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-medium">Profile Information</h3>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="size-8 p-0"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      <div className="space-y-6">
+        <div className="">
+          <div className="flex items-center justify-between ">
+            <h3 className="text-lg font-medium">Profile Information</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="size-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground max-w-[80%]">
+            Update your profile picture and personal information
+          </p>
+        </div>
+        {user && <UserProfileForm user={user} onClose={onClose} />}
       </div>
-      {user && <UserProfileForm user={user} onClose={onClose} />}
     </Modal>
   );
 }
@@ -74,20 +81,23 @@ const UserProfileForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label>Photo</Label>
-        <div className="flex gap-6 items-center">
+        <div className="flex gap-2 pt-4 items-center flex-col justify-center">
           <Avatar
-            className="h-24 w-24 ring-2 ring-border shrink-0 relative"
+            className={`size-24 ring-2 ring-border shrink-0 relative group cursor-pointer ${
+              isLoading && "cursor-not-allowed"
+            }`}
             onClick={() => !isLoading && handleChooseFile()}
           >
             <div
-              className={`w-24 h-12 bottom-0 text-white absolute flex justify-center items-center transition-opacity duration-200 opacity-0 ${
+              className={` h-12 w-24 bottom-0 text-white absolute flex justify-center items-center transition-opacity duration-200 opacity-0 ${
                 isLoading
                   ? "cursor-not-allowed"
-                  : "hover:bg-black/50 hover:opacity-100 cursor-pointer"
+                  : "group-hover:bg-black/50 group-hover:opacity-100 "
               }`}
             >
-              <Camera />
+              <div className="flex flex-col items-center ">
+                <Camera />
+              </div>
             </div>
             <AvatarImage src={previewUrl || user.photoUrl} alt={user.name} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
@@ -95,14 +105,6 @@ const UserProfileForm = ({
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col justify-between text-sm gap-2">
-            <Button
-              type="button"
-              disabled={isLoading}
-              variant={"outline"}
-              onClick={() => !isLoading && handleChooseFile()}
-            >
-              Update new photo
-            </Button>
             <input
               ref={fileInputRef}
               type="file"
@@ -110,15 +112,26 @@ const UserProfileForm = ({
               className="hidden"
               onChange={handleFileChange}
             />
-            <p className="text-muted-foreground">
-              Recommended: Square JPG/PNG, at least 1000px per side.
-            </p>
+          </div>
+          <div className="">
+            <Button
+              type="button"
+              size={"sm"}
+              variant="outline"
+              disabled={isLoading}
+              onClick={() => !isLoading && handleChooseFile()}
+              className=""
+            >
+              Change Photo
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Name *</Label>
+        <Label>
+          Name<span className="text-destructive">*</span>
+        </Label>
         <Input
           value={name}
           required
@@ -128,9 +141,12 @@ const UserProfileForm = ({
 
       <div className="space-y-2">
         <Label>Email</Label>
-        <h4 className="text-muted-foreground cursor-not-allowed">
-          {user.email}
-        </h4>
+        <Input
+          id="email"
+          value={user.email}
+          disabled
+          className="h-9 bg-muted/50 cursor-not-allowed"
+        />
       </div>
 
       <div className="flex justify-end gap-3">
@@ -148,7 +164,7 @@ const UserProfileForm = ({
           className="gap-2"
         >
           {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          Save
+          Save Changes
         </Button>
       </div>
     </form>
