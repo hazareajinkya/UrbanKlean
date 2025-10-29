@@ -47,9 +47,41 @@ class AgentService {
     });
   }
 
-  async deleteAgent({ aid }: { aid: string }) {
+  deleteAgent = async ({ aid }: { aid: string }) => {
+    // Fetch agent
+    const agent = await this.fetchAgent(aid);
+    if (!agent) {
+      console.warn(`Agent ${aid} not found. Skipping.`);
+      return;
+    }
+
+    // Helper fucntion to delete subcollection
+    const deleteSubcollection = async (path: string) => {
+      const snap = await getDocs(collection(db, path));
+      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+    };
+
+    // delete subcollections
+    await Promise.all([
+      deleteSubcollection(`agents/${aid}/sessions`),
+      deleteSubcollection(`agents/${aid}/workflows`),
+    ]);
+
+    // Unassign from channels
+    if (Array.isArray(agent.channels) && agent.channels.length && agent.wid) {
+      await Promise.all(
+        agent.channels.map(async (channelId) => {
+          await updateDoc(
+            doc(db, `workspaces/${agent.wid}/channels/${channelId}`),
+            { assignedAgentId: "" }
+          );
+        })
+      );
+    }
+
+    // Delete agent
     await deleteDoc(doc(db, `agents/${aid}`));
-  }
+  };
 }
 
 const agentService = new AgentService();

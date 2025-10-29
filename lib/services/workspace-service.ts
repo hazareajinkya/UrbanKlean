@@ -1,5 +1,4 @@
 import {
-  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -14,6 +13,8 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultWorkspace, IWorkspace } from "../types/workspace";
 import userService from "./user-service";
+import agentService from "./agent-service";
+import storageService from "./storage-service";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -121,8 +122,61 @@ class WorkspaceService {
       // Delete member document
       await deleteDoc(doc(db, `workspaces/${wid}/members/${memberEmail}`));
     }
+    // delete all agents
+    try {
+      const agents = await agentService.fetchAgents(wid);
+      await Promise.all(
+        agents.map((agent: any) => agentService.deleteAgent({ aid: agent.id }))
+      );
+    } catch (err) {
+      throw new Error("Failed to delete agents");
+    }
 
-    // Delete the workspace document
+    // helper function to delete collections
+    const deleteCollection = async (path: string) => {
+      const snap = await getDocs(collection(db, path));
+      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+    };
+
+    // delete workspace subcollection
+    await Promise.all([
+      deleteCollection(`workspaces/${wid}/channels`),
+      deleteCollection(`workspaces/${wid}/actions`),
+      deleteCollection(`workspaces/${wid}/people`),
+      deleteCollection(`workspaces/${wid}/knowledge/web/default`),
+    ]);
+
+    // delete text knowledge
+    const textSnap = await getDoc(doc(db, `workspaces/${wid}/knowledge/text`));
+    if (textSnap.exists()) await deleteDoc(textSnap.ref);
+
+    // delete pdf files from storage
+    const pdfSnap = await getDoc(doc(db, `workspaces/${wid}/knowledge/pdfs`));
+    if (pdfSnap.exists()) {
+      const data = pdfSnap.data() as any;
+      const files = Array.isArray(data?.files) ? data.files : [];
+
+      await Promise.all(
+        files.map(async (f: { docUrl: string }) => {
+          if (f?.docUrl) {
+            try {
+              await storageService.deleteFile(f.docUrl);
+            } catch (err) {
+              throw new Error("Failed to delete storage file.");
+            }
+          }
+        })
+      );
+
+      await deleteDoc(pdfSnap.ref);
+    }
+
+    // delete Qdrant collection
+    try {
+    } catch (err) {
+      throw new Error(`Failed to delete Qdrant collection.`);
+    }
+    //  delete the workspace document
     await deleteDoc(doc(db, `workspaces/${wid}`));
   }
 
