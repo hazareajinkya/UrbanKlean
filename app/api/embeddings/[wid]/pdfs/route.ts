@@ -22,9 +22,9 @@ export async function POST(
     if (!pdf.type.includes("pdf"))
       return errorResponse("File must be a PDF", 400);
 
-    const { points, chunkSize } = await knowledgeService.embedPdfs(wid, pdf);
+    const { points, chunkSize } = await knowledgeService.s_embedPdfs(wid, pdf);
 
-    await knowledgeService.savePDFKnowledge(wid, pdf, points, chunkSize);
+    await knowledgeService.s_savePDFKnowledge(wid, pdf, points, chunkSize);
 
     return successResponse(
       { wid, name: pdf.name, status: "trained" },
@@ -49,7 +49,7 @@ export async function DELETE(
 
     if (!did) return errorResponse("Document ID is required", 400);
 
-    await knowledgeService.deletePdfKnowledge(wid, did);
+    await knowledgeService.s_deletePdfKnowledge(wid, did);
 
     return successResponse({ wid, did }, "PDF deleted successfully");
   } catch (error) {

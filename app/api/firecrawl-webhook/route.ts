@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
         title: result.metadata?.title ?? "",
       };
 
-      const { chunkSize, points } = await knowledgeService.embedWeb(
+      const { chunkSize, points } = await knowledgeService.s_embedWeb(
         wid,
         content,
         me
       );
 
-      await knowledgeService.saveMultiUrlKnowledge(
+      await knowledgeService.s_saveMultiUrlKnowledge(
         wid,
         docId,
         me,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ status: "ok" });
     } else if (event.type === "batch_scrape.completed") {
-      await knowledgeService.compeletedTraining(wid, docId);
+      await knowledgeService.s_compeletedTraining(wid, docId);
       return NextResponse.json({ status: "ok" });
     }
   } catch (error) {

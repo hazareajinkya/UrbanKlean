@@ -13,6 +13,8 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultAgent, IAgent } from "../types/agent";
 import workspaceService from "./workspace-service";
+import { deleteCollection } from "../utils";
+import channelService from "./channel-service";
 
 class AgentService {
   async createAgent({ wid, name }: { wid: string; name: string }) {
@@ -53,31 +55,23 @@ class AgentService {
     if (!agent) {
       throw new Error("Agent not found");
     }
-
-    // Helper fucntion to delete subcollection
-    const deleteSubcollection = async (path: string) => {
-      const snap = await getDocs(collection(db, path));
-      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
-    };
-
     // delete subcollections
     await Promise.all([
-      deleteSubcollection(`agents/${aid}/sessions`),
-      deleteSubcollection(`agents/${aid}/workflows`),
+      deleteCollection(`agents/${aid}/sessions`),
+      deleteCollection(`agents/${aid}/workflows`),
     ]);
 
     // Unassign from channels
     if (Array.isArray(agent.channels) && agent.channels.length && agent.wid) {
-      await Promise.all(
-        agent.channels.map(async (channelId) => {
-          await updateDoc(
-            doc(db, `workspaces/${agent.wid}/channels/${channelId}`),
-            { assignedAgentId: "" }
-          );
-        })
-      );
+      const promises = agent.channels.map(async (channelId) => {
+        await channelService.unassignAgentFromChannel(
+          agent.wid,
+          channelId,
+          aid
+        );
+      });
+      await Promise.all(promises);
     }
-
     // Delete agent
     await deleteDoc(doc(db, `agents/${aid}`));
   };

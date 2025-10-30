@@ -29,7 +29,7 @@ export async function POST(
 
     const title = result.metadata?.title ?? "";
 
-    const docId = await knowledgeService.startedCrawl(wid, baseUrl, title);
+    const docId = await knowledgeService.s_startedCrawl(wid, baseUrl, title);
 
     await firecrawl.startBatchScrape(urls, {
       webhook: {

@@ -56,7 +56,7 @@ class KnowledgeService {
     }
   }
 
-  async embedText(wid: string, text: string) {
+  async s_embedText(wid: string, text: string) {
     await this.checkCollection(wid);
 
     const textKnowledge = await knowledgeService.getTextKnowledge(wid);
@@ -85,7 +85,8 @@ class KnowledgeService {
     };
   }
 
-  async embedPdfs(wid: string, pdf: File) {
+  async s_embedPdfs(wid: string, pdf: File) {
+    await this.checkCollection(wid);
     const buffer = Buffer.from(await pdf.arrayBuffer());
     const chunks = await chunkPdfContent(buffer);
     const chunkTexts = chunks.map((chunk) => chunk.pageContent);
@@ -112,7 +113,7 @@ class KnowledgeService {
     };
   }
 
-  async deletePdfKnowledge(wid: string, did: string) {
+  async s_deletePdfKnowledge(wid: string, did: string) {
     const pdfKnowledge = await this.getPdfKnowledge(wid);
     if (!pdfKnowledge?.files) return;
 
@@ -150,7 +151,19 @@ class KnowledgeService {
     }
   }
 
-  async deleteWebKnowledge(wid: string, uid: string) {
+  deleteAllPdfKnowledge = async (wid: string) => {
+    const pdfs = await knowledgeService.getPdfKnowledge(wid);
+    if (pdfs.files) {
+      const files = pdfs.files;
+      await Promise.all(
+        files.map(async (f) => {
+          await axiosClient.delete(`/api/embeddings/${wid}/pdfs?did=${f.id}`);
+        })
+      );
+    }
+  };
+
+  async s_deleteWebKnowledge(wid: string, uid: string) {
     try {
       const webKnowledge = await this.getUrlKnowledge(wid, uid);
       if (!webKnowledge) return;
@@ -166,8 +179,31 @@ class KnowledgeService {
       console.log("error.data: ", error.data);
     }
   }
+  deleteAllWebKnowledge = async (wid: string) => {
+    try {
+      const webKnowledge = await this.getWebKnowledge(wid);
+      if (webKnowledge.length > 0) {
+        const promises = webKnowledge.map((d) =>
+          axiosClient.delete(`/api/embeddings/${wid}/web/single?uid=${d.id}`)
+        );
+        await Promise.all(promises);
+      }
+    } catch (error) {
+      console.log("Error occured during delete web knowledge : ", error);
+      throw new Error("Failed to delete web knowledge");
+    }
+  };
+  // Delete text knowledge
+  async deleteAllTextKnowledge(wid: string) {
+    try {
+      await axiosClient.delete(`/api/embeddings/${wid}/text`);
+    } catch (error) {
+      console.log("Error occured during delete text knowledge : ", error);
+      throw new Error("Failed to delete text knowledge");
+    }
+  }
 
-  async savePDFKnowledge(
+  async s_savePDFKnowledge(
     wid: string,
     pdf: File,
     points: string[],
@@ -192,7 +228,7 @@ class KnowledgeService {
     );
   }
 
-  async embedWeb(wid: string, content: string, metadata: IWebPropsMetadata) {
+  async s_embedWeb(wid: string, content: string, metadata: IWebPropsMetadata) {
     try {
       await this.checkCollection(wid);
       if (!metadata) throw new Error("Metadata is required");
@@ -233,7 +269,7 @@ class KnowledgeService {
     }
   }
 
-  async startedCrawl(wid: string, baseUrl: string, title: string) {
+  async s_startedCrawl(wid: string, baseUrl: string, title: string) {
     const id = v4();
     await setDoc(
       doc(db, `workspaces/${wid}/knowledge/web/default/${id}`),
@@ -252,7 +288,7 @@ class KnowledgeService {
     return id;
   }
 
-  async compeletedTraining(wid: string, docId: string) {
+  async s_compeletedTraining(wid: string, docId: string) {
     await updateDoc(
       doc(db, `workspaces/${wid}/knowledge/web/default/${docId}`),
       {
@@ -261,7 +297,7 @@ class KnowledgeService {
       }
     );
   }
-  async saveSingleUrlKnowledge(
+  async s_saveSingleUrlKnowledge(
     wid: string,
     metadata: IWebPropsMetadata,
     points: string[],
@@ -285,7 +321,7 @@ class KnowledgeService {
     return data;
   }
 
-  async saveMultiUrlKnowledge(
+  async s_saveMultiUrlKnowledge(
     wid: string,
     docId: string,
     metadata: IWebPropsMetadata,
@@ -303,7 +339,7 @@ class KnowledgeService {
     );
   }
 
-  async saveText(
+  async s_saveText(
     wid: string,
     points: string[],
     content: string,
