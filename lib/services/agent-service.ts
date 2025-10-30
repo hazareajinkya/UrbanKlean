@@ -51,8 +51,7 @@ class AgentService {
     // Fetch agent
     const agent = await this.fetchAgent(aid);
     if (!agent) {
-      console.warn(`Agent ${aid} not found. Skipping.`);
-      return;
+      throw new Error("Agent not found");
     }
 
     // Helper fucntion to delete subcollection
