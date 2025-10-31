@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 import { toast } from "sonner";
 import { NextRequest } from "next/server";
+import { collection, deleteDoc, getDocs } from "firebase/firestore";
+import { db } from "./clients/firebase";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -107,4 +109,10 @@ export const getProtocol = (req: NextRequest) => {
   const isLocalhost = req.nextUrl.origin.includes("localhost");
   const protocol = isLocalhost ? "http:" : "https:";
   return protocol;
+};
+
+// Helper function to delete collections
+export const deleteCollection = async (path: string) => {
+  const snap = await getDocs(collection(db, path));
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
 };

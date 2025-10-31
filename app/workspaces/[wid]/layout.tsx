@@ -43,7 +43,7 @@ export default function WorkspaceLayout({
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div
@@ -73,7 +73,7 @@ export default function WorkspaceLayout({
           </Button>
           <h1 className="text- font-mdium">{workspace?.name || "Workspace"}</h1>
         </header>
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 min-h-0">{children}</div>
       </div>
     </div>
   );

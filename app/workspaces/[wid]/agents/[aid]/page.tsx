@@ -2,31 +2,16 @@
 
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Loader2,
   ArrowLeft,
   MessageCircle,
   Palette,
-  Settings,
   Code,
-  LayoutDashboard,
   HomeIcon,
-  MessageSquare,
   ChevronLeft,
-  GitBranch,
-  Workflow,
-  Cog,
   Settings2,
-  ChartNoAxesGantt,
-  ListStart,
   ListTree,
-  ListEnd,
-  ListCheck,
-  History,
-  RefreshCcw,
-  GalleryVerticalEnd,
-  MessageSquareMore,
   MessagesSquare,
   Play,
 } from "lucide-react";
@@ -44,6 +29,7 @@ import {
   WidgetTab,
 } from "@/components/agent";
 import clsx from "clsx";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AgentPage() {
   const router = useRouter();
@@ -96,9 +82,9 @@ export default function AgentPage() {
   ];
 
   return (
-    <div className="p-0">
+    <div className="flex flex-col h-full min-h-0 p-0">
       {/* Tab Navigation with Back Button */}
-      <div className="flex justify-between border-b bg-card p-1 items-center mb-4 animate-in slide-in-from-left-5 fade-in">
+      <div className="flex justify-between border-b bg-card p-1 items-center  animate-in slide-in-from-left-5 fade-in">
         <div className="flex gap-1 items-center">
           <Button
             variant="ghost"
@@ -146,15 +132,21 @@ export default function AgentPage() {
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="px-4">
-        {tab === "overview" && <OverviewTab agent={agent} />}
-        {tab === "chat" && <ChatTab agent={agent} />}
-        {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
-        {tab === "appearance" && <AppearanceTab agent={agent} />}
-        {tab === "workflow" && <WorkflowTab agent={agent} />}
-        {tab === "settings" && <SettingsTab agent={agent} />}
-        {tab === "widget" && <WidgetTab agent={agent} wid={wid} aid={aid} />}
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
+          {/* Tab Content */}
+          <div className="p-4 ">
+            {tab === "overview" && <OverviewTab agent={agent} />}
+            {tab === "chat" && <ChatTab agent={agent} />}
+            {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
+            {tab === "appearance" && <AppearanceTab agent={agent} />}
+            {tab === "workflow" && <WorkflowTab agent={agent} />}
+            {tab === "settings" && <SettingsTab agent={agent} />}
+            {tab === "widget" && (
+              <WidgetTab agent={agent} wid={wid} aid={aid} />
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultAgent, IAgent } from "../types/agent";
 import workspaceService from "./workspace-service";
+import { deleteCollection } from "../utils";
+import channelService from "./channel-service";
 
 class AgentService {
   async createAgent({ wid, name }: { wid: string; name: string }) {
@@ -47,9 +49,32 @@ class AgentService {
     });
   }
 
-  async deleteAgent({ aid }: { aid: string }) {
+  deleteAgent = async ({ aid }: { aid: string }) => {
+    // Fetch agent
+    const agent = await this.fetchAgent(aid);
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+    // delete subcollections
+    await Promise.all([
+      deleteCollection(`agents/${aid}/sessions`),
+      deleteCollection(`agents/${aid}/workflows`),
+    ]);
+
+    // Unassign from channels
+    if (Array.isArray(agent.channels) && agent.channels.length && agent.wid) {
+      const promises = agent.channels.map(async (channelId) => {
+        await channelService.unassignAgentFromChannel(
+          agent.wid,
+          channelId,
+          aid
+        );
+      });
+      await Promise.all(promises);
+    }
+    // Delete agent
     await deleteDoc(doc(db, `agents/${aid}`));
-  }
+  };
 }
 
 const agentService = new AgentService();

@@ -32,13 +32,13 @@ export async function POST(
       title: result.metadata?.title ?? "",
     };
 
-    const { chunkSize, points } = await knowledgeService.embedWeb(
+    const { chunkSize, points } = await knowledgeService.s_embedWeb(
       wid,
       content,
       me
     );
 
-    await knowledgeService.saveSingleUrlKnowledge(wid, me, points, chunkSize);
+    await knowledgeService.s_saveSingleUrlKnowledge(wid, me, points, chunkSize);
 
     return successResponse(
       { wid, url, status: "trained" },
@@ -71,7 +71,7 @@ export async function DELETE(
 
     if (!uid) return errorResponse("URL ID is required", 400);
 
-    await knowledgeService.deleteWebKnowledge(wid, uid);
+    await knowledgeService.s_deleteWebKnowledge(wid, uid);
 
     return successResponse({ wid, uid }, "Website deleted successfully");
   } catch (error) {

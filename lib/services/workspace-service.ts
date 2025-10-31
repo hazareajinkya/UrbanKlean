@@ -1,5 +1,4 @@
 import {
-  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -14,6 +13,12 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultWorkspace, IWorkspace } from "../types/workspace";
 import userService from "./user-service";
+import agentService from "./agent-service";
+import axiosClient from "../clients/axios-client";
+import { deleteCollection } from "../utils";
+import memberService from "./member-service";
+import { IAgent } from "../types/agent";
+import knowledgeService from "./knowledge-service";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -99,31 +104,75 @@ class WorkspaceService {
   }
 
   async deleteWorkspace({ wid }: { wid: string }) {
-    // Get all members of the workspace
-    const members = await getDocs(
-      query(collection(db, `workspaces/${wid}/members`))
-    );
-
-    // Remove workspace from all users' workspace arrays
-    for (const memberDoc of members.docs) {
-      const memberEmail = memberDoc.id;
-      const user = await userService.getUser(memberEmail);
-
-      if (user) {
-        const userData = user;
-        const workspaces = userData.workspaces || [];
-        const updatedWorkspaces = workspaces.filter((ws: any) => ws.id !== wid);
-        await userService.updateUser(user.email, {
-          workspaces: updatedWorkspaces,
-        });
+    try {
+      // Delete workspace members
+      try {
+        const members = await memberService.fetchMembers(wid);
+        if (!members?.length) return;
+        const promises = members.map((member) =>
+          memberService.removeMember({ wid, email: member.email })
+        );
+        await Promise.all(promises);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete members:`, error);
+        throw new Error("Failed to delete members.");
       }
 
-      // Delete member document
-      await deleteDoc(doc(db, `workspaces/${wid}/members/${memberEmail}`));
-    }
+      // Delete workspace agent
+      try {
+        const agents = await agentService.fetchAgents(wid);
+        if (!agents?.length) return;
+        const promises = agents.map((agent: IAgent) =>
+          agentService.deleteAgent({ aid: agent.id! })
+        );
+        await Promise.all(promises);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete agents:`, error);
+        throw new Error("Failed to delete agents.");
+      }
+      try {
+        // Delete workspace knowledge
+        await Promise.all([
+          knowledgeService.deleteAllTextKnowledge(wid),
+          knowledgeService.deleteAllPdfKnowledge(wid),
+          knowledgeService.deleteAllWebKnowledge(wid),
+        ]);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete knowledge:`, error);
+        throw new Error("Failed to delete knowledge.");
+      }
 
-    // Delete the workspace document
-    await deleteDoc(doc(db, `workspaces/${wid}`));
+      // Delete Qdrant collection
+      try {
+        await axiosClient.delete(`/api/embeddings/${wid}/qdrant-delete`);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete Qdrant:`, error);
+        throw new Error("Failed to delete Qdrant collection.");
+      }
+
+      // Delete web knowledge collection
+      await deleteCollection(`workspaces/${wid}/knowledge/web/default`);
+
+      // Delete subcollections
+      const subCollections = [
+        `workspaces/${wid}/channels`,
+        `workspaces/${wid}/actions`,
+        `workspaces/${wid}/people`,
+        `workspaces/${wid}/knowledge`,
+        `workspaces/${wid}/members`,
+      ];
+
+      await Promise.all(subCollections.map((path) => deleteCollection(path)));
+
+      //  Delete document
+      await deleteDoc(doc(db, `workspaces/${wid}`));
+    } catch (error: any) {
+      console.error(
+        `[WorkspaceService] Failed to delete workspace ${wid}:`,
+        error
+      );
+      throw new Error(`Failed to delete workspace: ${error?.message || error}`);
+    }
   }
 
   async addMember(
