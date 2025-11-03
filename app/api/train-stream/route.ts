@@ -1,10 +1,8 @@
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import { IChatMessage } from "@/lib/types/session";
-import { latency } from "@/lib/utils";
-import knowledgeService from "@/lib/services/knowledge-service";
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
-import z from "zod";
+import { convertToModelMessages, stepCountIs, streamText } from "ai";
+import { saveTrainingKnowledge } from "@/lib/tools/save-training-knowledge";
 
 export const POST = async (req: Request) => {
   try {
@@ -25,7 +23,7 @@ export const POST = async (req: Request) => {
     1) DO NOT repeat their words modify it.
     2) Respond warm & friendly with variety.
     3) Check is the information in the knowledge base using calling the searchKnowledge.
-    4) If there is no information about that MUST call saveTrainingData with a short clean summary other wise do nothing.
+    4) If there is no information about that MUST call saveTrainingKnowledge with a short clean summary other wise do nothing.
     4) Never mention you're learning.
     5) Stay kind, concise, helpful, same language as user.
     `;
@@ -34,7 +32,7 @@ export const POST = async (req: Request) => {
       system: prompt,
       messages: convertToModelMessages(messages),
       tools: {
-        saveTrainingData: saveTrainingData(wid),
+        saveTrainingKnowledge: saveTrainingKnowledge(wid),
         searchKnowledge: searchKnowledge(wid),
       },
       stopWhen: stepCountIs(5),
@@ -49,32 +47,3 @@ export const POST = async (req: Request) => {
     });
   }
 };
-
-const saveTrainingData = (wid: string) =>
-  tool({
-    name: "saveTrainingData",
-    description: "save data to the knowledge base",
-    inputSchema: z.object({
-      query: z
-        .string()
-        .describe(
-          "Smartly make this based on your message a reminder instruction for saving as text knowlede"
-        ),
-    }),
-    execute: async ({ query }) => {
-      latency.start();
-      const existing = await knowledgeService.getTextKnowledge(wid);
-      const newContent = existing?.content
-        ? `${existing.content}\n \n${query}`
-        : query;
-      const { chunkSize, points } = await knowledgeService.s_embedText(
-        wid,
-        newContent
-      );
-      await knowledgeService.s_saveText(wid, points, newContent, chunkSize);
-
-      console.log(query);
-      latency.end();
-      return `Saved training note.`;
-    },
-  });

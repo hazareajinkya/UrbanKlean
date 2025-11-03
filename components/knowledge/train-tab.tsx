@@ -165,7 +165,7 @@ export default function TrainTab() {
                           Agent Training
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                          Manage your training sessions
+                          Train your agent through conversation.
                         </p>
                       </div>
                     </div>
