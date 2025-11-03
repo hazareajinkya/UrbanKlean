@@ -87,7 +87,7 @@ class ChatService {
 const chatService = new ChatService();
 export default chatService;
 
-const cleanMessageForSaving = (message: IChatMessage) => {
+export const cleanMessageForSaving = (message: IChatMessage) => {
   // Remove undefined fields from message before saving
   const cleanMessage = Object.fromEntries(
     Object.entries(message).filter(([_, value]) => value !== undefined)

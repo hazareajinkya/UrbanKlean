@@ -1,11 +1,16 @@
 "use client";
 
-import { Globe, FileText, Type } from "lucide-react";
+import { Globe, FileText, Type, NotebookPenIcon, Bot } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 // Import tab components
-import { WebsiteTab, DocumentsTab, TextTab } from "@/components/knowledge";
+import {
+  WebsiteTab,
+  DocumentsTab,
+  TextTab,
+  TrainTab,
+} from "@/components/knowledge";
 
 export default function KnowledgeBasePage() {
   const searchParams = useSearchParams();
@@ -16,12 +21,13 @@ export default function KnowledgeBasePage() {
     { id: "website", label: "Website", icon: Globe },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "text", label: "Text", icon: Type },
+    { id: "train", label: "Train", icon: Bot },
   ];
 
   return (
-    <div className="p-0">
+    <div className="h-full min-h-0 flex flex-col">
       {/* Tab Navigation */}
-      <div className="flex w-full bg-card p-1 border-b rounded-ull  gap-0 items-center animate-in fade-in slide-in-from-left-2 duration-300 -z-20">
+      <div className="flex w-full bg-card p-1 border-b rounded-ull  gap-0 items-center animate-in fade-in slide-in-from-left-2 duration-300 ">
         {tabs.map((tabItem) => (
           <Link
             key={tabItem.id}
@@ -39,10 +45,11 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="px-0">
+      <div className="p-4 flex-1 min-h-0 overflow-auto">
         {tab === "website" && <WebsiteTab />}
         {tab === "documents" && <DocumentsTab />}
         {tab === "text" && <TextTab />}
+        {tab === "train" && <TrainTab />}
       </div>
     </div>
   );

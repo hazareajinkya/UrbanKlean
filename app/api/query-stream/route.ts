@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       tools: {
         ...customTools,
         collectInformation: collectInformation(agent.wid),
-        searchKnowledge: searchKnowledge(agent),
+        searchKnowledge: searchKnowledge(agent.wid),
       },
 
       onError: (error) => {

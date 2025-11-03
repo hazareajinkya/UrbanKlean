@@ -6,7 +6,7 @@ import embeddingService from "../services/embedding-service";
 import qdClient from "../clients/qdrant-client";
 import { IAgent } from "../types/agent";
 
-export const searchKnowledge = (agent: IAgent) =>
+export const searchKnowledge = (wid: string) =>
   tool({
     name: "Search knowledge",
     description: "Search the knowledge base",
@@ -20,7 +20,7 @@ export const searchKnowledge = (agent: IAgent) =>
     execute: async ({ query }) => {
       console.log("searching knowledgebase: ", query);
       latency.start();
-      const context = await retrieveContext(agent.wid, query);
+      const context = await retrieveContext(wid, query);
       latency.end();
       return context;
     },

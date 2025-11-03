@@ -48,7 +48,7 @@ const textEmbeddingSchema = z.object({
   tid: z.string().min(1, "Text ID is required"),
 });
 
-const validateRequestBody = async (request: NextRequest) => {
+export const validateRequestBody = async (request: NextRequest) => {
   try {
     const body = await request.json();
     return textEmbeddingSchema.parse(body);
