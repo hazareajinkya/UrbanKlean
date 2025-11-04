@@ -27,24 +27,18 @@ import { IChatMessage } from "@/lib/types/session";
 import { Button } from "../ui/button";
 
 interface MessageListProps {
-  agent?: IAgent;
+  agent: IAgent;
   messages: IChatMessage[];
   status: ChatStatus;
-  heightClassName?: string;
 }
 
-export const MessageList = ({
-  messages,
-  status,
-  agent,
-  heightClassName,
-}: MessageListProps) => {
+export const MessageList = ({ messages, status, agent }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const previousMessageCountRef = useRef(messages.length);
   const showLoadingIndicator = status === "submitted";
 
-  const brandColor = agent ? agent.customization.primaryColor : "#fffff";
+  const brandColor = agent.customization.primaryColor;
   const fontColor = getContrastingColor(brandColor);
 
   useEffect(() => {
@@ -68,8 +62,6 @@ export const MessageList = ({
     "Shipping information",
   ];
 
-  const heightClass =
-    heightClassName || `min-h-[calc(100vh-19rem)] md:min-h-[calc(100vh-20rem)]`;
   return (
     <div className="flex-1 overflow-y-auto p-4 ">
       <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
@@ -323,6 +315,8 @@ export const MessageList = ({
     </div>
   );
 };
+
+const heightClass = `min-h-[calc(100vh-19rem)] md:min-h-[calc(100vh-20rem)]`;
 
 const assistantMessageStyle = (message: UIMessage) =>
   clsx(

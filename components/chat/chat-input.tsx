@@ -12,7 +12,7 @@ import { IAgent } from "@/lib/types/agent";
 import Link from "next/link";
 
 interface ChatInputProps {
-  agent?: IAgent;
+  agent: IAgent;
   input: string;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (
@@ -32,7 +32,6 @@ export const ChatInput = ({
   isWidget = false,
 }: ChatInputProps) => {
   const isLoading = status !== "ready" && status !== "error";
-  const primaryColor = agent?.customization?.primaryColor ?? "#7c3aed"; // default to violet-600
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e, {});
@@ -52,11 +51,11 @@ export const ChatInput = ({
         <div className="flex items-end gap-3">
           <div
             className={cn(
-              "flex-1 border-1 relative rounded-lg transition-all duration-200 focus-within:ring-2"
+              `flex-1 border-1 relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:border-color-[${agent.customization.primaryColor}]`
             )}
             style={
               {
-                "--tw-ring-color": primaryColor,
+                "--tw-ring-color": agent.customization.primaryColor,
               } as React.CSSProperties & { "--tw-ring-color": string }
             }
           >
@@ -92,11 +91,13 @@ export const ChatInput = ({
                       backgroundColor:
                         isLoading || !input.trim()
                           ? "transparent"
-                          : primaryColor,
+                          : agent.customization.primaryColor,
                       color:
                         isLoading || !input.trim()
                           ? "black"
-                          : getContrastingColor(primaryColor),
+                          : getContrastingColor(
+                              agent.customization.primaryColor
+                            ),
                     }}
                     className={clsx(
                       "md:w-10 md:h-10 w-8 h-8 rounded-full transition-colors disabled:opacity-50"

@@ -79,13 +79,6 @@ export const saveLocalTrainSession = (wid: string, sid: string) => {
   localStorage.setItem("trainSessions", JSON.stringify(sessionsMap));
 };
 
-export const removeLocalTrainSession = (wid: string) => {
-  let sessions = localStorage.getItem("trainSessions");
-  let sessionsMap = sessions ? JSON.parse(sessions) : {};
-  delete sessionsMap[wid];
-  localStorage.setItem("trainSessions", JSON.stringify(sessionsMap));
-};
-
 export const getLocalTrainSession = (wid: string) => {
   let sessions = localStorage.getItem("trainSessions");
   let sessionsMap = sessions ? JSON.parse(sessions) : {};

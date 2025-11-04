@@ -26,7 +26,6 @@ export interface ISession {
 export interface ITraingSession {
   id: string;
   wid: string;
-  status: "open" | "closed";
   messages: IChatMessage[];
   createdAt: string;
   updatedAt: string;
@@ -110,7 +109,6 @@ export const generateDefaultTrainingSession = (
   return {
     id: id ?? v4(),
     wid,
-    status: "open",
     messages: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
