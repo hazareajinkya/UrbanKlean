@@ -21,26 +21,24 @@ import {
   BookMarkedIcon,
   Globe,
   Square,
+  Trash2Icon,
 } from "lucide-react";
-import trainService from "@/lib/services/train-services";
-import { useTrainedContentActions } from "@/lib/hooks/trian/use-trained-content-actions";
-import {
-  getLocalTrainSession,
-  saveLocalTrainSession,
-} from "../chat/chat-utils";
+import teachService from "@/lib/services/teach-services";
+
 import { cn, formatDateTime, getContrastingColor } from "@/lib/utils";
 import clsx from "clsx";
 import { TextShimmer } from "../ui/text-shimmer";
 import { Streamdown } from "streamdown";
 import { Textarea } from "../ui/textarea";
+import { Card, CardContent } from "../ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { useTrainedContent } from "@/lib/hooks/trian/use-trained-content";
+  teachKnowledgeKey,
+  useTechKnowledge,
+} from "@/lib/hooks/knowledge/use-knowledge-base";
+import { useQueryClient } from "@tanstack/react-query";
+import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
+import ConfirmationDialog from "../ui/confirmation-dialog";
+import { ITeachKnowledge } from "@/lib/types/knowledge";
 
 const useBrandColors = () => {
   const [colors, setColors] = useState({ primary: "", primaryForeground: "" });
@@ -63,12 +61,14 @@ export default function TrainTab() {
   const [input, setInput] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
-
-  const sidRef = useRef<string | null>(null);
-
-  const { saveKnowledge } = useTrainedContentActions(wid);
-  const { data: trainedContent, isPending } = useTrainedContent(wid);
-
+  const lastToolRef = useRef<string | null>(null);
+  const { data: teachContent, isPending } = useTechKnowledge(wid);
+  const { deleteTeachKnowledge } = useKnowledgeActions();
+  const [teachToDelete, setTeachToDelete] = useState<ITeachKnowledge | null>(
+    null
+  );
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { messages, sendMessage, setMessages, status } = useChat({
     messages: [
       {
@@ -83,32 +83,32 @@ export default function TrainTab() {
       },
     ],
     transport: new DefaultChatTransport({
-      api: "/api/train-stream",
+      api: "/api/teach-stream",
       body: { wid },
     }),
 
     onToolCall: async ({ toolCall }) => {
-      if (toolCall.toolName === "saveTrainingKnowledge") {
-        const input = toolCall.input as { title: string; description: string };
-        const title = input.title || "No Title Provided";
-        const description = input.description || "No content Provided";
-        if (!wid) throw new Error("Missing workspace id");
-        await saveKnowledge.mutateAsync({ wid, title, description });
-      }
+      lastToolRef.current = toolCall.toolName;
     },
+
     onError: (error) => {
       console.error("Error: ", error);
       const aimsg = defaultAImessage("Error: " + error.message);
-
       setMessages((prev) => [...prev, aimsg] as any);
     },
-    onFinish: (evt) => {
+    onFinish: async (evt) => {
       const aimsg = evt.message as unknown as IChatMessage;
       const prevMessages = evt.messages.slice(0, -1);
+      if (lastToolRef.current === "saveTrainingKnowledge") {
+        lastToolRef.current = null;
+        if (!wid) throw new Error("Missing workspace id");
+        await queryClient.invalidateQueries({
+          queryKey: teachKnowledgeKey(wid),
+        });
+      }
       setMessages([...prevMessages, aimsg] as any);
-      const currentSid = sidRef.current;
-      if (wid && currentSid) {
-        trainService.saveTrainingMessage(wid, currentSid, aimsg);
+      if (wid) {
+        teachService.saveTeachMessage(wid, aimsg);
       }
     },
   });
@@ -119,8 +119,7 @@ export default function TrainTab() {
   ) => {
     e.preventDefault();
 
-    const currentSid = sidRef.current;
-    if (!input.trim() || !wid || !currentSid) return;
+    if (!input.trim() || !wid) return;
 
     sendMessage({
       parts: [
@@ -134,20 +133,30 @@ export default function TrainTab() {
     setInput("");
 
     const userMsg = defaultUserMessage(input);
-    trainService.saveTrainingMessage(wid, currentSid, userMsg);
+    teachService.saveTeachMessage(wid, userMsg);
   };
 
+  const handleDeleteKnowledge = async (content: ITeachKnowledge) => {
+    setTeachToDelete(content);
+    setDeleteModalOpen(true);
+  };
+  const confirmDelete = async () => {
+    if (teachToDelete) {
+      await deleteTeachKnowledge.mutateAsync({ wid, tid: teachToDelete.id });
+      setDeleteModalOpen(false);
+      setTeachToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setTeachToDelete(null);
+  };
   useEffect(() => {
     const init = async () => {
       if (!wid) return;
-      let localSid = getLocalTrainSession(wid);
-      if (!localSid) {
-        const session = await trainService.createTrainingSession(wid);
-        localSid = session.id;
-        saveLocalTrainSession(wid, localSid);
-      }
-      sidRef.current = localSid;
-      const existing = await trainService.getTrainingSession(localSid, wid);
+      const existing = await teachService.getTeachSession(wid);
+      if (!existing) await teachService.createTeachSession(wid);
       if (existing?.messages?.length) {
         setMessages(existing.messages as any);
       }
@@ -172,12 +181,6 @@ export default function TrainTab() {
     return () => messageContainer.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!showScrollButton) {
-      scrollToBottom();
-    }
-  }, [messages, showScrollButton]);
-
   const scrollToBottom = () => {
     if (messageListRef.current) {
       messageListRef.current.scrollTo({
@@ -188,7 +191,7 @@ export default function TrainTab() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 p-6 place-items-center ">
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:p-6 place py-6 items-center ">
       <div className="relative h-[75vh] max-h-[900px] min-h-[500px] mx-auto">
         <div className="bg-gray-900 p-2 rounded-2xl shadow-2xl">
           <div className="bg-white rounded-xl overflow-hidden">
@@ -239,32 +242,15 @@ export default function TrainTab() {
           </div>
         </div>
       </div>
-      <Card className="w-full h-[75vh] max-h-[900px] min-h-[500px]">
-        <CardContent className="overflow-y-auto">
+      <Card className="w-full h-[75vh] max-h-[900px] min-h-[500px] mt-4 md:mt-0">
+        <CardContent className="overflow-y-auto py-2">
           {isPending ? (
             // Shimmer
-            <div className="space-y-3">
-              <div className="border rounded-md p-4 animate-pulse">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="size-7 rounded-md bg-muted" />
-                  <div className="h-4 w-40 bg-muted rounded" />
-                </div>
-                <div className="h-3 w-full bg-muted rounded mb-2" />
-                <div className="h-3 w-3/4 bg-muted rounded" />
-              </div>
-              <div className="border rounded-md p-4 animate-pulse">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="size-7 rounded-md bg-muted" />
-                  <div className="h-4 w-48 bg-muted rounded" />
-                </div>
-                <div className="h-3 w-full bg-muted rounded mb-2" />
-                <div className="h-3 w-2/3 bg-muted rounded" />
-              </div>
-            </div>
-          ) : trainedContent && trainedContent.length > 0 ? (
+            <Shimmer />
+          ) : teachContent && teachContent.length > 0 ? (
             <ul role="list" className="space-y-3">
               <AnimatePresence initial={true}>
-                {[...trainedContent].reverse().map((content, index) => (
+                {teachContent.map((content, index) => (
                   <motion.li
                     key={`${content.id ?? index}`}
                     initial={{ opacity: 0, y: 6 }}
@@ -273,7 +259,17 @@ export default function TrainTab() {
                     transition={{ duration: 0.18 }}
                     className="group border rounded-md p-4 transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-primary/70"
                   >
-                    <div className="">
+                    <div className="relative">
+                      <div className="absolute top-0 right-0 flex opacity-0 group-hover:opacity-75 transition-opacity">
+                        <Button
+                          variant={"ghost"}
+                          size={"icon"}
+                          onClick={() => handleDeleteKnowledge(content)}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </div>
+
                       <div className="flex items-center gap-3 ">
                         <div className="p-2 rounded-md bg-primary/10 text-primary">
                           <BookMarkedIcon className="size-4" />
@@ -283,16 +279,11 @@ export default function TrainTab() {
                             <h3 className="font-medium  leading-6 line-clamp-2">
                               {content.title}
                             </h3>
-                            {(content as any)?.createdAt && (
-                              <span className="shrink-0 text-[10px] text-muted-foreground">
-                                {formatDateTime((content as any).createdAt)}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground leading-6 line-clamp-4">
-                        {content.description}
+                        {content.content}
                       </p>
                     </div>
                   </motion.li>
@@ -312,6 +303,18 @@ export default function TrainTab() {
           )}
         </CardContent>
       </Card>
+      <ConfirmationDialog
+        isOpen={deleteModalOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title="Delete Knowledge"
+        description={`Are you sure you want to delete "${teachToDelete?.title}"?`}
+        warningMessage="This action cannot be undone. The knowledge will be permanently removed from your knowledge base."
+        confirmText="Delete Knowledge"
+        cancelText="Cancel"
+        isLoading={deleteTeachKnowledge.isPending}
+        variant="destructive"
+      />
     </div>
   );
 }
@@ -344,19 +347,18 @@ interface TrainMessageListProps {
 }
 
 const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
-  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const previousMessageCountRef = useRef(messages.length);
   const showLoadingIndicator = status === "submitted";
   const { primary: brandColor, primaryForeground: fontColor } =
     useBrandColors();
-
   useEffect(() => {
     const currentMessageCount = messages.length;
     const hasNewMessage = currentMessageCount > previousMessageCountRef.current;
 
-    if (hasNewMessage && lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({
+    if (hasNewMessage && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
@@ -366,21 +368,14 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
   }, [messages]);
 
   return (
-    <div
-      className={clsx("flex-1 overflow-y-auto p-4 text-primary")}
-      aria-live="polite"
-      aria-relevant="additions"
-    >
+    <div className="flex-1 overflow-y-auto p-4 ">
       <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
         {messages.map((message, index) => {
           const isLastAssistantMessage =
             message.role === "assistant" && index === messages.length - 1;
 
           return (
-            <div
-              key={message.id}
-              ref={index === messages.length - 1 ? lastMessageRef : undefined}
-            >
+            <div key={message.id}>
               <div
                 className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
@@ -455,8 +450,10 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
                             </div>
                           );
                         }
+
                         if (part.type === "tool-saveTrainingKnowledge") {
                           const isCalling = part.state !== "output-available";
+
                           return (
                             <div
                               className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
@@ -493,7 +490,7 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
                                     duration={1.5}
                                     spread={1.5}
                                   >
-                                    Training knowledge...
+                                    Learning knowledge...
                                   </TextShimmer>
                                 </div>
                               ) : (
@@ -508,12 +505,11 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
                             </div>
                           );
                         }
-
                         if (part.type === "text") {
                           return (
                             <div key={index}>
                               <div
-                                className="text-sm xl:text-base  prose prose-sm md:prose-base max-w-none leading-loose "
+                                className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose "
                                 key={index}
                               >
                                 <Streamdown
@@ -541,7 +537,7 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
                   ) : (
                     <>
                       <div className={""}>
-                        <p className="text-sm xl:text-base whitespace-pre-wrap leading-loose">
+                        <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
                           {message.parts.map(
                             (part) => part.type === "text" && part.text
                           )}
@@ -564,7 +560,6 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
             </div>
           );
         })}
-
         {showLoadingIndicator && (
           <div className={"flex justify-start"}>
             <div
@@ -592,12 +587,17 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
             </div>
           </div>
         )}
-
-        <div className="min-h-[calc(clamp(500px-1rem,75vh-1rem,900px-1rem)-20rem)]"></div>
+        <div
+          ref={messagesEndRef}
+          className="min-h-[calc(clamp(500px-1rem,75vh-1rem,900px-1rem)-20rem)]"
+        ></div>
       </div>
     </div>
   );
 };
+
+{
+}
 
 const assistantMessageStyle = (message: UIMessage) =>
   clsx(
@@ -714,6 +714,29 @@ const TrainChatInput = ({
             </div>
           </form>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const Shimmer = () => {
+  return (
+    <div className="space-y-3">
+      <div className="border rounded-md p-4 animate-pulse">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="size-7 rounded-md bg-muted" />
+          <div className="h-4 w-40 bg-muted rounded" />
+        </div>
+        <div className="h-3 w-full bg-muted rounded mb-2" />
+        <div className="h-3 w-3/4 bg-muted rounded" />
+      </div>
+      <div className="border rounded-md p-4 animate-pulse">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="size-7 rounded-md bg-muted" />
+          <div className="h-4 w-48 bg-muted rounded" />
+        </div>
+        <div className="h-3 w-full bg-muted rounded mb-2" />
+        <div className="h-3 w-2/3 bg-muted rounded" />
       </div>
     </div>
   );

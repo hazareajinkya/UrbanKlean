@@ -108,11 +108,12 @@ class WorkspaceService {
       // Delete workspace members
       try {
         const members = await memberService.fetchMembers(wid);
-        if (!members?.length) return;
-        const promises = members.map((member) =>
-          memberService.removeMember({ wid, email: member.email })
-        );
-        await Promise.all(promises);
+        if (members?.length) {
+          const promises = members.map((member) =>
+            memberService.removeMember({ wid, email: member.email })
+          );
+          await Promise.all(promises);
+        }
       } catch (error) {
         console.error(`[WorkspaceService] Failed to delete members:`, error);
         throw new Error("Failed to delete members.");
@@ -121,11 +122,12 @@ class WorkspaceService {
       // Delete workspace agent
       try {
         const agents = await agentService.fetchAgents(wid);
-        if (!agents?.length) return;
-        const promises = agents.map((agent: IAgent) =>
-          agentService.deleteAgent({ aid: agent.id! })
-        );
-        await Promise.all(promises);
+        if (agents?.length) {
+          const promises = agents.map((agent: IAgent) =>
+            agentService.deleteAgent({ aid: agent.id! })
+          );
+          await Promise.all(promises);
+        }
       } catch (error) {
         console.error(`[WorkspaceService] Failed to delete agents:`, error);
         throw new Error("Failed to delete agents.");
@@ -136,12 +138,22 @@ class WorkspaceService {
           knowledgeService.deleteAllTextKnowledge(wid),
           knowledgeService.deleteAllPdfKnowledge(wid),
           knowledgeService.deleteAllWebKnowledge(wid),
+          knowledgeService.deleteAllTeachKnowledge(wid),
         ]);
       } catch (error) {
         console.error(`[WorkspaceService] Failed to delete knowledge:`, error);
         throw new Error("Failed to delete knowledge.");
       }
 
+      try {
+        // Delete workspace teach sessions
+        await deleteDoc(
+          doc(db, `workspaces/${wid}/knowledge/teach/sessions/${wid}`)
+        );
+      } catch (error) {
+        console.error(` Failed to delete teaching session:`, error);
+        throw new Error("Failed to delete teaching session.");
+      }
       // Delete Qdrant collection
       try {
         await axiosClient.delete(`/api/embeddings/${wid}/qdrant-delete`);
@@ -158,11 +170,14 @@ class WorkspaceService {
         `workspaces/${wid}/channels`,
         `workspaces/${wid}/actions`,
         `workspaces/${wid}/people`,
+        `workspaces/${wid}/knowledge/teach/contents`,
+        `workspaces/${wid}/knowledge/teach/sessions`,
         `workspaces/${wid}/knowledge`,
         `workspaces/${wid}/members`,
       ];
 
       await Promise.all(subCollections.map((path) => deleteCollection(path)));
+      await deleteDoc(doc(db, `workspaces/${wid}/knowledge/teach`));
 
       //  Delete document
       await deleteDoc(doc(db, `workspaces/${wid}`));

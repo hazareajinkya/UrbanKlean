@@ -101,8 +101,7 @@ export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
     ],
   };
 };
-
-export const generateDefaultTrainingSession = (
+export const generateDefaultTeachSession = (
   wid: string,
   id?: string
 ): ITraingSession => {

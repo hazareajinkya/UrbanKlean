@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export const textKnowledgeKey = (wid: string) => ["text-knowledge", wid];
 export const pdfKnowledgeKey = (wid: string) => ["pdf-knowledge", wid];
 export const webKnowledgeKey = (wid: string) => ["web-knowledge", wid];
+export const teachKnowledgeKey = (wid: string) => ["teach-knowledge", wid];
 
 export const useTextKnowledge = (wid: string) => {
   return useQuery({
@@ -24,5 +25,13 @@ export const useWebKnowledge = (wid: string) => {
     queryKey: webKnowledgeKey(wid),
     queryFn: () => knowledgeService.getWebKnowledge(wid),
     staleTime: 1000 * 30,
+  });
+};
+
+export const useTechKnowledge = (wid: string) => {
+  return useQuery({
+    queryKey: teachKnowledgeKey(wid),
+    queryFn: () => knowledgeService.getAllTeachKnowledge(wid),
+    enabled: Boolean(wid),
   });
 };

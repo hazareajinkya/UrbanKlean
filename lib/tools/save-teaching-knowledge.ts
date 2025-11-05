@@ -1,16 +1,16 @@
 import { tool } from "ai";
 import { latency } from "../utils";
-import knowledgeService from "../services/knowledge-service";
 import z from "zod";
 import axiosClient from "../clients/axios-client";
-import { v4 } from "uuid";
 
-export const saveTrainingKnowledge = (wid: string) =>
+export const saveTeachKnowledge = (wid: string) =>
   tool({
     name: "Save training knowledge",
     description: "Save structured training knowledge (title + description)",
     inputSchema: z.object({
-      title: z.string().describe("Short title for the knowledge entry"),
+      title: z
+        .string()
+        .describe("Max three words title for the knowledge entry"),
       description: z.string().describe("Detailed training knowledge to save"),
     }),
     outputSchema: z.object({
@@ -19,16 +19,11 @@ export const saveTrainingKnowledge = (wid: string) =>
     }),
     execute: async ({ title, description }) => {
       latency.start();
-      const existing = await knowledgeService.getTextKnowledge(wid);
-      const tid = existing?.id ?? v4();
-      const newContent = existing?.content
-        ? `${existing.content}\n\n${description}`
-        : description;
-      console.log(newContent);
+
       try {
-        await axiosClient.post(`/api/embeddings/${wid}/text`, {
-          content: newContent,
-          tid,
+        await axiosClient.post(`/api/embeddings/${wid}/teach`, {
+          content: description,
+          title,
         });
       } catch (error) {
         console.log("Error occured during saving training data :", error);

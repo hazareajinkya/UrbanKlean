@@ -2,9 +2,7 @@ import queryClient from "@/lib/clients/query-client";
 import { sessionKey } from "@/lib/hooks/session/use-session";
 import chatService from "@/lib/services/chat-service";
 import { IAgent } from "@/lib/types/agent";
-import { IChatMessage, ISession } from "@/lib/types/session";
-import { useQueryClient } from "@tanstack/react-query";
-import { UIMessage } from "ai";
+import { IChatMessage } from "@/lib/types/session";
 import { v4 } from "uuid";
 
 export const initChat = async (agent: IAgent) => {
@@ -67,20 +65,4 @@ export const getLocalSession = (aid: string) => {
   let sessions = localStorage.getItem("sessions");
   let sessionsMap = sessions ? JSON.parse(sessions) : {};
   return sessionsMap[aid];
-};
-
-export const saveLocalTrainSession = (wid: string, sid: string) => {
-  let sessions = localStorage.getItem("trainSessions");
-  let sessionsMap = sessions ? JSON.parse(sessions) : {};
-  sessionsMap = {
-    ...sessionsMap,
-    [wid]: sid,
-  };
-  localStorage.setItem("trainSessions", JSON.stringify(sessionsMap));
-};
-
-export const getLocalTrainSession = (wid: string) => {
-  let sessions = localStorage.getItem("trainSessions");
-  let sessionsMap = sessions ? JSON.parse(sessions) : {};
-  return sessionsMap[wid];
 };

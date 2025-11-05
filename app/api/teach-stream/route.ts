@@ -2,7 +2,7 @@ import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import { IChatMessage } from "@/lib/types/session";
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, stepCountIs, streamText } from "ai";
-import { saveTrainingKnowledge } from "@/lib/tools/save-training-knowledge";
+import { saveTeachKnowledge } from "@/lib/tools/save-teaching-knowledge";
 
 export const POST = async (req: Request) => {
   try {
@@ -32,7 +32,7 @@ export const POST = async (req: Request) => {
       system: prompt,
       messages: convertToModelMessages(messages),
       tools: {
-        saveTrainingKnowledge: saveTrainingKnowledge(wid),
+        saveTrainingKnowledge: saveTeachKnowledge(wid),
         searchKnowledge: searchKnowledge(wid),
       },
       stopWhen: stepCountIs(5),
