@@ -19,18 +19,24 @@ export async function POST(
 
     if (!wid) return errorResponse("Workspace ID is required", 400);
 
-    const { content } = await validateRequestBody(request);
+    const { content, title } = await validateRequestBody(request);
 
-    const { chunkSize, points } = await knowledgeService.s_embedText(
+    const { chunkSize, points } = await knowledgeService.s_embedTeachContent(
       wid,
       content
     );
 
-    await knowledgeService.s_saveText(wid, points, content, chunkSize);
+    await knowledgeService.s_saveTeachKnowledge(
+      wid,
+      title,
+      content,
+      points,
+      chunkSize
+    );
 
     return successResponse(
       { wid, status: "trained" },
-      "Text embedded successfully"
+      "Teach content embedded successfully"
     );
   } catch (error) {
     console.error("Error in text embedding: ", error);
@@ -38,20 +44,19 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return errorResponse(error.message, 400);
     }
-
     return serverErrorResponse(error);
   }
 }
 
-const textEmbeddingSchema = z.object({
+const TeachContentEmbeddingSchema = z.object({
   content: z.string().min(1, "Content is required"),
-  tid: z.string().min(1, "Text ID is required"),
+  title: z.string().min(1, "Title is required"),
 });
 
 export const validateRequestBody = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    return textEmbeddingSchema.parse(body);
+    return TeachContentEmbeddingSchema.parse(body);
   } catch (error) {
     if (error instanceof z.ZodError) {
       throw error;
@@ -60,7 +65,6 @@ export const validateRequestBody = async (request: NextRequest) => {
   }
 };
 
-// Delete route
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ wid: string }> }
@@ -68,13 +72,19 @@ export async function DELETE(
   try {
     const { wid } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
-    const textKnowledge = await knowledgeService.getTextKnowledge(wid);
-    if (!textKnowledge) return successResponse("Text knowledge not exist");
+    const { searchParams } = new URL(request.url);
+    const tid = searchParams.get("tid");
+    if (!tid) return errorResponse("TeachKnowledge ID is required", 400);
+    const textKnowledge = await knowledgeService.getTeachKnowledge(wid, tid);
+    if (!textKnowledge)
+      return successResponse({ wid }, "Teach knowledge not exist");
     if (textKnowledge.points.length > 0) {
       await qdClient.delete(wid, { points: textKnowledge.points });
     }
-    await deleteDoc(doc(db, `workspaces/${wid}/knowledge/text`));
-    return successResponse({ wid }, "Text knowledge deleted successfully");
+    await deleteDoc(
+      doc(db, `workspaces/${wid}/knowledge/teach/contents/${tid}`)
+    );
+    return successResponse({ wid }, "Teach knowledge deleted successfully");
   } catch (error) {
     console.error("Error deleting text knowledge: ", error);
     return serverErrorResponse(error);

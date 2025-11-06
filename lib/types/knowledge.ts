@@ -11,6 +11,16 @@ export interface ITextKnowledge {
   updatedAt: string;
   status: ITrainingStatus;
 }
+export interface ITeachKnowledge {
+  id: string;
+  wid: string;
+  title: string;
+  points: string[];
+  chunkSize: number;
+  content: string;
+  updatedAt: string;
+  status: ITrainingStatus;
+}
 
 export interface IPdfKnowledge {
   files: {
@@ -58,6 +68,25 @@ export const generateDefaultTextKnowledge = (
     points,
     chunkSize,
     content,
+    updatedAt: new Date().toISOString(),
+    status: "trained",
+  };
+};
+
+export const generateDefaultTeachKnowledge = (
+  wid: string,
+  points: string[],
+  title: string,
+  content: string,
+  chunkSize: number
+): ITeachKnowledge => {
+  return {
+    id: v4(),
+    wid,
+    points,
+    title,
+    content,
+    chunkSize,
     updatedAt: new Date().toISOString(),
     status: "trained",
   };

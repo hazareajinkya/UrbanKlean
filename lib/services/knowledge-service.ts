@@ -6,6 +6,7 @@ import {
   getDoc,
   getDocs,
   increment,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -14,9 +15,11 @@ import {
 import qdClient from "../clients/qdrant-client";
 import {
   generateDefaultPdfKnowledge,
+  generateDefaultTeachKnowledge,
   generateDefaultTextKnowledge,
   generateDefaultWebKnowledge,
   IPdfKnowledge,
+  ITeachKnowledge,
   ITextKnowledge,
   IWebKnowledge,
   IWebPropsMetadata,
@@ -27,7 +30,6 @@ import { v4 } from "uuid";
 import { embeddingConfig } from "../constants";
 import { chunkPdfContent, chunkText } from "./chunker-service";
 import storageService from "./storage-service";
-import { DocumentMetadata } from "@mendable/firecrawl-js";
 import axiosClient from "../clients/axios-client";
 
 class KnowledgeService {
@@ -73,6 +75,29 @@ class KnowledgeService {
         payload: {
           text: embedding.text,
           source: "text",
+        },
+      };
+    });
+
+    await qdClient.upsert(wid, { points: points });
+    return {
+      chunks: embeddings,
+      points: points.map((point) => point.id),
+      chunkSize: embeddings.length,
+    };
+  }
+  async s_embedTeachContent(wid: string, content: string) {
+    await this.checkCollection(wid);
+    const chunks = await chunkText(content);
+    const chunkTexts = chunks.map((chunk) => chunk.pageContent);
+    const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
+    const points = embeddings.map((embedding) => {
+      return {
+        id: v4(),
+        vector: embedding.embedding,
+        payload: {
+          text: embedding.text,
+          source: "teach",
         },
       };
     });
@@ -153,7 +178,7 @@ class KnowledgeService {
 
   deleteAllPdfKnowledge = async (wid: string) => {
     const pdfs = await knowledgeService.getPdfKnowledge(wid);
-    if (pdfs.files) {
+    if (pdfs && pdfs.files) {
       const files = pdfs.files;
       await Promise.all(
         files.map(async (f) => {
@@ -194,14 +219,29 @@ class KnowledgeService {
     }
   };
   // Delete text knowledge
-  async deleteAllTextKnowledge(wid: string) {
+  deleteAllTextKnowledge = async (wid: string) => {
     try {
       await axiosClient.delete(`/api/embeddings/${wid}/text`);
     } catch (error) {
       console.log("Error occured during delete text knowledge : ", error);
       throw new Error("Failed to delete text knowledge");
     }
-  }
+  };
+  // Delete all tech knowledge
+  deleteAllTeachKnowledge = async (wid: string) => {
+    try {
+      const techKnowledge = await this.getAllTeachKnowledge(wid);
+      if (techKnowledge.length > 0) {
+        const promises = techKnowledge.map((t) =>
+          axiosClient.delete(`/api/embeddings/${wid}/teach?tid=${t.id}`)
+        );
+        await Promise.all(promises);
+      }
+    } catch (error) {
+      console.log("Error occured during delete teach knowledge : ", error);
+      throw new Error("Failed to delete teach knowledge");
+    }
+  };
 
   async s_savePDFKnowledge(
     wid: string,
@@ -352,10 +392,46 @@ class KnowledgeService {
     });
   }
 
+  async s_saveTeachKnowledge(
+    wid: string,
+    title: string,
+    content: string,
+    points: string[],
+    chuckSize: number
+  ) {
+    const data = generateDefaultTeachKnowledge(
+      wid,
+      points,
+      title,
+      content,
+      chuckSize
+    );
+    const ref = doc(
+      db,
+      `workspaces/${wid}/knowledge/teach/contents/${data.id}`
+    );
+    await setDoc(ref, data);
+  }
+
   async getTextKnowledge(wid: string) {
     const snap = await getDoc(doc(db, `workspaces/${wid}/knowledge/text`));
     const data = snap.data() as ITextKnowledge;
     return data ?? null;
+  }
+
+  async getTeachKnowledge(wid: string, tid: string) {
+    const ref = doc(db, `workspaces/${wid}/knowledge/teach/contents/${tid}`);
+    const snap = await getDoc(ref);
+    const data = snap.data() as ITeachKnowledge;
+    return data ?? null;
+  }
+
+  async getAllTeachKnowledge(wid: string) {
+    const colRef = collection(db, `workspaces/${wid}/knowledge/teach/contents`);
+    const q = query(colRef, orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
+    const data = snap.docs.map((doc) => doc.data()) as ITeachKnowledge[];
+    return data.length > 0 ? data : [];
   }
 
   async getPdfKnowledge(wid: string) {

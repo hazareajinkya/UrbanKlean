@@ -23,6 +23,14 @@ export interface ISession {
   updatedAt: string;
 }
 
+export interface ITraingSession {
+  id: string;
+  wid: string;
+  messages: IChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IChatMessage extends UIMessage {
   metadata: {
     createdAt: string;
@@ -91,5 +99,17 @@ export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
         text: msg,
       },
     ],
+  };
+};
+export const generateDefaultTeachSession = (
+  wid: string,
+  id?: string
+): ITraingSession => {
+  return {
+    id: id ?? v4(),
+    wid,
+    messages: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 };

@@ -1,7 +1,11 @@
 import axiosClient from "@/lib/clients/axios-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { pdfKnowledgeKey, webKnowledgeKey } from "./use-knowledge-base";
+import {
+  pdfKnowledgeKey,
+  teachKnowledgeKey,
+  webKnowledgeKey,
+} from "./use-knowledge-base";
 import knowledgeService from "@/lib/services/knowledge-service";
 
 export const useKnowledgeActions = () => {
@@ -134,6 +138,19 @@ export const useKnowledgeActions = () => {
     },
   });
 
+  const deleteTeachKnowledge = useMutation({
+    mutationFn: async ({ wid, tid }: { wid: string; tid: string }) => {
+      await axiosClient.delete(`/api/embeddings/${wid}/teach?tid=${tid}`);
+    },
+    onSuccess: (_, { wid }) => {
+      toast.success("Knowledge deleted successfully");
+      qc.invalidateQueries({ queryKey: teachKnowledgeKey(wid) });
+    },
+    onError: (error: Error) => {
+      console.log("error: ", error);
+      toast.error(error.message);
+    },
+  });
   return {
     embedAndSaveText,
     embedAndSavePdf,
@@ -142,5 +159,6 @@ export const useKnowledgeActions = () => {
     deleteWebsite,
     scrapeWebsite,
     crawlWebsites,
+    deleteTeachKnowledge,
   };
 };
