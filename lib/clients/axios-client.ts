@@ -106,6 +106,13 @@ axiosClient.interceptors.request.use(
   }
 );
 
+export const blogClient = axios.create({
+  baseURL: `${process.env.BLOG_API_URL}/api`,
+  headers: {
+    Authorization: `Bearer ${process.env.BLOG_API_KEY}`,
+  },
+});
+
 // Response interceptor
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {

@@ -4,7 +4,7 @@ import { MetadataRoute } from "next";
 export const revalidate = 60;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXTAUTH_URL!;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
   const { blogs } = await blogService.getAllBlogs();
 
   const blogUrls = blogs.map((b: any) => ({
