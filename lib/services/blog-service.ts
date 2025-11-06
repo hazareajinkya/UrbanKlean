@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import axiosClient, { blogClient } from "../clients/axios-client";
-import axios from "axios";
+import { blogClient } from "../clients/axios-client";
 
 export const blogService = {
   async getAllBlogs(): Promise<GetBlogsResponse> {
