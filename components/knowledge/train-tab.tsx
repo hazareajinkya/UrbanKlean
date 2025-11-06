@@ -371,7 +371,7 @@ const TrainChatHeader = ({ onRefresh }: { onRefresh: () => void }) => {
       </div>
       <Button
         size="icon"
-        variant="outline"
+        variant="ghost"
         onClick={onRefresh}
         aria-label="Refresh training session"
         title="Refresh training session"
