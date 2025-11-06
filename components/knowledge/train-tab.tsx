@@ -20,6 +20,7 @@ import {
   ArrowUp,
   BookMarkedIcon,
   Globe,
+  RotateCcw,
   Square,
   Trash2Icon,
 } from "lucide-react";
@@ -39,6 +40,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
 import ConfirmationDialog from "../ui/confirmation-dialog";
 import { ITeachKnowledge } from "@/lib/types/knowledge";
+
+import {
+  getTeachLocalSession,
+  saveTeachLocalSession,
+} from "../chat/chat-utils";
+import { useTeachSession } from "@/lib/hooks/teach-session/use-teach-session";
+import { useTeachSessionActions } from "@/lib/hooks/teach-session/use-teach-session-actions";
 
 const useBrandColors = () => {
   const [colors, setColors] = useState({ primary: "", primaryForeground: "" });
@@ -69,19 +77,24 @@ export default function TrainTab() {
   );
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const queryClient = useQueryClient();
-  const { messages, sendMessage, setMessages, status } = useChat({
-    messages: [
+  const sidRef = useRef<string | null>(null);
+  const { data: session } = useTeachSession(wid);
+  const { createSession } = useTeachSessionActions(wid);
+
+  const initialAssistantMessage: UIMessage = {
+    id: "Initial-agent-message",
+    role: "assistant",
+    parts: [
       {
-        id: "Initial-agent-message",
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: "Hello there! How can I help you today?",
-          },
-        ],
+        type: "text",
+        text: "Hello there! How can I help you today?",
       },
     ],
+  };
+
+  const { messages, sendMessage, setMessages, status } = useChat({
+    messages: [initialAssistantMessage],
+
     transport: new DefaultChatTransport({
       api: "/api/teach-stream",
       body: { wid },
@@ -106,9 +119,10 @@ export default function TrainTab() {
           queryKey: teachKnowledgeKey(wid),
         });
       }
+      const currentSid = sidRef.current;
       setMessages([...prevMessages, aimsg] as any);
-      if (wid) {
-        teachService.saveTeachMessage(wid, aimsg);
+      if (wid && currentSid) {
+        teachService.saveTeachMessage(wid, currentSid, aimsg);
       }
     },
   });
@@ -118,8 +132,8 @@ export default function TrainTab() {
     _options: ChatRequestOptions
   ) => {
     e.preventDefault();
-
-    if (!input.trim() || !wid) return;
+    const currentSid = sidRef.current;
+    if (!input.trim() || !wid || !currentSid) return;
 
     sendMessage({
       parts: [
@@ -133,7 +147,7 @@ export default function TrainTab() {
     setInput("");
 
     const userMsg = defaultUserMessage(input);
-    teachService.saveTeachMessage(wid, userMsg);
+    teachService.saveTeachMessage(wid, currentSid, userMsg);
   };
 
   const handleDeleteKnowledge = async (content: ITeachKnowledge) => {
@@ -155,14 +169,22 @@ export default function TrainTab() {
   useEffect(() => {
     const init = async () => {
       if (!wid) return;
-      const existing = await teachService.getTeachSession(wid);
-      if (!existing) await teachService.createTeachSession(wid);
+      let localSid = getTeachLocalSession(wid);
+      if (!localSid) {
+        const session = await teachService.createTeachSession(wid);
+        localSid = session.id;
+        saveTeachLocalSession(wid, localSid);
+      }
+      sidRef.current = localSid;
+      const existing = await teachService.getTeachSession(wid, localSid);
       if (existing?.messages?.length) {
         setMessages(existing.messages as any);
+      } else {
+        setMessages([initialAssistantMessage] as any);
       }
     };
     init();
-  }, [wid, setMessages]);
+  }, [wid, setMessages, session]);
 
   // Handle scroll detection
   useEffect(() => {
@@ -190,6 +212,15 @@ export default function TrainTab() {
     }
   };
 
+  //
+  const handleRefresh = async () => {
+    if (!wid) return;
+    console.log("test");
+    const newSession = await createSession.mutateAsync();
+    sidRef.current = newSession.id;
+    saveTeachLocalSession(wid, newSession.id);
+    setMessages([initialAssistantMessage] as any);
+  };
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:p-6 place py-6 items-center ">
       <div className="relative h-[75vh] max-h-[900px] min-h-[500px] mx-auto">
@@ -199,7 +230,7 @@ export default function TrainTab() {
               <div
                 className={`h-full flex flex-col overflow-hidden relative mx-auto  `}
               >
-                <TrainChatHeader />
+                <TrainChatHeader onRefresh={handleRefresh} />
 
                 <div className="flex-1 overflow-y-auto " ref={messageListRef}>
                   <TrainMessageList
@@ -319,9 +350,9 @@ export default function TrainTab() {
   );
 }
 
-const TrainChatHeader = () => {
+const TrainChatHeader = ({ onRefresh }: { onRefresh: () => void }) => {
   return (
-    <div className="border-b border-border bg-card px-6 py-4">
+    <div className="border-b border-border bg-card px-6 py-4 flex justify-between">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -338,6 +369,15 @@ const TrainChatHeader = () => {
           </div>
         </div>
       </div>
+      <Button
+        size="icon"
+        variant="outline"
+        onClick={onRefresh}
+        aria-label="Refresh training session"
+        title="Refresh training session"
+      >
+        <RotateCcw className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

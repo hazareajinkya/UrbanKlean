@@ -66,3 +66,26 @@ export const getLocalSession = (aid: string) => {
   let sessionsMap = sessions ? JSON.parse(sessions) : {};
   return sessionsMap[aid];
 };
+
+export const saveTeachLocalSession = (wid: string, sid: string) => {
+  let sessions = localStorage.getItem("teach_sessions");
+  let sessionsMap = sessions ? JSON.parse(sessions) : {};
+  sessionsMap = {
+    ...sessionsMap,
+    [wid]: sid,
+  };
+  localStorage.setItem("teach_sessions", JSON.stringify(sessionsMap));
+};
+
+export const removeTeachLocalSession = (wid: string) => {
+  let sessions = localStorage.getItem("teach_sessions");
+  let sessionsMap = sessions ? JSON.parse(sessions) : {};
+  delete sessionsMap[wid];
+  localStorage.setItem("teach_sessions", JSON.stringify(sessionsMap));
+};
+
+export const getTeachLocalSession = (wid: string) => {
+  let sessions = localStorage.getItem("teach_sessions");
+  let sessionsMap = sessions ? JSON.parse(sessions) : {};
+  return sessionsMap[wid];
+};

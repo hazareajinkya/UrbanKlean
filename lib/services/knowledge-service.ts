@@ -30,7 +30,6 @@ import { v4 } from "uuid";
 import { embeddingConfig } from "../constants";
 import { chunkPdfContent, chunkText } from "./chunker-service";
 import storageService from "./storage-service";
-import { DocumentMetadata } from "@mendable/firecrawl-js";
 import axiosClient from "../clients/axios-client";
 
 class KnowledgeService {
@@ -431,10 +430,7 @@ class KnowledgeService {
     const colRef = collection(db, `workspaces/${wid}/knowledge/teach/contents`);
     const q = query(colRef, orderBy("updatedAt", "desc"));
     const snap = await getDocs(q);
-    const data = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ITeachKnowledge[];
+    const data = snap.docs.map((doc) => doc.data()) as ITeachKnowledge[];
     return data.length > 0 ? data : [];
   }
 
