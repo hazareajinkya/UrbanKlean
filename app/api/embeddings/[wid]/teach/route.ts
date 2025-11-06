@@ -53,7 +53,7 @@ const TeachContentEmbeddingSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
-export const validateRequestBody = async (request: NextRequest) => {
+const validateRequestBody = async (request: NextRequest) => {
   try {
     const body = await request.json();
     return TeachContentEmbeddingSchema.parse(body);
