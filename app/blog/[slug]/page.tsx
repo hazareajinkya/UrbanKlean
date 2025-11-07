@@ -7,7 +7,7 @@ import { remark } from "remark";
 import html from "remark-html";
 import Script from "next/script";
 
-export const revalidate = 60 * 60 * 24;
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   const { blogs } = await blogService.getAllBlogs();
