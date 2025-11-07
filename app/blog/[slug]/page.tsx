@@ -22,7 +22,7 @@ export async function generateMetadata({
   return {
     title: blog.metaTitle || blog.title,
     description: blog.metaDescription || blog.excerpt,
-    keywords: blog.metaKeywords?.join(", "),
+    keywords: blog.metaKeywords,
     authors: [
       {
         name: blog.author.name,
@@ -34,9 +34,7 @@ export async function generateMetadata({
       type: "article",
       title: blog.metaTitle || blog.title,
       description: blog.metaDescription || blog.excerpt,
-      url:
-        blog.canonicalUrl ||
-        `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
       siteName: process.env.NEXT_PUBLIC_SITE_NAME || "Magical CX",
       publishedTime: blog.publishedAt,
       modifiedTime: blog.updatedAt,
@@ -57,9 +55,7 @@ export async function generateMetadata({
       creator: blog.author.name,
     },
     alternates: {
-      canonical:
-        blog.canonicalUrl ||
-        `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
+      canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
     },
 
     other: {
