@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { remark } from "remark";
 import html from "remark-html";
-export const revalidate = 60;
+import Script from "next/script";
+
+export const revalidate = 60 * 60 * 24;
 
 export async function generateStaticParams() {
   const { blogs } = await blogService.getAllBlogs();
@@ -19,9 +21,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const blog = await blogService.getBlogBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "Magical CX";
+  const canonicalUrl = blog.canonicalUrl || `${baseUrl}/blog/${blog.slug}`;
+  const ogImage =
+    blog.ogImage || blog.featuredImage || `${baseUrl}/default-og.jpg`;
+  const metaTitle = blog.metaTitle || blog.title;
+  const metaDescription = blog.metaDescription || blog.excerpt || "";
+
   return {
-    title: blog.metaTitle || blog.title,
-    description: blog.metaDescription || blog.excerpt,
+    title: metaTitle,
+    description: metaDescription,
     keywords: blog.metaKeywords,
     authors: [
       {
@@ -30,62 +40,46 @@ export async function generateMetadata({
       },
     ],
     category: blog.categories?.[0] || "Blog",
+    robots: {
+      index: blog.status === "published",
+      follow: true,
+      googleBot: {
+        index: blog.status === "published",
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     openGraph: {
       type: "article",
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || blog.excerpt,
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
-      siteName: process.env.NEXT_PUBLIC_SITE_NAME || "Magical CX",
+      title: metaTitle,
+      description: metaDescription,
+      url: canonicalUrl,
+      siteName: siteName,
       publishedTime: blog.publishedAt,
       modifiedTime: blog.updatedAt,
       authors: [blog.author.name],
       tags: blog.tags,
+      section: blog.categories?.[0],
       images: [
         {
-          url: blog.ogImage || blog.featuredImage || "/default-og.jpg",
-          alt: blog.metaTitle || blog.title,
+          url: ogImage,
+          alt: metaTitle,
+          width: 1200,
+          height: 630,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || blog.excerpt,
-      images: [blog.ogImage || blog.featuredImage || "/default-og.jpg"],
+      title: metaTitle,
+      description: metaDescription,
+      images: [ogImage],
       creator: blog.author.name,
     },
     alternates: {
-      canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/blog/${blog.slug}`,
-    },
-
-    other: {
-      "script:type": "application/ld+json",
-      "script:innerHTML": JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        headline: blog.metaTitle || blog.title,
-        description: blog.metaDescription || blog.excerpt,
-        image: blog.ogImage || blog.featuredImage || "/default-og.jpg",
-        author: {
-          "@type": "Person",
-          name: blog.author.name,
-          url: blog.author.profilePicture,
-        },
-        publisher: {
-          "@type": "Organization",
-          name: process.env.NEXT_PUBLIC_SITE_NAME || "Magical CX",
-          logo: {
-            "@type": "ImageObject",
-            url: `${process.env.NEXT_PUBLIC_BASE_URL}/logo.png`,
-          },
-        },
-        datePublished: blog.publishedAt,
-        dateModified: blog.updatedAt,
-        mainEntityOfPage: {
-          "@type": "WebPage",
-          "@id": blog.canonicalUrl,
-        },
-      }),
+      canonical: canonicalUrl,
     },
   };
 }
@@ -101,13 +95,100 @@ export default async function BlogPage({
     .use(html, { sanitize: false })
     .process(blog.content);
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "Magical CX";
+  const canonicalUrl = blog.canonicalUrl || `${baseUrl}/blog/${blog.slug}`;
+  const ogImage =
+    blog.ogImage || blog.featuredImage || `${baseUrl}/default-og.jpg`;
+  const metaTitle = blog.metaTitle || blog.title;
+  const metaDescription = blog.metaDescription || blog.excerpt || "";
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: metaTitle,
+    description: metaDescription,
+    image: ogImage,
+    author: {
+      "@type": "Person",
+      name: blog.author.name,
+      image: blog.author.profilePicture,
+      url: blog.author.profilePicture,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    datePublished: blog.publishedAt,
+    dateModified: blog.updatedAt,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    ...(blog.categories &&
+      blog.categories.length > 0 && {
+        articleSection: blog.categories[0],
+      }),
+    ...(blog.tags &&
+      blog.tags.length > 0 && {
+        keywords: blog.tags.join(", "),
+      }),
+    ...(blog.readingTime && {
+      timeRequired: `PT${blog.readingTime}M`,
+    }),
+  };
+
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${baseUrl}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: metaTitle,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background dark">
+      <Script
+        id="blog-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData),
+        }}
+      />
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbStructuredData),
+        }}
+      />
       <header className="border-b border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+            aria-label="Back to blog listing"
           >
             <span>
               <ArrowLeft />
@@ -120,22 +201,30 @@ export default async function BlogPage({
           <div className="flex items-center gap-4">
             <Image
               src={blog.author.profilePicture || "/placeholder.svg"}
-              alt={blog.author.name}
+              alt={`${blog.author.name}'s profile picture`}
               width={48}
               height={48}
               className="rounded-full w-12 h-12"
             />
             <div>
               <p className="font-medium text-foreground">{blog.author.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(
-                  blog.publishedAt || blog.createdAt
-                ).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <time dateTime={blog.publishedAt || blog.createdAt}>
+                  {new Date(
+                    blog.publishedAt || blog.createdAt
+                  ).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+                {blog.readingTime && (
+                  <>
+                    <span>•</span>
+                    <span>{blog.readingTime} min read</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
