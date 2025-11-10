@@ -27,10 +27,10 @@ export default async function BlogListPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto min-h-screen px-4 ">
-        <div className=" py-12 sm:py-14 lg:py-16">
-          <div className="space-y-6">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-foreground">
-              Blog
+        <div className=" py-6 sm:py-8 lg:py-10 mt-5">
+          <div className="space-y-4 max-w-4xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+              Exploring New Blogs
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed tracking-normal">
               Thoughts on web development, design, and technology.
@@ -51,7 +51,7 @@ export default async function BlogListPage() {
             </div>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
             {blogs.map((blog) => (
               <Link
                 key={blog.id}
@@ -70,7 +70,7 @@ export default async function BlogListPage() {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-5 py-6 sm:py-7 flex-1">
+                <div className="flex flex-col gap-3 py-6 sm:py-7 flex-1">
                   <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 flex-shrink-0" />
@@ -94,9 +94,12 @@ export default async function BlogListPage() {
                     )}
                   </div>
 
-                  <h2 className="text-xl sm:text-2xl  text-foreground group-hover:text-primary transition-colors  leading-snug tracking-tight">
+                  <h2 className="text-xl sm:text-2xl text-foreground group-hover:text-primary transition-colors  leading-snug tracking-tight">
                     {blog.title}
                   </h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    {blog.excerpt}
+                  </p>
                 </div>
               </Link>
             ))}
