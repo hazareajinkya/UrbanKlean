@@ -9,7 +9,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="dark">
+    <div className="">
       {children}
       <Analytics />
     </div>
