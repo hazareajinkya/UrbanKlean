@@ -25,11 +25,11 @@ export default async function BlogListPage() {
   const { blogs } = await blogService.getAllBlogs();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto min-h-screen px-4 ">
         <div className=" py-6 sm:py-8 lg:py-10 mt-5">
           <div className="space-y-4 max-w-4xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font- tracking-tight leading-tight">
               Exploring New Blogs
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed tracking-normal">
@@ -64,16 +64,22 @@ export default async function BlogListPage() {
                       src={blog.featuredImage || "/placeholder.svg"}
                       alt={blog.title}
                       fill
-                      className="object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                      className="object-cover opacity-100 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 )}
 
                 <div className="flex flex-col gap-3 py-6 sm:py-7 flex-1">
+                  <h2 className="text-xl sm:text-2xl text-foreground group-hover:text-primary transition-colors  leading-snug tracking-tight">
+                    {blog.title}
+                  </h2>
+                  {/* <p className="text-sm sm:text-base text-muted-foreground">
+                    {blog.excerpt}
+                  </p> */}
                   <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 flex-shrink-0" />
+                      {/* <Calendar className="h-4 w-4 flex-shrink-0" /> */}
                       <span className="leading-normal">
                         {new Date(
                           blog.publishedAt || blog.updatedAt
@@ -86,20 +92,13 @@ export default async function BlogListPage() {
                     </div>
                     {blog.readingTime && (
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        {/* <Clock className="h-4 w-4 flex-shrink-0" /> */}
                         <span className="leading-normal">
                           {blog.readingTime} min
                         </span>
                       </div>
                     )}
                   </div>
-
-                  <h2 className="text-xl sm:text-2xl text-foreground group-hover:text-primary transition-colors  leading-snug tracking-tight">
-                    {blog.title}
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {blog.excerpt}
-                  </p>
                 </div>
               </Link>
             ))}

@@ -5,18 +5,14 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import {
-  FB_ID,
-  FB_PAGE_ACCESS_TOKEN,
-  INSTA_ID,
-  INSTA_PAGE_ACCESS_TOKEN,
-  PAGE_ACCESS_TOKEN,
-  SLACK_CLIENT_ID,
-  SLACK_CLIENT_SECRET,
   waconf,
-  WA_PHONE_ID,
   fbconf,
   instaconf,
-} from "../constants";
+  slackconf,
+  postmarkconf,
+  resendconf,
+  blogconf,
+} from "../utils/conf";
 
 // Create axios instance with default configuration
 const axiosClient: AxiosInstance = axios.create({
@@ -28,55 +24,55 @@ const axiosClient: AxiosInstance = axios.create({
 });
 
 export const waclient = axios.create({
-  baseURL: `https://graph.facebook.com/${waconf.version}/${waconf.phoneID}`,
+  baseURL: `${waconf.baseURL}/${waconf.version}/${waconf.phoneID}`,
   headers: {
     Authorization: `Bearer ${waconf.accessToken}`,
   },
 });
 
 export const waMediaClient = axios.create({
-  baseURL: `https://graph.facebook.com/${waconf.version}`,
+  baseURL: `${waconf.baseURL}/${waconf.version}`,
   headers: {
     Authorization: `Bearer ${waconf.accessToken}`,
   },
 });
 
 export const instaClient = axios.create({
-  baseURL: `https://graph.instagram.com/${instaconf.version}/${instaconf.id}`,
+  baseURL: `${instaconf.baseURL}/${instaconf.version}/${instaconf.id}`,
   headers: {
     Authorization: `Bearer ${instaconf.accessToken}`,
   },
 });
 
 export const messengerClient = axios.create({
-  baseURL: `https://graph.facebook.com/${fbconf.version}/${fbconf.id}`,
+  baseURL: `${fbconf.baseURL}/${fbconf.version}/${fbconf.id}`,
   headers: {
     Authorization: `Bearer ${fbconf.accessToken}`,
   },
 });
 
 export const slackClient = axios.create({
-  baseURL: "https://slack.com/api",
+  baseURL: slackconf.baseURL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 export const postmarkClient = axios.create({
-  baseURL: "https://api.postmarkapp.com",
+  baseURL: postmarkconf.baseURL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    "X-Postmark-Account-Token": process.env.POSTMARK_ACCOUNT_TOKEN ?? "",
-    "X-Postmark-Server-Token": process.env.POSTMARK_SERVER_TOKEN ?? "",
+    "X-Postmark-Account-Token": postmarkconf.accountToken,
+    "X-Postmark-Server-Token": postmarkconf.serverToken,
   },
 });
 
 export const resendClient = axios.create({
-  baseURL: "https://api.resend.com",
+  baseURL: resendconf.baseURL,
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.RESEND_API_KEY ?? ""}`,
+    Authorization: `Bearer ${resendconf.apiKey}`,
   },
 });
 
@@ -107,9 +103,9 @@ axiosClient.interceptors.request.use(
 );
 
 export const blogClient = axios.create({
-  baseURL: `${process.env.BLOG_API_URL}/api`,
+  baseURL: `${blogconf.baseUrl}/api`,
   headers: {
-    Authorization: `Bearer ${process.env.BLOG_API_KEY}`,
+    Authorization: `Bearer ${blogconf.apiKey}`,
   },
 });
 

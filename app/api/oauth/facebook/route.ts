@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import axios from "axios";
 
-import { FB_APP_ID, FB_APP_SECRET, FB_REDIRECT_URI } from "@/lib/constants";
+import { fbconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import messengerService from "@/lib/services/messenger/messenger-service";
@@ -56,12 +56,12 @@ export async function GET(req: NextRequest) {
 
     // Step 2: Exchange the Code for an Access Token
     const tokenResponse = await axios.get(
-      "https://graph.facebook.com/v23.0/oauth/access_token",
+      `${fbconf.baseURL}/${fbconf.version}/oauth/access_token`,
       {
         params: {
-          client_id: FB_APP_ID,
-          redirect_uri: FB_REDIRECT_URI,
-          client_secret: FB_APP_SECRET,
+          client_id: fbconf.appId,
+          redirect_uri: fbconf.redirectUri,
+          client_secret: fbconf.appSecret,
           code: validatedParams.code,
         },
       }
@@ -76,9 +76,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Step 3: Inspect the Access Token (Optional but recommended for security)
-    const appAccessToken = `${FB_APP_ID}|${FB_APP_SECRET}`;
+    const appAccessToken = `${fbconf.appId}|${fbconf.appSecret}`;
     const debugResponse = await axios.get(
-      "https://graph.facebook.com/debug_token",
+      `${fbconf.baseURL}/${fbconf.version}/debug_token`,
       {
         params: {
           input_token: access_token,
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       throw new Error("Invalid access token received");
     }
 
-    if (tokenData.app_id !== FB_APP_ID) {
+    if (tokenData.app_id !== fbconf.appId) {
       throw new Error("Access token does not belong to this app");
     }
 

@@ -6,7 +6,7 @@ import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
-import { INSTA_ID } from "@/lib/constants";
+import { INSTA_ID } from "@/lib/utils/conf";
 
 // Function to send a text message
 export const maxDuration = 60;

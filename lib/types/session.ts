@@ -11,6 +11,7 @@ import {
   UIMessagePart,
   UITools,
 } from "ai";
+import z from "zod";
 export interface ISession {
   id: string;
   aid: string;
@@ -31,11 +32,19 @@ export interface ITraingSession {
   updatedAt: string;
 }
 
-export interface IChatMessage extends UIMessage {
-  metadata: {
-    createdAt: string;
-  };
-}
+const dataPartSchema = z.object({
+  type: z.literal("data"),
+  data: z.any(),
+});
+
+const metadataSchema = z.object({
+  createdAt: z.string(),
+});
+
+type MyMetadata = z.infer<typeof metadataSchema>;
+type MyDataPart = z.infer<typeof dataPartSchema>;
+
+export type IChatMessage = UIMessage<MyMetadata, MyDataPart, UITools>;
 
 export const generateDefaultSession = (
   wid: string,
@@ -101,6 +110,23 @@ export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
     ],
   };
 };
+
+export const defaultDataMessage = (data: any, id?: string): IChatMessage => {
+  return {
+    id: id ?? v4(),
+    role: "system",
+    metadata: {
+      createdAt: new Date().toISOString(),
+    },
+    parts: [
+      {
+        type: "data-data",
+        data: data,
+      },
+    ],
+  };
+};
+
 export const generateDefaultTeachSession = (
   wid: string,
   id?: string
@@ -113,3 +139,9 @@ export const generateDefaultTeachSession = (
     updatedAt: new Date().toISOString(),
   };
 };
+
+// export interface IChatMessage extends UIMessage {
+//   metadata: {
+//     createdAt: string;
+//   };
+// }

@@ -204,7 +204,7 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                           return (
                             <div key={index}>
                               <div
-                                className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose "
+                                className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
                                 key={index}
                               >
                                 <Streamdown
@@ -287,12 +287,12 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
             <div
               className={clsx(
                 "max-w-[90%] md:max-w-[75%] leading-7",
+                "px-3 py-3",
                 assistantMessageStyle({
                   id: "loading",
                   role: "assistant",
                   parts: [{ type: "text", text: "" }],
-                } as UIMessage),
-                "px-3 py-3"
+                } as UIMessage)
               )}
             >
               <div className="flex gap-1.5 py-1">
@@ -320,7 +320,7 @@ const heightClass = `min-h-[calc(100vh-19rem)] md:min-h-[calc(100vh-20rem)]`;
 
 const assistantMessageStyle = (message: UIMessage) =>
   clsx(
-    "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-2",
+    "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-1.5",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
       ? "rounded-b-2xl rounded-tr-2xl "

@@ -22,7 +22,8 @@ export const getModel = (agent: IAgent) => {
 export const getSystemPrompt = async (
   agent: IAgent,
   query: string,
-  channel: IChannelProvider
+  channel: IChannelProvider,
+  personId?: string
 ) => {
   const workflowstext = await retrieveWorkflow(agent.id, query);
 
@@ -31,7 +32,7 @@ export const getSystemPrompt = async (
 
   ${coreSystemPrompt}
 
-  ${channel === "web" && identityCollectionPrompt}
+  ${!personId && channel === "web" && identityCollectionPrompt}
 
   ${
     channel === "email" &&

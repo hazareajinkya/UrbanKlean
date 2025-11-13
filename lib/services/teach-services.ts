@@ -6,7 +6,7 @@ import {
   generateDefaultTeachSession,
 } from "../types/session";
 import { cleanMessageForSaving } from "./chat-service";
-import { saveTeachLocalSession } from "@/components/chat/chat-utils";
+import { saveTeachLocalSession } from "../../components/chat/chat-utils";
 
 class TeachService {
   async createTeachSession(wid: string) {

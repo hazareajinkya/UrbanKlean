@@ -6,7 +6,7 @@ import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
-import { FB_ID, INSTA_ID } from "@/lib/constants";
+import { FB_ID, INSTA_ID } from "@/lib/utils/conf";
 import messengerParser from "@/lib/services/messenger/messenger-webhook-parser";
 import messengerService from "@/lib/services/messenger/messenger-service";
 import channelService from "@/lib/services/channel-service";

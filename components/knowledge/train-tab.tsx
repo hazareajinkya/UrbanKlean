@@ -112,6 +112,7 @@ export default function TrainTab() {
     onFinish: async (evt) => {
       const aimsg = evt.message as unknown as IChatMessage;
       const prevMessages = evt.messages.slice(0, -1);
+
       if (lastToolRef.current === "saveTrainingKnowledge") {
         lastToolRef.current = null;
         if (!wid) throw new Error("Missing workspace id");

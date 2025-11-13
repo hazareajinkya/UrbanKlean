@@ -3,7 +3,7 @@ import { waclient, waMediaClient } from "@/lib/clients/axios-client";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import storageService from "../storage-service";
 import axios from "axios";
-import { PAGE_ACCESS_TOKEN } from "@/lib/constants";
+import { waconf } from "@/lib/utils/conf";
 
 class WaService {
   private body = {
@@ -87,7 +87,7 @@ class WaService {
         const mediaDownload = await axios.get(mediaUrl, {
           responseType: "arraybuffer",
           headers: {
-            Authorization: `Bearer ${PAGE_ACCESS_TOKEN}`,
+            Authorization: `Bearer ${waconf.accessToken}`,
           },
         });
 

@@ -12,14 +12,7 @@ import {
 import EmailSetupModal from "@/components/channels/email-setup-modal";
 import { useChannelActions } from "@/hooks/channels/use-channel-actions";
 import { useChannels } from "@/hooks/channels/use-channels";
-import {
-  FB_APP_ID,
-  FB_REDIRECT_URI,
-  INSTAGRAM_APP_ID,
-  INSTAGRAM_REDIRECT_URI,
-  SLACK_CLIENT_ID,
-  SLACK_REDIRECT_URI,
-} from "@/lib/constants";
+import { fbconf, instaconf, slackconf } from "@/lib/utils/conf";
 import { useAgents } from "@/lib/hooks/agent/use-agent";
 import {
   InstagramIcon,
@@ -53,8 +46,8 @@ const ChannelsPage = () => {
   const [isEmailSetupModalOpen, setIsEmailSetupModalOpen] = useState(false);
 
   const handleConnectInstagram = () => {
-    const clientId = INSTAGRAM_APP_ID;
-    const redirectUri = INSTAGRAM_REDIRECT_URI;
+    const clientId = instaconf.appId;
+    const redirectUri = instaconf.redirectUri;
     const scopes = [
       "instagram_business_basic",
       "instagram_business_manage_messages",
@@ -73,7 +66,7 @@ const ChannelsPage = () => {
 
   const handleConnectFB = () => {
     const configId = "793606190090300";
-    const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${FB_APP_ID}&config_id=${configId}&redirect_uri=${FB_REDIRECT_URI}&response_type=code&state=${wid}`;
+    const url = `https://www.facebook.com/${fbconf.version}/dialog/oauth?client_id=${fbconf.appId}&config_id=${configId}&redirect_uri=${fbconf.redirectUri}&response_type=code&state=${wid}`;
     window.open(url, "_blank");
   };
 
@@ -90,7 +83,7 @@ const ChannelsPage = () => {
       "team:read", // Read team information
     ].join(",");
 
-    const url = `https://slack.com/oauth/v2/authorize?client_id=${SLACK_CLIENT_ID}&scope=${scopes}&redirect_uri=${SLACK_REDIRECT_URI}&state=${wid}`;
+    const url = `https://slack.com/oauth/v2/authorize?client_id=${slackconf.clientId}&scope=${scopes}&redirect_uri=${slackconf.redirectUri}&state=${wid}`;
     window.open(url, "_blank");
   };
 

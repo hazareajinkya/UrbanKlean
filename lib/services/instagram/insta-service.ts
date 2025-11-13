@@ -1,5 +1,5 @@
 import { instaClient } from "@/lib/clients/axios-client";
-import { INSTA_PAGE_ACCESS_TOKEN } from "@/lib/constants";
+import { instaconf } from "@/lib/utils/conf";
 import axios from "axios";
 
 class InstaService {
@@ -58,7 +58,7 @@ class InstaService {
 
   async getProfile(token: string) {
     try {
-      const baseURl = "https://graph.instagram.com/v23.0/me";
+      const baseURl = `${instaconf.baseURL}/${instaconf.version}/me`;
       const { data } = await axios.get(`${baseURl}`, {
         params: {
           fields:
@@ -66,7 +66,7 @@ class InstaService {
           accessToken: token,
         },
         headers: {
-          Authorization: `Bearer ${INSTA_PAGE_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${instaconf.accessToken}`,
         },
       });
       console.log("data: ", data);
