@@ -550,7 +550,7 @@ const TrainMessageList = ({ messages, status }: TrainMessageListProps) => {
                           return (
                             <div key={index}>
                               <div
-                                className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose "
+                                className="text-sm md:text-base prose prose-p:my-0 prose-sm md:prose-base max-w-none leading-loose "
                                 key={index}
                               >
                                 <Streamdown
