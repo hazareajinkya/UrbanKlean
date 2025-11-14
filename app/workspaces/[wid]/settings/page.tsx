@@ -95,11 +95,6 @@ export default function SettingsPage() {
   const canAddDomain =
     Boolean(companyDomain.trim()) && !isDomainInvalid && !disableDomainActions;
 
-  const resetDomainInput = () => {
-    setCompanyDomain("");
-    setDomainError("");
-  };
-
   const handleAddDomain = async () => {
     const normalized = normalizeDomain(companyDomain);
     if (!normalized) {
@@ -117,7 +112,8 @@ export default function SettingsPage() {
       return;
     }
 
-    resetDomainInput();
+    setCompanyDomain("");
+    setDomainError("");
 
     await addWorkspaceDomain.mutateAsync({ wid, domain: normalized });
   };
