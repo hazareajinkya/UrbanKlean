@@ -11,6 +11,7 @@ import messengerParser from "@/lib/services/messenger/messenger-webhook-parser";
 import messengerService from "@/lib/services/messenger/messenger-service";
 import channelService from "@/lib/services/channel-service";
 import { successResponse } from "@/lib/types/api-response";
+import messengerBotService from "@/lib/services/messenger/messenger-bot-service";
 
 // Function to send a text message
 export const maxDuration = 60;
@@ -46,12 +47,13 @@ export async function POST(req: Request) {
       return successResponse(200, "Processed message ");
     }
 
-    const { success, message: ans } = await waBotService.generateResponse(
-      msg,
-      msg.to,
-      msg.from,
-      "messenger"
-    );
+    const { success, message: ans } =
+      await messengerBotService.generateResponse(
+        msg,
+        msg.to,
+        msg.from,
+        "messenger"
+      );
     if (success) {
       await messengerService.sendTextMessage(msg.from, ans ?? "placeholder");
     }

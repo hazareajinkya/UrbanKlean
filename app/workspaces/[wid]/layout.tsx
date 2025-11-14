@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Rss,
+  Settings2,
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -73,7 +74,7 @@ export default function WorkspaceLayout({
           </Button>
           <h1 className="text- font-mdium">{workspace?.name || "Workspace"}</h1>
         </header>
-        <div className="flex-1 min-h-0">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
       </div>
     </div>
   );
@@ -110,6 +111,11 @@ const navigation = [
     title: "Members",
     href: "/members",
     icon: Users,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings2,
   },
 ];
 
