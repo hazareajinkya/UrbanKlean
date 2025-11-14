@@ -3,7 +3,12 @@
 import { useChat } from "@ai-sdk/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChatRequestOptions, DefaultChatTransport, UIMessage } from "ai";
+import {
+  ChatRequestOptions,
+  DefaultChatTransport,
+  ToolUIPart,
+  UIMessage,
+} from "ai";
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatHeader } from "@/components/chat/chat-header";
@@ -15,6 +20,7 @@ import { getGreetingMsg, initChat } from "@/components/chat/chat-utils";
 import chatService from "@/lib/services/chat-service";
 import {
   defaultAImessage,
+  defaultDataMessage,
   defaultUserMessage,
   IChatMessage,
   ISession,
@@ -24,6 +30,8 @@ import { ArrowDown, ArrowDownNarrowWide, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getContrastingColor } from "@/lib/utils";
 import z from "zod";
+import peopleService from "@/lib/services/people-service";
+import { IPerson } from "@/lib/types/person";
 
 export default function ChatPage() {
   const { aid } = useParams() as { aid: string };
@@ -31,20 +39,43 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
+  const [deviceId, setDeviceId] = useState<string>();
+
+  const lastToolRef = useRef<string | null>(null);
 
   // Check if running in widget mode
   const isWidget = searchParams.get("widget") === "true";
 
   const { agent } = useAgent(aid);
-  const { session } = useSession(aid);
+  const { session, updateSession } = useSession(aid);
 
-  const { messages, sendMessage, setMessages, status } = useChat({
+  const getPersonId = () => {
+    if (session?.personId) {
+      return session.personId;
+    }
+    return undefined;
+  };
+  const { messages, sendMessage, setMessages, status } = useChat<IChatMessage>({
     id: session?.id,
     messages: agent ? [getGreetingMsg(agent)] : [],
     transport: new DefaultChatTransport({
       api: "/api/query-stream",
-      body: { aid },
+      body: () => {
+        return {
+          aid,
+          deviceId,
+          personId: getPersonId(),
+        };
+      },
     }),
+    onData: (data) => {
+      console.log("data: ", data);
+    },
+    onToolCall: ({ toolCall }) => {
+      if (toolCall?.toolCallId) {
+        lastToolRef.current = toolCall.toolCallId;
+      }
+    },
 
     onError: (error) => {
       console.error("Error: ", error);
@@ -52,6 +83,21 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, aimsg]);
     },
     onFinish: (messages) => {
+      const lastMessage = messages.messages[
+        messages.messages.length - 1
+      ] as IChatMessage;
+
+      const lastTool = lastMessage.parts?.find(
+        (part) => part.type === "tool-collectInformation"
+      ) as ToolUIPart;
+
+      if (lastTool?.toolCallId && lastToolRef.current === lastTool.toolCallId) {
+        lastToolRef.current = null;
+        const person = (lastTool.output as { person: IPerson })?.person;
+        if (person) {
+          updateSession({ ...session!, personId: person.id });
+        }
+      }
       messages.message.metadata = { createdAt: new Date().toISOString() };
       const aimsg = messages.message as IChatMessage;
       const prevMessages = messages.messages.slice(0, -1);
@@ -79,17 +125,45 @@ export default function ChatPage() {
     setInput("");
   };
 
+  // const initChatMessages = async (agent: IAgent) => {
+  //   const deviceId = await initChat(agent);
+  //   const dataMsg = defaultDataMessage({ deviceId });
+  //   setMessages([getGreetingMsg(agent), dataMsg]);
+  //   console.log("messages: ", messages);
+  // };
+
   useEffect(() => {
     if (agent) {
-      initChat(agent);
+      initChat(agent).then((did) => setDeviceId(did));
     }
   }, [aid, agent]);
 
   useEffect(() => {
+    if (!session) return;
+    if (!agent) return;
+
+    console.log("checking if session has personId:");
+
     if (session) {
-      session.messages.length > 0 && setMessages(session.messages);
+      // const dataMsg = defaultDataMessage({ deviceId });
+      // setMessages((prev) => [...prev, dataMsg]);
+
+      if (session.messages.length > 0) {
+        setMessages((prev) => [...prev, ...session.messages]);
+      }
+
+      if (session.personId) {
+        console.log("ruuning person check: ");
+
+        peopleService.getPerson(agent.wid, session.personId).then((person) => {
+          console.log("person: ", person);
+          if (person) {
+            setMessages((prev) => [defaultDataMessage(person), ...prev]);
+          }
+        });
+      }
     }
-  }, [session]);
+  }, [session, agent]);
 
   // Handle scroll detection
   useEffect(() => {

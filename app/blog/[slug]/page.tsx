@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { remark } from "remark";
 import html from "remark-html";
+import remarkGfm from "remark-gfm";
 import Script from "next/script";
 import BlogShareSidebar from "@/components/blog/blog-share-sidebar";
 
@@ -93,6 +94,7 @@ export default async function BlogPage({
   const { slug } = await params;
   const blog = await blogService.getBlogBySlug(slug);
   const htmlContent = await remark()
+    .use(remarkGfm)
     .use(html, { sanitize: false })
     .process(blog.content);
 
@@ -169,7 +171,7 @@ export default async function BlogPage({
   };
 
   return (
-    <>
+    <div className="bg-card">
       <Script
         id="blog-structured-data"
         type="application/ld+json"
@@ -185,7 +187,7 @@ export default async function BlogPage({
         }}
       />
       {/* border-l border-r */}
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen max-w-5xl mx-auto ">
         <div className="max-w-7xl mx-auto  min-h-screen">
           <header className="px-4 xl:px-6 py-8 sm:py-12 border-b">
             <div>
@@ -207,7 +209,7 @@ export default async function BlogPage({
                   />
                 </div>
               </div>
-              <h1 className="mt-4 max-w-5xl text-3xl sm:text-4xl lg:text-5xl text-balance text-foreground">
+              <h1 className="mt-4 max-w-5xl text-3xl sm:text-4xl lg:text-5xl md:text-balance leading-[1.2] text-foreground">
                 {blog.title}
               </h1>
               {blog.excerpt && (
@@ -250,7 +252,7 @@ export default async function BlogPage({
           </header>
 
           {blog.featuredImage && (
-            <div className="relative w-full h-64 sm:h-96 lg:h-[500px] overflow-hidden border-b">
+            <div className="relative w-full h-full aspect-[16/9] overflow-hidden border-b">
               <Image
                 src={blog.featuredImage || "/placeholder.svg"}
                 alt={blog.title}
@@ -263,7 +265,7 @@ export default async function BlogPage({
             </div>
           )}
 
-          <div className="flex flex-col lg:flex-row-reverse gap-2 lg:gap-12 px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="flex flex-col border lg:flex-row-reverse gap-2 lg:gap-12 px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <aside className="lg:w-64 shrink-0">
               <div className="lg:sticky lg:top-24 hidden md:block">
                 <BlogShareSidebar
@@ -274,8 +276,8 @@ export default async function BlogPage({
                 />
               </div>
             </aside>
-            <article className="flex-1 min-w-0">
-              <div className="prose prose-sm sm:prose-base md:prose-lg  dark:prose-invert max-w-none prose-h2:my-0 prose-h2:mb-7">
+            <article className="flex-1 mx-auto max-w-prose  min-w-0">
+              <div className="prose prose-neutral prose-base md:prose-lg prose-img:rounded-xl prose-a:underline-offset-2 prose-a:underline prose-a:text-blue-600 prose-a:hover:text-primary/80 dark:prose-invert max-w-none  prose-h2:my-0 prose-h2:mb-7">
                 <div
                   dangerouslySetInnerHTML={{ __html: htmlContent.toString() }}
                 />
@@ -284,6 +286,6 @@ export default async function BlogPage({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

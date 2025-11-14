@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import slackParser from "@/lib/services/slack/slack-webhook-parser";
 import { successResponse } from "@/lib/types/api-response";
-import { SLACK_SIGNING_SECRET } from "@/lib/constants";
+import { slackconf } from "@/lib/utils/conf";
 import crypto from "crypto";
 import channelService from "@/lib/services/channel-service";
 import slackService from "@/lib/services/slack/slack-service";
@@ -103,7 +103,7 @@ function verifySlackSignature(
   signature: string,
   timestamp: string
 ): boolean {
-  if (!SLACK_SIGNING_SECRET) {
+  if (!slackconf.signingSecret) {
     console.error("SLACK_SIGNING_SECRET is not set");
     return false;
   }
@@ -118,7 +118,7 @@ function verifySlackSignature(
   // Create signature
   const sigBasestring = `v0:${timestamp}:${body}`;
   const mySignature = `v0=${crypto
-    .createHmac("sha256", SLACK_SIGNING_SECRET)
+    .createHmac("sha256", slackconf.signingSecret)
     .update(sigBasestring, "utf8")
     .digest("hex")}`;
 

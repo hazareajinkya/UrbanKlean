@@ -1,10 +1,10 @@
 import axios from "axios";
 import channelService from "../channel-service";
-import { SLACK_CLIENT_SECRET } from "@/lib/constants";
+import { slackconf } from "@/lib/utils/conf";
 import { slackClient } from "@/lib/clients/axios-client";
 
 class SlackService {
-  private baseURL = "https://slack.com/api";
+  private baseURL = slackconf.baseURL;
 
   async sendMessage(channel: string, text: string, teamId: string) {
     try {

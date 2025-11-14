@@ -16,7 +16,7 @@ import { db } from "../clients/firebase";
 import { normEmail, normNote, normPhone, normWord } from "../utils";
 import { kMaxLength } from "buffer";
 import { v4 } from "uuid";
-import { IPerson } from "../types/person";
+import { generateDefaultPerson, IPerson } from "../types/person";
 
 class PeopleService {
   async identifyPerson({
@@ -115,12 +115,6 @@ class PeopleService {
     if (data.title !== undefined) update.title = data.title;
     if (data.location !== undefined) update.location = data.location;
 
-    if (data.preferences) {
-      for (const [k, v] of Object.entries(data.preferences)) {
-        update[`preferences.${k}`] = v;
-      }
-    }
-
     // externalIds (shallow merge)
     if (data.externalIds) {
       for (const [k, v] of Object.entries(data.externalIds)) {
@@ -163,6 +157,7 @@ class PeopleService {
   }
 
   async getPerson(wid: string, personId: string) {
+    console.log("Getting person: ", personId);
     const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
     const snap = await getDoc(personRef);
     return snap.data() as IPerson;
@@ -176,8 +171,168 @@ class PeopleService {
     const snaps = await getDocs(q);
     return snaps.docs.map((doc) => doc.data() as IPerson);
   }
+
+  async identify({
+    wid,
+    email,
+    phone,
+    externalIds,
+    name,
+  }: {
+    wid: string;
+    email?: string;
+    phone?: string;
+    externalIds?: Record<string, string>;
+    name?: string;
+  }) {
+    console.log("identify called with:", {
+      wid,
+      email,
+      phone,
+      externalIds,
+      name,
+    });
+
+    const peopleCol = collection(db, `workspaces/${wid}/people`);
+    const emailN = normEmail(email);
+    const phoneN = normPhone(phone);
+
+    let personSnap: DocumentSnapshot | undefined = undefined;
+
+    // 1. try by email
+    if (emailN) {
+      console.log("Attempting to identify by email:", emailN);
+      const q = query(
+        peopleCol,
+        where("emails", "array-contains", emailN),
+        limit(1)
+      );
+      const snaps = await getDocs(q);
+      console.log("Email lookup result count:", snaps.docs.length);
+      if (snaps.docs.length > 0) {
+        personSnap = snaps.docs[0];
+        console.log("Person found by email:", personSnap.data());
+      }
+    }
+
+    // 2. try by phone
+    if (!personSnap && phoneN) {
+      console.log("Attempting to identify by phone:", phoneN);
+      const q = query(
+        peopleCol,
+        where("phones", "array-contains", phoneN),
+        limit(1)
+      );
+      const snaps = await getDocs(q);
+      console.log("Phone lookup result count:", snaps.docs.length);
+      if (snaps.docs.length > 0) {
+        personSnap = snaps.docs[0];
+        console.log("Person found by phone:", personSnap.data());
+      }
+    }
+
+    // 3. try by externalIds
+    if (!personSnap && externalIds) {
+      for (const [k, v] of Object.entries(externalIds)) {
+        console.log(`Attempting to identify by externalId: ${k}=${v}`);
+        const q = query(
+          peopleCol,
+          where(`externalIds.${k}`, "==", v),
+          limit(1)
+        );
+        const snaps = await getDocs(q);
+        console.log(
+          `ExternalId lookup (${k}) result count:`,
+          snaps.docs.length
+        );
+        if (snaps.docs.length > 0) {
+          personSnap = snaps.docs[0];
+          console.log(`Person found by externalId (${k}):`, personSnap.data());
+        }
+        break;
+      }
+    }
+
+    if (personSnap) {
+      const person = personSnap.data() as IPerson;
+      return { existing: true, person: person };
+    }
+
+    console.log("No existing person found.");
+    return { existing: false, person: undefined };
+  }
+
+  async create({
+    wid,
+    name,
+    email,
+    phone,
+    externalIds,
+    sessionId,
+  }: {
+    wid: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    externalIds?: Record<string, string>;
+    sessionId?: string;
+  }) {
+    const person = generateDefaultPerson({
+      name,
+      email,
+      phone,
+      externalIds,
+      sessionId,
+    });
+    const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
+
+    await setDoc(personRef, person);
+    return person;
+  }
+
+  async update({
+    wid,
+    personId,
+    updates,
+  }: {
+    wid: string;
+    personId: string;
+    updates: Partial<IPerson>;
+  }) {
+    const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
+    await updateDoc(personRef, updates);
+
+    return this.getPerson(wid, personId);
+  }
+
+  async create2({
+    wid,
+    name,
+    emails,
+    phones,
+    externalIds,
+    sessionId,
+  }: {
+    wid: string;
+    name?: string;
+    emails: string[];
+    phones: string[];
+    externalIds?: Record<string, string>;
+    sessionId?: string;
+  }) {
+    const person = generateDefaultPerson({
+      name,
+      email: emails[0],
+      phone: phones[0],
+      externalIds,
+      sessionId,
+    });
+    const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
+    await setDoc(personRef, person);
+    return person;
+  }
 }
 
-const customerService = new PeopleService();
+const peopleService = new PeopleService();
 
-export default customerService;
+export default peopleService;

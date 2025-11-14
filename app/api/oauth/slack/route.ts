@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import axios from "axios";
 
-import {
-  SLACK_CLIENT_ID,
-  SLACK_CLIENT_SECRET,
-  SLACK_REDIRECT_URI,
-} from "@/lib/constants";
+import { slackconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import { getProtocol } from "@/lib/utils";
@@ -55,12 +51,12 @@ export async function GET(req: NextRequest) {
 
     // Step 2: Exchange the Code for an Access Token
     const tokenResponse = await axios.post(
-      "https://slack.com/api/oauth.v2.access",
+      `${slackconf.baseURL}/oauth.v2.access`,
       new URLSearchParams({
-        client_id: SLACK_CLIENT_ID,
-        client_secret: SLACK_CLIENT_SECRET,
+        client_id: slackconf.clientId,
+        client_secret: slackconf.clientSecret,
         code: validatedParams.code,
-        redirect_uri: SLACK_REDIRECT_URI,
+        redirect_uri: slackconf.redirectUri,
       }),
       {
         headers: {
@@ -83,14 +79,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Step 3: Get additional team and bot information
-    const teamInfoResponse = await axios.get(
-      "https://slack.com/api/team.info",
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
+    const teamInfoResponse = await axios.get(`${slackconf.baseURL}/team.info`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
 
     const teamInfo = teamInfoResponse.data;
     console.log("Slack team info:", teamInfo);
@@ -167,7 +160,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // TODO: Revoke Slack OAuth token
-    // await axios.post("https://slack.com/api/auth.revoke", {
+    // await axios.post(`${slackconf.baseURL}/auth.revoke`, {
     //   token: accessToken
     // });
 

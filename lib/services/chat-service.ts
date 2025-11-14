@@ -17,16 +17,28 @@ import {
 } from "../types/session";
 import { db } from "../clients/firebase";
 import { UIDataTypes, UIMessagePart, UITools } from "ai";
-import { saveLocalSession } from "@/components/chat/chat-utils";
 import { IChannelProvider } from "../types/channel";
+import { saveLocalSession } from "../../components/chat/chat-utils";
 
 class ChatService {
-  async createSession(wid: string, aid: string) {
+  async createSession(wid: string, aid: string, personId?: string) {
     const session = generateDefaultSession(wid, aid, "web");
+    if (personId) {
+      session.personId = personId;
+    }
+
     saveLocalSession(aid, session.id);
 
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
+  }
+
+  async updateSession(aid: string, sid: string, updates: Partial<ISession>) {
+    const ref = doc(db, `agents/${aid}/sessions/${sid}`);
+    await updateDoc(ref, {
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   async createWASession(
@@ -103,7 +115,17 @@ export const cleanMessageForSaving = (message: IChatMessage) => {
       })
       .filter((part) => Object.keys(part).length > 0); // Remove empty parts
 
-    cleanMessage.parts = parts as UIMessagePart<UIDataTypes, UITools>[];
+    cleanMessage.parts = parts.map((part) => {
+      // Ensure 'data-data' type gets properly typed to satisfy UIMessagePart interface.
+      if (part.type && part.type.startsWith("data-")) {
+        return { ...part, type: "data-data" } as {
+          type: "data-data";
+          id?: string;
+          data: any;
+        };
+      }
+      return part;
+    }) as UIMessagePart<{ type: "data"; data: any }, UITools>[];
   }
 
   return cleanMessage;

@@ -2,6 +2,7 @@ import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
 import { openai } from "@ai-sdk/openai";
 import {
+  convertToCoreMessages,
   convertToModelMessages,
   stepCountIs,
   streamText,
@@ -31,31 +32,60 @@ import {
 import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
+import { convertToMyModelMessages } from "@/components/chat/chat-utils";
 
 export async function POST(req: Request) {
   try {
-    const { messages, aid }: { messages: IChatMessage[]; aid: string } =
-      await req.json();
+    const {
+      messages,
+      aid,
+      deviceId,
+      personId,
+      id: sessionId,
+    }: {
+      messages: IChatMessage[];
+      id: string;
+      aid: string;
+      deviceId: string;
+      personId?: string;
+    } = await req.json();
+
+    console.log("sessionId: ", sessionId);
+    console.log("deviceId: ", deviceId);
+    console.log("personId: ", personId);
 
     const agent = await agentService.fetchAgent(aid);
 
     if (!agent) throw new Error("Agent not found");
+    // console.log("messages: ", messages);
 
     let model = getModel(agent);
 
     const lastMessage = getLastMessage(messages);
     const actions = await actionService.getActions(agent.wid);
     const customTools = getCustomTools(actions);
-    const systemPrompt = await getSystemPrompt(agent, lastMessage, "web");
+    const systemPrompt = await getSystemPrompt(
+      agent,
+      lastMessage,
+      "web",
+      personId
+    );
+    const convertedMessages = convertToMyModelMessages(messages);
 
     const result = streamText({
       model,
       system: systemPrompt,
-      messages: convertToModelMessages(messages),
+      messages: convertedMessages,
       stopWhen: stepCountIs(5),
       tools: {
         ...customTools,
-        collectInformation: collectInformation(agent.wid),
+        collectInformation: collectInformation(
+          agent.wid,
+          agent.id,
+          sessionId,
+          "web",
+          deviceId
+        ),
         searchKnowledge: searchKnowledge(agent.wid),
       },
 
@@ -91,7 +121,7 @@ const getCustomTools = (actions: IAction[]): ToolSet => {
   }, {} as ToolSet);
 };
 
-const getLastMessage = (messages: UIMessage[]): string => {
+const getLastMessage = (messages: IChatMessage[]): string => {
   return messages[messages.length - 1].parts
     .map((part) => (part.type === "text" ? part.text : ""))
     .join("");

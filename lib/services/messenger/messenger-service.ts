@@ -2,7 +2,7 @@ import axiosClient, {
   instaClient,
   messengerClient,
 } from "@/lib/clients/axios-client";
-import { FB_ID, FB_PAGE_ACCESS_TOKEN } from "@/lib/constants";
+import { fbconf } from "@/lib/utils/conf";
 import axios from "axios";
 
 class MessengerService {
@@ -45,8 +45,6 @@ class MessengerService {
 
   async unsubscribeFromWebhook(token: string) {
     try {
-      console.log("FB_PAGE_ACCESS_TOKEN: ", FB_PAGE_ACCESS_TOKEN);
-
       const response = await messengerClient.delete(`/subscribed_apps`, {
         params: {
           access_token: token,
@@ -64,7 +62,7 @@ class MessengerService {
 
   async getProfile(token: string) {
     try {
-      const baseURl = `https://graph.facebook.com/v23.0/me`;
+      const baseURl = `${fbconf.baseURL}/${fbconf.version}/me`;
       const { data } = await axios.get(`${baseURl}`, {
         params: {
           fields:
@@ -72,7 +70,7 @@ class MessengerService {
           accessToken: token,
         },
         headers: {
-          Authorization: `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${fbconf.accessToken}`,
         },
       });
 
