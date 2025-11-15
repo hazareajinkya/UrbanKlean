@@ -187,7 +187,7 @@ export default function SettingsPage() {
                 onChange={(e) => setWorkspaceName(e.target.value)}
                 required
                 disabled={updateWorkspace.isPending}
-                className="transition-all"
+                className=" "
               />
             </div>
 

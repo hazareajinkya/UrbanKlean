@@ -2,25 +2,23 @@
 
 import { IAgent } from "@/lib/types/agent";
 import InfiniteScroll from "react-infinite-scroll-component";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useEffect, useRef, useState } from "react";
 import { ISession } from "@/lib/types/session";
-import chatService from "@/lib/services/chat-service";
 import { formatDate, getContrastingColor } from "@/lib/utils";
 import clsx from "clsx";
 import { UIMessage } from "ai";
 import { Streamdown } from "streamdown";
 import { useHistoryStore } from "@/lib/stores/history-store";
-import { Globe, Loader2, MailIcon, User } from "lucide-react";
+import {
+  Globe,
+  Loader2,
+  MailIcon,
+  PanelRightClose,
+  PanelRightOpen,
+  User,
+} from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
-import { IPerson } from "@/lib/types/person";
-import { useSearchParams } from "next/navigation";
+import { Button } from "../ui/button";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -29,8 +27,7 @@ interface ChatHistoryTabProps {
 export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
   const [sessions, setsessions] = useState<ISession[]>();
   const [currentSession, setcurrentSession] = useState<ISession>();
-
-  const searchParams = useSearchParams();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const history = useHistoryStore((state) => state.history);
   const subscribeToHistory = useHistoryStore(
@@ -47,8 +44,10 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
   }, [agent.id]);
 
   return (
-    <div>
-      <div className="grid bg-white grid-cols-[1fr_2fr_1fr] border rounded-xl h-[80vh] overflow-hidden">
+    <div className="h-full p-4">
+      <div
+        className={`grid bg-white border rounded-xl h-full overflow-hidden grid-cols-[1fr_2fr_1fr] `}
+      >
         {/* Chats Sidebar */}
         <div className="p-0 border-r overflow-y-auto" id="scrollableDiv">
           <SessionList
@@ -60,12 +59,28 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
         </div>
 
         {/* Chat Content */}
-        <div className="p-0 overflow-y-auto">
-          <HistoryMessageList agent={agent} currentSession={currentSession} />
+        <div
+          className={`p-0 overflow-y-auto transition-all ${
+            currentSession?.personId && !isCollapsed
+              ? "col-span-1"
+              : "col-span-2"
+          }`}
+        >
+          <HistoryMessageList
+            agent={agent}
+            currentSession={currentSession}
+            isCollapsed={isCollapsed}
+            onCollapsedChange={setIsCollapsed}
+          />
         </div>
 
         {/* User Info Sidebar */}
-        <div className="p-4 border-l">
+
+        <div
+          className={`p-4 border-l  ${
+            currentSession?.personId && !isCollapsed ? "" : "hidden"
+          }`}
+        >
           <InfoSidebar currentSession={currentSession} />
         </div>
       </div>
@@ -105,6 +120,27 @@ const SessionList = ({
   const nChats = useHistoryStore((state) => state.nChats);
   const hasMore = useHistoryStore((state) => state.hasMore);
   const fetchNextSessions = useHistoryStore((state) => state.fetchNextSessions);
+
+  const persons = useHistoryStore((state) => state.persons);
+
+  const renderVisitorID = (session: ISession) => {
+    const channel = session.channel;
+    const type =
+      channel === "web"
+        ? "Visitor"
+        : channel === "messenger"
+        ? "FB"
+        : channel === "instagram"
+        ? "IG"
+        : channel === "email"
+        ? "Email"
+        : channel === "slack"
+        ? "SL"
+        : channel === "whatsapp"
+        ? "WA"
+        : "API";
+    return `${type}-${session.id.split("-")[0]}`;
+  };
   return (
     <div className="bg-secondary h-full">
       <div className="h-14 border-b bg-gray-100 px-4 y-4 grid place-items-center">
@@ -137,6 +173,9 @@ const SessionList = ({
       >
         {sessions?.map((session, index) => {
           const channel = session.channel;
+          const person = session.personId
+            ? persons[session.personId]
+            : undefined;
           return (
             <div
               key={session.id}
@@ -149,42 +188,48 @@ const SessionList = ({
             >
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
-                  {channel === "web"
-                    ? "Visitor"
-                    : channel === "messenger"
-                    ? "FB"
-                    : channel === "instagram"
-                    ? "IG"
-                    : channel === "email"
-                    ? "Email"
-                    : channel === "slack"
-                    ? "SL"
-                    : channel === "whatsapp"
-                    ? "WA"
-                    : "API"}
-                  -{session.id.split("-")[0]}
+                  {person ? person.name : renderVisitorID(session)}
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(session.updatedAt)}
                 </p>
               </div>
 
-              <div>
-                {channel === "web" ? (
-                  <Globe className="size-4.5" />
-                ) : channel === "whatsapp" ? (
-                  <WAIcon className="size-5" />
-                ) : channel === "instagram" ? (
-                  <InstagramIcon className="size-4.5" />
-                ) : channel === "messenger" ? (
-                  <MessengerIcon className="size-4.5" />
-                ) : channel === "email" ? (
-                  <MailIcon className="size-4.5" />
-                ) : channel === "slack" ? (
-                  <SlackLogo className="size-4.5" />
-                ) : (
-                  <></>
-                )}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full flex gap-1 items-center ${
+                    session.status === "open"
+                      ? "text-green-700 bg-green-400/20"
+                      : "text-muted-foreground bg-muted-foreground/20"
+                  } `}
+                >
+                  <div
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      session.status === "open"
+                        ? "bg-green-500 "
+                        : "bg-muted-foreground"
+                    }`}
+                  ></div>
+                  {session.status === "open" ? "Open" : "Closed"}
+                </span>
+
+                <div>
+                  {channel === "web" ? (
+                    <Globe className="size-4.5" />
+                  ) : channel === "whatsapp" ? (
+                    <WAIcon className="size-5" />
+                  ) : channel === "instagram" ? (
+                    <InstagramIcon className="size-4.5" />
+                  ) : channel === "messenger" ? (
+                    <MessengerIcon className="size-4.5" />
+                  ) : channel === "email" ? (
+                    <MailIcon className="size-4.5" />
+                  ) : channel === "slack" ? (
+                    <SlackLogo className="size-4.5" />
+                  ) : (
+                    <></>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -197,9 +242,13 @@ const SessionList = ({
 const HistoryMessageList = ({
   agent,
   currentSession,
+  isCollapsed,
+  onCollapsedChange,
 }: {
   agent: IAgent;
   currentSession?: ISession;
+  isCollapsed: boolean;
+  onCollapsedChange: (c: boolean) => void;
 }) => {
   const brandColor = agent.customization.primaryColor;
   const fontColor = getContrastingColor(brandColor);
@@ -213,23 +262,40 @@ const HistoryMessageList = ({
     scrollToBottom();
   }, [currentSession?.messages]);
 
+  const persons = useHistoryStore((state) => state.persons);
   return (
     <div>
       {currentSession && (
         <div className="">
-          <div className="border-b bg-gray-100 h-14 px-4 grid place-items-center sticky top-0 z-10">
+          <div className="border-b bg-gray-100 h-14 px-4 flex justify-between items-center sticky top-0 z-10 ">
             <div className="w-full">
               <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
-                Visitor-{currentSession.id.split("-")[0]}
+                {currentSession.personId && persons[currentSession.personId]
+                  ? persons[currentSession.personId].name
+                  : `Visitor-${currentSession.id.split("-")[0]}`}
               </h4>
               <p className="text-xs text-muted-foreground">
                 {formatDate(currentSession.updatedAt)}
               </p>
             </div>
+            {currentSession.personId && (
+              <Button
+                variant={"ghost"}
+                size={"icon"}
+                onClick={() => onCollapsedChange(!isCollapsed)}
+                className="transition-all"
+              >
+                {isCollapsed ? (
+                  <PanelRightOpen className="size-5" />
+                ) : (
+                  <PanelRightClose className="size-5" />
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Chat Messages */}
-          <div className="p-4 pb-8 space-y-4 ">
+          <div className="p-4 pb-8 space-y-4 prose-p:my-0">
             {currentSession.messages.map((message, index) => (
               <div
                 key={index}
@@ -307,7 +373,10 @@ const HistoryMessageList = ({
                       }
                     })
                   ) : message.role === "user" ? (
-                    <div className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose ">
+                    <div
+                      className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                      style={{ color: fontColor }}
+                    >
                       {message.parts?.map((part, partIndex) => (
                         <div key={partIndex} className="">
                           <Streamdown>

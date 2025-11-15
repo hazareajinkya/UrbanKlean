@@ -16,7 +16,7 @@ interface ChatTabProps {
 
 export default function ChatTab({ agent }: ChatTabProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 place-items-center ">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-9 place-items-center ">
       {/* Left Column - Mobile Chat Widget */}
       <div className="flex justify-center lg:justify-start">
         <div className="relative">
