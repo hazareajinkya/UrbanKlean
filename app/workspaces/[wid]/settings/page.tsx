@@ -20,31 +20,7 @@ import { Loader2, Plus, Trash } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
-
-const validateDomain = (domain: string): boolean => {
-  if (!domain) return true;
-  const domainRegex =
-    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-  return domainRegex.test(domain);
-};
-const normalizeDomain = (value: string) => {
-  if (!value) return "";
-  const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return "";
-
-  try {
-    const candidate = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
-    const url = new URL(candidate);
-    return url.hostname.replace(/^www\./, "");
-  } catch {
-    return trimmed
-      .replace(/^(https?:\/\/)/, "")
-      .replace(/^www\./, "")
-      .split("/")[0]
-      .split("?")[0]
-      .split("#")[0];
-  }
-};
+import { normalizeDomain, validateDomain } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { wid } = useParams() as { wid: string };
