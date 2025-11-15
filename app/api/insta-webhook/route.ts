@@ -7,6 +7,7 @@ import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
 import { INSTA_ID } from "@/lib/utils/conf";
+import instaBotService from "@/lib/services/instagram/insta-bot-service";
 
 // Function to send a text message
 export const maxDuration = 60;
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { success, message: ans } = await waBotService.generateResponse(
+    const { success, message: ans } = await instaBotService.generateResponse(
       msg,
       msg.to,
       msg.from,

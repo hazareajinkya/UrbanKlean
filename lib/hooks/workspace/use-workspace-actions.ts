@@ -28,6 +28,24 @@ export const useWorkspaceActions = () => {
     onError: handleError,
   });
 
+  const addWorkspaceDomain = useMutation({
+    mutationFn: workspaceService.addDomainToWorkspace,
+    onSuccess: (_, variables) => {
+      toast.success("Domain added successfully");
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
+  const removeWorkspaceDomain = useMutation({
+    mutationFn: workspaceService.removeDomainFromWorkspace,
+    onSuccess: (_, variables) => {
+      toast.success("Domain removed successfully");
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   const deleteWorkspace = useMutation({
     mutationFn: workspaceService.deleteWorkspace,
     onSuccess: (_, variables) => {
@@ -41,6 +59,8 @@ export const useWorkspaceActions = () => {
   return {
     createWorkspace,
     updateWorkspace,
+    addWorkspaceDomain,
+    removeWorkspaceDomain,
     deleteWorkspace,
   };
 };

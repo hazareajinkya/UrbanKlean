@@ -94,6 +94,30 @@ class ChatService {
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }
+  async createInstaSession(
+    wid: string,
+    aid: string,
+    instaUserId: string,
+    personId: string,
+    provider: IChannelProvider
+  ) {
+    const session = generateDefaultSession(wid, aid, provider, instaUserId);
+    session.personId = personId;
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
+  async createMessengerSession(
+    wid: string,
+    aid: string,
+    messengerUserId: string,
+    personId: string,
+    provider: IChannelProvider
+  ) {
+    const session = generateDefaultSession(wid, aid, provider, messengerUserId);
+    session.personId = personId;
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
 }
 
 const chatService = new ChatService();

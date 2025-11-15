@@ -1,4 +1,5 @@
 import {
+  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -101,6 +102,26 @@ class WorkspaceService {
         }
       }
     }
+  }
+
+  async addDomainToWorkspace({ wid, domain }: { wid: string; domain: string }) {
+    await updateDoc(doc(db, `workspaces/${wid}`), {
+      domains: arrayUnion(domain),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  async removeDomainFromWorkspace({
+    wid,
+    domain,
+  }: {
+    wid: string;
+    domain: string;
+  }) {
+    await updateDoc(doc(db, `workspaces/${wid}`), {
+      domains: arrayRemove(domain),
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   async deleteWorkspace({ wid }: { wid: string }) {

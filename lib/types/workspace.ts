@@ -4,6 +4,7 @@ export interface IWorkspace {
   id: string;
   name: string;
   description: string;
+  domains: string[];
   thumbnail: string;
   ownerId: string;
   createdAt: string;
@@ -17,6 +18,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     name: "",
     description: "",
     ownerId: "",
+    domains: [],
     thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

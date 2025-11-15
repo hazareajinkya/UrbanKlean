@@ -116,3 +116,28 @@ export const deleteCollection = async (path: string) => {
   const snap = await getDocs(collection(db, path));
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
 };
+
+export const validateDomain = (domain: string): boolean => {
+  if (!domain) return true;
+  const domainRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  return domainRegex.test(domain);
+};
+export const normalizeDomain = (value: string) => {
+  if (!value) return "";
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return "";
+
+  try {
+    const candidate = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
+    const url = new URL(candidate);
+    return url.hostname.replace(/^www\./, "");
+  } catch {
+    return trimmed
+      .replace(/^(https?:\/\/)/, "")
+      .replace(/^www\./, "")
+      .split("/")[0]
+      .split("?")[0]
+      .split("#")[0];
+  }
+};
