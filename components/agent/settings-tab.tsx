@@ -72,7 +72,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
   const router = useRouter();
 
   return (
-    <div className="">
+    <div className="p-4">
       {/* AI Model Configuration */}
 
       <div className="">

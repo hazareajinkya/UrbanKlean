@@ -133,20 +133,16 @@ export default function AgentPage() {
       </div>
 
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-          {/* Tab Content */}
-          <div className="p-4 ">
-            {tab === "overview" && <OverviewTab agent={agent} />}
-            {tab === "chat" && <ChatTab agent={agent} />}
-            {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
-            {tab === "appearance" && <AppearanceTab agent={agent} />}
-            {tab === "workflow" && <WorkflowTab agent={agent} />}
-            {tab === "settings" && <SettingsTab agent={agent} />}
-            {tab === "widget" && (
-              <WidgetTab agent={agent} wid={wid} aid={aid} />
-            )}
-          </div>
-        </ScrollArea>
+        {/* Tab Content */}
+        <div className=" h-full ">
+          {tab === "overview" && <OverviewTab agent={agent} />}
+          {tab === "chat" && <ChatTab agent={agent} />}
+          {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
+          {tab === "appearance" && <AppearanceTab agent={agent} />}
+          {tab === "workflow" && <WorkflowTab agent={agent} />}
+          {tab === "settings" && <SettingsTab agent={agent} />}
+          {tab === "widget" && <WidgetTab agent={agent} wid={wid} aid={aid} />}
+        </div>
       </div>
     </div>
   );
