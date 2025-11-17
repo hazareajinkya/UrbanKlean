@@ -141,3 +141,13 @@ export const normalizeDomain = (value: string) => {
       .split("#")[0];
   }
 };
+
+export const checkStillActive = (
+  lastActivity: string,
+  hour: number
+): boolean => {
+  const now = new Date();
+  const diffMs = now.getTime() - new Date(lastActivity).getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  return diffHours < hour;
+};
