@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { normEmail, normPhone } from "../utils";
+import { IChannelProvider } from "./channel";
 
 export interface IPerson {
   id: string;
@@ -10,7 +11,7 @@ export interface IPerson {
   phones: string[];
 
   //external ids like whatsapp, instagram, shopify customer id
-  externalIds: Record<string, string>;
+  externalIds: IExternalIds;
 
   //company info
   company: string;
@@ -39,6 +40,7 @@ export interface IPerson {
   updatedAt: string;
 }
 
+export type IExternalIds = { provider: IChannelProvider; id: string }[];
 export const generateDefaultPerson = ({
   name,
   email,
@@ -49,7 +51,7 @@ export const generateDefaultPerson = ({
   name?: string;
   email?: string;
   phone?: string;
-  externalIds?: Record<string, string>;
+  externalIds?: IExternalIds;
   sessionId?: string;
 }): IPerson => {
   const emailN = normEmail(email);
@@ -60,7 +62,7 @@ export const generateDefaultPerson = ({
     name: name ?? "",
     emails: emailN ? [emailN] : [],
     phones: phoneN ? [phoneN] : [],
-    externalIds: externalIds ?? {},
+    externalIds: externalIds ?? [],
     company: "",
     title: "",
     location: "",

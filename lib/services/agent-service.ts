@@ -13,7 +13,7 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultAgent, IAgent } from "../types/agent";
 import workspaceService from "./workspace-service";
-import { deleteCollection, checkStillActive } from "../utils";
+import { deleteCollection, checkRecentlyActive } from "../utils";
 import channelService from "./channel-service";
 
 class AgentService {
@@ -34,16 +34,7 @@ class AgentService {
     const snap = await getDoc(doc(db, `agents/${aid}`));
     if (!snap.exists()) return null;
     const agent = snap.data() as IAgent;
-    // Checking the last activity when agent fetch
-    // This allow to reduce read operations; reminder : only update the agent once a day but update workspace when agents updates
-    const inactive = !checkStillActive(agent.lastActivity, 24);
-    if (inactive) {
-      await this.updateLastActivity(agent.wid, aid);
-      return {
-        ...agent,
-        lastActivity: new Date().toISOString(),
-      };
-    }
+    this.updateLastActivity(agent);
     return agent;
   }
 
@@ -90,14 +81,16 @@ class AgentService {
 
   // Updating last activity of agent and workspace
 
-  updateLastActivity = async (wid: string, aid: string) => {
+  updateLastActivity = async (agent: IAgent) => {
+    const isRecentlyActive = checkRecentlyActive(agent.lastActivity, 24);
+    if (isRecentlyActive) return;
     // Update agent once per day
-    await updateDoc(doc(db, `agents/${aid}`), {
+    await updateDoc(doc(db, `agents/${agent.id}`), {
       lastActivity: new Date().toISOString(),
     });
 
     // Update workspace every time an agent updates
-    await updateDoc(doc(db, `workspaces/${wid}`), {
+    await updateDoc(doc(db, `workspaces/${agent.wid}`), {
       lastActivity: new Date().toISOString(),
     });
   };

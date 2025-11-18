@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { NextRequest } from "next/server";
 import { collection, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "./clients/firebase";
+import { IPerson } from "./types/person";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -142,7 +143,7 @@ export const normalizeDomain = (value: string) => {
   }
 };
 
-export const checkStillActive = (
+export const checkRecentlyActive = (
   lastActivity: string,
   hour: number
 ): boolean => {
