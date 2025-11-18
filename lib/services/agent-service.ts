@@ -47,7 +47,6 @@ class AgentService {
   }) {
     await updateDoc(doc(db, `agents/${aid}`), {
       ...updates,
-      lastActivity: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
   }
