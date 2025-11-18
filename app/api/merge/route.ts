@@ -1,5 +1,10 @@
 import { mergeService } from "@/lib/services/merge-service";
 import peopleService from "@/lib/services/people-service";
+import {
+  errorResponse,
+  serverErrorResponse,
+  successResponse,
+} from "@/lib/types/api-response";
 import { IExternalIds, IPerson } from "@/lib/types/person";
 import { generateMergePrompt } from "@/prompts/merge-prompt";
 
@@ -13,15 +18,12 @@ export const POST = async (req: Request) => {
     const { wid, personIds }: { wid: string; personIds: string[] } =
       await req.json();
 
-    if (personIds.length < 2)
-      return new Response("Persons ID required", { status: 400 });
+    if (personIds.length < 2) return errorResponse("Persons ID required", 400);
 
     // Geting persons
     const persons: IPerson[] = await peopleService.getPersons(wid, personIds);
     if (!persons || persons.length < 2)
-      return new Response("Not enough valid person records to merge", {
-        status: 400,
-      });
+      return errorResponse("Not enough valid person records to merge", 400);
 
     //   Sorting IDs
     const { primaryId, otherIds } =
@@ -53,11 +55,10 @@ export const POST = async (req: Request) => {
       mergedPerson,
       wid
     );
-    return Response.json(mergedPerson);
+
+    return successResponse(mergedPerson, "Persons merged successfully.");
   } catch (error: any) {
-    return new Response(error.message || "Error to train the agent", {
-      status: 500,
-    });
+    return serverErrorResponse(error);
   }
 };
 const MergeLlmPersonSchema = z.object({
