@@ -12,6 +12,7 @@ export interface IAgent {
   settings: IAgentSettings;
   createdAt: string;
   updatedAt: string;
+  lastActivity: string;
 }
 
 export interface IAgentSettings {
@@ -56,5 +57,6 @@ export const generateDefaultAgent = (
 
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    lastActivity: new Date().toISOString(),
   };
 };

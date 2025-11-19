@@ -16,7 +16,7 @@ import { db } from "../clients/firebase";
 import { normEmail, normNote, normPhone, normWord } from "../utils";
 import { kMaxLength } from "buffer";
 import { v4 } from "uuid";
-import { generateDefaultPerson, IPerson } from "../types/person";
+import { generateDefaultPerson, IExternalIds, IPerson } from "../types/person";
 
 class PeopleService {
   async identifyPerson({
@@ -182,7 +182,7 @@ class PeopleService {
     wid: string;
     email?: string;
     phone?: string;
-    externalIds?: Record<string, string>;
+    externalIds?: IExternalIds;
     name?: string;
   }) {
     console.log("identify called with:", {
@@ -274,7 +274,7 @@ class PeopleService {
     name?: string;
     email?: string;
     phone?: string;
-    externalIds?: Record<string, string>;
+    externalIds?: IExternalIds;
     sessionId?: string;
   }) {
     const person = generateDefaultPerson({
@@ -317,7 +317,7 @@ class PeopleService {
     name?: string;
     emails: string[];
     phones: string[];
-    externalIds?: Record<string, string>;
+    externalIds?: IExternalIds;
     sessionId?: string;
   }) {
     const person = generateDefaultPerson({

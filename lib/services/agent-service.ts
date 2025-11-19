@@ -13,7 +13,7 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultAgent, IAgent } from "../types/agent";
 import workspaceService from "./workspace-service";
-import { deleteCollection } from "../utils";
+import { deleteCollection, checkRecentlyActive } from "../utils";
 import channelService from "./channel-service";
 
 class AgentService {
@@ -31,9 +31,11 @@ class AgentService {
   }
 
   async fetchAgent(aid: string) {
-    const agent = await getDoc(doc(db, `agents/${aid}`));
-    if (!agent.exists()) return null;
-    return agent.data() as IAgent;
+    const snap = await getDoc(doc(db, `agents/${aid}`));
+    if (!snap.exists()) return null;
+    const agent = snap.data() as IAgent;
+    this.updateLastActivity(agent);
+    return agent;
   }
 
   async updateAgent({
@@ -74,6 +76,22 @@ class AgentService {
     }
     // Delete agent
     await deleteDoc(doc(db, `agents/${aid}`));
+  };
+
+  // Updating last activity of agent and workspace
+
+  updateLastActivity = async (agent: IAgent) => {
+    const isRecentlyActive = checkRecentlyActive(agent.lastActivity, 24);
+    if (isRecentlyActive) return;
+    // Update agent once per day
+    await updateDoc(doc(db, `agents/${agent.id}`), {
+      lastActivity: new Date().toISOString(),
+    });
+
+    // Update workspace every time an agent updates
+    await updateDoc(doc(db, `workspaces/${agent.wid}`), {
+      lastActivity: new Date().toISOString(),
+    });
   };
 }
 

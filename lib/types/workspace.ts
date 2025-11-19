@@ -9,6 +9,7 @@ export interface IWorkspace {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+  lastActivity: string;
 }
 
 export const generateDefaultWorkspace = (): IWorkspace => {
@@ -22,6 +23,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    lastActivity: new Date().toISOString(),
   };
 };
 

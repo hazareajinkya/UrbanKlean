@@ -1,7 +1,7 @@
 import { tool, UIMessageStreamWriter } from "ai";
 import { z } from "zod";
 import peopleService from "../services/people-service";
-import { IPerson } from "../types/person";
+import { IExternalIds, IPerson } from "../types/person";
 import chatService from "../services/chat-service";
 import { IChannelProvider } from "../types/channel";
 
@@ -64,9 +64,12 @@ export const collectInformation = (
       console.log("providerId: ", providerId);
       console.log("sessionId: ", sessionId);
 
-      const externalIds: Record<string, string> = {
-        [provider.toLowerCase()]: providerId,
-      };
+      const externalIds: IExternalIds = [
+        {
+          provider: provider,
+          id: providerId,
+        },
+      ];
 
       const data: Partial<IPerson> = {
         name: params.name,

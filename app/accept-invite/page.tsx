@@ -19,7 +19,7 @@ import { toast } from "sonner";
 function AcceptInviteContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useCurrentUser();
+  const { user, isLoading } = useCurrentUser();
   const { acceptInvitation } = useMemberActions();
 
   const [status, setStatus] = useState<
@@ -41,10 +41,12 @@ function AcceptInviteContent() {
         return;
       }
 
+      if (isLoading) return;
+
       if (!user?.email) {
         // User not logged in, redirect to auth with return URL
         const returnUrl = `/accept-invite?wid=${wid}&token=${token}`;
-        router.push(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
+        router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
         return;
       }
 
@@ -84,7 +86,7 @@ function AcceptInviteContent() {
     };
 
     handleInvitation();
-  }, [wid, token, user, acceptInvitation, router]);
+  }, [wid, token, user, isLoading]);
 
   const handleGoToWorkspace = () => {
     if (wid) {
