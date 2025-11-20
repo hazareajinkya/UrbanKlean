@@ -12,6 +12,7 @@ import {
   postmarkconf,
   resendconf,
   blogconf,
+  backendconf,
 } from "../utils/conf";
 
 // Create axios instance with default configuration
@@ -23,6 +24,12 @@ const axiosClient: AxiosInstance = axios.create({
   },
 });
 
+export const backendClient = axios.create({
+  baseURL: `${backendconf.baseURL}/api`,
+  headers: {
+    Authorization: `Bearer ${backendconf.accessToken}`,
+  },
+});
 export const waclient = axios.create({
   baseURL: `${waconf.baseURL}/${waconf.version}/${waconf.phoneID}`,
   headers: {

@@ -18,7 +18,7 @@ export async function POST(
     const { wid } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
 
-    const { baseUrl, urls } = await validateRequestBody(request);
+    const { baseUrl, urls, workspaceType } = await validateRequestBody(request);
 
     // const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl-webhook`;
     const webhookUrl = `https://holding-promoted-ball-thomas.trycloudflare.com/api/firecrawl-webhook`;
@@ -38,6 +38,7 @@ export async function POST(
           wid,
           docId,
           type: "batch_scrape",
+          workspaceType,
         },
         events: ["page", "completed"],
       },
@@ -61,6 +62,7 @@ export async function POST(
 const webEmbeddingSchema = z.object({
   baseUrl: z.url("Invalid Url"),
   urls: z.array(z.url("Invalid URL")),
+  workspaceType: z.enum(["onboarding", ""]),
 });
 
 const validateRequestBody = async (request: NextRequest) => {

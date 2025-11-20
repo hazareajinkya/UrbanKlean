@@ -1,3 +1,4 @@
+import { backendClient } from "@/lib/clients/axios-client";
 import knowledgeService from "@/lib/services/knowledge-service";
 import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { doc } from "firebase/firestore";
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Parse and process verified webhook
     const event = JSON.parse(body);
 
-    const { wid, docId } = event.metadata;
+    const { wid, docId, workspaceType } = event.metadata;
 
     if (!wid || !docId) {
       return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "ok" });
     } else if (event.type === "batch_scrape.completed") {
       await knowledgeService.s_compeletedTraining(wid, docId);
+      if (workspaceType === "onboarding")
+        backendClient.post("/onboard/webhook", { wid });
       return NextResponse.json({ status: "ok" });
     }
   } catch (error) {
