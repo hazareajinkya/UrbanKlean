@@ -91,3 +91,8 @@ export const blogconf = {
   baseUrl: process.env.BLOG_API_URL ?? "",
   apiKey: process.env.BLOG_API_KEY ?? "",
 };
+
+export const backendconf = {
+  accessToken: process.env.BACKEND_API_KEY,
+  baseURL: process.env.BACKEND_URL,
+};
