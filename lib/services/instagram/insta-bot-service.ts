@@ -93,7 +93,10 @@ class InstaBotService {
     agent: IAgent,
     channel: IChannelProvider
   ) {
-    let session = await chatService.getSession(instaUserId, agent.id);
+    let session = await chatService.getSessionByProviderId(
+      instaUserId,
+      agent.id
+    );
     if (!session) {
       const { personId } = await peopleService.identifyPerson({
         wid: agent.wid,

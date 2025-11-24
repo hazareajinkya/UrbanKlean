@@ -51,7 +51,7 @@ export const generateDefaultAgent = (
       model: "gemini-2.5-flash",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
-        workspace.description
+        workspace.oneLiner
       ),
     },
 

@@ -18,7 +18,7 @@ export const initChat = async (agent: IAgent) => {
 
   const { person } = await peopleService.identify({
     wid: agent.wid,
-    externalIds: { web: deviceId },
+    externalIds: [{ id: deviceId, provider: "web" }],
   });
 
   const sid = getLocalSession(agent.id);

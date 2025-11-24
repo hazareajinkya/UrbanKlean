@@ -71,7 +71,7 @@ class WABotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          collectInformation: collectInformation(agent.wid),
+          // collectInformation: collectInformation(agent.wid),
           searchKnowledge: searchKnowledge(agent.wid),
         },
       });
@@ -93,7 +93,7 @@ class WABotService {
     agent: IAgent,
     channel: IChannelProvider
   ) {
-    let session = await chatService.getSession(waPhoneId, agent.id);
+    let session = await chatService.getSessionByProviderId(waPhoneId, agent.id);
     if (!session) {
       const { personId } = await peopleService.identifyPerson({
         wid: agent.wid,

@@ -685,7 +685,7 @@ export const InfoSidebar = ({
               </span>
             </div>
             <div className="space-y-2 ml-6">
-              {Object.entries(person.externalIds).map(([platform, id]) => (
+              {Object.entries(person.externalIds).map(([platform, { id }]) => (
                 <div
                   key={platform}
                   className="flex items-center justify-between text-sm"

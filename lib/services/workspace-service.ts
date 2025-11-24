@@ -48,7 +48,7 @@ class WorkspaceService {
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
-    workspace.description = description;
+    workspace.oneLiner = description;
     workspace.ownerId = ownerId;
     //create workspace
     await setDoc(doc(db, `workspaces/${wid}`), workspace);
