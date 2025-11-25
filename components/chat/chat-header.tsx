@@ -14,7 +14,7 @@ export const ChatHeader = ({
   isWidget?: boolean;
 }) => {
   const handleRefresh = () => {
-    refreshSession(agent);
+    refreshSession(agent.id);
   };
 
   const handleClose = () => {
