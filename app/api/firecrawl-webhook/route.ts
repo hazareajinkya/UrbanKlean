@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     } else if (event.type === "batch_scrape.completed") {
       await knowledgeService.s_compeletedTraining(wid, docId);
       if (workspaceType === "onboarding")
-        backendClient.post("/onboard/webhook", { wid });
+        backendClient.post("/onboard/completed", { wid });
       return NextResponse.json({ status: "ok" });
     }
   } catch (error) {
