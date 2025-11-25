@@ -64,6 +64,8 @@
   /* --primary: #e4f0b7; */
   /* --primary: #640d5f; */
   --primary: #0a400c;
+  /* --primary: #007aff; */
+  /* --primary: #0074f0; */
   --primary-foreground: oklch(0.985 0 0);
   /* --primary-foreground: #000; */
   --secondary: oklch(0.97 0 0);

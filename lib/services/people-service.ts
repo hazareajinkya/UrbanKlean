@@ -233,21 +233,28 @@ class PeopleService {
 
     // 3. try by externalIds
     if (!personSnap && externalIds) {
-      for (const [k, v] of Object.entries(externalIds)) {
-        console.log(`Attempting to identify by externalId: ${k}=${v}`);
+      for (const externalId of externalIds) {
+        // console.log(`Attempting to identify by externalId: ${k}=${v}`);
         const q = query(
           peopleCol,
-          where(`externalIds.${k}`, "==", v),
+          where("externalIds", "array-contains", {
+            provider: externalId.provider,
+            id: externalId.id,
+          }),
           limit(1)
         );
+
         const snaps = await getDocs(q);
         console.log(
-          `ExternalId lookup (${k}) result count:`,
+          `ExternalId lookup (${externalId.id}) result count:`,
           snaps.docs.length
         );
         if (snaps.docs.length > 0) {
           personSnap = snaps.docs[0];
-          console.log(`Person found by externalId (${k}):`, personSnap.data());
+          console.log(
+            `Person found by externalId (${externalId.id}):`,
+            personSnap.data()
+          );
         }
         break;
       }

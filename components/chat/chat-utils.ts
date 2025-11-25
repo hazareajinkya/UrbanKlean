@@ -22,6 +22,7 @@ export const initChat = async (agent: IAgent) => {
   });
 
   const sid = getLocalSession(agent.id);
+
   //create new session
   if (!sid) {
     const session = await chatService.createSession(
@@ -29,11 +30,18 @@ export const initChat = async (agent: IAgent) => {
       agent.id,
       person?.id
     );
+
     queryClient.setQueryData(sessionKey(session.id), session);
   } else if (sid && person && person.id) {
     const session = await chatService.getSession(sid, agent.id);
-
-    if (session?.personId !== person.id) {
+    if (!session) {
+      const newSession = await chatService.createSession(
+        agent.wid,
+        agent.id,
+        person?.id
+      );
+      queryClient.setQueryData(sessionKey(newSession.id), newSession);
+    } else if (session?.personId !== person.id) {
       console.log("updating session: ", session?.personId, person.id);
       await chatService.updateSession(agent.id, sid, {
         personId: person.id,
@@ -45,13 +53,12 @@ export const initChat = async (agent: IAgent) => {
       });
     }
   }
-
   return deviceId;
 };
 
-export const refreshSession = async (agent: IAgent) => {
+export const refreshSession = async (aid: string) => {
   //remove current session
-  removeLocalSession(agent.id);
+  removeLocalSession(aid);
 
   window.location.reload();
 };

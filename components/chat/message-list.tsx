@@ -70,7 +70,7 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
             message.role === "assistant" && index === messages.length - 1;
 
           return (
-            <div key={message.id}>
+            <div key={index}>
               <div
                 className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
