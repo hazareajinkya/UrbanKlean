@@ -42,7 +42,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!workspace) return;
     setWorkspaceName(workspace.name || "");
-    setWorkspaceDescription(workspace.description || "");
+    setWorkspaceDescription(workspace.oneLiner || "");
   }, [workspace]);
 
   const disableDomainActions = useMemo(
@@ -121,7 +121,7 @@ export default function SettingsPage() {
       wid,
       updates: {
         name: workspaceName.trim(),
-        description: workspaceDescription.trim(),
+        oneLiner: workspaceDescription.trim(),
       },
     });
   };

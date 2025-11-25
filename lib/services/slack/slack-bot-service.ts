@@ -86,7 +86,7 @@ class SlackBotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          collectInformation: collectInformation(agent.wid),
+          // collectInformation: collectInformation(agent.wid),
           searchKnowledge: searchKnowledge(agent.wid),
         },
       });
@@ -103,12 +103,15 @@ class SlackBotService {
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
 
-      // Save AI message
-      let aiMsg: IChatMessage = defaultAImessage(result.text);
-      aiMsg.parts = [
-        ...toolCalls.map((call) => defaultToolMessage(call)),
-        ...aiMsg.parts,
-      ];
+      // Save AI message with proper message parts type consistency
+      const aiMsg: IChatMessage = {
+        ...defaultAImessage(result.text),
+        parts: [
+          ...toolCalls.map((call) => defaultToolMessage(call)).filter(Boolean), // filter out undefined/null
+          ...defaultAImessage(result.text).parts,
+        ] as IChatMessage["parts"], // type cast to satisfy exact expected shape
+      };
+
       chatService.saveMessage(agent.id, session.id, aiMsg);
 
       console.log("ai response: ", result.text);
@@ -129,7 +132,7 @@ class SlackBotService {
     // Create a unique session ID combining user and channel
     const sessionId = `${userId}_${channelId}`;
 
-    let session = await chatService.getSession(sessionId, agent.id);
+    let session = await chatService.getSessionByProviderId(sessionId, agent.id);
     if (!session) {
       // Get user info from Slack
       let userInfo;

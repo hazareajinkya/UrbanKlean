@@ -55,7 +55,7 @@ export default function WorkspacesPage() {
         wid: editingWorkspace.id,
         updates: {
           name: workspaceName.trim(),
-          description: workspaceDescription.trim(),
+          oneLiner: workspaceDescription.trim(),
         },
       },
       { onSuccess: () => handleCloseModal() }
@@ -80,7 +80,7 @@ export default function WorkspacesPage() {
   const handleEditWorkspace = (workspace: IWorkspace) => {
     setEditingWorkspace(workspace);
     setWorkspaceName(workspace.name);
-    setWorkspaceDescription(workspace.description);
+    setWorkspaceDescription(workspace.oneLiner);
     setIsModalOpen(true);
   };
 

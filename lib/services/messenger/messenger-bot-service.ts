@@ -95,7 +95,10 @@ class MessengerBotService {
     agent: IAgent,
     channel: IChannelProvider
   ) {
-    let session = await chatService.getSession(messengerUserId, agent.id);
+    let session = await chatService.getSessionByProviderId(
+      messengerUserId,
+      agent.id
+    );
     if (!session) {
       const { personId } = await peopleService.identifyPerson({
         wid: agent.wid,

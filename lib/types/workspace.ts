@@ -1,12 +1,21 @@
 import { v4 } from "uuid";
-
+export type IWorkspaceType = "onboarding" | "";
 export interface IWorkspace {
   id: string;
   name: string;
-  description: string;
+  oneLiner: string;
   domains: string[];
   thumbnail: string;
   ownerId: string;
+  type: IWorkspaceType;
+  info: {
+    email: string;
+    tagline: string;
+    industry: string;
+    businessType: string;
+    description: string;
+    toneGuidelines: string;
+  };
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
@@ -17,9 +26,18 @@ export const generateDefaultWorkspace = (): IWorkspace => {
   return {
     id: id,
     name: "",
-    description: "",
+    oneLiner: "",
     ownerId: "",
     domains: [],
+    info: {
+      businessType: "",
+      description: "",
+      email: "",
+      industry: "",
+      tagline: "",
+      toneGuidelines: "",
+    },
+    type: "",
     thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

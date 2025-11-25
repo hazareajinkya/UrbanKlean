@@ -3,12 +3,14 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import {
   generateDefaultSession,
@@ -53,7 +55,18 @@ class ChatService {
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }
-
+  async getSessionByProviderId(pid: string, aid: string) {
+    const ref = collection(db, `agents/${aid}/sessions`);
+    const q = query(
+      ref,
+      where("providerId", "==", pid),
+      where("status", "==", "open"),
+      orderBy("updatedAt", "desc"),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    return snap.docs[0]?.data() as ISession;
+  }
   async getSession(sid: string, aid: string) {
     const docRef = doc(db, `agents/${aid}/sessions/${sid}`);
     const snap = await getDoc(docRef);
