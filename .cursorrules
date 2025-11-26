@@ -104,4 +104,6 @@ For API routes
 /(feature)/route.ts - actual code for that
 /(feature)/schema.ts - types for it's input and response format
 
+In api routes use successResponse and errorResponse
+
 use this schema when calling these routes using axios
