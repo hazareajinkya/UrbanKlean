@@ -28,9 +28,7 @@ class ChatService {
     if (personId) {
       session.personId = personId;
     }
-
     saveLocalSession(aid, session.id);
-
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }
@@ -67,6 +65,36 @@ class ChatService {
     const snap = await getDocs(q);
     return snap.docs[0]?.data() as ISession;
   }
+
+  async getSessionsByFilter({
+    aid,
+    sid,
+    status = "all",
+    nLimit = 50,
+    providerId,
+    personId,
+  }: {
+    aid: string;
+    sid: string;
+    status?: "open" | "closed" | "all";
+    nLimit?: number;
+    providerId?: string;
+    personId?: string;
+  }) {
+    const colRef = collection(db, `agents/${aid}/sessions`);
+
+    const filters = [];
+    const fetchOrder = orderBy("updatedAt", "desc");
+    const lt = limit(nLimit);
+    if (sid) filters.push(where("id", "==", sid));
+    if (status !== "all") filters.push(where("status", "==", status));
+    if (providerId) filters.push(where("providerId", "==", providerId));
+    if (personId) filters.push(where("personId", "==", personId));
+    const q = query(colRef, ...filters, fetchOrder, lt);
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => doc.data() as ISession);
+  }
+
   async getSession(sid: string, aid: string) {
     const docRef = doc(db, `agents/${aid}/sessions/${sid}`);
     const snap = await getDoc(docRef);

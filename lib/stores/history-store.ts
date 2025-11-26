@@ -147,7 +147,7 @@ const buildQuery = (
 ): Query => {
   const ref = collection(db, `agents/${aid}/sessions`);
   const fetchOrder = orderBy("updatedAt", "desc");
-  const lt = limit(10);
+  const lt = limit(11);
 
   const filters = [];
   if (lastVisible) filters.push(startAfter(lastVisible));

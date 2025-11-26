@@ -13,6 +13,7 @@ import {
   Globe,
   Loader2,
   MailIcon,
+  MessageCircleMoreIcon,
   PanelRightClose,
   PanelRightOpen,
   User,
@@ -49,7 +50,7 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
         className={`grid bg-white border rounded-xl h-full overflow-hidden grid-cols-[1fr_2fr_1fr] `}
       >
         {/* Chats Sidebar */}
-        <div className="p-0 border-r overflow-y-auto" id="scrollableDiv">
+        <div className="p-0 border-r">
           <SessionList
             agent={agent}
             sessions={history ?? []}
@@ -81,7 +82,11 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
             currentSession?.personId && !isCollapsed ? "" : "hidden"
           }`}
         >
-          <InfoSidebar currentSession={currentSession} />
+          <InfoSidebar
+            currentSession={currentSession}
+            setcurrentSession={setcurrentSession}
+            sessions={history ?? []}
+          />
         </div>
       </div>
     </div>
@@ -151,90 +156,92 @@ const SessionList = ({
           </p>
         </div>
       </div>
-      <InfiniteScroll
-        dataLength={nChats}
-        scrollableTarget="scrollableDiv"
-        scrollThreshold={0.8}
-        className="bg-secondary"
-        next={() => {
-          fetchNextSessions(agent.id);
-        }}
-        hasMore={hasMore}
-        loader={
-          <div className="py-4 text-center mx-auto w-full">
-            <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-          </div>
-        }
-        endMessage={
-          <div className="py-4 text-sm text-center text-muted-foreground">
-            End of conversations
-          </div>
-        }
-      >
-        {sessions?.map((session, index) => {
-          const channel = session.channel;
-          const person = session.personId
-            ? persons[session.personId]
-            : undefined;
-          return (
-            <div
-              key={session.id}
-              className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3 border-b ${
-                currentSession?.id === session.id
-                  ? "bg-card border-l-2 border-b-0 border-primary"
-                  : ""
-              }`}
-              onClick={() => setcurrentSession(session)}
-            >
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
-                  {person ? person.name : renderVisitorID(session)}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(session.updatedAt)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full flex gap-1 items-center ${
-                    session.status === "open"
-                      ? "text-green-700 bg-green-400/20"
-                      : "text-muted-foreground bg-muted-foreground/20"
-                  } `}
-                >
-                  <div
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      session.status === "open"
-                        ? "bg-green-500 "
-                        : "bg-muted-foreground"
-                    }`}
-                  ></div>
-                  {session.status === "open" ? "Open" : "Closed"}
-                </span>
-
+      <div className="max-h-[680px] overflow-y-scroll " id="scrollableDiv">
+        <InfiniteScroll
+          dataLength={sessions.length}
+          scrollableTarget="scrollableDiv"
+          scrollThreshold={0.8}
+          className="bg-secondary"
+          next={() => {
+            fetchNextSessions(agent.id);
+          }}
+          hasMore={hasMore}
+          loader={
+            <div className="py-4 text-center mx-auto w-full">
+              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+            </div>
+          }
+          endMessage={
+            <div className="py-4 text-sm text-center text-muted-foreground">
+              End of conversations
+            </div>
+          }
+        >
+          {sessions?.map((session, index) => {
+            const channel = session.channel;
+            const person = session.personId
+              ? persons[session.personId]
+              : undefined;
+            return (
+              <div
+                key={index}
+                className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3 border-b ${
+                  currentSession?.id === session.id
+                    ? "bg-card border-l-2 border-b-0 border-primary"
+                    : ""
+                }`}
+                onClick={() => setcurrentSession(session)}
+              >
                 <div>
-                  {channel === "web" ? (
-                    <Globe className="size-4.5" />
-                  ) : channel === "whatsapp" ? (
-                    <WAIcon className="size-5" />
-                  ) : channel === "instagram" ? (
-                    <InstagramIcon className="size-4.5" />
-                  ) : channel === "messenger" ? (
-                    <MessengerIcon className="size-4.5" />
-                  ) : channel === "email" ? (
-                    <MailIcon className="size-4.5" />
-                  ) : channel === "slack" ? (
-                    <SlackLogo className="size-4.5" />
-                  ) : (
-                    <></>
-                  )}
+                  <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
+                    {person ? person.name : renderVisitorID(session)}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(session.updatedAt)}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full flex gap-1 items-center ${
+                      session.status === "open"
+                        ? "text-green-700 bg-green-400/20"
+                        : "text-muted-foreground bg-muted-foreground/20"
+                    } `}
+                  >
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        session.status === "open"
+                          ? "bg-green-500 "
+                          : "bg-muted-foreground"
+                      }`}
+                    ></div>
+                    {session.status === "open" ? "Open" : "Closed"}
+                  </span>
+
+                  <div>
+                    {channel === "web" ? (
+                      <Globe className="size-4.5" />
+                    ) : channel === "whatsapp" ? (
+                      <WAIcon className="size-5" />
+                    ) : channel === "instagram" ? (
+                      <InstagramIcon className="size-4.5" />
+                    ) : channel === "messenger" ? (
+                      <MessengerIcon className="size-4.5" />
+                    ) : channel === "email" ? (
+                      <MailIcon className="size-4.5" />
+                    ) : channel === "slack" ? (
+                      <SlackLogo className="size-4.5" />
+                    ) : (
+                      <></>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </InfiniteScroll>
+            );
+          })}
+        </InfiniteScroll>
+      </div>
     </div>
   );
 };
@@ -366,7 +373,22 @@ const HistoryMessageList = ({
                               className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
                               key={index}
                             >
-                              <Streamdown>{part.text}</Streamdown>
+                              <Streamdown
+                                components={{
+                                  a: ({ href, children }) => (
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-2"
+                                    >
+                                      {children}
+                                    </a>
+                                  ),
+                                }}
+                              >
+                                {part.text}
+                              </Streamdown>
                             </div>
                           </div>
                         );
@@ -379,7 +401,21 @@ const HistoryMessageList = ({
                     >
                       {message.parts?.map((part, partIndex) => (
                         <div key={partIndex} className="">
-                          <Streamdown>
+                          <Streamdown
+                            components={{
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium  transition-colors underline underline-offset-2"
+                                  style={{ color: fontColor }}
+                                >
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
                             {part.type === "text" ? part.text ?? "" : ""}
                           </Streamdown>
                         </div>
@@ -407,9 +443,13 @@ const HistoryMessageList = ({
 };
 
 export const InfoSidebar = ({
+  setcurrentSession,
   currentSession,
+  sessions,
 }: {
   currentSession?: ISession;
+  setcurrentSession: (session: ISession) => void;
+  sessions: ISession[];
 }) => {
   const persons = useHistoryStore((state) => state.persons);
 
@@ -664,7 +704,7 @@ export const InfoSidebar = ({
         )}
 
         {/* Connected Accounts */}
-        {person.externalIds && Object.keys(person.externalIds).length > 0 && (
+        {person.externalIds && person.externalIds.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <svg
@@ -685,14 +725,16 @@ export const InfoSidebar = ({
               </span>
             </div>
             <div className="space-y-2 ml-6">
-              {Object.entries(person.externalIds).map(([platform, { id }]) => (
+              {person.externalIds.map((channel, index) => (
                 <div
-                  key={platform}
+                  key={index}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-gray-600 capitalize">{platform}</span>
+                  <span className="text-gray-600 capitalize">
+                    {channel.provider}
+                  </span>
                   <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-800">
-                    {id}
+                    {channel.id}
                   </code>
                 </div>
               ))}
@@ -701,6 +743,41 @@ export const InfoSidebar = ({
         )}
       </div>
 
+      <div className="flex-1 px-4 space-y-6 overflow-y-auto">
+        {person.pastSessionIds && person.pastSessionIds.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <MessageCircleMoreIcon className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">
+                Previous chats
+              </span>
+            </div>
+            <div className="space-y-2 ml-6">
+              {person.pastSessionIds.map((sessionId) => (
+                <div
+                  key={sessionId}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-600 capitalize"
+                    onClick={() =>
+                      setcurrentSession(
+                        sessions.find(
+                          (session) => session.id === sessionId
+                        ) as ISession
+                      )
+                    }
+                  >
+                    {sessionId}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       {/* Footer */}
       {(person.createdAt || person.updatedAt) && (
         <div className="px-4 py-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
