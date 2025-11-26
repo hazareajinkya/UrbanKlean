@@ -229,7 +229,7 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                         }
                       })}
                     </>
-                  ) : (
+                  ) : message.role === "user" ? (
                     <>
                       <div className={""}>
                         <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
@@ -239,6 +239,8 @@ export const MessageList = ({ messages, status, agent }: MessageListProps) => {
                         </p>
                       </div>
                     </>
+                  ) : message.role === "system" ? null : (
+                    <></>
                   )}
                 </div>
               </div>

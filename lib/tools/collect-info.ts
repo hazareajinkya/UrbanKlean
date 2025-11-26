@@ -112,8 +112,14 @@ export const collectInformation = (
           personId: personData!.id,
           updates: {
             ...params,
+            externalIds,
           },
         });
+
+        // //attach person id to session if there is no person id already
+        // await chatService.updateSession(aid, sessionId, {
+        //   personId: personData!.id,
+        // });
       }
 
       return {

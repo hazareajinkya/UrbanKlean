@@ -20,8 +20,10 @@ import {
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
+
+const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
 export default function WorkspaceLayout({
   children,
@@ -131,7 +133,10 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    return false;
+  });
   const [isModalOpen, setIsModelOpen] = useState(false);
 
   const handleSignOut = () => {
@@ -139,7 +144,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   };
 
   const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newState));
   };
   const handleModalOpen = () => {
     setIsModelOpen(true);

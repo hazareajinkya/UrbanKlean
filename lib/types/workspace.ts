@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-export type IWorkspaceType = "onboarding" | "";
+export type IWorkspaceType = "onboarding" | "default";
 export interface IWorkspace {
   id: string;
   name: string;
@@ -37,7 +37,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       tagline: "",
       toneGuidelines: "",
     },
-    type: "",
+    type: "default",
     thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

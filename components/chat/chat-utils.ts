@@ -3,9 +3,11 @@ import { sessionKey } from "@/lib/hooks/session/use-session";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
 import { IAgent } from "@/lib/types/agent";
+import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
 import lsMap from "@/lib/utils/ls-map";
 import { ModelMessage } from "ai";
+import { arrayUnion } from "firebase/firestore";
 import { v4 } from "uuid";
 
 export const initChat = async (agent: IAgent) => {
@@ -25,7 +27,7 @@ export const initChat = async (agent: IAgent) => {
 
   //create new session
   if (!sid) {
-    createNewSession(agent.wid, agent.id, person?.id);
+    createNewSession(agent.wid, agent.id, person);
   } else {
     //get session by open status
     const sessions = await chatService.getSessionsByFilter({
@@ -39,12 +41,13 @@ export const initChat = async (agent: IAgent) => {
 
     //if no session, create new session
     if (!session) {
-      session = await createNewSession(agent.wid, agent.id, person?.id);
+      session = await createNewSession(agent.wid, agent.id, person);
     }
 
     //if person exists, and session personId is different, update session
     if (person && person.id && session?.personId !== person.id) {
-      console.log("updating session: ", session?.personId, person.id);
+      console.log("updating session: ", session?.id, person.id);
+
       await chatService.updateSession(agent.id, sid, {
         personId: person.id,
       });
@@ -59,12 +62,24 @@ export const initChat = async (agent: IAgent) => {
   return deviceId;
 };
 
-const createNewSession = async (
-  wid: string,
-  aid: string,
-  personId?: string
-) => {
-  const session = await chatService.createSession(wid, aid, personId);
+const createNewSession = async (wid: string, aid: string, person?: IPerson) => {
+  //create new session
+  const session = await chatService.createSession(wid, aid, person?.id);
+
+  if (person) {
+    // Only update if the session id is not already present
+    if (!person.pastSessionIds.includes(session.id)) {
+      const updatedSessionIds = [...person.pastSessionIds, session.id];
+      await peopleService.update({
+        wid,
+        personId: person.id,
+        updates: {
+          pastSessionIds: updatedSessionIds,
+        },
+      });
+    }
+  }
+
   queryClient.setQueryData(sessionKey(session.id), session);
   return session;
 };

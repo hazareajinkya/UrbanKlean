@@ -210,7 +210,7 @@ export default function SettingsPage() {
                 className="min-w-[120px] transition-all"
               >
                 {updateWorkspace.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin " />
+                  <Loader2 className="h-4 w-4 animate-spin " />
                 )}
                 Save Changes
               </Button>
@@ -249,9 +249,9 @@ export default function SettingsPage() {
                   className="w-full sm:w-auto transition-all disabled:opacity-50"
                 >
                   {addWorkspaceDomain.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin " />
+                    <Loader2 className="h-4 w-4 animate-spin " />
                   ) : (
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   )}
                   Add domain
                 </Button>

@@ -65,7 +65,7 @@ export const useKnowledgeActions = () => {
       });
     },
     onSuccess: () => {
-      toast.success("Text embedded and saved successfully");
+      toast.success("Text saved and trained successfully");
     },
     onError: (error: Error) => {
       console.log("error: ", error);
@@ -85,7 +85,7 @@ export const useKnowledgeActions = () => {
       });
     },
     onSuccess: (_, { wid }) => {
-      toast.success("PDF embedded and saved successfully");
+      toast.success("PDF saved and trained successfully");
       qc.invalidateQueries({ queryKey: pdfKnowledgeKey(wid) });
     },
     onError: (error: Error) => {
