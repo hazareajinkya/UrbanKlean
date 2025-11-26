@@ -310,6 +310,7 @@ const CreateAgentModal = ({
               id="agentName"
               type="text"
               placeholder="Customer Support Bot"
+              autoFocus={true}
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
               className="mt-2"

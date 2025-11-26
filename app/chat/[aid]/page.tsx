@@ -15,8 +15,12 @@ import { ChatHeader } from "@/components/chat/chat-header";
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { IAgent } from "@/lib/types/agent";
 import { v4 } from "uuid";
-import { useSession } from "@/lib/hooks/session/use-session";
-import { getGreetingMsg, initChat } from "@/components/chat/chat-utils";
+import { sessionKey, useSession } from "@/lib/hooks/session/use-session";
+import {
+  getGreetingMsg,
+  getLocalDeviceId,
+  initChat,
+} from "@/components/chat/chat-utils";
 import chatService from "@/lib/services/chat-service";
 import {
   defaultAImessage,
@@ -32,6 +36,7 @@ import { getContrastingColor } from "@/lib/utils";
 import z from "zod";
 import peopleService from "@/lib/services/people-service";
 import { IPerson } from "@/lib/types/person";
+import { queryClient } from "@/lib/clients/query-client";
 
 export default function ChatPage() {
   const { aid } = useParams() as { aid: string };
@@ -55,16 +60,22 @@ export default function ChatPage() {
     }
     return undefined;
   };
+
   const { messages, sendMessage, setMessages, status } = useChat<IChatMessage>({
-    id: session?.id,
+    id: `${session?.id}`,
     messages: agent ? [getGreetingMsg(agent)] : [],
     transport: new DefaultChatTransport({
       api: "/api/query-stream",
       body: () => {
+        const deviceId = agent ? getLocalDeviceId(agent.wid) : undefined;
+        const cachedSession = session?.id
+          ? queryClient.getQueryData<ISession>(sessionKey(session.id))
+          : undefined;
+
         return {
           aid,
-          deviceId,
-          personId: getPersonId(),
+          deviceId: deviceId,
+          personId: cachedSession?.personId,
         };
       },
     }),

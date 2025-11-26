@@ -27,6 +27,7 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
   nextQuery: null,
   unsubscribe: null,
   persons: {},
+  loadingSessionIds: new Set<string>(),
   setnChats: (nChats: number) => set({ nChats }),
   sethasMore: (hasMore: boolean) => set({ hasMore }),
 
@@ -75,7 +76,9 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     const people = await peopleService.getPersons(wid, ids);
 
     const map = people.reduce((acc, person) => {
+      person.pastSessionIds = person.pastSessionIds.reverse();
       acc[person.id] = person;
+
       return acc;
     }, {} as Record<string, IPerson>);
 
@@ -120,6 +123,47 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       console.log("error: ", error);
     }
   },
+
+  fetchAndAddSessionToHistory: async (sessionId: string, aid: string) => {
+    const { history, loadingSessionIds } = get();
+    // Return early if session already exists in history
+    const existingSession = history.find((s) => s.id === sessionId);
+    if (existingSession) return;
+
+    // Return early if session is already being fetched
+    if (loadingSessionIds.has(sessionId)) return;
+
+    // Mark session as loading to prevent duplicate fetches
+    set({
+      loadingSessionIds: new Set([...loadingSessionIds, sessionId]),
+    });
+
+    try {
+      // Fetch session from Firestore
+      const session = await chatService.getSession(sessionId, aid);
+      if (session) {
+        // Add to history and sort by updatedAt (newest first)
+        const updatedHistory = [...history, session].sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+        set({ history: updatedHistory });
+
+        // Fetch person info if session has a personId
+        if (session.personId) {
+          get().getPersonsInfo([session.personId]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch session:", error);
+    } finally {
+      // Remove session from loading set
+      const { loadingSessionIds: currentLoading } = get();
+      const updated = new Set(currentLoading);
+      updated.delete(sessionId);
+      set({ loadingSessionIds: updated });
+    }
+  },
 }));
 
 export interface IHistoryStore {
@@ -129,12 +173,17 @@ export interface IHistoryStore {
   history: ISession[];
   persons: Record<string, IPerson>;
   unsubscribe: (() => void) | null;
+  loadingSessionIds: Set<string>;
   setnChats: (nChats: number) => void;
   sethasMore: (hasMore: boolean) => void;
   getChatsCount: (query: Query) => Promise<void>;
 
   getPersonsInfo: (ids: string[]) => Promise<void>;
   fetchNextSessions: (aid: string) => Promise<void>;
+  fetchAndAddSessionToHistory: (
+    sessionId: string,
+    aid: string
+  ) => Promise<void>;
 
   subscribeToSessions: (aid: string) => void;
   unsubscribeFromSessions: () => void;

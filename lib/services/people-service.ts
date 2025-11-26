@@ -164,6 +164,7 @@ class PeopleService {
   }
 
   async getPersons(wid: string, personIds: string[]) {
+    if (!personIds || personIds.length === 0) return [];
     const q = query(
       collection(db, `workspaces/${wid}/people`),
       where("id", "in", personIds)
@@ -174,37 +175,37 @@ class PeopleService {
 
   async identify({
     wid,
-    email,
-    phone,
+    emails,
+    phones,
     externalIds,
     name,
   }: {
     wid: string;
-    email?: string;
-    phone?: string;
+    emails?: string[];
+    phones?: string[];
     externalIds?: IExternalIds;
     name?: string;
   }) {
     console.log("identify called with:", {
       wid,
-      email,
-      phone,
+      emails,
+      phones,
       externalIds,
       name,
     });
 
     const peopleCol = collection(db, `workspaces/${wid}/people`);
-    const emailN = normEmail(email);
-    const phoneN = normPhone(phone);
+    const emailNs = emails?.map(normEmail).filter(Boolean);
+    const phoneNs = phones?.map(normPhone).filter(Boolean);
 
     let personSnap: DocumentSnapshot | undefined = undefined;
 
     // 1. try by email
-    if (emailN) {
-      console.log("Attempting to identify by email:", emailN);
+    if (emailNs) {
+      console.log("Attempting to identify by email:", emailNs);
       const q = query(
         peopleCol,
-        where("emails", "array-contains", emailN),
+        where("emails", "array-contains-any", emailNs),
         limit(1)
       );
       const snaps = await getDocs(q);
@@ -216,11 +217,11 @@ class PeopleService {
     }
 
     // 2. try by phone
-    if (!personSnap && phoneN) {
-      console.log("Attempting to identify by phone:", phoneN);
+    if (!personSnap && phoneNs) {
+      console.log("Attempting to identify by phone:", phoneNs);
       const q = query(
         peopleCol,
-        where("phones", "array-contains", phoneN),
+        where("phones", "array-contains-any", phoneNs),
         limit(1)
       );
       const snaps = await getDocs(q);

@@ -20,11 +20,16 @@ import {
 import { db } from "../clients/firebase";
 import { UIDataTypes, UIMessagePart, UITools } from "ai";
 import { IChannelProvider } from "../types/channel";
-import { saveLocalSession } from "../../components/chat/chat-utils";
+import {
+  getLocalDeviceId,
+  saveLocalSession,
+} from "../../components/chat/chat-utils";
 
 class ChatService {
   async createSession(wid: string, aid: string, personId?: string) {
-    const session = generateDefaultSession(wid, aid, "web");
+    const deviceId = getLocalDeviceId(wid);
+
+    const session = generateDefaultSession(wid, aid, "web", deviceId);
     if (personId) {
       session.personId = personId;
     }
