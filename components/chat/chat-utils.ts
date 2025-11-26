@@ -25,23 +25,25 @@ export const initChat = async (agent: IAgent) => {
 
   //create new session
   if (!sid) {
-    const session = await chatService.createSession(
-      agent.wid,
-      agent.id,
-      person?.id
-    );
+    createNewSession(agent.wid, agent.id, person?.id);
+  } else {
+    //get session by open status
+    const sessions = await chatService.getSessionsByFilter({
+      aid: agent.id,
+      sid: sid,
+      status: "open",
+      nLimit: 1,
+    });
 
-    queryClient.setQueryData(sessionKey(session.id), session);
-  } else if (sid && person && person.id) {
-    const session = await chatService.getSession(sid, agent.id);
+    let session = sessions.length > 0 ? sessions[0] : null;
+
+    //if no session, create new session
     if (!session) {
-      const newSession = await chatService.createSession(
-        agent.wid,
-        agent.id,
-        person?.id
-      );
-      queryClient.setQueryData(sessionKey(newSession.id), newSession);
-    } else if (session?.personId !== person.id) {
+      session = await createNewSession(agent.wid, agent.id, person?.id);
+    }
+
+    //if person exists, and session personId is different, update session
+    if (person && person.id && session?.personId !== person.id) {
       console.log("updating session: ", session?.personId, person.id);
       await chatService.updateSession(agent.id, sid, {
         personId: person.id,
@@ -53,7 +55,18 @@ export const initChat = async (agent: IAgent) => {
       });
     }
   }
+
   return deviceId;
+};
+
+const createNewSession = async (
+  wid: string,
+  aid: string,
+  personId?: string
+) => {
+  const session = await chatService.createSession(wid, aid, personId);
+  queryClient.setQueryData(sessionKey(session.id), session);
+  return session;
 };
 
 export const refreshSession = async (aid: string) => {
