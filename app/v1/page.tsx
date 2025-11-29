@@ -20,6 +20,33 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 
+const GridBackground = () => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    {/* Animated Grid Pattern */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage: `linear-gradient(to right, #808080 1px, transparent 1px), linear-gradient(to bottom, #808080 1px, transparent 1px)`,
+        backgroundSize: '60px 60px'
+      }}
+    />
+    
+    {/* Gradient Orbs - Subtle/Nature inspired */}
+    <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" 
+         style={{ animationDuration: '4s' }} />
+    <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" 
+         style={{ animationDuration: '6s', animationDelay: '1s' }} />
+    <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-slate-500/10 rounded-full blur-3xl animate-pulse" 
+         style={{ animationDuration: '5s', animationDelay: '2s' }} />
+    
+    {/* Radial Gradient Overlay */}
+    <div className="absolute inset-0 bg-gradient-radial from-transparent via-background/50 to-background" />
+    
+    {/* Top and Bottom Fade */}
+    <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background/90" />
+  </div>
+);
+
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -236,37 +263,44 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full pb-8 overflow-hidden">
-          <div className=" px-4 md:px-6 relative w-full">
-            <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
-
+        <section className="w-full pb-20 pt-32 overflow-hidden relative">
+          <GridBackground />
+          <div className="container px-4 md:px-6 relative w-full mx-auto z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-center max-w-3xl mx-auto py-10"
+              className="text-center max-w-4xl mx-auto"
             >
               <Badge
-                className="mb-4 rounded-full px-4 py-1.5 text-sm font-medium"
-                variant="secondary"
+                className="mb-6 rounded-full px-4 py-1.5 text-sm font-medium bg-secondary/80 backdrop-blur-sm border-border/50 text-secondary-foreground"
+                variant="outline"
               >
-                HumanlyClear, Empathy-First AI
+                AI Agents for Enterprise Support
               </Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                Customer Support That Feels Human — Because It Should
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-medium tracking-tight mb-8 text-foreground leading-[1.1]">
+                AI that talks like a human. <br className="hidden md:block" />
+                <span className="text-muted-foreground italic">Handles millions of calls.</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
                 MagicalCX creates AI team members that understand, empathize,
                 and resolve customer issues in one conversation — no waiting, no
-                repeating yourself, no frustration.
+                repeating yourself.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Button
                   size="lg"
-                  className="rounded-full h-12 px-8 text-base"
+                  className="rounded-full h-14 px-8 text-base font-medium bg-foreground text-background hover:bg-foreground/90 transition-all hover:scale-105 shadow-lg"
                   onClick={openCalendlyDirect}
                 >
-                  See It In Action
+                  Talk to us
+                </Button>
+                 <Button
+                  size="lg"
+                  variant="ghost"
+                  className="rounded-full h-14 px-8 text-base font-medium hover:bg-secondary/80"
+                >
+                  See how it works
                   <ExternalLink className="ml-2 size-4" />
                 </Button>
               </div>
@@ -276,9 +310,18 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="relative mx-auto max-w-5xl"
+              className="relative mx-auto max-w-5xl mt-20"
             >
-              <div className="rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-muted/20"></div>
+              <div className="rounded-2xl overflow-hidden shadow-2xl border border-border/40 bg-background/50 backdrop-blur-xl aspect-video relative group">
+                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                 {/* Placeholder for Hero Image/Video */}
+                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">✨</div>
+                        <p className="text-xl font-medium">Platform Demo</p>
+                    </div>
+                 </div>
+              </div>
             </motion.div>
           </div>
         </section>
