@@ -31,6 +31,39 @@ export function formatDateTime(date?: string) {
   return format(new Date(date), "dd MMM yyyy hh:mm a");
 }
 
+export const formatHistoryDateTime = (date?: string) => {
+  if (!date) return "";
+  const now = new Date();
+  const givenDate = new Date(date);
+
+  // Remove seconds/milliseconds for accurate same-day handling
+  now.setSeconds(0, 0);
+  givenDate.setSeconds(0, 0);
+
+  const isToday =
+    now.getFullYear() === givenDate.getFullYear() &&
+    now.getMonth() === givenDate.getMonth() &&
+    now.getDate() === givenDate.getDate();
+
+  if (isToday) {
+    return `Today, ${format(givenDate, "hh:mm a")}`;
+  }
+
+  // If yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    yesterday.getFullYear() === givenDate.getFullYear() &&
+    yesterday.getMonth() === givenDate.getMonth() &&
+    yesterday.getDate() === givenDate.getDate()
+  ) {
+    return `Yesterday, ${format(givenDate, "hh:mm a")}`;
+  }
+
+  // Otherwise, normal formatting
+  return format(givenDate, "dd MMM yy hh:mm a");
+};
+
 export const getRandomAvatar = (num?: number) => {
   const randomNumber = num ?? Math.floor(Math.random() * 16) + 1;
   return `https://firebasestorage.googleapis.com/v0/b/algotify-972f2.firebasestorage.app/o/face-avatar-2%2Favatar-${randomNumber}.png?alt=media&token=607149f6-5e3d-439d-aa3d-da34219143e9`;

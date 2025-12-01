@@ -46,6 +46,15 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       unsubscribe();
     }
 
+    // Clear previous state immediately when switching agents
+    set({
+      history: [],
+      persons: {},
+      nChats: 0,
+      hasMore: true,
+      nextQuery: null,
+    });
+
     const q = buildQuery(aid);
 
     const newUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -76,7 +85,7 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     const people = await peopleService.getPersons(wid, ids);
 
     const map = people.reduce((acc, person) => {
-      person.pastSessionIds = person.pastSessionIds.reverse();
+      person.pastSessionIds = person.pastSessionIds?.reverse() ?? [];
       acc[person.id] = person;
 
       return acc;
@@ -98,25 +107,28 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
 
     try {
       const first = buildQuery(aid);
+      const snaps = await getDocs(nextQuery ?? first);
 
-      const snaps = await getDocs(nextQuery ? nextQuery : first);
+      if (snaps.empty) {
+        set({ hasMore: false });
+        return;
+      }
 
-      let data = snaps.docs.map((doc) => doc.data()) as ISession[];
+      const data = snaps.docs.map((doc) => doc.data()) as ISession[];
+      const lastVisible = snaps.docs[snaps.docs.length - 1];
+      const next = buildQuery(aid, true, lastVisible);
       const updatedHistory = [...get().history, ...data];
 
       const personIds = data
-        .map((session) => session.personId)
+        .map((s) => s.personId)
         .filter((id) => id !== undefined);
       get().getPersonsInfo(personIds);
 
-      set({ history: updatedHistory });
+      set({ history: updatedHistory, nextQuery: next });
 
       const qWithoutLimits = buildQuery(aid, false);
       const snap = await getCountFromServer(qWithoutLimits);
       const { count } = snap.data();
-
-      console.log("count: ", count);
-      console.log("hasMore: ", count > updatedHistory.length);
 
       set({ nChats: count, hasMore: count > updatedHistory.length });
     } catch (error) {

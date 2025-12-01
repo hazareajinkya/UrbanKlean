@@ -4,9 +4,14 @@ import { IAgent } from "@/lib/types/agent";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ISession } from "@/lib/types/session";
-import { formatDate, getContrastingColor } from "@/lib/utils";
+import {
+  formatDate,
+  formatDateTime,
+  formatHistoryDateTime,
+  getContrastingColor,
+} from "@/lib/utils";
 import clsx from "clsx";
-import { UIMessage } from "ai";
+import { consumeStream, UIMessage } from "ai";
 import { Streamdown } from "streamdown";
 import { useHistoryStore } from "@/lib/stores/history-store";
 import {
@@ -168,8 +173,8 @@ const SessionList = ({
     return `${type}-${session.id.split("-")[0]}`;
   };
   return (
-    <div className="bg-secondary h-full">
-      <div className="h-14 border-b bg-gray-100 px-4 grid place-items-center">
+    <div className="bg-secondary h-full flex flex-col">
+      <div className="h-14 border-b bg-gray-100 px-4 grid place-items-center flex-shrink-0">
         <div className="w-full">
           <p className="text-sm">Conversations</p>
           <p className="text-xs text-muted-foreground ">
@@ -177,10 +182,7 @@ const SessionList = ({
           </p>
         </div>
       </div>
-      <div
-        className="max-h-[680px] overflow-y-scroll no-scrollbar "
-        id="scrollableDiv"
-      >
+      <div className="flex-1 overflow-y-auto no-scrollbar" id="scrollableDiv">
         <InfiniteScroll
           dataLength={sessions.length}
           scrollableTarget="scrollableDiv"
@@ -201,7 +203,7 @@ const SessionList = ({
             </div>
           }
         >
-          {sessions?.map((session, index) => {
+          {sessions?.map((session) => {
             const channel = session.channel;
             const person = session.personId
               ? persons[session.personId]
@@ -209,7 +211,7 @@ const SessionList = ({
 
             return (
               <div
-                key={index}
+                key={session.id}
                 className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3.5 border-b ${
                   currentSession?.id === session.id
                     ? "bg-card border-l-2 border-b-0 border-primary"
@@ -220,9 +222,10 @@ const SessionList = ({
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
                     {person ? person.name : renderVisitorID(session)}
+                    {/* {renderVisitorID(session)} */}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(session.updatedAt)}
+                    {formatHistoryDateTime(session.createdAt)}
                   </p>
                 </div>
 

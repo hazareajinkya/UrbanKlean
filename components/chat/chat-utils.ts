@@ -1,4 +1,5 @@
 import queryClient from "@/lib/clients/query-client";
+import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { sessionKey } from "@/lib/hooks/session/use-session";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
@@ -6,12 +7,14 @@ import { IAgent } from "@/lib/types/agent";
 import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
 import lsMap from "@/lib/utils/ls-map";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ModelMessage } from "ai";
 import { arrayUnion } from "firebase/firestore";
 import { v4 } from "uuid";
 
 export const initChat = async (agent: IAgent) => {
   let deviceId = getLocalDeviceId(agent.wid);
+
   if (!deviceId) {
     const did = v4();
     saveLocalDeviceId(agent.wid, did);
@@ -62,23 +65,127 @@ export const initChat = async (agent: IAgent) => {
   return deviceId;
 };
 
+const initChat2 = async (agent: IAgent) => {
+  const deviceId = getOrCreateDeviceId(agent.wid);
+  const sid = getLocalSession(agent.id);
+
+  const sessionsPromise = sid
+    ? chatService.getSessionsByFilter({
+        sid,
+        aid: agent.id,
+        status: "open",
+        nLimit: 1,
+      })
+    : Promise.resolve([]);
+
+  const personPromise = peopleService.identify({
+    wid: agent.wid,
+    externalIds: [{ id: deviceId, provider: "web" }],
+  });
+
+  //parallelized for better performance
+  const [sessions, { person }] = await Promise.all([
+    sessionsPromise,
+    personPromise,
+  ]);
+
+  // Try to get open session
+  let session = sessions[0];
+
+  // Create new session if needed
+  if (!session) {
+    session = await createNewSession(agent.wid, agent.id, person);
+  }
+
+  // Update session with personId if necessary
+  if (person?.id && session.personId !== person.id) {
+    await chatService.updateSession(agent.id, session.id, {
+      personId: person.id,
+    });
+
+    session = { ...session, personId: person.id };
+  }
+
+  //check if session id exists in person pastSessionIds
+  if (person?.id && !person.pastSessionIds.includes(session.id)) {
+    const pastSessionIds = Array.from(
+      new Set([...(person.pastSessionIds ?? []), session.id])
+    );
+    peopleService.update({
+      wid: agent.wid,
+      personId: person.id,
+      updates: {
+        pastSessionIds: pastSessionIds,
+      },
+    });
+  }
+  return { session, person, deviceId };
+};
+
+export const chatInitKey = (aid: string) => ["chat-init", aid];
+
+export const useChatInit = (aid: string) => {
+  const { agent } = useAgent(aid);
+  const qc = useQueryClient();
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: chatInitKey(aid),
+    queryFn: () => initChat2(agent!),
+    enabled: !!agent,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 30,
+  });
+  const refresh = () => {
+    removeLocalSession(aid);
+    refetch();
+  };
+
+  console.log("data.person: ", data?.person);
+
+  const updatePerson = (newPerson: IPerson) => {
+    qc.setQueryData(chatInitKey(aid), (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        person: newPerson,
+        session: { ...old.session, personId: newPerson.id },
+      };
+    });
+  };
+
+  return {
+    agent,
+    session: data?.session,
+    person: data?.person,
+    deviceId: data?.deviceId,
+    isLoading: isLoading,
+    error: error,
+    refresh,
+    updatePerson,
+  };
+};
+
+const getOrCreateDeviceId = (wid: string) => {
+  let id = getLocalDeviceId(wid);
+  if (!id) saveLocalDeviceId(wid, (id = v4()));
+  return id;
+};
+
 const createNewSession = async (wid: string, aid: string, person?: IPerson) => {
   //create new session
   const session = await chatService.createSession(wid, aid, person?.id);
 
-  if (person) {
-    // Only update if the session id is not already present
-    if (!person.pastSessionIds.includes(session.id)) {
-      const updatedSessionIds = [...person.pastSessionIds, session.id];
-      await peopleService.update({
-        wid,
-        personId: person.id,
-        updates: {
-          pastSessionIds: updatedSessionIds,
-        },
-      });
-    }
-  }
+  // Only update if the session id is not already present
+  // if (person && !person.pastSessionIds.includes(session.id)) {
+  //   const updatedSessionIds = [...(person.pastSessionIds ?? []), session.id];
+  //   peopleService.update({
+  //     wid,
+  //     personId: person.id,
+  //     updates: {
+  //       pastSessionIds: updatedSessionIds,
+  //     },
+  //   });
+  // }
 
   queryClient.setQueryData(sessionKey(session.id), session);
   return session;

@@ -50,7 +50,8 @@ export const collectInformation = (
   aid: string,
   sessionId: string,
   provider: IChannelProvider,
-  providerId: string
+  providerId: string,
+  currentPersonId?: string
 ) =>
   tool({
     name: "Collect Information",
@@ -77,49 +78,82 @@ export const collectInformation = (
         phones: params.phones,
         externalIds: externalIds,
       };
+
       let personData;
 
-      //check if person already exists
-      const { existing, person } = await peopleService.identify({
-        wid: wid,
-        ...data,
-      });
-      personData = person;
-
-      //if person does not exist, create a new one
-      if (!existing) {
-        personData = await peopleService.create2({
-          wid: wid,
-          sessionId: sessionId,
-          emails: params.emails,
-          phones: params.phones,
-          externalIds: externalIds,
-          name: params.name,
-        });
-
-        //attach person id to session
-        await chatService.updateSession(aid, sessionId, {
-          personId: personData.id,
-        });
+      if (currentPersonId) {
+        try {
+          // ✅ ALREADY IDENTIFIED - Just update their info
+          personData = await peopleService.updatePerson(wid, currentPersonId, {
+            ...params,
+            externalIds,
+          });
+        } catch (error) {
+          // Person doesn't exist - fallback to identify flow
+          console.warn("Person not found, re-identifying");
+          currentPersonId = undefined; // Force identify flow below
+        }
       }
 
-      //if person exists, update the person
-      else {
-        console.log("updating the person: ", { ...params });
+      // ❓ NOT IDENTIFIED - Need to identify or create
+      if (!currentPersonId) {
+        //check if person already exists
+        const { existing, person } = await peopleService.identify({
+          wid: wid,
+          ...data,
+        });
+        personData = person;
 
+        console.log("existing: ", existing);
+
+        //if person does not exist, create a new one
+        if (!existing) {
+          console.log("creating a new person: ", { ...params });
+          personData = await peopleService.create2({
+            wid: wid,
+            sessionId: sessionId,
+            emails: params.emails,
+            phones: params.phones,
+            externalIds: externalIds,
+            name: params.name,
+          });
+
+          //attach person id to session
+          await chatService.updateSession(aid, sessionId, {
+            personId: personData.id,
+          });
+        }
+
+        //if person exists, update the person
+        else {
+          console.log("updating the person: ", { ...params });
+
+          await peopleService.update({
+            wid: wid,
+            personId: personData!.id,
+            updates: {
+              ...params,
+              externalIds,
+            },
+          });
+        }
+
+        // Update session with newly identified person
+        await chatService.updateSession(aid, sessionId, {
+          personId: personData!.id,
+        });
+
+        const pastSessionIds = Array.from(
+          new Set([...(personData?.pastSessionIds ?? []), sessionId])
+        );
+        //update pastSessionIds in  person data
         await peopleService.update({
           wid: wid,
           personId: personData!.id,
           updates: {
-            ...params,
-            externalIds,
+            pastSessionIds: pastSessionIds,
           },
         });
-
-        // //attach person id to session if there is no person id already
-        // await chatService.updateSession(aid, sessionId, {
-        //   personId: personData!.id,
-        // });
       }
 
       return {
