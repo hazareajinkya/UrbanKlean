@@ -194,80 +194,85 @@ class PeopleService {
       name,
     });
 
-    const peopleCol = collection(db, `workspaces/${wid}/people`);
-    const emailNs = emails?.map(normEmail).filter(Boolean);
-    const phoneNs = phones?.map(normPhone).filter(Boolean);
+    try {
+      const peopleCol = collection(db, `workspaces/${wid}/people`);
+      const emailNs = emails?.map(normEmail).filter(Boolean);
+      const phoneNs = phones?.map(normPhone).filter(Boolean);
 
-    let personSnap: DocumentSnapshot | undefined = undefined;
+      let personSnap: DocumentSnapshot | undefined = undefined;
 
-    // 1. try by email
-    if (emailNs) {
-      console.log("Attempting to identify by email:", emailNs);
-      const q = query(
-        peopleCol,
-        where("emails", "array-contains-any", emailNs),
-        limit(1)
-      );
-      const snaps = await getDocs(q);
-      console.log("Email lookup result count:", snaps.docs.length);
-      if (snaps.docs.length > 0) {
-        personSnap = snaps.docs[0];
-        console.log("Person found by email:", personSnap.data());
-      }
-    }
-
-    // 2. try by phone
-    if (!personSnap && phoneNs) {
-      console.log("Attempting to identify by phone:", phoneNs);
-      const q = query(
-        peopleCol,
-        where("phones", "array-contains-any", phoneNs),
-        limit(1)
-      );
-      const snaps = await getDocs(q);
-      console.log("Phone lookup result count:", snaps.docs.length);
-      if (snaps.docs.length > 0) {
-        personSnap = snaps.docs[0];
-        console.log("Person found by phone:", personSnap.data());
-      }
-    }
-
-    // 3. try by externalIds
-    if (!personSnap && externalIds) {
-      for (const externalId of externalIds) {
-        // console.log(`Attempting to identify by externalId: ${k}=${v}`);
+      // 1. try by email
+      if (emailNs && emailNs.length > 0) {
+        console.log("Attempting to identify by email:", emailNs);
         const q = query(
           peopleCol,
-          where("externalIds", "array-contains", {
-            provider: externalId.provider,
-            id: externalId.id,
-          }),
+          where("emails", "array-contains-any", emailNs),
           limit(1)
         );
-
         const snaps = await getDocs(q);
-        console.log(
-          `ExternalId lookup (${externalId.id}) result count:`,
-          snaps.docs.length
-        );
+        console.log("Email lookup result count:", snaps.docs.length);
         if (snaps.docs.length > 0) {
           personSnap = snaps.docs[0];
-          console.log(
-            `Person found by externalId (${externalId.id}):`,
-            personSnap.data()
-          );
+          console.log("Person found by email:", personSnap.data());
         }
-        break;
       }
-    }
 
-    if (personSnap) {
-      const person = personSnap.data() as IPerson;
-      return { existing: true, person: person };
-    }
+      // 2. try by phone
+      if (!personSnap && phoneNs && phoneNs.length > 0) {
+        console.log("Attempting to identify by phone:", phoneNs);
+        const q = query(
+          peopleCol,
+          where("phones", "array-contains-any", phoneNs),
+          limit(1)
+        );
+        const snaps = await getDocs(q);
+        console.log("Phone lookup result count:", snaps.docs.length);
+        if (snaps.docs.length > 0) {
+          personSnap = snaps.docs[0];
+          console.log("Person found by phone:", personSnap.data());
+        }
+      }
 
-    console.log("No existing person found.");
-    return { existing: false, person: undefined };
+      // 3. try by externalIds
+      if (!personSnap && externalIds) {
+        for (const externalId of externalIds) {
+          // console.log(`Attempting to identify by externalId: ${k}=${v}`);
+          const q = query(
+            peopleCol,
+            where("externalIds", "array-contains", {
+              provider: externalId.provider,
+              id: externalId.id,
+            }),
+            limit(1)
+          );
+
+          const snaps = await getDocs(q);
+          console.log(
+            `ExternalId lookup (${externalId.id}) result count:`,
+            snaps.docs.length
+          );
+          if (snaps.docs.length > 0) {
+            personSnap = snaps.docs[0];
+            console.log(
+              `Person found by externalId (${externalId.id}):`,
+              personSnap.data()
+            );
+          }
+          break;
+        }
+      }
+
+      if (personSnap) {
+        const person = personSnap.data() as IPerson;
+        return { existing: true, person: person };
+      }
+
+      console.log("No existing person found.");
+      return { existing: false, person: undefined };
+    } catch (error) {
+      console.error("Error identifying person: ", error);
+      return { existing: false, person: undefined };
+    }
   }
 
   async create({

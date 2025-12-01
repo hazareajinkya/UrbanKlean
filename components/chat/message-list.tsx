@@ -2,338 +2,380 @@
 
 import { Streamdown } from "streamdown";
 import { UIMessage } from "ai";
-import {
-  formatDate,
-  formatDateTime,
-  formatTime,
-  getContrastingColor,
-} from "@/lib/utils";
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { formatDateTime, getContrastingColor } from "@/lib/utils";
+import { getMessageStyle, heightClass } from "@/lib/utils/message-utils";
+import { useEffect, useRef, memo, useMemo, useState } from "react";
 import clsx from "clsx";
 import { ChatStatus } from "ai";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { IAgent } from "@/lib/types/agent";
-import {
-  Copy,
-  CopyPlus,
-  Globe,
-  MessageSquareWarning,
-  ThumbsDownIcon,
-  ThumbsUp,
-  User,
-} from "lucide-react";
+import { ArrowDown, Globe, User } from "lucide-react";
 import { IChatMessage } from "@/lib/types/session";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../ui/button";
 
 interface MessageListProps {
   agent: IAgent;
   messages: IChatMessage[];
   status: ChatStatus;
+  isWidget?: boolean;
 }
 
-export const MessageList = ({ messages, status, agent }: MessageListProps) => {
+export const MessageList = ({
+  messages,
+  status,
+  agent,
+  isWidget,
+}: MessageListProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lastMessagesStartRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const previousMessageCountRef = useRef(messages.length);
+  const previousMessagesRef = useRef<IChatMessage[]>(messages);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const showLoadingIndicator = status === "submitted";
 
   const brandColor = agent.customization.primaryColor;
-  const fontColor = getContrastingColor(brandColor);
+  const fontColor = useMemo(
+    () => getContrastingColor(brandColor),
+    [brandColor]
+  );
+
+  const scrollToLastMessageStart = () => {
+    lastMessagesStartRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  };
+
+  const scrollToEnd = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  };
 
   useEffect(() => {
-    const currentMessageCount = messages.length;
-    const hasNewMessage = currentMessageCount > previousMessageCountRef.current;
+    scrollToLastMessageStart();
+  }, []);
 
-    if (hasNewMessage && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+  // Scroll button visibility based on lastMessagesStartRef
+  useEffect(() => {
+    const target = lastMessagesStartRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowScrollButton(!entry.isIntersecting),
+      { root: containerRef.current, threshold: 0 }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-scroll: only on user message → scroll to end, AI response → no scroll
+  useEffect(() => {
+    const prevMessages = previousMessagesRef.current;
+    const hasNewMessage = messages.length > prevMessages.length;
+
+    if (hasNewMessage) {
+      const newMessage = messages[messages.length - 1];
+      if (newMessage?.role === "user") scrollToEnd();
     }
 
-    previousMessageCountRef.current = currentMessageCount;
+    previousMessagesRef.current = messages;
   }, [messages]);
 
-  const suggestions = [
-    "Track Order",
-    "Size guide",
-    "Return policy",
-    "Shipping information",
-  ];
-
   return (
-    <div className="flex-1 overflow-y-auto p-4 ">
-      <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
-        {messages.map((message, index) => {
-          const isLastAssistantMessage =
-            message.role === "assistant" && index === messages.length - 1;
+    <>
+      <div ref={containerRef} className="h-full overflow-y-auto p-4">
+        <div className="space-y-3 md:space-y-4 max-w-4xl mx-auto">
+          {messages.map((message, index) => {
+            const isLastAssistantMessage =
+              message.role === "assistant" && index === messages.length - 1;
 
-          return (
-            <div key={index}>
-              <div
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                } `}
-              >
-                <div
-                  className={clsx(
-                    "max-w-[90%] md:max-w-[75%] leading-7",
-                    message.role === "user" && userMessageStyle(message),
-                    message.role === "assistant" && [
-                      assistantMessageStyle(message),
-                    ]
-                  )}
-                  style={{
-                    backgroundColor: message.role === "user" ? brandColor : "",
-                    color: message.role === "user" ? fontColor : "",
-                  }}
-                >
-                  {message.role === "assistant" ? (
-                    <>
-                      {message.parts?.map((part, index) => {
-                        if (part.type === "tool-searchKnowledge") {
-                          const isCalling = part.state !== "output-available";
-                          return (
-                            <div
-                              className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
-                                isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
-                              }`}
-                              style={{
-                                backgroundColor: isCalling
-                                  ? "transparent"
-                                  : `${brandColor}10`,
-                                borderColor: isCalling
-                                  ? "transparent"
-                                  : `${brandColor}40`,
-                                color: isCalling ? brandColor : brandColor,
-                              }}
-                              key={index}
-                            >
-                              {isCalling ? (
-                                <div
-                                  key={`${part.state}-calling`}
-                                  className="flex gap-2 items-center animate-in fade-in "
-                                >
-                                  <Globe
-                                    className="w-4 h-4 animate-bounce"
-                                    style={{ color: brandColor }}
-                                  />
-                                  <TextShimmer
-                                    className="text-sm md:text-base"
-                                    style={
-                                      {
-                                        "--base-color": brandColor,
-                                        "--base-gradient-color": `${brandColor}80`,
-                                      } as React.CSSProperties
-                                    }
-                                    duration={1.5}
-                                    spread={1.5}
-                                  >
-                                    Searching knowledge...
-                                  </TextShimmer>
-                                </div>
-                              ) : (
-                                <div
-                                  key={`${part.state}-output-available`}
-                                  className="flex items-center gap-2 text-sm md:text-sm"
-                                >
-                                  <Globe className="w-4 h-4" />
-                                  Searched knowledge
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        if (part.type === "tool-collectInformation") {
-                          const isCalling = part.state !== "output-available";
-
-                          return (
-                            <div
-                              className={`inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out ${
-                                isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
-                              }`}
-                              style={{
-                                backgroundColor: isCalling
-                                  ? "transparent"
-                                  : `${brandColor}10`,
-                                borderColor: isCalling
-                                  ? "transparent"
-                                  : `${brandColor}40`,
-                                color: isCalling ? brandColor : brandColor,
-                              }}
-                              key={index}
-                            >
-                              {isCalling ? (
-                                <div
-                                  key={`${part.state}-calling`}
-                                  className="flex gap-2 items-center animate-in fade-in "
-                                >
-                                  <User
-                                    className="w-4 h-4 animate-bounce"
-                                    style={{ color: brandColor }}
-                                  />
-                                  <TextShimmer
-                                    className="text-sm md:text-base"
-                                    style={
-                                      {
-                                        "--base-color": brandColor,
-                                        "--base-gradient-color": `${brandColor}80`,
-                                      } as React.CSSProperties
-                                    }
-                                    duration={1.5}
-                                    spread={1.5}
-                                  >
-                                    Personalizing response...
-                                  </TextShimmer>
-                                </div>
-                              ) : (
-                                <div
-                                  key={`${part.state}-output-available`}
-                                  className="flex items-center gap-2 text-sm md:text-sm"
-                                >
-                                  <User className="w-4 h-4" />
-                                  Personalized response
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                        if (part.type === "text") {
-                          return (
-                            <div key={index}>
-                              <div
-                                className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
-                                key={index}
-                              >
-                                <Streamdown
-                                  components={{
-                                    a: ({ href, children }) => (
-                                      <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-medium text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-2"
-                                      >
-                                        {children}
-                                      </a>
-                                    ),
-                                  }}
-                                >
-                                  {part.text}
-                                </Streamdown>
-                              </div>
-                            </div>
-                          );
-                        }
-                      })}
-                    </>
-                  ) : message.role === "user" ? (
-                    <>
-                      <div className={""}>
-                        <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
-                          {message.parts.map(
-                            (part) => part.type === "text" && part.text
-                          )}
-                        </p>
-                      </div>
-                    </>
-                  ) : message.role === "system" ? null : (
-                    <></>
-                  )}
-                </div>
-              </div>
-
-              {isLastAssistantMessage && (
-                <div
-                  className={`flex items-center gap-4 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2`}
-                >
-                  <p className="text-left flex-1  text-xs text-muted-foreground">
-                    {formatDateTime(message.metadata?.createdAt ?? "")}
-                  </p>
-                </div>
-              )}
-
-              {/* {isLastAssistantMessage && suggestions.length > 0 && (
-                <div className="mt-2">
-                  <div
-                    className="flex flex-wrap gap-2"
-                    key={`suggestions-${suggestions.length}`}
-                  >
-                    {suggestions.map((suggestion, suggestionIndex) => (
-                      <motion.button
-                        key={`${suggestionIndex}-${suggestion}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{
-                          duration: 0.2,
-                          delay: suggestionIndex * 0.06,
-                          ease: "easeOut",
-                        }}
-                        onClick={() => onSuggestionClick?.(suggestion)}
-                        className="px-3 py-1.5 md:px-3 md:py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer slide-in-from-bottom "
-                      >
-                        {suggestion}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )} */}
-            </div>
-          );
-        })}
-
-        {showLoadingIndicator && (
-          <div className={"flex justify-start"}>
-            <div
-              className={clsx(
-                "max-w-[90%] md:max-w-[75%] leading-7",
-                "px-3 py-3",
-                assistantMessageStyle({
-                  id: "loading",
-                  role: "assistant",
-                  parts: [{ type: "text", text: "" }],
-                } as UIMessage)
-              )}
-            >
-              <div className="flex gap-1.5 py-1">
-                <div className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500" />
-                <div
-                  className="w-1.5 h-1.5 rounded-full  animate-bounce bg-neutral-500"
-                  style={{ animationDelay: "0.13s" }}
+            if (message.role === "assistant") {
+              return (
+                <AssistantMessage
+                  key={message.id ?? index}
+                  message={message}
+                  isLast={isLastAssistantMessage}
+                  brandColor={brandColor}
                 />
-                <div
-                  className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
-                  style={{ animationDelay: "0.3s" }}
+              );
+            }
+            if (message.role === "user") {
+              return (
+                <UserMessage
+                  key={message.id ?? index}
+                  message={message}
+                  brandColor={brandColor}
+                  fontColor={fontColor}
                 />
-              </div>
-            </div>
-          </div>
-        )}
+              );
+            }
+            if (message.role === "system") {
+              return (
+                <SystemMessage key={message.id ?? index} message={message} />
+              );
+            }
+            return null;
+          })}
 
-        <div ref={messagesEndRef} className={heightClass}></div>
+          {showLoadingIndicator && <LoadingIndicator />}
+
+          <div ref={lastMessagesStartRef} />
+          <div ref={messagesEndRef} className={heightClass} />
+        </div>
       </div>
-    </div>
+
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute bottom-1.5 right-4 z-10"
+          >
+            <Button
+              onClick={scrollToLastMessageStart}
+              size="icon"
+              variant="outline"
+              className="w-8 h-8 text-muted-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <ArrowDown className="w-3 h-3" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
-const heightClass = `min-h-[calc(100vh-19rem)] md:min-h-[calc(100vh-20rem)]`;
+interface ToolBadgeProps {
+  isCalling: boolean;
+  brandColor: string;
+  Icon: React.ComponentType<{
+    className?: string;
+    style?: React.CSSProperties;
+  }>;
+  callingText: string;
+  completedText: string;
+}
 
-const assistantMessageStyle = (message: UIMessage) =>
-  clsx(
-    "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-1.5",
-    message.parts.some((part) => part.type === "text") &&
-      message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tr-2xl "
-      : "rounded-2xl"
-  );
+const ToolBadge = memo(
+  ({
+    isCalling,
+    brandColor,
+    Icon,
+    callingText,
+    completedText,
+  }: ToolBadgeProps) => (
+    <div
+      className={clsx(
+        "inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out",
+        isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
+      )}
+      style={{
+        backgroundColor: isCalling ? "transparent" : `${brandColor}10`,
+        borderColor: isCalling ? "transparent" : `${brandColor}40`,
+        color: brandColor,
+      }}
+    >
+      {isCalling ? (
+        <div className="flex gap-2 items-center animate-in fade-in">
+          <Icon
+            className="w-4 h-4 animate-bounce"
+            style={{ color: brandColor }}
+          />
+          <TextShimmer
+            className="text-sm md:text-base"
+            style={
+              {
+                "--base-color": brandColor,
+                "--base-gradient-color": `${brandColor}80`,
+              } as React.CSSProperties
+            }
+            duration={1.5}
+            spread={1.5}
+          >
+            {callingText}
+          </TextShimmer>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-sm md:text-sm">
+          <Icon className="w-4 h-4" />
+          {completedText}
+        </div>
+      )}
+    </div>
+  )
+);
 
-const userMessageStyle = (message: UIMessage) =>
-  clsx(
-    "bg-secondary text-secondary-foreground px-3 md:px-4 py-1 md:py-1.5",
-    message.parts.some((part) => part.type === "text") &&
-      message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tl-2xl"
-      : "rounded-2xl"
-  );
+ToolBadge.displayName = "ToolBadge";
+
+interface MessagePartsProps {
+  parts: IChatMessage["parts"];
+  brandColor: string;
+}
+
+const MessageParts = memo(({ parts, brandColor }: MessagePartsProps) => (
+  <>
+    {parts?.map((part, index) => {
+      if (part.type === "tool-searchKnowledge") {
+        return (
+          <ToolBadge
+            key={index}
+            isCalling={part.state !== "output-available"}
+            brandColor={brandColor}
+            Icon={Globe}
+            callingText="Searching knowledge..."
+            completedText="Searched knowledge"
+          />
+        );
+      }
+
+      if (part.type === "tool-collectInformation") {
+        return (
+          <ToolBadge
+            key={index}
+            isCalling={part.state !== "output-available"}
+            brandColor={brandColor}
+            Icon={User}
+            callingText="Personalizing response..."
+            completedText="Personalized response"
+          />
+        );
+      }
+
+      if (part.type === "text") {
+        return (
+          <div
+            key={index}
+            className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
+          >
+            <Streamdown components={streamdownComponents}>
+              {part.text}
+            </Streamdown>
+          </div>
+        );
+      }
+
+      return null;
+    })}
+  </>
+));
+
+MessageParts.displayName = "MessageParts";
+
+const streamdownComponents = {
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-medium text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-2"
+    >
+      {children}
+    </a>
+  ),
+};
+
+const LoadingIndicator = memo(() => (
+  <div className="flex justify-start">
+    <div
+      className={clsx(
+        "max-w-[90%] md:max-w-[75%] leading-7 px-3 py-3",
+        getMessageStyle(
+          {
+            id: "loading",
+            role: "assistant",
+            parts: [{ type: "text", text: "" }],
+          } as UIMessage,
+          "assistant"
+        )
+      )}
+    >
+      <div className="flex gap-1.5 py-1">
+        {[0, 0.13, 0.3].map((delay, i) => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
+            style={{ animationDelay: `${delay}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+));
+
+LoadingIndicator.displayName = "LoadingIndicator";
+
+interface AssistantMessageProps {
+  message: IChatMessage;
+  isLast: boolean;
+  brandColor: string;
+}
+
+const AssistantMessage = memo(
+  ({ message, isLast, brandColor }: AssistantMessageProps) => (
+    <div>
+      <div className="flex justify-start">
+        <div
+          className={clsx(
+            "max-w-[90%] md:max-w-[75%]",
+            getMessageStyle(message, "assistant")
+          )}
+        >
+          <MessageParts parts={message.parts} brandColor={brandColor} />
+        </div>
+      </div>
+      {isLast && (
+        <div className="flex items-center gap-4 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
+          <p className="text-left flex-1 text-xs text-muted-foreground">
+            {formatDateTime(message.metadata?.createdAt ?? "")}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+);
+
+AssistantMessage.displayName = "AssistantMessage";
+
+interface UserMessageProps {
+  message: IChatMessage;
+  brandColor: string;
+  fontColor: string;
+}
+
+const UserMessage = memo(
+  ({ message, brandColor, fontColor }: UserMessageProps) => (
+    <div className="flex justify-end">
+      <div
+        className={clsx(
+          "max-w-[90%] md:max-w-[75%]",
+          getMessageStyle(message, "user")
+        )}
+        style={{
+          backgroundColor: brandColor,
+          color: fontColor,
+        }}
+      >
+        <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
+          {message.parts.map((part) => part.type === "text" && part.text)}
+        </p>
+      </div>
+    </div>
+  )
+);
+
+UserMessage.displayName = "UserMessage";
+
+interface SystemMessageProps {
+  message: IChatMessage;
+}
+
+const SystemMessage = memo(({ message }: SystemMessageProps) => null);
+
+SystemMessage.displayName = "SystemMessage";
