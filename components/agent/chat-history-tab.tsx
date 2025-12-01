@@ -225,7 +225,7 @@ const SessionList = ({
                     {/* {renderVisitorID(session)} */}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {formatHistoryDateTime(session.createdAt)}
+                    {formatHistoryDateTime(session.updatedAt)}
                   </p>
                 </div>
 
