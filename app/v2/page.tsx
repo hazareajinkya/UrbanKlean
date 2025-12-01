@@ -22,7 +22,6 @@ import {
   Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 
 export default function V2LandingPage() {
   return (
