@@ -24,7 +24,8 @@ export const getSystemPrompt = async (
   query: string,
   channel: IChannelProvider,
   personId?: string,
-  isFinetuning?: boolean
+  isFinetuning?: boolean,
+  reasoning?: string
 ) => {
   const workflowstext = await retrieveWorkflow(agent.id, query);
 
@@ -34,6 +35,8 @@ export const getSystemPrompt = async (
   ${coreSystemPrompt}
 
   ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
+
+  ${isFinetuning ? fineTuningInstructions(reasoning) : ""}
 
   ${
     channel === "email" &&
@@ -63,6 +66,7 @@ export const getSystemPrompt = async (
   ## Context
   - Channel:${channel}
 
+
 `;
 };
 
@@ -76,4 +80,37 @@ export const retrieveWorkflow = async (aid: string, query: string) => {
     .join("\n\n");
 
   return workflowstext;
+};
+
+const fineTuningInstructions = (reasoning?: string) => {
+  console.log(reasoning && "Is reasoning.........");
+  return `
+  ## Fine-Tuning Instructions
+  
+  CRITICAL: Follow these steps for EVERY query:
+  
+  1. ALWAYS call the 'searchKnowledge' tool first with the relevant query
+  2. If the tool returns relevant results, you MUST use them to construct your answer
+  3. Only rely on your own reasoning or general knowledge if the tool returns no relevant information
+  4. For technical, factual, or detailed queries, prioritize searching the knowledge base
+  5. Never skip the search step - this is mandatory
+
+  ${
+    reasoning
+      ? `
+  ## Reasoning Context
+  
+  The following reasoning has been provided to guide your response:
+  
+  ${reasoning}
+  
+  IMPORTANT: Use this reasoning to:
+  - Refine and enhance the accuracy of your final answer
+  - Improve clarity, structure, and depth of your response
+  - Correct any potential misunderstandings or gaps
+  - Integrate these insights naturally without repeating them verbatim
+  `
+      : ""
+  }
+  `;
 };
