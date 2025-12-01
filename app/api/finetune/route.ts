@@ -14,10 +14,12 @@ export async function POST(req: Request) {
       aid,
       question,
       reasoning,
+      suggestion,
     }: {
       aid: string;
       question: string;
       reasoning?: string;
+      suggestion?: string;
     } = await req.json();
 
     const agent = await agentService.fetchAgent(aid);
@@ -33,7 +35,8 @@ export async function POST(req: Request) {
       "web",
       undefined,
       true,
-      reasoning
+      reasoning,
+      suggestion
     );
 
     const tools = {

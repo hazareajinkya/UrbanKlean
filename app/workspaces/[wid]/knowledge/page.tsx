@@ -11,6 +11,7 @@ import {
   TextTab,
   TrainTab,
 } from "@/components/knowledge";
+import QATab from "@/components/knowledge/qa-tab";
 
 export default function KnowledgeBasePage() {
   const searchParams = useSearchParams();
@@ -22,10 +23,11 @@ export default function KnowledgeBasePage() {
     { id: "documents", label: "Documents", icon: FileText },
     { id: "text", label: "Text", icon: Type },
     { id: "train", label: "Train", icon: Bot },
+    { id: "qa", label: "QA", icon: NotebookPenIcon },
   ];
 
   return (
-    <div className="h-full min-h-0 flex flex-col">
+    <div className="h-full min-h-0 flex flex-col ">
       {/* Tab Navigation */}
       <div className="flex w-full bg-card p-1 border-b rounded-ull  gap-0 items-center animate-in fade-in slide-in-from-left-2 duration-300 ">
         {tabs.map((tabItem) => (
@@ -45,11 +47,12 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="p-4 flex-1 min-h-0 overflow-auto">
+      <div className="p-4 flex-1 overflow-hidden">
         {tab === "website" && <WebsiteTab />}
         {tab === "documents" && <DocumentsTab />}
         {tab === "text" && <TextTab />}
         {tab === "train" && <TrainTab />}
+        {tab === "qa" && <QATab />}
       </div>
     </div>
   );
