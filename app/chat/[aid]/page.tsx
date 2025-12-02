@@ -178,8 +178,6 @@ export default function ChatPage() {
   //   }
   // }, [session, agent]);
 
-  console.log("session: ", session);
-
   // Widget-specific styles
   useEffect(() => {
     if (isWidget) {
