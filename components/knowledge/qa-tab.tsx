@@ -7,7 +7,6 @@ import { Badge } from "../ui/badge";
 import {
   AlertCircle,
   CheckCircle2,
-  HelpCircle,
   Lightbulb,
   MessageCircle,
   Pencil,
@@ -28,7 +27,85 @@ export default function QATab() {
 
   if (isLoading) {
     return (
-      <div className="p-4 text-center text-muted-foreground">Loading...</div>
+      <div className="h-full p-4">
+        <div className="bg-card border rounded-xl h-full overflow-hidden flex">
+          <div className="p-0 border-r w-full">
+            <div className="bg-card h-full flex flex-col">
+              <div className="h-14 border-b px-4 grid place-items-center">
+                <div className="w-full space-y-2">
+                  <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-24"></div>
+                  <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-48"></div>
+                </div>
+              </div>
+
+              <div className="overflow-y-auto no-scrollbar">
+                {[...Array(6)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="px-4 flex flex-col gap-2 py-3.5 border-b"
+                  >
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-3/4"></div>
+                    <div className="flex items-center gap-2 w-full">
+                      <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-16"></div>
+                      <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-12 ml-auto"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-0 transition-all flex flex-col overflow-hidden w-[680px]">
+            <div className="h-full flex flex-col">
+              <div className="border-b h-14 px-4 flex justify-between items-center">
+                <div className="w-full space-y-2">
+                  <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-32"></div>
+                  <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-48"></div>
+                </div>
+              </div>
+
+              <div className="p-4 pb-8 space-y-6 flex-1 overflow-y-auto no-scrollbar">
+                <section className="space-y-3">
+                  <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-24"></div>
+                  <div className="p-4 rounded-lg border space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-4/5"></div>
+                  </div>
+                </section>
+
+                <section className="space-y-3">
+                  <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-20"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-3/4"></div>
+                  </div>
+                </section>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg border bg-card space-y-2">
+                    <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-16"></div>
+                    <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-20"></div>
+                  </div>
+                  <div className="p-4 rounded-lg border bg-card space-y-2">
+                    <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-24"></div>
+                    <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-16"></div>
+                  </div>
+                </div>
+
+                <section className="space-y-3">
+                  <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-28"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer bg-[length:200%_100%] w-5/6"></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
