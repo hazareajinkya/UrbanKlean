@@ -3,8 +3,14 @@ import { resendClient } from "@/lib/clients/axios-client";
 interface ISendEmailParams {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
   from?: string;
+  template?: {
+    id: string;
+    variables: {
+      [key: string]: string | number | boolean;
+    };
+  };
 }
 
 interface IEmailResponse {

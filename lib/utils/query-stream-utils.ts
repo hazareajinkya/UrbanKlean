@@ -25,7 +25,8 @@ export const getSystemPrompt = async (
   channel: IChannelProvider,
   personId?: string,
   isFinetuning?: boolean,
-  reasoning?: string
+  reasoning?: string,
+  suggestion?: string
 ) => {
   const workflowstext = await retrieveWorkflow(agent.id, query);
 
@@ -36,7 +37,7 @@ export const getSystemPrompt = async (
 
   ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
 
-  ${isFinetuning ? fineTuningInstructions(reasoning) : ""}
+  ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
 
   ${
     channel === "email" &&
@@ -82,8 +83,13 @@ export const retrieveWorkflow = async (aid: string, query: string) => {
   return workflowstext;
 };
 
-const fineTuningInstructions = (reasoning?: string) => {
-  console.log(reasoning && "Is reasoning.........");
+const fineTuningInstructions = (
+  reasoning?: string,
+  improvementSuggestions?: string
+) => {
+  console.log(
+    (reasoning || improvementSuggestions) && "Has guidance context..........."
+  );
   return `
   ## Fine-Tuning Instructions
   
@@ -98,9 +104,9 @@ const fineTuningInstructions = (reasoning?: string) => {
   ${
     reasoning
       ? `
-  ## Reasoning Context
+  ## Previous Reasoning Context
   
-  The following reasoning has been provided to guide your response:
+  The following reasoning has been provided from a previous analysis:
   
   ${reasoning}
   
@@ -109,6 +115,25 @@ const fineTuningInstructions = (reasoning?: string) => {
   - Improve clarity, structure, and depth of your response
   - Correct any potential misunderstandings or gaps
   - Integrate these insights naturally without repeating them verbatim
+  `
+      : ""
+  }
+
+  ${
+    improvementSuggestions
+      ? `
+  ## Improvement Suggestions
+  
+  The following suggestions have been identified to enhance the answer quality:
+  
+  ${improvementSuggestions}
+  
+  ACTION REQUIRED: Apply these improvements by:
+  - Addressing any gaps or missing information highlighted
+  - Enhancing clarity where confusion was noted
+  - Adding relevant details or examples as suggested
+  - Restructuring the response if recommended
+  - Ensuring all aspects of the question are fully covered
   `
       : ""
   }

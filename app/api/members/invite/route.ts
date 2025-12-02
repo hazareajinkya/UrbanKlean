@@ -9,6 +9,7 @@ import {
   errorResponse,
   serverErrorResponse,
 } from "@/lib/types/api-response";
+import { resendClient } from "@/lib/clients/axios-client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,15 +84,22 @@ const sendInvitationEmail = async (
   const workspaceName = workspace?.name || "Workspace";
   const inviterName = invitedBy.split("@")[0];
 
-  const emailHtml = generateInvitationEmail(
-    workspaceName,
-    inviterName,
-    invitationLink
-  );
+  // const emailHtml = generateInvitationEmail(
+  //   workspaceName,
+  //   inviterName,
+  //   invitationLink
+  // );
 
   await resendService.sendEmail({
     to: email,
     subject: `You're invited to join ${workspaceName} on Magical CX`,
-    html: emailHtml,
+    template: {
+      id: "invite",
+      variables: {
+        workspaceName,
+        invitationLink,
+        inviterName,
+      },
+    },
   });
 };
