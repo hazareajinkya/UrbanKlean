@@ -22,11 +22,12 @@ import {
   Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Navbar } from "@/components/landing/navbar";
 
 export default function V2LandingPage() {
   return (
     <div>
-      <Header />
+      <Navbar />
       <div className="min-h-screen bg-background grid place-items-center w-full px-4 py-24 gap-10">
         <div className="flex flex-col items-center text-center mt-18">
           <h1 className="text-4xl fot- mb-4">
@@ -145,70 +146,6 @@ export default function V2LandingPage() {
     </div>
   );
 }
-
-const Header = () => {
-  return (
-    <nav className="w-full px-8 py-3 flex items-center justify-between bg-background border-b fixed top-0 left-0 z-50">
-      <Link
-        href="/"
-        aria-label="Magical CX Home"
-        tabIndex={0}
-        className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary"
-      >
-        {/* <img
-          src="/logo-transparent.png"
-          alt="Magical CX Logo"
-          className="w-10 h-10 rounded-full"
-          loading="lazy"
-        /> */}
-        <span className="font- text-base tracking-tight">Magical CX</span>
-      </Link>
-      <div className="flex items-center gap-6">
-        <Link
-          href="#features"
-          aria-label="Features"
-          tabIndex={0}
-          className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          Features
-        </Link>
-        <Link
-          href="#integration"
-          aria-label="Integration"
-          tabIndex={0}
-          className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          Integration
-        </Link>
-        <Link
-          href="#pricing"
-          aria-label="Pricing"
-          tabIndex={0}
-          className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          Pricing
-        </Link>
-        <Link
-          href="#resources"
-          aria-label="Resources"
-          tabIndex={0}
-          className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          Resources
-        </Link>
-
-        <Link
-          href="/demo"
-          aria-label="Book Demo"
-          tabIndex={0}
-          className="ml-1 text-sm px-3 py-1 rounded-full font-medium bg-foreground text-background hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-        >
-          Book a demo
-        </Link>
-      </div>
-    </nav>
-  );
-};
 
 const BeforeVsAfter = () => {
   const beforeList = [
