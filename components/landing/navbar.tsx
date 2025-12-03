@@ -4,10 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MotionValue, useMotionValueEvent } from "framer-motion";
 
-export const Navbar = () => {
+export const Navbar = ({
+  scrollYProgress,
+}: {
+  scrollYProgress: MotionValue<number>;
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isInside, setIsInside] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,8 +22,6 @@ export const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  console.log(isScrolled);
 
   const handleToggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const handleCloseMenu = () => setIsMenuOpen(false);
@@ -29,10 +33,20 @@ export const Navbar = () => {
     { href: "#about", label: "About" },
   ];
 
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v > 0.477 && v < 0.99) setIsInside(true);
+    else setIsInside(false);
+  });
   return (
     <>
-      <nav className="w-full py-2 md:py-3 bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50">
-        <div className="container mx-auto pl-4 pr-2 md:px-4 flex items-center justify-between">
+      <nav
+        className={`w-full py-2 md:py-3 bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50 transition-colors duration-300 ${
+          isInside && "dark"
+        }`}
+      >
+        <div
+          className={`container mx-auto pl-4 pr-2 md:px-4 flex items-center justify-between`}
+        >
           <Link
             href="/"
             aria-label="Magical CX Home"
@@ -49,7 +63,7 @@ export const Navbar = () => {
               loading="lazy"
               draggable={false}
             /> */}
-            <span className="font-medium text-base tracking-tight">
+            <span className="font-medium text-base text-primary tracking-tight">
               Magical CX
             </span>
           </Link>
