@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const HeroSection = () => {
   return (
-    <div className="border-x flex flex-col items-center justify-center w-full py-20 sm:py-16 md:py-24 gap-6 sm:gap-8 md:gap-10">
+    <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
       <div className="flex flex-col items-center text-center mt-8 sm:mt-12 md:mt-18">
         <h1 className="text-3xl leading-normal md:text-4xl mb-4 px-4">
           From "How can I help?" to "It's already done."
@@ -19,7 +19,8 @@ export const HeroSection = () => {
           <Button
             asChild
             size="lg"
-            className="px-6 sm:px-8 py-2 text-base font-semibold rounded-full bg-primary text-white hover:bg-neutral-900 transition-transform duration-200 hover:-translate-y-1 focus:ring-2 focus:ring-primary"
+            className="px-8 py-6 text-base rounded-full bg-foreground text-background hover:bg-foreground/90 hover:scale-105 hover:shadow-lg active:scale-100"
+            aria-label="Book a Demo"
           >
             <Link
               href="https://calendly.com/echorift-ai"
@@ -27,7 +28,6 @@ export const HeroSection = () => {
               rel="noopener noreferrer"
               tabIndex={0}
               aria-label="Book a Demo"
-              className="rounded-full"
             >
               Book a Demo
             </Link>
@@ -37,7 +37,7 @@ export const HeroSection = () => {
       <div
         className="flex items-center aspect-[1.58] justify-center w-full animate-fade-in p-4  md:p-16"
         style={{
-          background: "linear-gradient(0deg, #F5F4F2 0%, #E6F2FF 100%)",
+          background: "linear-gradient(0deg, #f7fafc 0%, #e5ecec 100%)",
         }}
         aria-label="Customer support dashboard preview background"
         tabIndex={-1}

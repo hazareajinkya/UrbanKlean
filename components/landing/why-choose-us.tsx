@@ -186,21 +186,30 @@ export const WhyChooseUs = () => {
   }, []);
 
   return (
-    <section className="container mx-auto border py-24 md:py-32 bg-background border overflow-hidden dark">
-      <div className="max-w-4xl mx-auto text-center mb-16">
-        <h2 className="text-3xl leading-normal text-foreground md:text-4xl mb-6 px-4 ">
-          Why fast-growing brands{" "}
-          <span className="text-muted-foreground">switch to MagicalCX</span>
+    <section className="section-container border py-24 md:py-32 bg-background overflow-hidden dark">
+      <div className="max-w-5xl mx-auto text-center mb-16 section-container-padding">
+        <h2 className="section-heading ">
+          {/* Why fast-growing brands{" "}
+          <span className="text-muted-foreground">switch to MagicalCX</span> */}
+          {/* Why Teams Love Working With MagicalCX */}
+          {/* Why Growing Brands Pick MagicalCX */}
+          <span className="text-muted-foreground">
+            Why MagicalCX is the
+          </span>{" "}
+          <span className="text-muted-oreground">smarter choice</span>
+          {/* Why MagicalCX Is Different */}
         </h2>
-        <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
-          We built the only AI engine that combines the memory of a CRM, the
-          hands of an agent, and the brain of a salesperson.
+        <p className="section-subheadline">
+          {/* We built the only AI engine that combines the memory of a CRM, the
+          hands of an agent, and the brain of a salesperson. */}
+          We built the only AI engine that remembers like a CRM, acts like an
+          agent, and thinks like a salesperson.
         </p>
       </div>
 
       {/* Carousel Container */}
       <div
-        className="relative max-w-7xl mx-auto"
+        className="relative section-content-padding"
         onMouseEnter={pauseAutoScroll}
         onMouseLeave={() => {
           if (pauseTimeoutRef.current) {
@@ -213,7 +222,7 @@ export const WhyChooseUs = () => {
         <div
           ref={scrollRef}
           onScroll={handleManualScroll}
-          className="flex gap-6 overflow-x-auto pb-8 px-4 lg:px-6 snap-x snap-mandatory scrollbar-hide"
+          className="flex gap-0 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {reasons.map((item, index) => (
@@ -261,7 +270,7 @@ export const WhyChooseUs = () => {
         </div>
 
         {/* Navigation Controls - Bottom */}
-        <div className="flex items-center justify-between gap-4 mt-8 px-6 md:px-[72px]">
+        <div className="section-content-padding flex items-center justify-between gap-4 mt-8 ">
           {/* Page Indicators */}
           <div className="flex items-center gap-2">
             {reasons.map((_, index) => (

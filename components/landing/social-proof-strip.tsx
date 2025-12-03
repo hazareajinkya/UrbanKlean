@@ -11,7 +11,7 @@ export const SocialProofStrip = () => {
   ];
 
   return (
-    <section className="w-full py-12 bg-muted/50 border-y border-x">
+    <section className="section-container w-full py-12 bg-muted/50 border-t border-x">
       <div className="container mx-auto px-4">
         <p className="text-center text-sm text-muted-foreground mb-8">
           Trusted by leading companies worldwide

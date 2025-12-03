@@ -40,12 +40,12 @@ export const Navbar = ({
   return (
     <>
       <nav
-        className={`w-full py-2 md:py-3 bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50 transition-colors duration-300 ${
+        className={`w-full  bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50 transition-colors duration-300 ${
           isInside && "dark"
         }`}
       >
         <div
-          className={`container mx-auto pl-4 pr-2 md:px-4 flex items-center justify-between`}
+          className={`section-container py-2 md:py-3 pr-2 pl-4 md:px-6 lg:px-0  flex items-center justify-between`}
         >
           <Link
             href="/"

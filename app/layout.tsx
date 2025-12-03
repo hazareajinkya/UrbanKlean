@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${playfair.variable} ${bodona.variable} font-sans antialiased`}
+        className={` ${inter.variable} ${playfair.variable} ${bodona.variable} font-sans antialiased`}
       >
         <ClientProvider>{children}</ClientProvider>
         <Analytics />

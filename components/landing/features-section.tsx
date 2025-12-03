@@ -339,25 +339,29 @@ const HandoffVisual = () => (
 export const FeaturesSection = () => {
   return (
     <section
-      className="py-24 md:py-32 container mx-auto border px-4 md:px-0"
+      className="section-container py-24 md:py-32 border-x border-b"
       id="features"
     >
-      <div className="max-w-3xl mx-auto text-center mb-16">
-        <h2 className="text-3xl leading-normal md:text-4xl mb-6">
-          Features built to{" "}
-          <span className="text-muted-foreground">scale your support</span>
+      <div className="max-w-5xl mx-auto text-center mb-16 section-container-padding">
+        <h2 className="section-heading ">
+          {/* Features built to{" "}
+          <span className="text-muted-foreground">scale your support</span> */}
+          <span className="text-muted-foreground">Everything you need to</span>{" "}
+          deliver magical experience
+          {/* Why your team works better with{" "}
+          <span className="font-serif italic">MagicalCX</span> */}
         </h2>
-        <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto">
-          From instant answers to automated workflows, get everything you need
-          to deliver world-class customer service.
+        <p className="section-subheadline">
+          MagicalCX is designed to help every customer feel understood,
+          supported, and genuinely cared for.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-neutral-200 border border-neutral-200 rounded-none max-w-7xl mx-auto overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border-y rounded-none max-w-7xl mx-auto overflow-hidden">
         {/* Row 1 */}
         <FeatureCard
           title="Conversational Memory"
-          description="MagicalCX remembers past chats, orders, and details so customers don't repeat themselves."
+          description="MagicalCX remembers past chats, orders, and details so customers don't repeat themselves"
           Visual={MemoryVisual}
         />
         <FeatureCard
@@ -372,11 +376,11 @@ export const FeaturesSection = () => {
         />
 
         {/* Row 2 */}
-        <div className="md:col-span-2 group relative bg-white flex flex-col">
+        <div className="md:col-span-2 group relative bg-card flex flex-col">
           <div className="w-full h-[350px] bg-neutral-50/30 border-b border-border/50 overflow-hidden relative">
             <OmnichannelVisual />
           </div>
-          <div className="p-6 md:p-8 bg-white z-10">
+          <div className="p-6 md:p-8 bg-card z-10">
             <h3 className="text-lg mb-2">Omnichannel Inbox</h3>
             <p className="text-base font-normal text-muted-foreground leading-relaxed max-w-xl">
               Unify WhatsApp, Instagram, Email, and Webchat in one organized
@@ -422,11 +426,11 @@ const FeatureCard = ({
   Visual: React.ComponentType;
 }) => {
   return (
-    <div className="group relative bg-white flex flex-col h-full">
-      <div className="w-full h-[350px] bg-neutral-50/30 border-b border-border/50 overflow-hidden relative">
+    <div className="group relative bg-card flex flex-col h-full">
+      <div className="w-full h-[350px] bg-muted border-b overflow-hidden relative">
         <Visual />
       </div>
-      <div className="p-6 md:p-8 bg-white z-10 flex flex-col justify-start">
+      <div className="p-6 md:p-8 bg-card z-10 flex flex-col justify-start">
         <h3 className="text-lg mb-2">{title}</h3>
         <p className="text-base font-normal text-muted-foreground leading-relaxed">
           {description}

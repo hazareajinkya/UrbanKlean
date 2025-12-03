@@ -33,136 +33,198 @@ import {
   Unplug,
   Gem,
   Megaphone,
+  MessageCircleMore,
+  MessageCircle,
+  SplitSquareHorizontal,
+  Split,
+  AlignHorizontalJustifyCenter,
+  Merge,
+  FileTextIcon,
+  Undo2,
+  Redo2,
+  Redo,
+  Undo,
+  Mail,
+  User,
+  RotateCw,
+  DatabaseBackup,
+  Repeat2,
+  InfinityIcon,
 } from "lucide-react";
 
 const comparisons = [
   {
-    old: { icon: FileText, text: "Robotic scripts that hit dead ends" },
+    old: {
+      icon: Bot,
+      // text: "Robotic replies that stop the moment things get real",
+      // text: "Robotic replies that fail when it matters",
+      // text: "Robotic replies that fail when it matters",
+      text: "Fails with robotic replies when it matters",
+      // text: "Scripts that can’t handle real customer problems",
+    },
     new: {
-      icon: MessageCircleHeart,
-      text: "Fluid conversations that actually resolve issues",
+      icon: MessageCircle,
+      // text: "Human-like conversations that solve real problems",
+      // text: "Human-like help that solves real issues",
+
+      text: "Helps with human-like replies when it matters",
     },
   },
   {
-    old: { icon: RotateCcw, text: "Forcing customers to repeat themselves" },
-    new: { icon: Brain, text: "Remembers every detail, across every channel" },
+    // old: { icon: RotateCcw, text: "Forcing customers to repeat themselves" },
+    old: { icon: Repeat2, text: "Makes customers repeat themselves" },
+    new: { icon: Brain, text: "Remembers every detail, across channels" },
+    // new: { icon: Brain, text: "Memory that follows the customer everywhere" },
   },
   {
-    old: { icon: LinkIcon, text: "Throwing help links at angry customers" },
-    new: { icon: Zap, text: "Takes action (refunds, updates) instantly" },
+    old: {
+      icon: LinkIcon,
+      text: "Sends links when people need solutions",
+    },
+    new: { icon: Zap, text: "Takes action right inside the chat" },
   },
   {
-    old: { icon: ShieldAlert, text: "Just trying to deflect tickets" },
+    old: { icon: Split, text: "Designed to deflect tickets" },
+    new: { icon: TrendingUp, text: "Designed to turn support into sales" },
+  },
+  // {
+  //   old: {
+  //     icon: AlignHorizontalJustifyCenter,
+  //     text: "Scattered conversations everywhere",
+  //   },
+  //   new: {
+  //     icon: GitMerge,
+  //     text: "One unified inbox for every channel",
+  //   },
+  // },
+
+  {
+    old: {
+      icon: HelpCircle,
+      text: "Leaves you guessing",
+    },
+    // new: { icon: BarChart3, text: "Shows exactly what’s working at a glance" },
+    // new: { icon: BarChart3, text: "Shows you what matters without digging" },
     new: {
-      icon: TrendingUp,
-      text: "Turning support chats into sales opportunities",
+      icon: FileTextIcon,
+      text: "Tells you what customers actually care about",
+    },
+  },
+  // {
+  //   old: {
+  //     icon: RefreshCw,
+  //     text: "Makes you manually update answers",
+  //   },
+  //   new: {
+  //     icon: DatabaseBackup,
+  //     // text: "Syncs with your knowledgebase automatically",
+  //     text: "Auto-syncs with your knowledgebase",
+  //   },
+  // },
+  {
+    old: { icon: Bot, text: "Makes your brand sound cold and generic" },
+    // new: { icon: Megaphone, text: "Matches your brand voice in every message" },
+    new: {
+      icon: Megaphone,
+      text: "Makes your brand sound warm and human",
+      // text: "Makes your brand sound like… your brand",
     },
   },
   {
-    old: { icon: GitBranch, text: "Scattered conversations everywhere" },
+    old: {
+      icon: Mail,
+      text: "Tells customers to email for complex issues",
+    },
+    new: { icon: User, text: "Seamlessly brings in an agent when needed" },
+  },
+  {
+    old: {
+      icon: Unplug,
+      text: "Disconnected from your tools and data",
+    },
     new: {
-      icon: GitMerge,
-      text: "One unified brain for Email, WhatsApp, & Web",
+      icon: Cable,
+      text: "Works seamlessly with your CRM and data",
     },
   },
-  {
-    old: { icon: Hammer, text: "You building complex flowcharts" },
-    new: {
-      icon: HeartHandshake,
-      text: "We handle the setup and training for you",
-    },
-  },
-  {
-    old: { icon: RefreshCw, text: "Manually updating stale answers" },
-    new: { icon: Zap, text: "Syncs with your site automatically, every day" },
-  },
-  {
-    old: { icon: HelpCircle, text: "Guessing if it's actually working" },
-    new: { icon: BarChart3, text: "Weekly insights on revenue & resolution" },
-  },
-  {
-    old: { icon: Bot, text: "Sounding like a generic robot" },
-    new: { icon: Megaphone, text: "Speaks fluent 'You' (your brand voice)" },
-  },
-  {
-    old: { icon: EyeOff, text: "Blind handoffs to human agents" },
-    new: { icon: Eye, text: "Agents step in with full context ready" },
-  },
-  {
-    old: { icon: Unplug, text: "Disconnected from your store data" },
-    new: { icon: Cable, text: "Deeply integrated with Shopify & your stack" },
-  },
-  {
-    old: { icon: DollarSign, text: "Optimizing for lowest cost" },
-    new: { icon: Gem, text: "Optimizing for highest Customer Lifetime Value" },
-  },
+  // {
+  //   old: { icon: DollarSign, text: "Optimizes for cost instead of customers" },
+  //   // new: { icon: Gem, text: "Boosts LTV through better conversations" },
+  //   new: { icon: Gem, text: "Optimizes for LTV instead of costs" },
+  // },
 ];
 
 export const OldNewWay = () => {
   return (
-    <section className="py-12 md:py-24 bg-muted/30 border">
-      <div className="container mx-auto px-4 md:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12 md:mb-20">
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-normal tracking-tight text-foreground mb-4 md:mb-6">
-            Invest in an outcome.
-          </h2>
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto font-light px-2">
-            Stop settling for tools that just "deflect" tickets. Switch to a
-            platform built to grow your business.
-          </p>
+    <section className="section-container py-16 md:py-32 border section-content-padding">
+      {/* Section Header */}
+      <div className="text-center mb-12 md:mb-20">
+        <h2 className="section-heading ">
+          {/* Yesterdays helpdesk vs. Tomorrows CX. */}
+          {/* From Outdated to Upgraded */}
+          {/* Old Method vs New Standard. */}
+          {/* From "I'm just a bot." to "I've got this." */}
+          The Old Way vs The New Way
+          {/* Slow, Repetitive, Frustrating vs Fast, Human, Effortless. */}
+          {/* Yesterday's Support vs Tomorrow's Experience.  */}
+          {/* Old Problems. New Solutions. */}
+          {/* Support of the Past vs Experience of Tomorrow */}
+        </h2>
+        <p className="section-subheadline">
+          {/* Most tools make support harder. MagicalCX makes it simpler, kinder,
+            and far more effective. */}
+          {/* A quick look at how support changes when it finally works the way it
+            should. */}
+          Two very different ways to handle support — only one makes sense.
+        </p>
+      </div>
+
+      {/* Split Container */}
+      <div className=" flex flex-col md:flex-row max-w-4xl mx-auto border border-border rounded-md overflow-hidden">
+        {/* Left Side: The Old Way */}
+        <div className="w-full md:w-1/2 bg-card px-4 py-6 md:px-6 lg:px-8 md:py-8 border-b md:border-b-0 md:border-r border-border">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg md:text-xl text-muted-foreground font-normal">
+              The Old Way
+            </h3>
+            <Undo className="size-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-6 pb-2 md:pb-0">
+            {comparisons.map((item, idx) => (
+              <div
+                key={`old-${idx}`}
+                className="flex gap-4 opacity-60 items-center"
+              >
+                <item.old.icon className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div>
+                  <h3 className="text-base text-foreground font-normal leading-snug">
+                    {item.old.text}
+                  </h3>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Split Container */}
-        <div className="flex flex-col md:flex-row max-w-6xl mx-auto border border-border rounded-md overflow-hidden">
-          {/* Left Side: The Old Way */}
-          <div className="w-full md:w-1/2 bg-white p-6 md:p-8 lg:p-12 xl:p-16 border-b md:border-b-0 md:border-r border-border">
-            <div className="mb-6 md:mb-8 md:sticky md:top-8 z-10 bg-white md:bg-white/95 md:backdrop-blur py-2">
-              <h3 className="text-lg md:text-xl lg:text-2xl text-muted-foreground font-normal">
-                The Old Way
-              </h3>
-            </div>
-
-            <div className="space-y-4 md:space-y-6">
-              {comparisons.map((item, idx) => (
-                <div
-                  key={`old-${idx}`}
-                  className="flex gap-3 md:gap-5 opacity-60 items-center"
-                >
-                  <item.old.icon className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground shrink-0" />
-                  <div>
-                    <h3 className="text-base md:text-lg text-foreground font-normal leading-snug">
-                      {item.old.text}
-                    </h3>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Right Side: The MagicalCX Way */}
+        <div className="w-full md:w-1/2 bg-primary px-4 py-6 md:px-6 lg:px-8 md:py-8">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg md:text-xl text-primary-foreground font-normal">
+              The MagicalCX Way
+            </h3>
+            <Redo className="size-5 text-primary-foreground" />
           </div>
-
-          {/* Right Side: The MagicalCX Way */}
-          <div className="w-full md:w-1/2 bg-primary p-6 md:p-8 lg:p-12 xl:p-16">
-            <div className="mb-6 md:mb-8 md:sticky md:top-8 z-10 bg-primary md:bg-primary/95 md:backdrop-blur py-2">
-              <h3 className="text-lg md:text-xl lg:text-2xl text-primary-foreground font-normal">
-                The MagicalCX Way
-              </h3>
-            </div>
-
-            <div className="space-y-4 md:space-y-6">
-              {comparisons.map((item, idx) => (
-                <div
-                  key={`new-${idx}`}
-                  className="flex gap-3 md:gap-5 items-center"
-                >
-                  <item.new.icon className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground shrink-0" />
-                  <div>
-                    <h3 className="text-base md:text-lg text-primary-foreground font-normal leading-snug">
-                      {item.new.text}
-                    </h3>
-                  </div>
+          <div className="space-y-6 pb-2 md:pb-0">
+            {comparisons.map((item, idx) => (
+              <div key={`new-${idx}`} className="flex gap-4 items-center">
+                <item.new.icon className="w-5 h-5 text-primary-foreground shrink-0" />
+                <div>
+                  <h3 className="text-base text-primary-foreground font-normal leading-snug">
+                    {item.new.text}
+                  </h3>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

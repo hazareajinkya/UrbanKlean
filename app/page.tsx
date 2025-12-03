@@ -7,6 +7,9 @@ import { OldNewWay } from "@/components/landing/old-new-way";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { WhyChooseUs } from "@/components/landing/why-choose-us";
+import { Footer } from "@/components/landing/footer";
+import { CtaSection } from "@/components/landing/cta-section";
+import { FaqSection } from "@/components/landing/faq-section";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { useRef } from "react";
 
@@ -20,19 +23,23 @@ export default function LandingPage() {
   return (
     <div className="bg-background min-h-screen">
       <Navbar scrollYProgress={scrollYProgress} />
-      <div className="container mx-auto">
-        <HeroSection />
-        <SocialProofStrip />
-        <OldNewWay />
-        <FeaturesSection />
-      </div>
+
+      <HeroSection />
+      <SocialProofStrip />
+      <OldNewWay />
+      <FeaturesSection />
+
       <div className="bg-background dark " ref={whyRef}>
         <WhyChooseUs />
       </div>
-      <div className="container mx-auto">
-        <HowItWorks />
+
+      <HowItWorks />
+
+      <FaqSection />
+      <div className="bg-background dark">
+        <CtaSection />
+        <Footer />
       </div>
-      <div className="h-100"></div>
     </div>
   );
 }
