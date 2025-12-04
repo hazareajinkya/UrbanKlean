@@ -217,54 +217,58 @@ ToolBadge.displayName = "ToolBadge";
 interface MessagePartsProps {
   parts: IChatMessage["parts"];
   brandColor: string;
+  isLast: boolean;
 }
 
-const MessageParts = memo(({ parts, brandColor }: MessagePartsProps) => (
-  <>
-    {parts?.map((part, index) => {
-      if (part.type === "tool-searchKnowledge") {
-        return (
-          <ToolBadge
-            key={index}
-            isCalling={part.state !== "output-available"}
-            brandColor={brandColor}
-            Icon={Globe}
-            callingText="Searching knowledge..."
-            completedText="Searched knowledge"
-          />
-        );
-      }
+const MessageParts = memo(
+  ({ parts, brandColor, isLast }: MessagePartsProps) => (
+    <>
+      {parts?.map((part, index) => {
+        if (
+          part.type === "tool-collectInformation" ||
+          part.type === "tool-searchKnowledge"
+        ) {
+          const nextParts = parts.slice(index + 1);
+          const hasSubsequentText = nextParts.some(
+            (p) => p.type === "text" && p.text && p.text.length > 0
+          );
 
-      if (part.type === "tool-collectInformation") {
-        return (
-          <ToolBadge
-            key={index}
-            isCalling={part.state !== "output-available"}
-            brandColor={brandColor}
-            Icon={User}
-            callingText="Personalizing response..."
-            completedText="Personalized response"
-          />
-        );
-      }
+          if (isLast && !hasSubsequentText) {
+            return (
+              <div className="" key={index}>
+                <div className="flex gap-1.5 py-1">
+                  {[0, 0.13, 0.3].map((delay, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
+                      style={{ animationDelay: `${delay}s` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        }
 
-      if (part.type === "text") {
-        return (
-          <div
-            key={index}
-            className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
-          >
-            <Streamdown components={streamdownComponents}>
-              {part.text}
-            </Streamdown>
-          </div>
-        );
-      }
+        if (part.type === "text") {
+          return (
+            <div
+              key={index}
+              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
+            >
+              <Streamdown components={streamdownComponents}>
+                {part.text}
+              </Streamdown>
+            </div>
+          );
+        }
 
-      return null;
-    })}
-  </>
-));
+        return null;
+      })}
+    </>
+  )
+);
 
 MessageParts.displayName = "MessageParts";
 
@@ -327,7 +331,11 @@ const AssistantMessage = memo(
             getMessageStyle(message, "assistant")
           )}
         >
-          <MessageParts parts={message.parts} brandColor={brandColor} />
+          <MessageParts
+            parts={message.parts}
+            brandColor={brandColor}
+            isLast={isLast}
+          />
         </div>
       </div>
       {isLast && (
