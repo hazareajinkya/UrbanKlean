@@ -31,6 +31,20 @@ export function formatDateTime(date?: string) {
   return format(new Date(date), "dd MMM yyyy hh:mm a");
 }
 
+export function formatAgentTime(date?: string) {
+  if (!date) return "";
+  const inputDate = new Date(date);
+  const now = new Date();
+
+  const msDifference = now.getTime() - inputDate.getTime();
+  const msInDay = 24 * 60 * 60 * 1000;
+
+  if (msDifference > msInDay) {
+    return format(inputDate, "dd MMM yy");
+  }
+  return format(inputDate, "hh:mm a");
+}
+
 export const formatHistoryDateTime = (date?: string) => {
   if (!date) return "";
   const now = new Date();

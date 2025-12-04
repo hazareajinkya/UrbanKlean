@@ -20,7 +20,7 @@ export const getMessageStyle = (
 
   return clsx(
     baseStyle,
-    "py-2 md:py-1.5",
+    "py-2 md:py-2",
     hasText && isShort ? "rounded-t-2xl rounded-br-2xl" : "rounded-2xl"
   );
 };

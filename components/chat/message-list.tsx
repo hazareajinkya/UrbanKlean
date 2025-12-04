@@ -2,7 +2,7 @@
 
 import { Streamdown } from "streamdown";
 import { UIMessage } from "ai";
-import { formatDateTime, getContrastingColor } from "@/lib/utils";
+import { formatDateTime, formatTime, getContrastingColor } from "@/lib/utils";
 import { getMessageStyle, heightClass } from "@/lib/utils/message-utils";
 import { useEffect, useRef, memo, useMemo, useState } from "react";
 import clsx from "clsx";
@@ -320,9 +320,9 @@ const AssistantMessage = memo(
         </div>
       </div>
       {isLast && (
-        <div className="flex items-center gap-4 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
-          <p className="text-left flex-1 text-xs text-muted-foreground">
-            {formatDateTime(message.metadata?.createdAt ?? "")}
+        <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
+          <p className="text-xs text-muted-foreground">
+            {formatTime(message.metadata?.createdAt ?? "")}
           </p>
         </div>
       )}
