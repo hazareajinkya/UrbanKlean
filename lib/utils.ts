@@ -185,3 +185,8 @@ export const checkRecentlyActive = (
   const diffHours = diffMs / (1000 * 60 * 60);
   return diffHours < hour;
 };
+
+export const isMac = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+};

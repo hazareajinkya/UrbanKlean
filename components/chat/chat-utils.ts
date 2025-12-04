@@ -1,6 +1,4 @@
-import queryClient from "@/lib/clients/query-client";
 import { useAgent } from "@/lib/hooks/agent/use-agent";
-import { sessionKey } from "@/lib/hooks/session/use-session";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
 import { IAgent } from "@/lib/types/agent";
@@ -8,199 +6,85 @@ import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
 import lsMap from "@/lib/utils/ls-map";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { cosineSimilarity, ModelMessage } from "ai";
-import { arrayUnion } from "firebase/firestore";
+import { ModelMessage } from "ai";
 import { v4 } from "uuid";
-
-export const initChat = async (agent: IAgent) => {
-  let deviceId = getLocalDeviceId(agent.wid);
-
-  if (!deviceId) {
-    const did = v4();
-    saveLocalDeviceId(agent.wid, did);
-    deviceId = did;
-  }
-
-  const { person } = await peopleService.identify({
-    wid: agent.wid,
-    externalIds: [{ id: deviceId, provider: "web" }],
-  });
-
-  const sid = getLocalSession(agent.id);
-
-  //create new session
-  if (!sid) {
-    createNewSession(agent.wid, agent.id, person);
-  } else {
-    //get session by open status
-    const sessions = await chatService.getSessionsByFilter({
-      aid: agent.id,
-      sid: sid,
-      status: "open",
-      nLimit: 1,
-    });
-
-    let session = sessions.length > 0 ? sessions[0] : null;
-
-    //if no session, create new session
-    if (!session) {
-      session = await createNewSession(agent.wid, agent.id, person);
-    }
-
-    //if person exists, and session personId is different, update session
-    if (person && person.id && session?.personId !== person.id) {
-      console.log("updating session: ", session?.id, person.id);
-
-      await chatService.updateSession(agent.id, sid, {
-        personId: person.id,
-      });
-
-      queryClient.setQueryData(sessionKey(sid), {
-        ...session,
-        personId: person.id,
-      });
-    }
-  }
-
-  return deviceId;
-};
-
-const initChat2 = async (agent: IAgent, test?: boolean) => {
-  const deviceId = getOrCreateDeviceId(agent.wid);
-  const sid = getLocalSession(agent.id);
-
-  const sessionsPromise = sid
-    ? chatService.getSessionsByFilter({
-        sid,
-        aid: agent.id,
-        status: "open",
-        nLimit: 1,
-      })
-    : Promise.resolve([]);
-
-  const personPromise = peopleService.identify({
-    wid: agent.wid,
-    externalIds: [{ id: deviceId, provider: "web" }],
-  });
-
-  //parallelized for better performance
-  const [sessions, { person }] = await Promise.all([
-    sessionsPromise,
-    personPromise,
-  ]);
-
-  // Try to get open session
-  let session = sessions[0];
-  console.log("session : ", session);
-
-  // // Fix : Don't create new session if person is not found
-  // // Create new session if needed
-  if (!session && test) {
-    session = await createNewSession(agent.wid, agent.id, person);
-  }
-
-  // Update session with personId if necessary
-  if (person?.id && session.personId !== person.id) {
-    await chatService.updateSession(agent.id, session.id, {
-      personId: person.id,
-    });
-
-    session = { ...session, personId: person.id };
-  }
-
-  //check if session id exists in person pastSessionIds
-  if (person?.id && !person.pastSessionIds.includes(session.id)) {
-    const pastSessionIds = Array.from(
-      new Set([...(person.pastSessionIds ?? []), session.id])
-    );
-    peopleService.update({
-      wid: agent.wid,
-      personId: person.id,
-      updates: {
-        pastSessionIds: pastSessionIds,
-      },
-    });
-  }
-  return { session, person, deviceId };
-};
-
-const chatInit3 = async (agent: IAgent) => {
-  const deviceId = getOrCreateDeviceId(agent.wid);
-  const sid = getLocalSession(agent.id);
-
-  const sessionsPromise = sid
-    ? chatService.getSessionsByFilter({
-        sid,
-        aid: agent.id,
-        status: "open",
-        nLimit: 1,
-      })
-    : Promise.resolve([]);
-
-  const personPromise = peopleService.identify({
-    wid: agent.wid,
-    externalIds: [{ id: deviceId, provider: "web" }],
-  });
-
-  //parallelized for better performance
-  const [sessions, { person }] = await Promise.all([
-    sessionsPromise,
-    personPromise,
-  ]);
-  let session = sessions[0];
-
-  return { session, person, deviceId };
-};
-
-const createNewSession2 = async (
-  agent: IAgent,
-  person: IPerson,
-  deviceId: string
-) => {
-  let session = await createNewSession(agent.wid, agent.id, person);
-  // Update session with personId if necessary
-  if (person?.id && session.personId !== person.id) {
-    await chatService.updateSession(agent.id, session.id, {
-      personId: person.id,
-    });
-
-    session = { ...session, personId: person.id };
-  }
-  //check if session id exists in person pastSessionIds
-  if (person?.id && !person.pastSessionIds.includes(session.id)) {
-    const pastSessionIds = Array.from(
-      new Set([...(person.pastSessionIds ?? []), session.id])
-    );
-    peopleService.update({
-      wid: agent.wid,
-      personId: person.id,
-      updates: {
-        pastSessionIds: pastSessionIds,
-      },
-    });
-  }
-  return { session, person, deviceId };
-};
 
 export const chatInitKey = (aid: string) => ["chat-init", aid];
 
-export const useChatInit = (aid: string, test?: boolean) => {
+export const initChat = async (agent: IAgent) => {
+  const deviceId = getOrCreateDeviceId(agent.wid);
+  const sid = getLocalSession(agent.id);
+
+  const sessionsPromise = sid
+    ? chatService.getSessionsByFilter({
+        sid,
+        aid: agent.id,
+        status: "open",
+        nLimit: 1,
+      })
+    : Promise.resolve([]);
+
+  const personPromise = peopleService.identify({
+    wid: agent.wid,
+    externalIds: [{ id: deviceId, provider: "web" }],
+  });
+
+  const [sessions, { person }] = await Promise.all([
+    sessionsPromise,
+    personPromise,
+  ]);
+
+  let session: ISession | undefined;
+  let isSessionInDB = false;
+  let sessionId: string;
+
+  if (sessions.length > 0) {
+    session = sessions[0];
+    isSessionInDB = true;
+    sessionId = session.id;
+  } else {
+    isSessionInDB = false;
+    sessionId = sid ?? v4();
+    saveLocalSession(agent.id, sessionId);
+  }
+
+  return { sessionId, session, person, deviceId, isSessionInDB };
+};
+
+export const useChatInit = (aid: string) => {
   const { agent } = useAgent(aid);
   const qc = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: chatInitKey(aid),
-    queryFn: () => chatInit3(agent!),
+    queryFn: () => initChat(agent!),
     enabled: !!agent,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 30,
   });
-  const refresh = () => {
-    removeLocalSession(aid);
-    refetch();
-  };
 
-  console.log("data.person: ", data?.person);
+  const createNewSession = async () => {
+    if (!data || !agent) return;
+
+    // Create session in backend with the pre-generated UUID
+    const session = await chatService.createSession(
+      agent.wid,
+      aid,
+      data.person?.id,
+      data.sessionId // ✅ Pass the UUID we already generated
+    );
+
+    //save to local storage
+    saveLocalSession(aid, session.id);
+
+    //update query data
+    qc.setQueryData(chatInitKey(aid), {
+      ...data,
+      session: session,
+      isSessionInDB: true,
+    });
+    return session;
+  };
 
   const updatePerson = (newPerson: IPerson) => {
     qc.setQueryData(chatInitKey(aid), (old: any) => {
@@ -208,46 +92,27 @@ export const useChatInit = (aid: string, test?: boolean) => {
       return {
         ...old,
         person: newPerson,
-        session: { ...old.session, personId: newPerson.id },
       };
     });
-  };
-  const updateSession = async () => {
-    const chatInit = qc.getQueryData(chatInitKey(aid)) as {
-      person: IPerson;
-      session: ISession;
-      deviceId: string;
-    };
-    const chat = await createNewSession2(
-      agent!,
-      chatInit?.person,
-      chatInit?.deviceId
-    );
-    qc.setQueryData(chatInitKey(aid), (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        person: chat.person,
-        session: chat.session,
-      };
-    });
-    return {
-      ...chat,
-      person: chat.person,
-      session: chat.session,
-    };
+
+    // Update session in backend if it exists
+    if (data?.isSessionInDB && data?.sessionId) {
+      chatService.updateSession(aid, data.sessionId, {
+        personId: newPerson.id,
+      });
+    }
   };
 
   return {
-    agent,
     session: data?.session,
     person: data?.person,
     deviceId: data?.deviceId,
-    isLoading: isLoading,
-    error: error,
-    refresh,
+    sessionId: data?.sessionId!,
+    isSessionInDB: data?.isSessionInDB,
+    isLoading,
+    createNewSession,
     updatePerson,
-    updateSession,
+    error,
   };
 };
 
@@ -255,26 +120,6 @@ const getOrCreateDeviceId = (wid: string) => {
   let id = getLocalDeviceId(wid);
   if (!id) saveLocalDeviceId(wid, (id = v4()));
   return id;
-};
-
-const createNewSession = async (wid: string, aid: string, person?: IPerson) => {
-  //create new session
-  const session = await chatService.createSession(wid, aid, person?.id);
-
-  // Only update if the session id is not already present
-  // if (person && !person.pastSessionIds.includes(session.id)) {
-  //   const updatedSessionIds = [...(person.pastSessionIds ?? []), session.id];
-  //   peopleService.update({
-  //     wid,
-  //     personId: person.id,
-  //     updates: {
-  //       pastSessionIds: updatedSessionIds,
-  //     },
-  //   });
-  // }
-
-  queryClient.setQueryData(sessionKey(session.id), session);
-  return session;
 };
 
 export const refreshSession = async (aid: string) => {

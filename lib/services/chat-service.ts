@@ -26,14 +26,25 @@ import {
 } from "../../components/chat/chat-utils";
 
 class ChatService {
-  async createSession(wid: string, aid: string, personId?: string) {
-    const deviceId = getLocalDeviceId(wid);
+  async createSession(
+    wid: string,
+    aid: string,
+    personId?: string,
+    sessionId?: string
+  ) {
+    // const deviceId = getLocalDeviceId(wid);
 
-    const session = generateDefaultSession(wid, aid, "web", deviceId);
+    const session = generateDefaultSession(
+      wid,
+      aid,
+      "web",
+      undefined,
+      // deviceId,
+      sessionId
+    );
     if (personId) {
       session.personId = personId;
     }
-    saveLocalSession(aid, session.id);
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }
@@ -44,6 +55,26 @@ class ChatService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
+  }
+
+  async ensureSession(
+    wid: string,
+    aid: string,
+    sid: string,
+    personId?: string
+  ) {
+    let session = await this.getSession(sid, aid);
+
+    if (!session) {
+      // Session doesn't exist, create it
+      session = await this.createSession(wid, aid, personId, sid);
+    } else if (personId && session.personId !== personId) {
+      // Session exists but personId changed, update it
+      await this.updateSession(aid, sid, { personId });
+      session.personId = personId;
+    }
+
+    return session;
   }
 
   async createWASession(

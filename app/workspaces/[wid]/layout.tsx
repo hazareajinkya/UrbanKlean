@@ -3,6 +3,7 @@ import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Loader2,
   Users,
@@ -20,8 +21,19 @@ import {
 } from "lucide-react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
+import { useHotkeys } from "react-hotkeys-hook";
+import {
+  sidebarCollapseShortcut,
+  navDashboardShortcut,
+  navKnowledgeShortcut,
+  navAgentsShortcut,
+  navChannelsShortcut,
+  navActionsShortcut,
+  navMembersShortcut,
+  navSettingsShortcut,
+} from "@/lib/utils/shortcuts";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -134,7 +146,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    if (typeof window !== "undefined")
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
     return false;
   });
   const [isModalOpen, setIsModelOpen] = useState(false);
@@ -148,6 +161,35 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     setIsCollapsed(newState);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newState));
   };
+
+  useHotkeys("ctrl+b,meta+b", handleToggleCollapse, {
+    enableOnFormTags: false,
+  });
+
+  useHotkeys(
+    "g+1,g+2,g+3,g+4,g+5,g+6,g+7",
+    (event) => {
+      const key = event.key;
+      const index = parseInt(key) - 1;
+      if (index >= 0 && index < navigation.length) {
+        router.push(`/workspaces/${wid}${navigation[index].href}`);
+      }
+    },
+    {
+      enableOnFormTags: false,
+    }
+  );
+
+  const navShortcuts = [
+    navDashboardShortcut,
+    navKnowledgeShortcut,
+    navAgentsShortcut,
+    navChannelsShortcut,
+    navActionsShortcut,
+    navMembersShortcut,
+    navSettingsShortcut,
+  ];
+
   const handleModalOpen = () => {
     setIsModelOpen(true);
   };
@@ -202,9 +244,10 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
       {/* Navigation */}
       <div className="flex-1 px-3 py-4">
         <nav className={`${isCollapsed ? "space-y-2" : "space-y-1"}`}>
-          {navigation.map((item) => {
+          {navigation.map((item, index) => {
             const href = `/workspaces/${wid}${item.href}`;
             const isActive = pathname.includes(href);
+            const shortcutKey = navShortcuts[index];
 
             return (
               <Link
@@ -219,19 +262,26 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                       ? "bg-primary/10 text-primary"
                       : "text-neutral-600 -foreground hover:text-primary"
                   }
-                  ${isCollapsed ? "justify-center" : ""}
+                  ${isCollapsed ? "justify-center" : "justify-between"}
                 `}
                 title={isCollapsed ? item.title : undefined}
               >
-                <item.icon
-                  className={`h-4 w-4 shrink-0 ${
-                    isCollapsed ? "h-4.5 w-4.5" : ""
-                  }`}
-                />
-                {!isCollapsed && (
-                  <span className="line-clamp-1 overflow-hidden truncate">
-                    {item.title}
-                  </span>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <item.icon
+                    className={`h-4 w-4 shrink-0 ${
+                      isCollapsed ? "h-4.5 w-4.5" : ""
+                    }`}
+                  />
+                  {!isCollapsed && (
+                    <span className="line-clamp-1 overflow-hidden truncate">
+                      {item.title}
+                    </span>
+                  )}
+                </div>
+                {!isCollapsed && shortcutKey && (
+                  <Kbd className="opacity-60 text-[10px] shrink-0">
+                    {shortcutKey}
+                  </Kbd>
                 )}
               </Link>
             );
@@ -253,11 +303,18 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {!isCollapsed && <span className="text-sm">Collapse</span>}
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
+          <div className="flex items-center gap-1.5">
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <>
+                <Kbd className="hidden lg:inline-flex opacity-60 text-[10px]">
+                  {sidebarCollapseShortcut}
+                </Kbd>
+                <ChevronLeft className="h-4 w-4" />
+              </>
+            )}
+          </div>
         </Button>
       </div>
 

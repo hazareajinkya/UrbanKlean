@@ -51,10 +51,11 @@ export const generateDefaultSession = (
   wid: string,
   aid: string,
   channel: IChannelProvider,
-  pid?: string
+  pid?: string,
+  id?: string
 ): ISession => {
   return {
-    id: v4(),
+    id: id ?? v4(),
     aid,
     wid,
     channel,

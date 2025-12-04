@@ -10,10 +10,8 @@ import { ChatHeader } from "@/components/chat/chat-header";
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { sessionKey, useSession } from "@/lib/hooks/session/use-session";
 import {
-  chatInitKey,
   getGreetingMsg,
   getLocalDeviceId,
-  initChat,
   useChatInit,
 } from "@/components/chat/chat-utils";
 import chatService from "@/lib/services/chat-service";
@@ -42,39 +40,28 @@ export default function ChatPage() {
 
   const { agent } = useAgent(aid);
 
-  let currentSession: ISession | undefined;
+  // const {
+  //   session,
+  //   person,
+  //   deviceId,
+  //   isLoading,
+  //   error,
+  //   refresh,
+  //   updatePerson,
+  //   updateSession,
+  // } = useChatInit(aid);
+
   const {
+    sessionId,
     session,
     person,
     deviceId,
     isLoading,
-    error,
-    refresh,
     updatePerson,
-    updateSession,
+    error,
   } = useChatInit(aid);
-  useEffect(() => {
-    if (session) {
-      console.warn("Session is found");
-      sessionRef.current = session;
-    } else {
-      console.warn("Session is not found");
-    }
-    console.warn("Session: ", sessionRef.current?.id);
-  }, [session]);
 
-  // const {
-  //   session,
-  //   isLoading: isSessionLoading,
-  //   updateSession,
-  // } = useSession(aid);
-
-  // const messagesLoading = isInitializing || isSessionLoading;
   const messagesLoading = isLoading;
-  const getPersonId = () => {
-    return session?.personId;
-  };
-  console.log("session: ", session);
 
   const initialMessages = useMemo(() => {
     if (!agent) return [];
@@ -91,7 +78,7 @@ export default function ChatPage() {
   }, [agent, session, person]);
 
   const { messages, sendMessage, setMessages, status } = useChat<IChatMessage>({
-    id: sessionRef.current?.id,
+    id: sessionId,
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/query-stream",
@@ -107,8 +94,8 @@ export default function ChatPage() {
         return {
           aid,
           deviceId: deviceId,
-          personId: sessionRef.current?.personId,
-          sessionId: sessionRef.current?.id,
+          personId: person?.id,
+          sessionId: sessionId,
         };
       },
     }),
@@ -147,18 +134,10 @@ export default function ChatPage() {
       const prevMessages = messages.messages.slice(0, -1);
       setMessages([...prevMessages, aimsg]);
 
-      chatService.saveMessage(aid, sessionRef.current!.id, aimsg);
+      // chatService.saveMessage(aid, sessionId, aimsg);
     },
   });
 
-  const ensureSession = async (msg: IChatMessage) => {
-    if (!sessionRef.current) {
-      console.log("Creating new session");
-      const newSession = await updateSession();
-      sessionRef.current = newSession.session;
-    }
-    return sessionRef.current!;
-  };
   const handleChatSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
     options: ChatRequestOptions
@@ -167,14 +146,13 @@ export default function ChatPage() {
     if (!input.trim() || !aid || !agent) return;
 
     const msg = defaultUserMessage(input);
-    let currentSession = await ensureSession(msg);
 
     sendMessage({
       text: input,
       metadata: { createdAt: new Date().toISOString() },
     });
 
-    chatService.saveMessage(aid, currentSession.id, msg);
+    // chatService.saveMessage(aid, sessionId, msg);
 
     setInput("");
   };

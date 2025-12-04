@@ -4,6 +4,7 @@ import { openai } from "@ai-sdk/openai";
 import {
   convertToCoreMessages,
   convertToModelMessages,
+  createIdGenerator,
   stepCountIs,
   streamText,
   Tool,
@@ -33,6 +34,7 @@ import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
+import { v4 } from "uuid";
 
 export async function POST(req: Request) {
   try {
@@ -42,10 +44,8 @@ export async function POST(req: Request) {
       deviceId,
       personId,
       sessionId,
-    }: // id: sessionId,
-    {
+    }: {
       messages: IChatMessage[];
-      // id: string;
       aid: string;
       deviceId: string;
       personId?: string;
@@ -57,9 +57,14 @@ export async function POST(req: Request) {
     console.log("personId: ", personId);
 
     const agent = await agentService.fetchAgent(aid);
-
     if (!agent) throw new Error("Agent not found");
-    // console.log("messages: ", messages);
+
+    // Ensure session exists in DB before processing the message
+    await chatService.ensureSession(agent.wid, aid, sessionId, personId);
+
+    // Save the user message after session is ensured
+    const userMessage = messages[messages.length - 1];
+    await chatService.saveMessage(aid, sessionId, userMessage);
 
     let model = getModel(agent);
 
@@ -96,7 +101,21 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toUIMessageStreamResponse({});
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+      onFinish: async ({ responseMessage }) => {
+        const aiMessage = {
+          ...responseMessage,
+          id: v4(),
+          metadata: {
+            ...responseMessage.metadata,
+            createdAt: new Date().toISOString(),
+          },
+        } as IChatMessage;
+
+        await chatService.saveMessage(agent.id, sessionId, aiMessage);
+      },
+    });
   } catch (error: any) {
     return new Response(error.message || "Error processing request", {
       status: 500,

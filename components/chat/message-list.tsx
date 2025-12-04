@@ -13,6 +13,7 @@ import { ArrowDown, Globe, User } from "lucide-react";
 import { IChatMessage } from "@/lib/types/session";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../ui/button";
+import { MessageLoading } from "./message-loading";
 
 interface MessageListProps {
   agent: IAgent;
@@ -234,19 +235,20 @@ const MessageParts = memo(
           );
 
           if (isLast && !hasSubsequentText) {
-            return (
-              <div className="" key={index}>
-                <div className="flex gap-1.5 py-1">
-                  {[0, 0.13, 0.3].map((delay, i) => (
-                    <div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
-                      style={{ animationDelay: `${delay}s` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
+            return <MessageLoading key={index} />;
+            // return (
+            //   <div className="" key={index}>
+            //     <div className="flex gap-1.5 py-1">
+            //       {[0, 0.13, 0.3].map((delay, i) => (
+            //         <div
+            //           key={i}
+            //           className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
+            //           style={{ animationDelay: `${delay}s` }}
+            //         />
+            //       ))}
+            //     </div>
+            //   </div>
+            // );
           }
           return null;
         }
@@ -289,7 +291,7 @@ const LoadingIndicator = memo(() => (
   <div className="flex justify-start">
     <div
       className={clsx(
-        "max-w-[90%] md:max-w-[75%] leading-7 px-3 py-3",
+        "max-w-[90%] md:max-w-[75%] leading-7",
         getMessageStyle(
           {
             id: "loading",
@@ -300,15 +302,7 @@ const LoadingIndicator = memo(() => (
         )
       )}
     >
-      <div className="flex gap-1.5 py-1">
-        {[0, 0.13, 0.3].map((delay, i) => (
-          <div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
-            style={{ animationDelay: `${delay}s` }}
-          />
-        ))}
-      </div>
+      <MessageLoading />
     </div>
   </div>
 ));
