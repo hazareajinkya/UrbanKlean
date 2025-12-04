@@ -275,6 +275,14 @@ class PeopleService {
     }
   }
 
+  async updatePastSessionIds(wid: string, personId: string, sessionId: string) {
+    const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
+    await updateDoc(personRef, {
+      pastSessionIds: arrayUnion(sessionId),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
   async create({
     wid,
     name,

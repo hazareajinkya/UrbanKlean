@@ -35,20 +35,17 @@ export const initChat = async (agent: IAgent) => {
   ]);
 
   let session: ISession | undefined;
-  let isSessionInDB = false;
   let sessionId: string;
 
   if (sessions.length > 0) {
     session = sessions[0];
-    isSessionInDB = true;
     sessionId = session.id;
   } else {
-    isSessionInDB = false;
     sessionId = sid ?? v4();
     saveLocalSession(agent.id, sessionId);
   }
 
-  return { sessionId, session, person, deviceId, isSessionInDB };
+  return { sessionId, session, person, deviceId };
 };
 
 export const useChatInit = (aid: string) => {
@@ -63,29 +60,6 @@ export const useChatInit = (aid: string) => {
     gcTime: 1000 * 60 * 30,
   });
 
-  const createNewSession = async () => {
-    if (!data || !agent) return;
-
-    // Create session in backend with the pre-generated UUID
-    const session = await chatService.createSession(
-      agent.wid,
-      aid,
-      data.person?.id,
-      data.sessionId // ✅ Pass the UUID we already generated
-    );
-
-    //save to local storage
-    saveLocalSession(aid, session.id);
-
-    //update query data
-    qc.setQueryData(chatInitKey(aid), {
-      ...data,
-      session: session,
-      isSessionInDB: true,
-    });
-    return session;
-  };
-
   const updatePerson = (newPerson: IPerson) => {
     qc.setQueryData(chatInitKey(aid), (old: any) => {
       if (!old) return old;
@@ -95,8 +69,9 @@ export const useChatInit = (aid: string) => {
       };
     });
 
-    // Update session in backend if it exists
-    if (data?.isSessionInDB && data?.sessionId) {
+    // Update session in backend if sessionId exists
+    // Backend handles all pastSessionIds updates automatically
+    if (data?.sessionId) {
       chatService.updateSession(aid, data.sessionId, {
         personId: newPerson.id,
       });
@@ -107,10 +82,8 @@ export const useChatInit = (aid: string) => {
     session: data?.session,
     person: data?.person,
     deviceId: data?.deviceId,
-    sessionId: data?.sessionId!,
-    isSessionInDB: data?.isSessionInDB,
+    sessionId: data?.sessionId || "",
     isLoading,
-    createNewSession,
     updatePerson,
     error,
   };

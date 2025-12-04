@@ -235,20 +235,7 @@ const MessageParts = memo(
           );
 
           if (isLast && !hasSubsequentText) {
-            return <MessageLoading key={index} />;
-            // return (
-            //   <div className="" key={index}>
-            //     <div className="flex gap-1.5 py-1">
-            //       {[0, 0.13, 0.3].map((delay, i) => (
-            //         <div
-            //           key={i}
-            //           className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
-            //           style={{ animationDelay: `${delay}s` }}
-            //         />
-            //       ))}
-            //     </div>
-            //   </div>
-            // );
+            return <MessageLoading key={index} style={{ padding: 0 }} />;
           }
           return null;
         }
@@ -257,7 +244,7 @@ const MessageParts = memo(
           return (
             <div
               key={index}
-              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
+              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0 "
             >
               <Streamdown components={streamdownComponents}>
                 {part.text}

@@ -109,7 +109,7 @@ export const InfoSidebar = ({
     person.pastSessionIds && person.pastSessionIds.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-card">
       {/* Header */}
       <div className="px-5 py-6 border-b border-border/50">
         <div className="flex items-center gap-3">

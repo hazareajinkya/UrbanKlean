@@ -24,52 +24,71 @@ import {
   getLocalDeviceId,
   saveLocalSession,
 } from "../../components/chat/chat-utils";
+import peopleService from "./people-service";
 
 class ChatService {
   async createSession(
     wid: string,
     aid: string,
     personId?: string,
-    sessionId?: string
+    sessionId?: string,
+    providerId?: string
   ) {
-    // const deviceId = getLocalDeviceId(wid);
-
     const session = generateDefaultSession(
       wid,
       aid,
       "web",
-      undefined,
-      // deviceId,
+      providerId,
       sessionId
     );
+
     if (personId) {
       session.personId = personId;
+      peopleService.updatePastSessionIds(wid, personId, session.id);
     }
+
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+
     return session;
   }
 
   async updateSession(aid: string, sid: string, updates: Partial<ISession>) {
     const ref = doc(db, `agents/${aid}/sessions/${sid}`);
+    const session = updates.personId ? await this.getSession(sid, aid) : null;
+
     await updateDoc(ref, {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
+
+    // Update pastSessionIds if personId changed
+    if (
+      updates.personId &&
+      session?.wid &&
+      session?.personId !== updates.personId
+    ) {
+      await peopleService.updatePastSessionIds(
+        session.wid,
+        updates.personId,
+        sid
+      );
+    }
   }
 
   async ensureSession(
     wid: string,
     aid: string,
     sid: string,
-    personId?: string
+    personId?: string,
+    providerId?: string
   ) {
     let session = await this.getSession(sid, aid);
 
     if (!session) {
       // Session doesn't exist, create it
-      session = await this.createSession(wid, aid, personId, sid);
+      session = await this.createSession(wid, aid, personId, sid, providerId);
     } else if (personId && session.personId !== personId) {
-      // Session exists but personId changed, update it
+      // Session exists but personId changed or being added, update it
       await this.updateSession(aid, sid, { personId });
       session.personId = personId;
     }

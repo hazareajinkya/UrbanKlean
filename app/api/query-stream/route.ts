@@ -60,7 +60,13 @@ export async function POST(req: Request) {
     if (!agent) throw new Error("Agent not found");
 
     // Ensure session exists in DB before processing the message
-    await chatService.ensureSession(agent.wid, aid, sessionId, personId);
+    await chatService.ensureSession(
+      agent.wid,
+      aid,
+      sessionId,
+      personId,
+      deviceId
+    );
 
     // Save the user message after session is ensured
     const userMessage = messages[messages.length - 1];

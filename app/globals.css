@@ -178,8 +178,8 @@ spinner {
 }
 
 .spinner > div {
-  width: 7px;
-  height: 7px;
+  width: 5.5px;
+  height: 5.5px;
   background-color: #777;
 
   border-radius: 100%;
@@ -206,7 +206,7 @@ spinner {
     transform: translateY(0px);
   }
   40% {
-    -webkit-transform: translateY(-7px);
-    transform: translateY(-7px);
+    -webkit-transform: translateY(-5.5px);
+    transform: translateY(-5.5px);
   }
 }
