@@ -27,22 +27,41 @@ import {
 import peopleService from "@/lib/services/people-service";
 import { IPerson } from "@/lib/types/person";
 import { queryClient } from "@/lib/clients/query-client";
+import { Button } from "@/components/ui/button";
 
 export default function ChatPage() {
   const { aid } = useParams() as { aid: string };
   const searchParams = useSearchParams();
   const [input, setInput] = useState("");
   const lastToolRef = useRef<string | null>(null);
+  const sessionRef = useRef<ISession | undefined>(undefined);
 
   const [isInitializing, setIsInitializing] = useState(true);
-
   // Check if running in widget mode
   const isWidget = searchParams.get("widget") === "true";
 
   const { agent } = useAgent(aid);
 
-  const { session, person, deviceId, isLoading, error, refresh, updatePerson } =
-    useChatInit(aid);
+  let currentSession: ISession | undefined;
+  const {
+    session,
+    person,
+    deviceId,
+    isLoading,
+    error,
+    refresh,
+    updatePerson,
+    updateSession,
+  } = useChatInit(aid);
+  useEffect(() => {
+    if (session) {
+      console.warn("Session is found");
+      sessionRef.current = session;
+    } else {
+      console.warn("Session is not found");
+    }
+    console.warn("Session: ", sessionRef.current?.id);
+  }, [session]);
 
   // const {
   //   session,
@@ -55,9 +74,15 @@ export default function ChatPage() {
   const getPersonId = () => {
     return session?.personId;
   };
+  console.log("session: ", session);
 
   const initialMessages = useMemo(() => {
-    if (!agent || !session) return [];
+    if (!agent) return [];
+    if (!session)
+      return [
+        ...(person ? [defaultDataMessage(person)] : []),
+        getGreetingMsg(agent),
+      ];
     return [
       ...(person ? [defaultDataMessage(person)] : []),
       getGreetingMsg(agent),
@@ -66,20 +91,24 @@ export default function ChatPage() {
   }, [agent, session, person]);
 
   const { messages, sendMessage, setMessages, status } = useChat<IChatMessage>({
-    id: session?.id,
+    id: sessionRef.current?.id,
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/query-stream",
       body: () => {
         const deviceId = agent ? getLocalDeviceId(agent.wid) : undefined;
-        const personId = queryClient.getQueryData<{ session: ISession }>(
-          chatInitKey(aid)
-        )?.session?.personId;
+        console.log("Testing : ", {
+          aid,
+          deviceId: deviceId,
+          personId: sessionRef.current?.personId,
+          sessionId: sessionRef.current?.id,
+        });
 
         return {
           aid,
           deviceId: deviceId,
-          personId: personId,
+          personId: sessionRef.current?.personId,
+          sessionId: sessionRef.current?.id,
         };
       },
     }),
@@ -118,25 +147,35 @@ export default function ChatPage() {
       const prevMessages = messages.messages.slice(0, -1);
       setMessages([...prevMessages, aimsg]);
 
-      chatService.saveMessage(aid, session!.id, aimsg);
+      chatService.saveMessage(aid, sessionRef.current!.id, aimsg);
     },
   });
 
+  const ensureSession = async (msg: IChatMessage) => {
+    if (!sessionRef.current) {
+      console.log("Creating new session");
+      const newSession = await updateSession();
+      sessionRef.current = newSession.session;
+    }
+    return sessionRef.current!;
+  };
   const handleChatSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
     options: ChatRequestOptions
   ) => {
     e.preventDefault();
-    console.log("session1: ", session);
-
     if (!input.trim() || !aid || !agent) return;
 
     const msg = defaultUserMessage(input);
+    let currentSession = await ensureSession(msg);
+
     sendMessage({
       text: input,
       metadata: { createdAt: new Date().toISOString() },
     });
-    chatService.saveMessage(aid, session!.id, msg);
+
+    chatService.saveMessage(aid, currentSession.id, msg);
+
     setInput("");
   };
 
@@ -196,9 +235,7 @@ export default function ChatPage() {
       };
     }
   }, [isWidget]);
-
   if (!agent) return <div>Agent not found</div>;
-
   return (
     <div
       className={`h-full flex flex-col overflow-hidden bg-white relative ${

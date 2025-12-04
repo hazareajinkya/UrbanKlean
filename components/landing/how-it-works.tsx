@@ -716,9 +716,9 @@ export const HowItWorks = () => {
           </div>
         ) : (
           /* Desktop: Original Layout */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 section-content-padding items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 section-content-padding items-center">
             {/* Left Column: Steps List */}
-            <div className="lg:col-span-5 flex flex-col gap-4">
+            <div className="lg:col-span-5 flex flex-col gap-1">
               {steps.map((item, index) => {
                 const isActive = activeStep === index;
                 return (
@@ -726,7 +726,7 @@ export const HowItWorks = () => {
                     key={index}
                     onClick={() => handleStepChange(index)}
                     className={cn(
-                      "group relative p-6 rounded-lg transition-all duration-300 cursor-pointer border border-transparent",
+                      "group relative py-4 px-6 rounded-lg transition-all duration-300 cursor-pointer border border-transparent",
                       isActive
                         ? "bg-white border-border/50"
                         : "hover:bg-white/50  hover:border-border/30"
@@ -789,7 +789,7 @@ export const HowItWorks = () => {
             </div>
 
             {/* Right Column: Visual Display */}
-            <div className="lg:col-span-7 h-[400px] md:h-[500px] lg:h-[600px] sticky top-24">
+            <div className="lg:col-span-7 h-[400px] md:h-[500px] lg:h-[500px] sticky top-24">
               <div className="relative w-full h-full rounded-3xl border border-border/60 shadow-2xl shadow-neutral-200/50 bg-white/50 backdrop-blur-xl overflow-hidden p-2">
                 <div className="absolute inset-0 bg-grid-neutral-100/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
                 <AnimatePresence mode="wait">

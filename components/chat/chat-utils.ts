@@ -8,7 +8,7 @@ import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
 import lsMap from "@/lib/utils/ls-map";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ModelMessage } from "ai";
+import { cosineSimilarity, ModelMessage } from "ai";
 import { arrayUnion } from "firebase/firestore";
 import { v4 } from "uuid";
 
@@ -65,7 +65,7 @@ export const initChat = async (agent: IAgent) => {
   return deviceId;
 };
 
-const initChat2 = async (agent: IAgent) => {
+const initChat2 = async (agent: IAgent, test?: boolean) => {
   const deviceId = getOrCreateDeviceId(agent.wid);
   const sid = getLocalSession(agent.id);
 
@@ -91,9 +91,11 @@ const initChat2 = async (agent: IAgent) => {
 
   // Try to get open session
   let session = sessions[0];
+  console.log("session : ", session);
 
-  // Create new session if needed
-  if (!session) {
+  // // Fix : Don't create new session if person is not found
+  // // Create new session if needed
+  if (!session && test) {
     session = await createNewSession(agent.wid, agent.id, person);
   }
 
@@ -122,15 +124,73 @@ const initChat2 = async (agent: IAgent) => {
   return { session, person, deviceId };
 };
 
+const chatInit3 = async (agent: IAgent) => {
+  const deviceId = getOrCreateDeviceId(agent.wid);
+  const sid = getLocalSession(agent.id);
+
+  const sessionsPromise = sid
+    ? chatService.getSessionsByFilter({
+        sid,
+        aid: agent.id,
+        status: "open",
+        nLimit: 1,
+      })
+    : Promise.resolve([]);
+
+  const personPromise = peopleService.identify({
+    wid: agent.wid,
+    externalIds: [{ id: deviceId, provider: "web" }],
+  });
+
+  //parallelized for better performance
+  const [sessions, { person }] = await Promise.all([
+    sessionsPromise,
+    personPromise,
+  ]);
+  let session = sessions[0];
+
+  return { session, person, deviceId };
+};
+
+const createNewSession2 = async (
+  agent: IAgent,
+  person: IPerson,
+  deviceId: string
+) => {
+  let session = await createNewSession(agent.wid, agent.id, person);
+  // Update session with personId if necessary
+  if (person?.id && session.personId !== person.id) {
+    await chatService.updateSession(agent.id, session.id, {
+      personId: person.id,
+    });
+
+    session = { ...session, personId: person.id };
+  }
+  //check if session id exists in person pastSessionIds
+  if (person?.id && !person.pastSessionIds.includes(session.id)) {
+    const pastSessionIds = Array.from(
+      new Set([...(person.pastSessionIds ?? []), session.id])
+    );
+    peopleService.update({
+      wid: agent.wid,
+      personId: person.id,
+      updates: {
+        pastSessionIds: pastSessionIds,
+      },
+    });
+  }
+  return { session, person, deviceId };
+};
+
 export const chatInitKey = (aid: string) => ["chat-init", aid];
 
-export const useChatInit = (aid: string) => {
+export const useChatInit = (aid: string, test?: boolean) => {
   const { agent } = useAgent(aid);
   const qc = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: chatInitKey(aid),
-    queryFn: () => initChat2(agent!),
+    queryFn: () => chatInit3(agent!),
     enabled: !!agent,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 30,
@@ -152,6 +212,31 @@ export const useChatInit = (aid: string) => {
       };
     });
   };
+  const updateSession = async () => {
+    const chatInit = qc.getQueryData(chatInitKey(aid)) as {
+      person: IPerson;
+      session: ISession;
+      deviceId: string;
+    };
+    const chat = await createNewSession2(
+      agent!,
+      chatInit?.person,
+      chatInit?.deviceId
+    );
+    qc.setQueryData(chatInitKey(aid), (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        person: chat.person,
+        session: chat.session,
+      };
+    });
+    return {
+      ...chat,
+      person: chat.person,
+      session: chat.session,
+    };
+  };
 
   return {
     agent,
@@ -162,6 +247,7 @@ export const useChatInit = (aid: string) => {
     error: error,
     refresh,
     updatePerson,
+    updateSession,
   };
 };
 

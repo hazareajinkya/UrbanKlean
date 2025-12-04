@@ -41,13 +41,15 @@ export async function POST(req: Request) {
       aid,
       deviceId,
       personId,
-      id: sessionId,
-    }: {
+      sessionId,
+    }: // id: sessionId,
+    {
       messages: IChatMessage[];
-      id: string;
+      // id: string;
       aid: string;
       deviceId: string;
       personId?: string;
+      sessionId: string;
     } = await req.json();
 
     console.log("sessionId: ", sessionId);
