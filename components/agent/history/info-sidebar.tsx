@@ -13,9 +13,16 @@ import {
   Clock,
   MessageSquare,
   Copy,
+  Link2,
 } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history-store";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Link from "next/link";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -134,7 +141,7 @@ export const InfoSidebar = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Contact Info */}
-        {hasContactInfo && (
+        {(hasContactInfo || currentSession.fromPage) && (
           <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Contact</SectionLabel>
             <div className="space-y-1">
@@ -146,6 +153,35 @@ export const InfoSidebar = ({
               ))}
               {person.location && (
                 <CopyableItem icon={MapPin} value={person.location} />
+              )}
+              {currentSession.fromPage && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={currentSession.fromPage}
+                      target="_blank"
+                      className="flex items-center gap-2.5 min-w-0 hover:bg-secondary/50 -mx-2 px-2 py-1 rounded-md transition-colors"
+                    >
+                      <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs text-foreground truncate flex-1">
+                        {(() => {
+                          try {
+                            return (
+                              new URL(currentSession.fromPage).pathname || "/"
+                            );
+                          } catch {
+                            return currentSession.fromPage;
+                          }
+                        })()}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs break-all">
+                      {currentSession.fromPage}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>

@@ -219,12 +219,11 @@ const SessionList = ({
                 }`}
                 onClick={() => setcurrentSession(session)}
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-medium text-foreground mb-0.5 ">
                     {person ? person.name : renderVisitorID(session)}
-                    {/* {renderVisitorID(session)} */}
                   </h4>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {formatHistoryDateTime(session.updatedAt)}
                   </p>
                 </div>
@@ -303,8 +302,8 @@ const HistoryMessageList = ({
       {currentSession && (
         <>
           <div className="border-b bg-muted h-14 px-4 flex justify-between items-center flex-shrink-0">
-            <div className="w-full">
-              <h4 className="text-sm font-medium text-foreground mb-0.5 ">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-foreground mb-0.5">
                 {currentSession.personId && persons[currentSession.personId]
                   ? persons[currentSession.personId].name
                   : `Visitor-${currentSession.id.split("-")[0]}`}
@@ -318,7 +317,7 @@ const HistoryMessageList = ({
                 variant={"ghost"}
                 size={"icon"}
                 onClick={() => onCollapsedChange(!isCollapsed)}
-                className="transition-all text-muted-foreground hover:text-primary pr-0 w-min"
+                className="transition-all text-muted-foreground hover:text-primary pr-0 w-min flex-shrink-0"
               >
                 {isCollapsed ? (
                   <PanelRightOpen className="size-4.5" />

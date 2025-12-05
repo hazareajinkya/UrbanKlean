@@ -27,17 +27,20 @@ export async function POST(req: Request) {
       deviceId,
       personId,
       sessionId,
+      fromPage,
     }: {
       messages: IChatMessage[];
       aid: string;
       deviceId: string;
       personId?: string;
       sessionId: string;
+      fromPage?: string;
     } = await req.json();
 
     console.log("sessionId: ", sessionId);
     console.log("deviceId: ", deviceId);
     console.log("personId: ", personId);
+    console.log("fromPage: ", fromPage);
 
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0] ||
@@ -61,7 +64,8 @@ export async function POST(req: Request) {
       aid,
       sessionId,
       personId,
-      deviceId
+      deviceId,
+      fromPage
     );
 
     // Save the user message after session is ensured

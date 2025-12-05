@@ -21,6 +21,7 @@ export interface ISession {
   channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
+  fromPage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,7 +53,8 @@ export const generateDefaultSession = (
   aid: string,
   channel: IChannelProvider,
   pid?: string,
-  id?: string
+  id?: string,
+  fromPage?: string
 ): ISession => {
   return {
     id: id ?? v4(),
@@ -62,6 +64,7 @@ export const generateDefaultSession = (
     status: "open",
     providerId: pid || "",
     messages: [],
+    ...(fromPage && { fromPage }),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

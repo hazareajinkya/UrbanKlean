@@ -29,6 +29,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const lastToolRef = useRef<string | null>(null);
   const isWidget = searchParams.get("widget") === "true";
+  const fromPage = searchParams.get("fromPage") || undefined;
   const { agent } = useAgent(aid);
   const { sessionId, session, person, isLoading, updatePerson } =
     useChatInit(aid);
@@ -62,9 +63,10 @@ export default function ChatPage() {
 
         return {
           aid,
-          deviceId: deviceId,
-          personId: personId,
-          sessionId: sessionId,
+          deviceId,
+          personId,
+          sessionId,
+          fromPage,
         };
       },
     }),

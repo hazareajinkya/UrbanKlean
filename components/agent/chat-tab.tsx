@@ -15,6 +15,11 @@ interface ChatTabProps {
 }
 
 export default function ChatTab({ agent }: ChatTabProps) {
+  const fromPage =
+    typeof window !== "undefined"
+      ? encodeURIComponent(window.location.href)
+      : "";
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-9 place-items-center ">
       {/* Left Column - Mobile Chat Widget */}
@@ -24,7 +29,7 @@ export default function ChatTab({ agent }: ChatTabProps) {
           <div className="bg-gray-900 p-2 rounded-2xl shadow-2xl">
             <div className="bg-white rounded-xl overflow-hidden">
               <iframe
-                src={`/chat/${agent.id}`}
+                src={`/chat/${agent.id}?fromPage=${fromPage}`}
                 className="w-[355px] h-[647px] border-0"
                 title={`Chat interface for ${agent.customization.name}`}
                 sandbox="allow-scripts allow-same-origin allow-forms"

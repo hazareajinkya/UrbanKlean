@@ -32,14 +32,16 @@ class ChatService {
     aid: string,
     personId?: string,
     sessionId?: string,
-    providerId?: string
+    providerId?: string,
+    fromPage?: string
   ) {
     const session = generateDefaultSession(
       wid,
       aid,
       "web",
       providerId,
-      sessionId
+      sessionId,
+      fromPage
     );
 
     if (personId) {
@@ -80,13 +82,21 @@ class ChatService {
     aid: string,
     sid: string,
     personId?: string,
-    providerId?: string
+    providerId?: string,
+    fromPage?: string
   ) {
     let session = await this.getSession(sid, aid);
 
     if (!session) {
       // Session doesn't exist, create it
-      session = await this.createSession(wid, aid, personId, sid, providerId);
+      session = await this.createSession(
+        wid,
+        aid,
+        personId,
+        sid,
+        providerId,
+        fromPage
+      );
     } else if (personId && session.personId !== personId) {
       // Session exists but personId changed or being added, update it
       await this.updateSession(aid, sid, { personId });
