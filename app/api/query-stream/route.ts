@@ -1,40 +1,17 @@
 import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
-import { openai } from "@ai-sdk/openai";
-import {
-  convertToCoreMessages,
-  convertToModelMessages,
-  createIdGenerator,
-  stepCountIs,
-  streamText,
-  Tool,
-  tool,
-  ToolSet,
-  UIMessage,
-} from "ai";
-import { google } from "@ai-sdk/google";
+import { stepCountIs, streamText, tool, ToolSet } from "ai";
 import { z } from "zod";
-import qdClient from "@/lib/clients/qdrant-client";
-import embeddingService from "@/lib/services/embedding-service";
-import knowledgeService from "@/lib/services/knowledge-service";
-import { latency } from "@/lib/utils";
 import actionService from "@/lib/services/action-service";
-import axios from "axios";
-import workspaceService from "@/lib/services/workspace-service";
-import workflowservice from "@/lib/services/workflow-service";
 import { collectInformation } from "@/lib/tools/collect-info";
-import { IAgent } from "@/lib/types/agent";
 import { IAction } from "@/lib/types/actions";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
-import {
-  coreSystemPrompt,
-  experimentalSystemPrompt,
-} from "@/prompts/system-prompt";
 import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
 import { v4 } from "uuid";
+import { ratelimit } from "@/lib/clients/upstash-client";
 
 export async function POST(req: Request) {
   try {
@@ -55,6 +32,19 @@ export async function POST(req: Request) {
     console.log("sessionId: ", sessionId);
     console.log("deviceId: ", deviceId);
     console.log("personId: ", personId);
+
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0] ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+
+    const { success } = await ratelimit.limit(ip);
+
+    if (!success) {
+      return new Response(getRandomRateLimitMessage(), {
+        status: 429,
+      });
+    }
 
     const agent = await agentService.fetchAgent(aid);
     if (!agent) throw new Error("Agent not found");
@@ -152,4 +142,21 @@ const getLastMessage = (messages: IChatMessage[]): string => {
   return messages[messages.length - 1].parts
     .map((part) => (part.type === "text" ? part.text : ""))
     .join("");
+};
+
+// Change we needed
+const rateLimitMessages = [
+  "Too many messages — try again in a moment.",
+  "Hold on a sec, you're sending a bit fast.",
+  "One moment, please slow down.",
+  "You're going a little fast — try again soon.",
+  "Please wait a moment before sending more.",
+  "Give it a sec and try again.",
+  "Hang tight — you're sending too quickly.",
+  "A quick pause, then try again.",
+];
+const getRandomRateLimitMessage = () => {
+  return rateLimitMessages[
+    Math.floor(Math.random() * rateLimitMessages.length)
+  ];
 };

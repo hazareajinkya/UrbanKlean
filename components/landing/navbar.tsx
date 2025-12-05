@@ -5,16 +5,18 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MotionValue, useMotionValueEvent } from "framer-motion";
+import { useDemoModal } from "./demo-modal";
 
 export const Navbar = ({
   scrollYProgress,
 }: {
-  scrollYProgress: MotionValue<number>;
+  scrollYProgress?: MotionValue<number>;
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isInside, setIsInside] = useState(false);
 
+  const { openDemoModal } = useDemoModal();
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > window.innerWidth * 0.2);
@@ -28,15 +30,18 @@ export const Navbar = ({
 
   const navLinks = [
     { href: "#features", label: "Features" },
-    { href: "#pricing", label: "Pricing" },
-    { href: "#resources", label: "Resources" },
-    { href: "#about", label: "About" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/blog", label: "Resources" },
+    { href: "/about", label: "About" },
   ];
 
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (v > 0.477 && v < 0.99) setIsInside(true);
-    else setIsInside(false);
-  });
+  if (scrollYProgress) {
+    useMotionValueEvent(scrollYProgress, "change", (v) => {
+      if (v > 0.477 && v < 0.99) setIsInside(true);
+      else setIsInside(false);
+    });
+  }
+
   return (
     <>
       <nav
@@ -81,7 +86,7 @@ export const Navbar = ({
             ))}
             <div className="flex items-center gap-6 ml-0">
               <Link
-                href="/signin"
+                href="/auth"
                 aria-label="Sign in"
                 tabIndex={0}
                 className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -96,8 +101,8 @@ export const Navbar = ({
               >
                 Book a demo
               </Link> */}
-              <Link
-                href="/demo"
+              <button
+                onClick={openDemoModal}
                 aria-label="Book Demo"
                 tabIndex={0}
                 className={`text-sm rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -107,7 +112,7 @@ export const Navbar = ({
                 }`}
               >
                 Talk to us
-              </Link>
+              </button>
               {/* <Link
                 href="/demo"
                 aria-label="Book Demo"
@@ -178,13 +183,12 @@ export const Navbar = ({
               >
                 Sign in
               </Link>
-              <Link
-                href="/demo"
-                onClick={handleCloseMenu}
+              <button
+                onClick={openDemoModal}
                 className="mt-2 py-2 px-3 text-sm font-medium text-center rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 Book a demo
-              </Link>
+              </button>
             </div>
           </div>
         </div>

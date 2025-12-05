@@ -19,7 +19,7 @@ import {
   Rss,
   Settings2,
 } from "lucide-react";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
@@ -34,6 +34,7 @@ import {
   navMembersShortcut,
   navSettingsShortcut,
 } from "@/lib/utils/shortcuts";
+import { useSession } from "next-auth/react";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -45,6 +46,10 @@ export default function WorkspaceLayout({
   const { wid } = useParams() as { wid: string };
   const { workspace, isLoading } = useWorkspace(wid);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { data } = useSession();
+  if (workspace?.ownerId !== data?.user?.email) {
+    redirect("/workspaces");
+  }
 
   if (isLoading) {
     return (

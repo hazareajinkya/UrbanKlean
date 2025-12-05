@@ -17,6 +17,7 @@ import {
 import {
   defaultAImessage,
   defaultDataMessage,
+  defaultUserMessage,
   IChatMessage,
 } from "@/lib/types/session";
 import { IPerson } from "@/lib/types/person";
@@ -31,7 +32,7 @@ export default function ChatPage() {
   const { agent } = useAgent(aid);
   const { sessionId, session, person, isLoading, updatePerson } =
     useChatInit(aid);
-
+  const lastUserMessageRef = useRef<string | null>(null);
   const messagesLoading = isLoading;
 
   const initialMessages = useMemo(() => {
@@ -75,12 +76,17 @@ export default function ChatPage() {
       if (toolCall?.toolCallId) {
         lastToolRef.current = toolCall.toolCallId;
       }
+      lastUserMessageRef.current = null;
     },
 
     onError: (error) => {
-      console.error("Error: ", error);
-      const aimsg = defaultAImessage("Error: " + error.message);
-      setMessages((prev) => [...prev, aimsg]);
+      // Never mind if we remove this the error message will not shown
+      setTimeout(() => {
+        const usermsg = defaultUserMessage(lastUserMessageRef.current || "");
+        const aimsg = defaultAImessage(error.message);
+        setMessages((prev) => [...prev, usermsg]);
+        setMessages((prev) => [...prev, aimsg]);
+      }, 0);
     },
     onFinish: (messages) => {
       const lastMessage = messages.messages[
@@ -108,6 +114,7 @@ export default function ChatPage() {
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || !aid || !agent) return;
+    lastUserMessageRef.current = input;
     sendMessage({
       text: input,
       metadata: { createdAt: new Date().toISOString() },

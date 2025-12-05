@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { useDemoModal } from "./demo-modal";
 
 const checklistItems = [
   "No credit card required",
@@ -13,8 +14,9 @@ const checklistItems = [
 ];
 
 export const CtaSection = () => {
+  const { openDemoModal } = useDemoModal();
   return (
-    <section className="section-container border py-24 md:py-32 bg-background overflow-hidden dark">
+    <section className="section-container border py-24 md:py-32 bg-background overflow-hidden ">
       <div className="">
         <div className="bg-card border border-border overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -32,19 +34,11 @@ export const CtaSection = () => {
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
                 <Button
-                  asChild
+                  onClick={openDemoModal}
                   size="lg"
                   className="px-8 py-6 text-base rounded-full bg-foreground text-background hover:bg-foreground/90"
                 >
-                  <Link
-                    href="https://calendly.com/echorift-ai"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Book a Demo"
-                    className="flex items-center gap-2"
-                  >
-                    Book a Demo
-                  </Link>
+                  Book a Demo
                 </Button>
               </div>
 

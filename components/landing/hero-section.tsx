@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useDemoModal } from "./demo-modal";
 
 export const HeroSection = () => {
+  const { openDemoModal } = useDemoModal();
   return (
     <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
       <div className="flex flex-col items-center text-center mt-8 sm:mt-12 md:mt-18">
@@ -17,20 +19,12 @@ export const HeroSection = () => {
 
         <div className="flex justify-center w-full mt-6 sm:mt-8">
           <Button
-            asChild
+            onClick={openDemoModal}
             size="lg"
             className="px-8 py-6 text-base rounded-full bg-foreground text-background hover:bg-foreground/90 hover:scale-105 hover:shadow-lg active:scale-100"
             aria-label="Book a Demo"
           >
-            <Link
-              href="https://calendly.com/echorift-ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              tabIndex={0}
-              aria-label="Book a Demo"
-            >
-              Book a Demo
-            </Link>
+            Book a Demo
           </Button>
         </div>
       </div>
