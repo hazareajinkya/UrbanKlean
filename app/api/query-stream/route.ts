@@ -11,7 +11,13 @@ import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
 import { v4 } from "uuid";
-import { ratelimit } from "@/lib/clients/upstash-client";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(20, "1 m"),
+});
 
 export async function POST(req: Request) {
   try {

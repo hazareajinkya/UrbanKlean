@@ -32,9 +32,8 @@ export default function ChatPage() {
   const { agent } = useAgent(aid);
   const { sessionId, session, person, isLoading, updatePerson } =
     useChatInit(aid);
-  const lastUserMessageRef = useRef<string | null>(null);
-  const messagesLoading = isLoading;
 
+  const messagesLoading = isLoading;
   const initialMessages = useMemo(() => {
     if (!agent) return [];
     if (!session)
@@ -76,17 +75,12 @@ export default function ChatPage() {
       if (toolCall?.toolCallId) {
         lastToolRef.current = toolCall.toolCallId;
       }
-      lastUserMessageRef.current = null;
     },
 
     onError: (error) => {
-      // Never mind if we remove this the error message will not shown
-      setTimeout(() => {
-        const usermsg = defaultUserMessage(lastUserMessageRef.current || "");
-        const aimsg = defaultAImessage(error.message);
-        setMessages((prev) => [...prev, usermsg]);
-        setMessages((prev) => [...prev, aimsg]);
-      }, 0);
+      console.error(error.message);
+      const aimsg = defaultAImessage(error.message);
+      setMessages((prev) => [...prev, aimsg]);
     },
     onFinish: (messages) => {
       const lastMessage = messages.messages[
@@ -114,7 +108,6 @@ export default function ChatPage() {
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || !aid || !agent) return;
-    lastUserMessageRef.current = input;
     sendMessage({
       text: input,
       metadata: { createdAt: new Date().toISOString() },
