@@ -6,10 +6,10 @@ import { IWorkspace } from "./workspace";
 export interface IAgent {
   id: string;
   wid: string;
-
   customization: IAgentChatCustomization;
   channels: string[];
   settings: IAgentSettings;
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
@@ -37,7 +37,7 @@ export const generateDefaultAgent = (
   return {
     id: id,
     wid: wid,
-
+    ownerId: workspace.ownerId,
     channels: [],
     customization: {
       name: name,

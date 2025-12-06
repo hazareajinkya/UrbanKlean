@@ -1,5 +1,6 @@
 import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
+import creditService from "@/lib/services/credit-service";
 import { stepCountIs, streamText, tool, ToolSet } from "ai";
 import { z } from "zod";
 import actionService from "@/lib/services/action-service";
@@ -57,6 +58,13 @@ export async function POST(req: Request) {
 
     const agent = await agentService.fetchAgent(aid);
     if (!agent) throw new Error("Agent not found");
+
+    const creditInfo = await creditService.getCredit(agent.ownerId);
+    if (!creditInfo || creditInfo.availableCredit < 2) {
+      return new Response("Insufficient credits", {
+        status: 400,
+      });
+    }
 
     // Ensure session exists in DB before processing the message
     await chatService.ensureSession(
@@ -120,6 +128,7 @@ export async function POST(req: Request) {
         } as IChatMessage;
 
         await chatService.saveMessage(agent.id, sessionId, aiMessage);
+        await creditService.decreaseCredit(2, creditInfo);
       },
     });
   } catch (error: any) {

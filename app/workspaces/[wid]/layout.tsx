@@ -35,6 +35,7 @@ import {
   navSettingsShortcut,
 } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
+import { useMember } from "@/lib/hooks/members/use-members";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -46,8 +47,40 @@ export default function WorkspaceLayout({
   const { wid } = useParams() as { wid: string };
   const { workspace, isLoading } = useWorkspace(wid);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { data } = useSession();
-  if (workspace?.ownerId !== data?.user?.email) {
+  const { data: session, status } = useSession();
+  const userEmail = session?.user?.email ?? "";
+  const { data: member, isLoading: isMemberLoading } = useMember(
+    wid,
+    userEmail
+  );
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Authenticating...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" || !session?.user?.email) {
+    redirect("/auth");
+  }
+
+  if (isMemberLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Checking access...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!member) {
     redirect("/workspaces");
   }
 
