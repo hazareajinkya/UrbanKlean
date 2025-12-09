@@ -7,6 +7,7 @@ export interface IWorkspace {
   domains: string[];
   thumbnail: string;
   ownerId: string;
+  folders: { id: string; name: string }[];
   type: IWorkspaceType;
   info: {
     email: string;
@@ -28,6 +29,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     name: "",
     oneLiner: "",
     ownerId: "",
+    folders: [],
     domains: [],
     info: {
       businessType: "",

@@ -87,7 +87,7 @@ class SlackBotService {
         stopWhen: stepCountIs(5),
         tools: {
           // collectInformation: collectInformation(agent.wid),
-          searchKnowledge: searchKnowledge(agent.wid),
+          searchKnowledge: searchKnowledge(agent),
         },
       });
       console.log("result.text: ", result.text);

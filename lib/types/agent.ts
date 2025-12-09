@@ -9,6 +9,7 @@ export interface IAgent {
   customization: IAgentChatCustomization;
   channels: string[];
   settings: IAgentSettings;
+  knowledgeFolders: string[];
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -39,6 +40,7 @@ export const generateDefaultAgent = (
     wid: wid,
     ownerId: workspace.ownerId,
     channels: [],
+    knowledgeFolders: [],
     customization: {
       name: name,
       greetingMessage: "Hello, how can I help you today?",

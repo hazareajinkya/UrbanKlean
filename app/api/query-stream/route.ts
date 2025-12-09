@@ -107,7 +107,7 @@ export async function POST(req: Request) {
           "web",
           deviceId
         ),
-        searchKnowledge: searchKnowledge(agent.wid),
+        searchKnowledge: searchKnowledge(agent.wid, agent),
       },
 
       onError: (error) => {
@@ -132,6 +132,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error: any) {
+    console.error("Error: ", error);
     return new Response(error.message || "Error processing request", {
       status: 500,
     });

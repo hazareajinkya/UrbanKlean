@@ -1,5 +1,6 @@
 import { firecrawl } from "@/lib/clients/firecrawl";
 import knowledgeService from "@/lib/services/knowledge-service";
+import folderService from "@/lib/services/folder-service";
 import {
   errorResponse,
   serverErrorResponse,
@@ -12,15 +13,16 @@ import z from "zod";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ wid: string }> }
+  { params }: { params: Promise<{ wid: string; folderId: string }> }
 ) {
   try {
-    const { wid } = await params;
+    const { wid, folderId } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
+    if (!folderId) return errorResponse("Folder ID is required", 400);
 
     const { url } = await validateRequestBody(request);
 
-    //get page content =
+    //get page content
     const result = await firecrawl.scrape(url, {
       formats: ["markdown", "html"],
     });
@@ -32,20 +34,32 @@ export async function POST(
       title: result.metadata?.title ?? "",
     };
 
+    const websiteId = v4();
     const { chunkSize, points } = await knowledgeService.s_embedWeb(
       wid,
+      folderId,
+      websiteId,
       content,
       me
     );
 
-    await knowledgeService.s_saveSingleUrlKnowledge(wid, me, points, chunkSize);
+    await knowledgeService.s_saveSingleUrlKnowledge(
+      wid,
+      folderId,
+      me,
+      points,
+      chunkSize
+    );
+
+    // Update folder item count
+    await folderService.updateFolderItemCount(wid, folderId, "websites", 1);
 
     return successResponse(
-      { wid, url, status: "trained" },
+      { wid, folderId, websiteId, url, status: "trained" },
       "Web embedded successfully"
     );
   } catch (error) {
-    console.error("Error Training on URl ", error);
+    console.error("Error Training on URL ", error);
 
     if (error instanceof z.ZodError) {
       return errorResponse(error.message, 400);
@@ -60,20 +74,27 @@ const webEmbeddingSchema = z.object({
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ wid: string }> }
+  { params }: { params: Promise<{ wid: string; folderId: string }> }
 ) {
   try {
-    const { wid } = await params;
+    const { wid, folderId } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
+    if (!folderId) return errorResponse("Folder ID is required", 400);
 
     const { searchParams } = new URL(request.url);
     const uid = searchParams.get("uid");
 
     if (!uid) return errorResponse("URL ID is required", 400);
 
-    await knowledgeService.s_deleteWebKnowledge(wid, uid);
+    await knowledgeService.s_deleteWebKnowledge(wid, folderId, uid);
 
-    return successResponse({ wid, uid }, "Website deleted successfully");
+    // Update folder item count
+    await folderService.updateFolderItemCount(wid, folderId, "websites", -1);
+
+    return successResponse(
+      { wid, folderId, uid },
+      "Website deleted successfully"
+    );
   } catch (error) {
     console.error("Error deleting website: ", error);
     return serverErrorResponse(error);
@@ -91,3 +112,4 @@ const validateRequestBody = async (request: NextRequest) => {
     throw new Error("Failed to parse request body");
   }
 };
+

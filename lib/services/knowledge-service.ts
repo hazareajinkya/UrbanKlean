@@ -58,10 +58,16 @@ class KnowledgeService {
     }
   }
 
-  async s_embedText(wid: string, text: string) {
+  async s_embedText(
+    wid: string,
+    folderId: string,
+    textId: string,
+    text: string
+  ) {
     await this.checkCollection(wid);
+    await this.ensureIndexes(wid);
 
-    const textKnowledge = await knowledgeService.getTextKnowledge(wid);
+    const textKnowledge = await this.getTextKnowledge(wid, folderId, textId);
     const chunks = await chunkText(text);
     const chunkTexts = chunks.map((chunk) => chunk.pageContent);
     const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
@@ -75,6 +81,8 @@ class KnowledgeService {
         payload: {
           text: embedding.text,
           source: "text",
+          folderId,
+          textId,
         },
       };
     });
@@ -86,8 +94,14 @@ class KnowledgeService {
       chunkSize: embeddings.length,
     };
   }
-  async s_embedTeachContent(wid: string, content: string) {
+  async s_embedTeachContent(
+    wid: string,
+    folderId: string,
+    teachId: string,
+    content: string
+  ) {
     await this.checkCollection(wid);
+    await this.ensureIndexes(wid);
     const chunks = await chunkText(content);
     const chunkTexts = chunks.map((chunk) => chunk.pageContent);
     const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
@@ -98,6 +112,8 @@ class KnowledgeService {
         payload: {
           text: embedding.text,
           source: "teach",
+          folderId,
+          teachId,
         },
       };
     });
@@ -110,9 +126,24 @@ class KnowledgeService {
     };
   }
 
-  async s_embedPdfs(wid: string, pdf: File) {
+  async s_embedPdfs(
+    wid: string,
+    folderId: string,
+    documentId: string,
+    pdf: File
+  ) {
     await this.checkCollection(wid);
-    const buffer = Buffer.from(await pdf.arrayBuffer());
+    await this.ensureIndexes(wid);
+
+    // Get the file buffer
+    const arrayBuffer = await pdf.arrayBuffer();
+    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+      throw new Error("PDF file is empty");
+    }
+
+    const buffer = Buffer.from(arrayBuffer);
+    console.log(`Processing PDF: ${pdf.name}, size: ${buffer.length} bytes`);
+
     const chunks = await chunkPdfContent(buffer);
     const chunkTexts = chunks.map((chunk) => chunk.pageContent);
     const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
@@ -125,6 +156,8 @@ class KnowledgeService {
           text: embedding.text,
           name: pdf.name,
           source: "pdf",
+          folderId,
+          documentId,
         },
       };
     });
@@ -138,119 +171,190 @@ class KnowledgeService {
     };
   }
 
-  async s_deletePdfKnowledge(wid: string, did: string) {
-    const pdfKnowledge = await this.getPdfKnowledge(wid);
-    if (!pdfKnowledge?.files) return;
-
-    const fileToDelete = pdfKnowledge.files.find((file) => file.id === did);
-    if (!fileToDelete) return;
+  async s_deletePdfKnowledge(wid: string, folderId: string, did: string) {
+    const pdfKnowledge = await this.getPdfKnowledge(wid, folderId, did);
+    if (!pdfKnowledge) return;
 
     // Delete from Qdrant vector database
-    await qdClient.delete(wid, { points: fileToDelete.points });
-    console.log("fileToDelete: ", fileToDelete);
+    if (pdfKnowledge.points.length > 0)
+      await qdClient.delete(wid, { points: pdfKnowledge.points });
 
     // Delete file from Firebase Storage
-    if (fileToDelete.docUrl) {
-      console.log("fileToDelete.docUrl: ", fileToDelete.docUrl);
-
+    if (pdfKnowledge.docUrl) {
       try {
-        await storageService.deleteFile(fileToDelete.docUrl);
+        await storageService.deleteFile(pdfKnowledge.docUrl);
       } catch (error) {
         console.log("error: ", error);
       }
     }
 
-    // Remove from Firestore document
-    const updatedFiles = pdfKnowledge.files.filter((file) => file.id !== did);
-
-    if (updatedFiles.length === 0) {
-      // Delete the entire document if no files left
-      await deleteDoc(doc(db, `workspaces/${wid}/knowledge/pdfs`));
-    } else {
-      // Update with remaining files
-      await setDoc(
-        doc(db, `workspaces/${wid}/knowledge/pdfs`),
-        { files: updatedFiles },
-        { merge: false }
-      );
-    }
+    // Delete from Firestore
+    await deleteDoc(
+      doc(db, `workspaces/${wid}/folders/${folderId}/documents/${did}`)
+    );
   }
 
-  deleteAllPdfKnowledge = async (wid: string) => {
-    const pdfs = await knowledgeService.getPdfKnowledge(wid);
-    if (pdfs && pdfs.files) {
-      const files = pdfs.files;
-      await Promise.all(
-        files.map(async (f) => {
-          await axiosClient.delete(`/api/embeddings/${wid}/pdfs?did=${f.id}`);
-        })
-      );
-    }
-  };
-
-  async s_deleteWebKnowledge(wid: string, uid: string) {
+  async s_deleteWebKnowledge(wid: string, folderId: string, uid: string) {
     try {
-      const webKnowledge = await this.getUrlKnowledge(wid, uid);
+      const webKnowledge = await this.getUrlKnowledge(wid, folderId, uid);
       if (!webKnowledge) return;
 
       if (webKnowledge.points.length > 0)
         await qdClient.delete(wid, { points: webKnowledge.points });
 
       await deleteDoc(
-        doc(db, `workspaces/${wid}/knowledge/web/default/${uid}`)
+        doc(db, `workspaces/${wid}/folders/${folderId}/websites/${uid}`)
       );
     } catch (error: any) {
       console.log("error: ", error);
       console.log("error.data: ", error.data);
     }
   }
-  deleteAllWebKnowledge = async (wid: string) => {
+
+  async s_deleteTextKnowledge(wid: string, folderId: string, textId: string) {
     try {
-      const webKnowledge = await this.getWebKnowledge(wid);
-      if (webKnowledge.length > 0) {
-        const promises = webKnowledge.map((d) =>
-          axiosClient.delete(`/api/embeddings/${wid}/web/single?uid=${d.id}`)
+      const textKnowledge = await this.getTextKnowledge(wid, folderId, textId);
+      if (!textKnowledge) return;
+
+      // Delete from Qdrant vector database
+      if (textKnowledge.points.length > 0)
+        await qdClient.delete(wid, { points: textKnowledge.points });
+
+      // Delete from Firestore
+      await deleteDoc(
+        doc(db, `workspaces/${wid}/folders/${folderId}/texts/${textId}`)
+      );
+    } catch (error: any) {
+      console.log("error: ", error);
+      console.log("error.data: ", error.data);
+    }
+  }
+
+  async s_deleteTeachKnowledge(wid: string, folderId: string, teachId: string) {
+    try {
+      const teachKnowledge = await this.getTeachKnowledge(
+        wid,
+        folderId,
+        teachId
+      );
+      if (!teachKnowledge) return;
+
+      // Delete from Qdrant vector database
+      if (teachKnowledge.points.length > 0)
+        await qdClient.delete(wid, { points: teachKnowledge.points });
+
+      // Delete from Firestore
+      await deleteDoc(
+        doc(db, `workspaces/${wid}/folders/${folderId}/teach/${teachId}`)
+      );
+    } catch (error: any) {
+      console.log("error: ", error);
+      console.log("error.data: ", error.data);
+    }
+  }
+
+  async deleteAllTextKnowledge(wid: string) {
+    try {
+      const foldersRef = collection(db, `workspaces/${wid}/folders`);
+      const foldersSnap = await getDocs(foldersRef);
+
+      for (const folderDoc of foldersSnap.docs) {
+        const folderId = folderDoc.id;
+        const textsRef = collection(
+          db,
+          `workspaces/${wid}/folders/${folderId}/texts`
         );
-        await Promise.all(promises);
+        const textsSnap = await getDocs(textsRef);
+
+        for (const textDoc of textsSnap.docs) {
+          await this.s_deleteTextKnowledge(wid, folderId, textDoc.id);
+        }
       }
-    } catch (error) {
-      console.log("Error occured during delete web knowledge : ", error);
-      throw new Error("Failed to delete web knowledge");
+    } catch (error: any) {
+      console.error("Error deleting all text knowledge:", error);
     }
-  };
-  // Delete text knowledge
-  deleteAllTextKnowledge = async (wid: string) => {
+  }
+
+  async deleteAllTeachKnowledge(wid: string) {
     try {
-      await axiosClient.delete(`/api/embeddings/${wid}/text`);
-    } catch (error) {
-      console.log("Error occured during delete text knowledge : ", error);
-      throw new Error("Failed to delete text knowledge");
-    }
-  };
-  // Delete all tech knowledge
-  deleteAllTeachKnowledge = async (wid: string) => {
-    try {
-      const techKnowledge = await this.getAllTeachKnowledge(wid);
-      if (techKnowledge.length > 0) {
-        const promises = techKnowledge.map((t) =>
-          axiosClient.delete(`/api/embeddings/${wid}/teach?tid=${t.id}`)
+      const foldersRef = collection(db, `workspaces/${wid}/folders`);
+      const foldersSnap = await getDocs(foldersRef);
+
+      for (const folderDoc of foldersSnap.docs) {
+        const folderId = folderDoc.id;
+        const teachRef = collection(
+          db,
+          `workspaces/${wid}/folders/${folderId}/teach`
         );
-        await Promise.all(promises);
+        const teachSnap = await getDocs(teachRef);
+
+        for (const teachDoc of teachSnap.docs) {
+          await this.s_deleteTeachKnowledge(wid, folderId, teachDoc.id);
+        }
       }
-    } catch (error) {
-      console.log("Error occured during delete teach knowledge : ", error);
-      throw new Error("Failed to delete teach knowledge");
+    } catch (error: any) {
+      console.error("Error deleting all teach knowledge:", error);
     }
-  };
+  }
+
+  async deleteAllPdfKnowledge(wid: string) {
+    try {
+      const foldersRef = collection(db, `workspaces/${wid}/folders`);
+      const foldersSnap = await getDocs(foldersRef);
+
+      for (const folderDoc of foldersSnap.docs) {
+        const folderId = folderDoc.id;
+        const docsRef = collection(
+          db,
+          `workspaces/${wid}/folders/${folderId}/documents`
+        );
+        const docsSnap = await getDocs(docsRef);
+
+        for (const pdfDoc of docsSnap.docs) {
+          await this.s_deletePdfKnowledge(wid, folderId, pdfDoc.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error deleting all pdf knowledge:", error);
+    }
+  }
+
+  async deleteAllWebKnowledge(wid: string) {
+    try {
+      const foldersRef = collection(db, `workspaces/${wid}/folders`);
+      const foldersSnap = await getDocs(foldersRef);
+
+      for (const folderDoc of foldersSnap.docs) {
+        const folderId = folderDoc.id;
+        const websitesRef = collection(
+          db,
+          `workspaces/${wid}/folders/${folderId}/websites`
+        );
+        const websitesSnap = await getDocs(websitesRef);
+
+        for (const webDoc of websitesSnap.docs) {
+          await this.s_deleteWebKnowledge(wid, folderId, webDoc.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error deleting all web knowledge:", error);
+    }
+  }
 
   async s_savePDFKnowledge(
     wid: string,
+    folderId: string,
     pdf: File,
     points: string[],
     chunkSize: number
   ) {
-    const result = generateDefaultPdfKnowledge(wid, points, chunkSize);
-    const storageRef = `workspaces/${wid}/knowledge/${result.id}-${pdf.name}`;
+    const result = generateDefaultPdfKnowledge(
+      wid,
+      folderId,
+      points,
+      chunkSize
+    );
+    const storageRef = `workspaces/${wid}/folders/${folderId}/documents/${result.id}-${pdf.name}`;
 
     //upload to db
     const data = await storageService.uploadFile(pdf, storageRef, pdf.name);
@@ -260,22 +364,23 @@ class KnowledgeService {
     result.metadata = data.metadata;
 
     await setDoc(
-      doc(db, `workspaces/${wid}/knowledge/pdfs`),
-      { files: arrayUnion(result) },
-      {
-        merge: true,
-      }
+      doc(db, `workspaces/${wid}/folders/${folderId}/documents/${result.id}`),
+      result
     );
   }
 
-  async s_embedWeb(wid: string, content: string, metadata: IWebPropsMetadata) {
+  async s_embedWeb(
+    wid: string,
+    folderId: string,
+    websiteId: string,
+    content: string,
+    metadata: IWebPropsMetadata
+  ) {
     try {
       await this.checkCollection(wid);
+      await this.ensureIndexes(wid);
       if (!metadata) throw new Error("Metadata is required");
-      const webKnowledge = await knowledgeService.getUrlKnowledgeByUrl(
-        wid,
-        metadata.url as string
-      );
+      const webKnowledge = await this.getUrlKnowledge(wid, folderId, websiteId);
       const chunks = await chunkText(content);
       const chunkTexts = chunks.map((chunk) => chunk.pageContent);
       const embeddings = await embeddingService.createEmbeddingMany(chunkTexts);
@@ -292,6 +397,8 @@ class KnowledgeService {
             title: metadata.title,
             url: metadata.url,
             source: "web",
+            folderId,
+            websiteId,
           },
         };
       });
@@ -309,13 +416,19 @@ class KnowledgeService {
     }
   }
 
-  async s_startedCrawl(wid: string, baseUrl: string, title: string) {
+  async s_startedCrawl(
+    wid: string,
+    folderId: string,
+    baseUrl: string,
+    title: string
+  ) {
     const id = v4();
     await setDoc(
-      doc(db, `workspaces/${wid}/knowledge/web/default/${id}`),
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${id}`),
       {
         id,
         wid,
+        folderId,
         title,
         baseUrl,
         urls: [],
@@ -328,9 +441,9 @@ class KnowledgeService {
     return id;
   }
 
-  async s_compeletedTraining(wid: string, docId: string) {
+  async s_compeletedTraining(wid: string, folderId: string, docId: string) {
     await updateDoc(
-      doc(db, `workspaces/${wid}/knowledge/web/default/${docId}`),
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${docId}`),
       {
         status: "trained",
         updatedAt: new Date().toISOString(),
@@ -339,6 +452,7 @@ class KnowledgeService {
   }
   async s_saveSingleUrlKnowledge(
     wid: string,
+    folderId: string,
     metadata: IWebPropsMetadata,
     points: string[],
     chunkSize: number
@@ -346,6 +460,7 @@ class KnowledgeService {
     const data = generateDefaultWebKnowledge(
       v4(),
       wid,
+      folderId,
       metadata.title,
       metadata.url,
       [metadata],
@@ -354,7 +469,7 @@ class KnowledgeService {
     );
 
     await setDoc(
-      doc(db, `workspaces/${wid}/knowledge/web/default/${data.id}`),
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${data.id}`),
       data,
       { merge: true }
     );
@@ -363,13 +478,14 @@ class KnowledgeService {
 
   async s_saveMultiUrlKnowledge(
     wid: string,
+    folderId: string,
     docId: string,
     metadata: IWebPropsMetadata,
     points: string[],
     chunkSize: number
   ) {
     await updateDoc(
-      doc(db, `workspaces/${wid}/knowledge/web/default/${docId}`),
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${docId}`),
       {
         urls: arrayUnion(metadata),
         chunkSize: increment(chunkSize),
@@ -381,90 +497,193 @@ class KnowledgeService {
 
   async s_saveText(
     wid: string,
+    folderId: string,
     points: string[],
     content: string,
     chunkSize: number
   ) {
-    const data = generateDefaultTextKnowledge(wid, points, content, chunkSize);
+    const data = generateDefaultTextKnowledge(
+      wid,
+      folderId,
+      points,
+      content,
+      chunkSize
+    );
 
-    await setDoc(doc(db, `workspaces/${wid}/knowledge/text`), data, {
-      merge: true,
-    });
+    await setDoc(
+      doc(db, `workspaces/${wid}/folders/${folderId}/texts/${data.id}`),
+      data
+    );
   }
 
   async s_saveTeachKnowledge(
     wid: string,
+    folderId: string,
+    teachId: string,
     title: string,
     content: string,
     points: string[],
-    chuckSize: number
+    chunkSize: number
   ) {
     const data = generateDefaultTeachKnowledge(
       wid,
+      folderId,
       points,
       title,
       content,
-      chuckSize
+      chunkSize,
+      teachId
     );
+    console.log("teach data: ", data);
     const ref = doc(
       db,
-      `workspaces/${wid}/knowledge/teach/contents/${data.id}`
+      `workspaces/${wid}/folders/${folderId}/teach/${data.id}`
     );
     await setDoc(ref, data);
   }
 
-  async getTextKnowledge(wid: string) {
-    const snap = await getDoc(doc(db, `workspaces/${wid}/knowledge/text`));
-    const data = snap.data() as ITextKnowledge;
-    return data ?? null;
+  async getTextKnowledge(
+    wid: string,
+    folderId: string,
+    textId: string
+  ): Promise<ITextKnowledge | null> {
+    const snap = await getDoc(
+      doc(db, `workspaces/${wid}/folders/${folderId}/texts/${textId}`)
+    );
+    if (!snap.exists()) return null;
+    return snap.data() as ITextKnowledge;
   }
 
-  async getTeachKnowledge(wid: string, tid: string) {
-    const ref = doc(db, `workspaces/${wid}/knowledge/teach/contents/${tid}`);
-    const snap = await getDoc(ref);
-    const data = snap.data() as ITeachKnowledge;
-    return data ?? null;
-  }
-
-  async getAllTeachKnowledge(wid: string) {
-    const colRef = collection(db, `workspaces/${wid}/knowledge/teach/contents`);
+  async getAllTextKnowledge(
+    wid: string,
+    folderId: string
+  ): Promise<ITextKnowledge[]> {
+    const colRef = collection(
+      db,
+      `workspaces/${wid}/folders/${folderId}/texts`
+    );
     const q = query(colRef, orderBy("updatedAt", "desc"));
     const snap = await getDocs(q);
-    const data = snap.docs.map((doc) => doc.data()) as ITeachKnowledge[];
-    return data.length > 0 ? data : [];
+    return snap.docs.map((doc) => doc.data() as ITextKnowledge);
   }
 
-  async getPdfKnowledge(wid: string) {
-    const snap = await getDoc(doc(db, `workspaces/${wid}/knowledge/pdfs`));
-    const data = snap.data() as IPdfKnowledge;
-    return data ?? null;
+  async getTeachKnowledge(
+    wid: string,
+    folderId: string,
+    tid: string
+  ): Promise<ITeachKnowledge | null> {
+    const ref = doc(db, `workspaces/${wid}/folders/${folderId}/teach/${tid}`);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data() as ITeachKnowledge;
   }
 
-  async getWebKnowledge(wid: string) {
-    const snaps = await getDocs(
-      query(collection(db, `workspaces/${wid}/knowledge/web/default`))
+  async getAllTeachKnowledge(
+    wid: string,
+    folderId: string
+  ): Promise<ITeachKnowledge[]> {
+    const colRef = collection(
+      db,
+      `workspaces/${wid}/folders/${folderId}/teach`
     );
-    const data = snaps.docs.map((doc) => doc.data() as IWebKnowledge);
-    return data ?? [];
+    const q = query(colRef, orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => doc.data() as ITeachKnowledge);
   }
 
-  async getUrlKnowledge(wid: string, id: string) {
+  async getAllTeachKnowledgeAcrossFolders(wid: string) {
+    // First, get all folders
+    const foldersRef = collection(db, `workspaces/${wid}/folders`);
+    const foldersSnap = await getDocs(foldersRef);
+
+    // Then fetch teach knowledge from each folder
+    const allTeachKnowledge: ITeachKnowledge[] = [];
+    for (const folderDoc of foldersSnap.docs) {
+      const folderId = folderDoc.id;
+      const teachRef = collection(
+        db,
+        `workspaces/${wid}/folders/${folderId}/teach`
+      );
+      const teachSnap = await getDocs(
+        query(teachRef, orderBy("updatedAt", "desc"))
+      );
+      const teachData = teachSnap.docs.map(
+        (doc) => doc.data() as ITeachKnowledge
+      );
+      allTeachKnowledge.push(...teachData);
+    }
+    return allTeachKnowledge.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  }
+
+  async getPdfKnowledge(
+    wid: string,
+    folderId: string,
+    documentId: string
+  ): Promise<IPdfKnowledge["files"][number] | null> {
     const snap = await getDoc(
-      doc(db, `workspaces/${wid}/knowledge/web/default/${id}`)
+      doc(db, `workspaces/${wid}/folders/${folderId}/documents/${documentId}`)
     );
-    const data = snap.data() as IWebKnowledge;
-    return data;
+    if (!snap.exists()) return null;
+    return snap.data() as IPdfKnowledge["files"][number];
   }
 
-  async getUrlKnowledgeByUrl(wid: string, url: string) {
+  async getAllPdfKnowledge(
+    wid: string,
+    folderId: string
+  ): Promise<IPdfKnowledge["files"][number][]> {
+    const colRef = collection(
+      db,
+      `workspaces/${wid}/folders/${folderId}/documents`
+    );
+    const q = query(colRef, orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => doc.data() as IPdfKnowledge["files"][number]);
+  }
+
+  async getWebKnowledge(
+    wid: string,
+    folderId: string
+  ): Promise<IWebKnowledge[]> {
+    const snaps = await getDocs(
+      query(collection(db, `workspaces/${wid}/folders/${folderId}/websites`))
+    );
+    return snaps.docs.map((doc) => doc.data() as IWebKnowledge);
+  }
+
+  async getUrlKnowledge(
+    wid: string,
+    folderId: string,
+    id: string
+  ): Promise<IWebKnowledge | null> {
+    const snap = await getDoc(
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${id}`)
+    );
+    if (!snap.exists()) return null;
+    return snap.data() as IWebKnowledge;
+  }
+
+  async getUrlKnowledgeByUrl(
+    wid: string,
+    folderId: string,
+    url: string
+  ): Promise<IWebKnowledge | null> {
     const snaps = await getDocs(
       query(
-        collection(db, `workspaces/${wid}/knowledge/web/default`),
+        collection(db, `workspaces/${wid}/folders/${folderId}/websites`),
         where("baseUrl", "==", url)
       )
     );
-    const data = snaps.docs.map((doc) => doc.data() as IWebKnowledge)[0];
-    return data;
+    if (snaps.empty) return null;
+    return snaps.docs[0].data() as IWebKnowledge;
+  }
+  async ensureIndexes(wid: string) {
+    await qdClient.createPayloadIndex(wid, {
+      field_name: "folderId",
+      field_schema: "keyword",
+    });
   }
 }
 

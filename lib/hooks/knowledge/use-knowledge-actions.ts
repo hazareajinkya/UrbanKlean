@@ -2,11 +2,14 @@ import axiosClient from "@/lib/clients/axios-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  pdfKnowledgeKey,
+  documentsKnowledgeKey,
+  websitesKnowledgeKey,
+  textsKnowledgeKey,
   teachKnowledgeKey,
-  webKnowledgeKey,
 } from "./use-knowledge-base";
 import knowledgeService from "@/lib/services/knowledge-service";
+import { handleError } from "@/lib/utils";
+import { foldersKey } from "../folders/use-folders";
 
 export const useKnowledgeActions = () => {
   const qc = useQueryClient();
@@ -18,138 +21,204 @@ export const useKnowledgeActions = () => {
     onSuccess: () => {
       toast.success("Website scraped successfully");
     },
-    onError: (error: Error) => {
-      console.error("Scraping failed: ", error);
-      toast.error("Failed to scrape website. Please try again.");
-    },
+    onError: handleError,
   });
 
   const crawlWebsites = useMutation({
     mutationFn: async ({
       wid,
+      folderId,
       baseUrl,
       urls,
     }: {
       wid: string;
+      folderId: string;
       baseUrl: string;
       urls: string[];
     }) => {
-      await axiosClient.post(`/api/embeddings/${wid}/web/multi`, {
-        baseUrl,
-        urls,
-      });
+      await axiosClient.post(
+        `/api/embeddings/${wid}/folders/${folderId}/web/multi`,
+        {
+          baseUrl,
+          urls,
+        }
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("Crawling started successfully");
-      qc.invalidateQueries({ queryKey: webKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: websitesKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.error("Crawling failed: ", error);
-      toast.error("Failed to start crawl. Please try again.");
-    },
+    onError: handleError,
   });
 
   const embedAndSaveText = useMutation({
     mutationFn: async ({
       wid,
-      tid,
+      folderId,
       content,
     }: {
       wid: string;
-      tid: string;
+      folderId: string;
       content: string;
     }) => {
-      await axiosClient.post(`/api/embeddings/${wid}/text`, {
-        tid: tid,
-        content: content,
-      });
+      await axiosClient.post(
+        `/api/embeddings/${wid}/folders/${folderId}/text`,
+        {
+          content: content,
+        }
+      );
     },
-    onSuccess: () => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("Text saved and trained successfully");
+      qc.invalidateQueries({ queryKey: textsKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
-    },
+    onError: handleError,
   });
 
   const embedAndSavePdf = useMutation({
-    mutationFn: async ({ wid, file }: { wid: string; file: File }) => {
+    mutationFn: async ({
+      wid,
+      folderId,
+      file,
+    }: {
+      wid: string;
+      folderId: string;
+      file: File;
+    }) => {
       const formData = new FormData();
       formData.append("file", file);
 
-      await axiosClient.post(`/api/embeddings/${wid}/pdfs`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await axiosClient.post(
+        `/api/embeddings/${wid}/folders/${folderId}/pdfs`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("PDF saved and trained successfully");
-      qc.invalidateQueries({ queryKey: pdfKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: documentsKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
-    },
+    onError: handleError,
   });
 
   const deletePdf = useMutation({
-    mutationFn: async ({ wid, did }: { wid: string; did: string }) => {
-      await axiosClient.delete(`/api/embeddings/${wid}/pdfs?did=${did}`);
+    mutationFn: async ({
+      wid,
+      folderId,
+      did,
+    }: {
+      wid: string;
+      folderId: string;
+      did: string;
+    }) => {
+      await axiosClient.delete(
+        `/api/embeddings/${wid}/folders/${folderId}/pdfs?did=${did}`
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("PDF deleted successfully");
-      qc.invalidateQueries({ queryKey: pdfKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: documentsKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
-    },
+    onError: handleError,
   });
 
   const embedAndSaveWebsite = useMutation({
-    mutationFn: async ({ wid, url }: { wid: string; url: string }) => {
-      await axiosClient.post(`/api/embeddings/${wid}/web/single`, {
-        url: url,
-      });
+    mutationFn: async ({
+      wid,
+      folderId,
+      url,
+    }: {
+      wid: string;
+      folderId: string;
+      url: string;
+    }) => {
+      await axiosClient.post(
+        `/api/embeddings/${wid}/folders/${folderId}/web/single`,
+        {
+          url: url,
+        }
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("Website content embedded and saved successfully");
-      qc.invalidateQueries({ queryKey: webKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: websitesKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
-    },
+    onError: handleError,
   });
 
   const deleteWebsite = useMutation({
-    mutationFn: async ({ wid, uid }: { wid: string; uid: string }) => {
-      await axiosClient.delete(`/api/embeddings/${wid}/web/single?uid=${uid}`);
+    mutationFn: async ({
+      wid,
+      folderId,
+      uid,
+    }: {
+      wid: string;
+      folderId: string;
+      uid: string;
+    }) => {
+      await axiosClient.delete(
+        `/api/embeddings/${wid}/folders/${folderId}/web/single?uid=${uid}`
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("Website deleted successfully");
-      qc.invalidateQueries({ queryKey: webKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: websitesKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
+    onError: handleError,
+  });
+
+  const deleteText = useMutation({
+    mutationFn: async ({
+      wid,
+      folderId,
+      textId,
+    }: {
+      wid: string;
+      folderId: string;
+      textId: string;
+    }) => {
+      await axiosClient.delete(
+        `/api/embeddings/${wid}/folders/${folderId}/text?textId=${textId}`
+      );
     },
+    onSuccess: (_, { wid, folderId }) => {
+      toast.success("Text deleted successfully");
+      qc.invalidateQueries({ queryKey: textsKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
+    },
+    onError: handleError,
   });
 
   const deleteTeachKnowledge = useMutation({
-    mutationFn: async ({ wid, tid }: { wid: string; tid: string }) => {
-      await axiosClient.delete(`/api/embeddings/${wid}/teach?tid=${tid}`);
+    mutationFn: async ({
+      wid,
+      folderId,
+      tid,
+    }: {
+      wid: string;
+      folderId: string;
+      tid: string;
+    }) => {
+      await axiosClient.delete(
+        `/api/embeddings/${wid}/folders/${folderId}/teach?tid=${tid}`
+      );
     },
-    onSuccess: (_, { wid }) => {
+    onSuccess: (_, { wid, folderId }) => {
       toast.success("Knowledge deleted successfully");
-      qc.invalidateQueries({ queryKey: teachKnowledgeKey(wid) });
+      qc.invalidateQueries({ queryKey: teachKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
-    onError: (error: Error) => {
-      console.log("error: ", error);
-      toast.error(error.message);
-    },
+    onError: handleError,
   });
   return {
     embedAndSaveText,
@@ -159,6 +228,7 @@ export const useKnowledgeActions = () => {
     deleteWebsite,
     scrapeWebsite,
     crawlWebsites,
+    deleteText,
     deleteTeachKnowledge,
   };
 };

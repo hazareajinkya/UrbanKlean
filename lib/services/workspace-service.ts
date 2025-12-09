@@ -20,6 +20,7 @@ import { deleteCollection } from "../utils";
 import memberService from "./member-service";
 import { IAgent } from "../types/agent";
 import knowledgeService from "./knowledge-service";
+import folderService from "./folder-service";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -63,6 +64,9 @@ class WorkspaceService {
       workspaces: arrayUnion({ id: wid, name: name, role: "owner" }),
       updatedAt: new Date().toISOString(),
     });
+
+    // Create Miscellaneous folder
+    await folderService.createMiscellaneousFolder(wid);
 
     return workspace;
   }
@@ -185,6 +189,9 @@ class WorkspaceService {
 
       // Delete web knowledge collection
       await deleteCollection(`workspaces/${wid}/knowledge/web/default`);
+
+      // Delete folders collection (includes all subcollections)
+      await deleteCollection(`workspaces/${wid}/folders`);
 
       // Delete subcollections
       const subCollections = [

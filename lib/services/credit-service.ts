@@ -136,7 +136,7 @@ class CreditService {
             id: "credit-limit-warning",
             variables: {
               name: name || "",
-              credit: threshold,
+              credit: threshold.toString(),
             },
           },
         });

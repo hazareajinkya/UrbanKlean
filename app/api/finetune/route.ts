@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
     const tools = {
       ...customTools,
-      searchKnowledge: searchKnowledge(agent.wid),
+      searchKnowledge: searchKnowledge(agent.wid, agent),
     };
 
     const result = await generateText({

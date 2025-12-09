@@ -11,7 +11,24 @@ const corsOptions = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
-export default withAuth(async function proxy(request: NextRequest) {
+// export default withAuth(async function proxy(request: NextRequest) {
+//
+// });
+
+export default function proxy(request: NextRequest) {
+  const url = request.nextUrl.pathname;
+  if (url.startsWith("/api/embeddings ")) {
+    return handleCors(request);
+  }
+  withAuth(async function Test(request: NextRequest) {
+    return handleCors(request);
+  });
+}
+export const config = {
+  matcher: ["/workspaces/:path*", "/api/embeddings/:path*"],
+};
+
+const handleCors = (request: NextRequest) => {
   const origin = request.headers.get("origin") ?? "";
   const isAllowedOrigin = allowedOrigins.includes(origin);
 
@@ -35,7 +52,4 @@ export default withAuth(async function proxy(request: NextRequest) {
   });
 
   return response;
-});
-export const config = {
-  matcher: ["/workspaces/:path*", "/api/embeddings/:path*"],
 };

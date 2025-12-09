@@ -26,10 +26,17 @@ export async function POST(request: NextRequest) {
     // Parse and process verified webhook
     const event = JSON.parse(body);
 
-    const { wid, docId, workspaceType } = event.metadata;
+    const { wid, folderId, docId, workspaceType } = event.metadata;
 
     if (!wid || !docId) {
       return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
+    }
+
+    if (!folderId) {
+      return NextResponse.json(
+        { error: "Folder ID is required" },
+        { status: 400 }
+      );
     }
 
     if (event.type === "batch_scrape.page") {
@@ -41,14 +48,18 @@ export async function POST(request: NextRequest) {
         title: result.metadata?.title ?? "",
       };
 
+      const websiteId = docId; // Use docId as websiteId for multi-url knowledge
       const { chunkSize, points } = await knowledgeService.s_embedWeb(
         wid,
+        folderId,
+        websiteId,
         content,
         me
       );
 
       await knowledgeService.s_saveMultiUrlKnowledge(
         wid,
+        folderId,
         docId,
         me,
         points,
@@ -57,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ status: "ok" });
     } else if (event.type === "batch_scrape.completed") {
-      await knowledgeService.s_compeletedTraining(wid, docId);
+      await knowledgeService.s_compeletedTraining(wid, folderId, docId);
       if (workspaceType === "onboarding")
         backendClient.post("/onboard/completed", { wid });
       return NextResponse.json({ status: "ok" });

@@ -1,13 +1,10 @@
 import { firecrawl } from "@/lib/clients/firecrawl";
-import knowledgeService from "@/lib/services/knowledge-service";
 import {
   errorResponse,
   serverErrorResponse,
   successResponse,
 } from "@/lib/types/api-response";
-import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { NextRequest } from "next/server";
-import z from "zod";
 
 export async function GET(request: NextRequest) {
   try {

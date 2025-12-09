@@ -32,10 +32,6 @@ import { TextShimmer } from "../ui/text-shimmer";
 import { Streamdown } from "streamdown";
 import { Textarea } from "../ui/textarea";
 import { Card, CardContent } from "../ui/card";
-import {
-  teachKnowledgeKey,
-  useTechKnowledge,
-} from "@/lib/hooks/knowledge/use-knowledge-base";
 import { useQueryClient } from "@tanstack/react-query";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
 import ConfirmationDialog from "../ui/confirmation-dialog";
@@ -45,6 +41,10 @@ import {
   getTeachLocalSession,
   saveTeachLocalSession,
 } from "../chat/chat-utils";
+import {
+  useAllTeachKnowledge,
+  allTeachKnowledgeKey,
+} from "@/lib/hooks/knowledge/use-knowledge-base";
 import { useTeachSession } from "@/lib/hooks/teach-session/use-teach-session";
 import { useTeachSessionActions } from "@/lib/hooks/teach-session/use-teach-session-actions";
 
@@ -64,13 +64,18 @@ const useBrandColors = () => {
   return colors;
 };
 
-export default function TrainTab() {
+interface TrainTabProps {}
+
+export default function TrainTab({}: TrainTabProps) {
   const { wid } = useParams() as { wid: string };
   const [input, setInput] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
   const lastToolRef = useRef<string | null>(null);
-  const { data: teachContent, isPending } = useTechKnowledge(wid);
+
+  // Fetch all teach knowledge across all folders
+  const { data: teachContent, isPending } = useAllTeachKnowledge(wid);
+
   const { deleteTeachKnowledge } = useKnowledgeActions();
   const [teachToDelete, setTeachToDelete] = useState<ITeachKnowledge | null>(
     null
@@ -78,6 +83,8 @@ export default function TrainTab() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const sidRef = useRef<string | null>(null);
+
+  // Use global session hooks
   const { data: session } = useTeachSession(wid);
   const { createSession } = useTeachSessionActions(wid);
 
@@ -97,7 +104,7 @@ export default function TrainTab() {
 
     transport: new DefaultChatTransport({
       api: "/api/teach-stream",
-      body: { wid },
+      body: { wid }, // Removed folderId
     }),
 
     onToolCall: async ({ toolCall }) => {
@@ -117,7 +124,7 @@ export default function TrainTab() {
         lastToolRef.current = null;
         if (!wid) throw new Error("Missing workspace id");
         await queryClient.invalidateQueries({
-          queryKey: teachKnowledgeKey(wid),
+          queryKey: allTeachKnowledgeKey(wid),
         });
       }
       const currentSid = sidRef.current;
@@ -157,7 +164,11 @@ export default function TrainTab() {
   };
   const confirmDelete = async () => {
     if (teachToDelete) {
-      await deleteTeachKnowledge.mutateAsync({ wid, tid: teachToDelete.id });
+      await deleteTeachKnowledge.mutateAsync({
+        wid,
+        folderId: teachToDelete.folderId, // Use the actual folderId from the teach item
+        tid: teachToDelete.id,
+      });
       setDeleteModalOpen(false);
       setTeachToDelete(null);
     }
@@ -172,9 +183,8 @@ export default function TrainTab() {
       if (!wid) return;
       let localSid = getTeachLocalSession(wid);
       if (!localSid) {
-        const session = await teachService.createTeachSession(wid);
-        localSid = session.id;
-        saveTeachLocalSession(wid, localSid);
+        const newSession = await createSession.mutateAsync();
+        localSid = newSession.id;
       }
       sidRef.current = localSid;
       const existing = await teachService.getTeachSession(wid, localSid);
@@ -185,7 +195,7 @@ export default function TrainTab() {
       }
     };
     init();
-  }, [wid, setMessages, session]);
+  }, [wid]);
 
   // Handle scroll detection
   useEffect(() => {
@@ -216,7 +226,6 @@ export default function TrainTab() {
   //
   const handleRefresh = async () => {
     if (!wid) return;
-    console.log("test");
     const newSession = await createSession.mutateAsync();
     sidRef.current = newSession.id;
     saveTeachLocalSession(wid, newSession.id);

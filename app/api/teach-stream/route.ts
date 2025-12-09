@@ -9,8 +9,13 @@ export const POST = async (req: Request) => {
     const {
       messages,
       wid,
-    }: { messages: IChatMessage[]; wid: string; sid?: string } =
-      await req.json();
+    }: {
+      messages: IChatMessage[];
+      wid: string;
+      folderId?: string;
+      sid?: string;
+    } = await req.json();
+
     const model = google("gemini-2.5-flash");
 
     const prompt = `
