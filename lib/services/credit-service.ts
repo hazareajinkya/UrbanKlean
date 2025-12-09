@@ -1,7 +1,6 @@
 import { doc, getDoc, increment, updateDoc } from "firebase/firestore";
 import { db } from "../clients/firebase";
-import { ICredit } from "../types/credit";
-import { IUser } from "../types/user";
+import { IUser, IUserCredit } from "../types/user";
 import resendService from "./resend/resend-service";
 
 const CREDIT_THRESHOLDS = [100, 0];
@@ -9,7 +8,7 @@ const EMAIL_COOLDOWN_HOURS = 24;
 
 interface ICreditInfo {
   name?: string;
-  credit: ICredit;
+  credit: IUserCredit;
   userId: string;
   email: string;
   lastCreditEmailSent?: string;
@@ -17,39 +16,42 @@ interface ICreditInfo {
 }
 
 class CreditService {
-  getCredit = async (uid: string) => {
+  async getCredit(uid: string) {
     const snap = await getDoc(doc(db, `users/${uid}`));
     if (!snap.exists()) return null;
 
     const data = snap.data() as IUser;
 
     console.log("data: ", data);
-    const quota = Number(data.credit?.quota ?? 0);
-    const carry = Number(data.credit?.carry ?? 0);
+    const monthly = Number(data.credit?.monthly ?? 0);
+    const purchased = Number(data.credit?.purchased ?? 0);
 
     return {
-      credit: { quota, carry },
+      credit: { monthly, purchased },
       userId: uid,
       name: data.name,
       email: data.email,
       lastCreditEmailSent: data.lastCreditEmailSent,
-      availableCredit: quota + carry,
+      availableCredit: monthly + purchased,
     };
-  };
-  decreaseCredit = async (amountToDeduct: number, creditObj: ICreditInfo) => {
-    const { credit, userId, email, lastCreditEmailSent, name } = creditObj;
-    let quota = Number(credit.quota);
-    let carry = Number(credit.carry);
-    const availableBefore = quota + carry;
+  }
 
-    if (quota >= amountToDeduct) {
-      quota -= amountToDeduct;
+  async decreaseCredit(amountToDeduct: number, creditObj: ICreditInfo) {
+    const { credit, userId, email, lastCreditEmailSent, name } = creditObj;
+    let monthly = Number(credit.monthly);
+    let purchased = Number(credit.purchased);
+    const availableBefore = monthly + purchased;
+
+    if (monthly >= amountToDeduct) {
+      monthly -= amountToDeduct;
     } else {
-      carry = Math.max(0, carry - (amountToDeduct - quota));
-      quota = 0;
+      purchased = Math.max(0, purchased - (amountToDeduct - monthly));
+      monthly = 0;
     }
-    const availableAfter = quota + carry;
-    await updateDoc(doc(db, `users/${userId}`), { credit: { quota, carry } });
+    const availableAfter = monthly + purchased;
+    await updateDoc(doc(db, `users/${userId}`), {
+      credit: { monthly, purchased },
+    });
     for (const threshold of CREDIT_THRESHOLDS) {
       if (availableBefore >= threshold && availableAfter < threshold) {
         this.sendLowCreditEmail(
@@ -63,46 +65,58 @@ class CreditService {
       }
     }
     return {
-      credit: { quota, carry } as ICredit,
+      credit: { monthly, purchased } as IUserCredit,
       userId,
       availableCredit: availableAfter,
     };
-  };
+  }
 
-  increaseCredit = async (amountToAdd: number, userId: string) => {
+  async increaseCredit(amountToAdd: number, userId: string) {
     try {
       await updateDoc(doc(db, `users/${userId}`), {
-        "credit.carry": increment(amountToAdd),
+        "credit.purchased": increment(amountToAdd),
       });
       return { success: true };
     } catch (error) {
       console.error("Error increasing credit:", error);
       return { success: false };
     }
-  };
+  }
 
-  updateCredit = async (userId: string, quota: number, carry: number) => {
+  async updateCredit(userId: string, monthly: number, purchased: number) {
     try {
       await updateDoc(doc(db, `users/${userId}`), {
-        credit: { quota, carry },
+        credit: { monthly, purchased },
       });
       return {
-        credit: { quota, carry } as ICredit,
+        credit: { monthly, purchased } as IUserCredit,
         userId,
-        availableCredit: quota + carry,
+        availableCredit: monthly + purchased,
       };
     } catch (error) {
       console.error("Error updating credit: ", error);
     }
+  }
+
+  renewQuota = async (userId: string, newMonthlyAmount: number) => {
+    try {
+      await updateDoc(doc(db, `users/${userId}`), {
+        "credit.monthly": newMonthlyAmount,
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Error renewing monthly credits:", error);
+      return { success: false };
+    }
   };
 
-  sendLowCreditEmail = async (
+  async sendLowCreditEmail(
     userId: string,
     name: string | undefined,
     email: string,
     threshold: number,
     lastCreditEmailSent?: string
-  ) => {
+  ) {
     try {
       if (lastCreditEmailSent) {
         const hoursSinceLastEmail =
@@ -152,7 +166,7 @@ class CreditService {
     } catch (error) {
       console.error("Error sending low credit email: ", error);
     }
-  };
+  }
 }
 
 const creditService = new CreditService();
