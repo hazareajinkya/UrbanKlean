@@ -22,22 +22,11 @@ export async function POST(
     if (!wid) return errorResponse("Workspace ID is required", 400);
     if (!folderId) return errorResponse("Folder ID is required", 400);
 
-    const { baseUrl, urls, workspaceType } = await validateRequestBody(request);
+    const { urls, workspaceType } = await validateRequestBody(request);
 
     const webhookUrl = `${tunnelOrigin}/api/firecrawl-webhook`;
 
-    const result = await firecrawl.scrape(baseUrl, {
-      formats: [],
-    });
-
-    const title = result.metadata?.title ?? "";
-
-    const docId = await knowledgeService.s_startedCrawl(
-      wid,
-      folderId,
-      baseUrl,
-      title
-    );
+    const docId = v4();
 
     await firecrawl.startBatchScrape(urls, {
       webhook: {
@@ -69,7 +58,6 @@ export async function POST(
 }
 
 const webEmbeddingSchema = z.object({
-  baseUrl: z.url("Invalid Url"),
   urls: z.array(z.url("Invalid URL")),
   workspaceType: z
     .enum(["onboarding", "default"])
@@ -80,6 +68,7 @@ const webEmbeddingSchema = z.object({
 const validateRequestBody = async (request: NextRequest) => {
   try {
     const body = await request.json();
+    console.log("Body : ", body);
     return webEmbeddingSchema.parse(body);
   } catch (error) {
     if (error instanceof z.ZodError) {

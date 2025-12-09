@@ -23,6 +23,7 @@ class CreditService {
 
     const data = snap.data() as IUser;
 
+    console.log("data: ", data);
     const quota = Number(data.credit?.quota ?? 0);
     const carry = Number(data.credit?.carry ?? 0);
 

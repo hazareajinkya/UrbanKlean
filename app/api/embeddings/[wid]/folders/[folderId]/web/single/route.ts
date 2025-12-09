@@ -51,9 +51,6 @@ export async function POST(
       chunkSize
     );
 
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "websites", 1);
-
     return successResponse(
       { wid, folderId, websiteId, url, status: "trained" },
       "Web embedded successfully"
@@ -88,9 +85,6 @@ export async function DELETE(
 
     await knowledgeService.s_deleteWebKnowledge(wid, folderId, uid);
 
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "websites", -1);
-
     return successResponse(
       { wid, folderId, uid },
       "Website deleted successfully"
@@ -112,4 +106,3 @@ const validateRequestBody = async (request: NextRequest) => {
     throw new Error("Failed to parse request body");
   }
 };
-

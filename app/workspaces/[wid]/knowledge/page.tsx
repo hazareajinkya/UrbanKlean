@@ -26,9 +26,10 @@ import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 
 type TabType = "knowledge" | "training" | "qa";
 
-interface ScrapedUrl {
-  url: string;
-  title?: string;
+interface ScrapedCategory {
+  folderId: string;
+  folderName: string;
+  urls: string[];
 }
 
 export default function KnowledgeBasePage() {
@@ -53,8 +54,10 @@ export default function KnowledgeBasePage() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [textContent, setTextContent] = useState("");
 
-  const [scrapedUrls, setScrapedUrls] = useState<ScrapedUrl[]>([]);
-  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
+  const [scrapedUrls, setScrapedUrls] = useState<ScrapedCategory[]>([]);
+  const [selectedUrls, setSelectedUrls] = useState<
+    { url: string; folderId: string }[]
+  >([]);
   const [websiteView, setWebsiteView] = useState<"input" | "list">("input");
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -127,10 +130,18 @@ export default function KnowledgeBasePage() {
     if (!websiteUrl.trim()) return;
     try {
       new URL(websiteUrl);
-      const links = await scrapeWebsite.mutateAsync({ wid, url: websiteUrl });
-      if (links) {
-        setScrapedUrls(links);
-        setSelectedUrls(links.map((l: ScrapedUrl) => l.url));
+      const categories = await scrapeWebsite.mutateAsync({
+        wid,
+        url: websiteUrl,
+      });
+      if (categories) {
+        setScrapedUrls(categories);
+        // Initially select all
+        const allUrls = categories.flatMap(
+          (cat: { urls: any[]; folderId: any }) =>
+            cat.urls.map((url) => ({ url, folderId: cat.folderId }))
+        );
+        setSelectedUrls(allUrls);
         setWebsiteView("list");
       }
     } catch {
@@ -139,25 +150,53 @@ export default function KnowledgeBasePage() {
   };
 
   const handleAddMultipleUrls = async () => {
-    if (selectedUrls.length === 0 || !selectedFolderId) return;
-    await crawlWebsites.mutateAsync({
-      wid,
-      folderId: selectedFolderId,
-      baseUrl: websiteUrl,
-      urls: selectedUrls,
-    });
-    handleCloseWebsiteModal();
+    if (selectedUrls.length === 0) return;
+
+    // Group selected URLs by folder
+    const urlsByFolder = selectedUrls.reduce((acc, curr) => {
+      if (!acc[curr.folderId]) {
+        acc[curr.folderId] = [];
+      }
+      acc[curr.folderId].push(curr.url);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    try {
+      // Execute additions sequentially or in parallel
+      const promises = Object.entries(urlsByFolder).map(([folderId, urls]) =>
+        crawlWebsites.mutateAsync({
+          wid,
+          folderId,
+          baseUrl: websiteUrl,
+          urls,
+        })
+      );
+
+      await Promise.all(promises);
+      handleCloseWebsiteModal();
+    } catch (error) {
+      console.error("Error adding URLs:", error);
+      toast.error("Failed to add some URLs");
+    }
   };
 
-  const handleUrlSelection = (url: string) => {
-    setSelectedUrls((prev) =>
-      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
-    );
+  const handleUrlSelection = (url: string, folderId: string) => {
+    setSelectedUrls((prev) => {
+      const exists = prev.some((u) => u.url === url && u.folderId === folderId);
+      if (exists) {
+        return prev.filter((u) => !(u.url === url && u.folderId === folderId));
+      } else {
+        return [...prev, { url, folderId }];
+      }
+    });
   };
 
   const handleSelectAllUrls = (checked: boolean) => {
     if (checked) {
-      setSelectedUrls(scrapedUrls.map((link) => link.url));
+      const allUrls = scrapedUrls.flatMap((cat) =>
+        cat.urls.map((url) => ({ url, folderId: cat.folderId }))
+      );
+      setSelectedUrls(allUrls);
     } else {
       setSelectedUrls([]);
     }
@@ -468,15 +507,18 @@ export default function KnowledgeBasePage() {
               </div>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
-                  Found {scrapedUrls.length} URLs. {selectedUrls.length}{" "}
-                  selected.
+                  {selectedUrls.length} selected.
                 </p>
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="select-all-modal"
                     checked={
-                      selectedUrls.length === scrapedUrls.length &&
-                      scrapedUrls.length > 0
+                      scrapedUrls.length > 0 &&
+                      selectedUrls.length ===
+                        scrapedUrls.reduce(
+                          (acc, cat) => acc + cat.urls.length,
+                          0
+                        )
                     }
                     onCheckedChange={handleSelectAllUrls}
                   />
@@ -489,27 +531,44 @@ export default function KnowledgeBasePage() {
                 </div>
               </div>
               <ScrollArea className="h-64">
-                <div className="space-y-1 pr-4">
-                  {scrapedUrls.map((scrapedUrl, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                      onClick={() => handleUrlSelection(scrapedUrl.url)}
-                    >
-                      <Checkbox
-                        id={`modal-${scrapedUrl.url}`}
-                        checked={selectedUrls.includes(scrapedUrl.url)}
-                        onCheckedChange={() =>
-                          handleUrlSelection(scrapedUrl.url)
-                        }
-                      />
-                      <label
-                        htmlFor={`modal-${scrapedUrl.url}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 truncate cursor-pointer"
-                        title={scrapedUrl.title || scrapedUrl.url}
-                      >
-                        {scrapedUrl.url || scrapedUrl.title}
-                      </label>
+                <div className="space-y-4 pr-4">
+                  {scrapedUrls.map((category) => (
+                    <div key={category.folderId} className="space-y-2">
+                      <h5 className="font-medium text-sm text-muted-foreground sticky top-0 bg-background py-1 z-10 border-b">
+                        {category.folderName}
+                      </h5>
+                      <div className="space-y-1 pl-2">
+                        {category.urls.map((url, urlIndex) => {
+                          const isSelected = selectedUrls.some(
+                            (u) =>
+                              u.url === url && u.folderId === category.folderId
+                          );
+                          return (
+                            <div
+                              key={`${category.folderId}-${urlIndex}`}
+                              className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
+                              onClick={() =>
+                                handleUrlSelection(url, category.folderId)
+                              }
+                            >
+                              <Checkbox
+                                id={`modal-${category.folderId}-${url}`}
+                                checked={isSelected}
+                                onCheckedChange={() =>
+                                  handleUrlSelection(url, category.folderId)
+                                }
+                              />
+                              <label
+                                htmlFor={`modal-${category.folderId}-${url}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 truncate cursor-pointer"
+                                title={url}
+                              >
+                                {url}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -31,10 +31,13 @@ export async function POST(
       content
     );
 
-    await knowledgeService.s_saveText(wid, folderId, points, content, chunkSize);
-
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "texts", 1);
+    await knowledgeService.s_saveText(
+      wid,
+      folderId,
+      points,
+      content,
+      chunkSize
+    );
 
     return successResponse(
       { wid, folderId, textId, status: "trained" },
@@ -82,25 +85,7 @@ export async function DELETE(
 
     if (!textId) return errorResponse("Text ID is required", 400);
 
-    const textKnowledge = await knowledgeService.getTextKnowledge(
-      wid,
-      folderId,
-      textId
-    );
-    if (!textKnowledge)
-      return successResponse({ wid, folderId }, "Text knowledge does not exist");
-
-    if (textKnowledge.points.length > 0) {
-      const qdClient = (await import("@/lib/clients/qdrant-client")).default;
-      await qdClient.delete(wid, { points: textKnowledge.points });
-    }
-
-    await deleteDoc(
-      doc(db, `workspaces/${wid}/folders/${folderId}/texts/${textId}`)
-    );
-
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "texts", -1);
+    await knowledgeService.s_deleteTextKnowledge(wid, folderId, textId);
 
     return successResponse(
       { wid, folderId, textId },
@@ -111,4 +96,3 @@ export async function DELETE(
     return serverErrorResponse(error);
   }
 }
-

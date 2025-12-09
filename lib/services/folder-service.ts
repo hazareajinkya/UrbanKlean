@@ -11,6 +11,7 @@ import {
   query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../clients/firebase";
 import { generateDefaultFolder, IFolder } from "../types/folder";
@@ -103,22 +104,52 @@ class FolderService {
     const folder = await this.getFolder(wid, folderId);
     if (!folder) return;
 
-    const newCount = Math.max(0, folder.itemCount[type] + delta);
-    const newTotal =
-      folder.itemCount.documents +
-      folder.itemCount.websites +
-      folder.itemCount.texts +
-      folder.itemCount.teach +
-      delta;
+    const currentCounts = folder.itemCount || {
+      documents: 0,
+      websites: 0,
+      texts: 0,
+      teach: 0,
+      total: 0,
+    };
 
-    await updateDoc(folderRef, {
-      [`itemCount.${type}`]: newCount,
-      "itemCount.total": Math.max(0, newTotal),
-      updatedAt: new Date().toISOString(),
-    });
+    const currentTypeCount = currentCounts[type] || 0;
+    const newCount = Math.max(0, currentTypeCount + delta);
+
+    let total = 0;
+    total += currentCounts.documents || 0;
+    total += currentCounts.websites || 0;
+    total += currentCounts.texts || 0;
+    total += currentCounts.teach || 0;
+    const newTotal = Math.max(0, total + delta);
+
+    if (!folder.itemCount) {
+      const newItemCount = {
+        ...currentCounts,
+        [type]: newCount,
+        total: newTotal,
+      };
+      await updateDoc(folderRef, {
+        itemCount: newItemCount,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await updateDoc(folderRef, {
+        [`itemCount.${type}`]: newCount,
+        "itemCount.total": newTotal,
+        updatedAt: new Date().toISOString(),
+      });
+    }
   }
 
-  async createMiscellaneousFolder(wid: string): Promise<IFolder> {
+  async getOrCreateMiscellaneousFolder(wid: string): Promise<IFolder> {
+    const colRef = collection(db, `workspaces/${wid}/folders`);
+    const q = query(colRef, where("name", "==", "Miscellaneous"));
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      return snap.docs[0].data() as IFolder;
+    }
+
     return this.createFolder(wid, "Miscellaneous");
   }
 }

@@ -25,18 +25,19 @@ import {
   IWebPropsMetadata,
 } from "../types/knowledge";
 import embeddingService from "./embedding-service";
+import folderService from "./folder-service";
 import { db } from "../clients/firebase";
 import { v4 } from "uuid";
 import { embeddingConfig } from "../constants";
 import { chunkPdfContent, chunkText } from "./chunker-service";
 import storageService from "./storage-service";
 import axiosClient from "../clients/axios-client";
-
 class KnowledgeService {
   async scrapeWebsite(wid: string, url: string) {
-    const response = await axiosClient.get(
-      `/api/embeddings/${wid}/web/get-urls?url=${encodeURIComponent(url)}`
-    );
+    let endpoint = `/api/embeddings/${wid}/web/get-urls?url=${encodeURIComponent(
+      url
+    )}`;
+    const response = await axiosClient.get(endpoint);
     return response.data.data.result;
   }
 
@@ -192,6 +193,7 @@ class KnowledgeService {
     await deleteDoc(
       doc(db, `workspaces/${wid}/folders/${folderId}/documents/${did}`)
     );
+    await folderService.updateFolderItemCount(wid, folderId, "documents", -1);
   }
 
   async s_deleteWebKnowledge(wid: string, folderId: string, uid: string) {
@@ -205,6 +207,7 @@ class KnowledgeService {
       await deleteDoc(
         doc(db, `workspaces/${wid}/folders/${folderId}/websites/${uid}`)
       );
+      await folderService.updateFolderItemCount(wid, folderId, "websites", -1);
     } catch (error: any) {
       console.log("error: ", error);
       console.log("error.data: ", error.data);
@@ -224,6 +227,7 @@ class KnowledgeService {
       await deleteDoc(
         doc(db, `workspaces/${wid}/folders/${folderId}/texts/${textId}`)
       );
+      await folderService.updateFolderItemCount(wid, folderId, "texts", -1);
     } catch (error: any) {
       console.log("error: ", error);
       console.log("error.data: ", error.data);
@@ -247,6 +251,7 @@ class KnowledgeService {
       await deleteDoc(
         doc(db, `workspaces/${wid}/folders/${folderId}/teach/${teachId}`)
       );
+      await folderService.updateFolderItemCount(wid, folderId, "teach", -1);
     } catch (error: any) {
       console.log("error: ", error);
       console.log("error.data: ", error.data);
@@ -367,6 +372,7 @@ class KnowledgeService {
       doc(db, `workspaces/${wid}/folders/${folderId}/documents/${result.id}`),
       result
     );
+    await folderService.updateFolderItemCount(wid, folderId, "documents", 1);
   }
 
   async s_embedWeb(
@@ -438,17 +444,25 @@ class KnowledgeService {
       },
       { merge: true }
     );
+    await folderService.updateFolderItemCount(wid, folderId, "websites", 1);
     return id;
   }
 
   async s_compeletedTraining(wid: string, folderId: string, docId: string) {
-    await updateDoc(
-      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${docId}`),
-      {
+    const websitesRef = collection(
+      db,
+      `workspaces/${wid}/folders/${folderId}/websites`
+    );
+    const snaps = await getDocs(websitesRef);
+
+    const updatePromises = snaps.docs.map((docSnap) =>
+      updateDoc(docSnap.ref, {
         status: "trained",
         updatedAt: new Date().toISOString(),
-      }
+      })
     );
+
+    await Promise.all(updatePromises);
   }
   async s_saveSingleUrlKnowledge(
     wid: string,
@@ -473,6 +487,35 @@ class KnowledgeService {
       data,
       { merge: true }
     );
+    await folderService.updateFolderItemCount(wid, folderId, "websites", 1);
+    return data;
+  }
+
+  async s_saveScrapedWebPage(
+    wid: string,
+    folderId: string,
+    docId: string,
+    metadata: IWebPropsMetadata,
+    points: string[],
+    chunkSize: number
+  ) {
+    const data = generateDefaultWebKnowledge(
+      docId,
+      wid,
+      folderId,
+      metadata.title,
+      metadata.url,
+      [metadata],
+      chunkSize,
+      points
+    );
+
+    await setDoc(
+      doc(db, `workspaces/${wid}/folders/${folderId}/websites/${data.id}`),
+      data,
+      { merge: true }
+    );
+    await folderService.updateFolderItemCount(wid, folderId, "websites", 1);
     return data;
   }
 
@@ -514,6 +557,7 @@ class KnowledgeService {
       doc(db, `workspaces/${wid}/folders/${folderId}/texts/${data.id}`),
       data
     );
+    await folderService.updateFolderItemCount(wid, folderId, "texts", 1);
   }
 
   async s_saveTeachKnowledge(
@@ -540,6 +584,7 @@ class KnowledgeService {
       `workspaces/${wid}/folders/${folderId}/teach/${data.id}`
     );
     await setDoc(ref, data);
+    await folderService.updateFolderItemCount(wid, folderId, "teach", 1);
   }
 
   async getTextKnowledge(

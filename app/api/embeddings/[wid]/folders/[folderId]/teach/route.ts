@@ -20,18 +20,18 @@ export async function POST(
 
     if (!wid) return errorResponse("Workspace ID is required", 400);
     if (!folderId) return errorResponse("Folder ID is required", 400);
-    console.log("1.0");
+
     const { content, title } = await validateRequestBody(request);
-    console.log("2.0");
+
     const teachId = v4();
-    console.log("3.0");
+
     const { chunkSize, points } = await knowledgeService.s_embedTeachContent(
       wid,
       folderId,
       teachId,
       content
     );
-    console.log("4.0");
+
     await knowledgeService.s_saveTeachKnowledge(
       wid,
       folderId,
@@ -42,11 +42,6 @@ export async function POST(
       chunkSize
     );
 
-    console.log("5.0");
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "teach", 1);
-
-    console.log("6.0");
     return successResponse(
       { wid, folderId, teachId, status: "trained" },
       "Teach content embedded successfully"
@@ -91,28 +86,7 @@ export async function DELETE(
     const tid = searchParams.get("tid");
     if (!tid) return errorResponse("TeachKnowledge ID is required", 400);
 
-    const teachKnowledge = await knowledgeService.getTeachKnowledge(
-      wid,
-      folderId,
-      tid
-    );
-    if (!teachKnowledge)
-      return successResponse(
-        { wid, folderId },
-        "Teach knowledge does not exist"
-      );
-
-    if (teachKnowledge.points.length > 0) {
-      const qdClient = (await import("@/lib/clients/qdrant-client")).default;
-      await qdClient.delete(wid, { points: teachKnowledge.points });
-    }
-
-    await deleteDoc(
-      doc(db, `workspaces/${wid}/folders/${folderId}/teach/${tid}`)
-    );
-
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "teach", -1);
+    await knowledgeService.s_deleteTeachKnowledge(wid, folderId, tid);
 
     return successResponse(
       { wid, folderId, tid },

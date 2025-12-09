@@ -73,6 +73,14 @@ export default function KnowledgeContentList({
   const isLoading =
     documentsLoading || websitesLoading || textsLoading || teachLoading;
 
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
   // Combine all content into a unified list
   const unifiedContent: UnifiedContentItem[] = [
     ...(documents || []).map((doc) => ({
@@ -115,14 +123,6 @@ export default function KnowledgeContentList({
       data: { type: "teach" as const, data: item },
     })),
   ].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-
-  const formatFileSize = (bytes: number) => {
-    if (!bytes) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
 
   const getIcon = (type: string) => {
     switch (type) {

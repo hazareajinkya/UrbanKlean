@@ -40,9 +40,6 @@ export async function POST(
       chunkSize
     );
 
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "documents", 1);
-
     return successResponse(
       { wid, folderId, documentId, name: pdf.name, status: "trained" },
       "PDF embedded successfully"
@@ -69,9 +66,6 @@ export async function DELETE(
     if (!did) return errorResponse("Document ID is required", 400);
 
     await knowledgeService.s_deletePdfKnowledge(wid, folderId, did);
-
-    // Update folder item count
-    await folderService.updateFolderItemCount(wid, folderId, "documents", -1);
 
     return successResponse({ wid, folderId, did }, "PDF deleted successfully");
   } catch (error) {

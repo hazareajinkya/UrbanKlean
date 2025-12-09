@@ -61,6 +61,7 @@ export async function POST(req: Request) {
 
     const creditInfo = await creditService.getCredit(agent.ownerId);
     if (!creditInfo || creditInfo.availableCredit < 2) {
+      console.log("Insufficient credits: ", creditInfo);
       return new Response("Insufficient credits", {
         status: 400,
       });

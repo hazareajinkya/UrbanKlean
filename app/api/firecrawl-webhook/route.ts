@@ -3,6 +3,7 @@ import knowledgeService from "@/lib/services/knowledge-service";
 import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { doc } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
+import { v4 } from "uuid";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         title: result.metadata?.title ?? "",
       };
 
-      const websiteId = docId; // Use docId as websiteId for multi-url knowledge
+      const websiteId = v4(); // Generate new ID for each page
       const { chunkSize, points } = await knowledgeService.s_embedWeb(
         wid,
         folderId,
@@ -57,10 +58,10 @@ export async function POST(request: NextRequest) {
         me
       );
 
-      await knowledgeService.s_saveMultiUrlKnowledge(
+      await knowledgeService.s_saveScrapedWebPage(
         wid,
         folderId,
-        docId,
+        websiteId,
         me,
         points,
         chunkSize
