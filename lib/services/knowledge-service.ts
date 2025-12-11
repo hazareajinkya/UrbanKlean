@@ -562,16 +562,8 @@ class KnowledgeService {
       const batches: WriteBatch[] = [];
       let currentBatch = writeBatch(db);
       let count = 0;
-      const allPoints: string[] = [];
 
       for (const doc of textsSnap.docs) {
-        // Collect points for Qdrant deletion
-        const data = doc.data() as ITextKnowledge;
-        if (data.points && data.points.length > 0) {
-          allPoints.push(...data.points);
-        }
-
-        // Add to batch
         currentBatch.delete(doc.ref);
         count++;
 
@@ -586,19 +578,7 @@ class KnowledgeService {
         batches.push(currentBatch);
       }
 
-      // Execute Qdrant deletion
-      if (allPoints.length > 0) {
-        // Chunk points if necessary for qdrant (optional, but safe)
-        const pointChunks = [];
-        for (let i = 0; i < allPoints.length; i += 1000) {
-          pointChunks.push(allPoints.slice(i, i + 1000));
-        }
-        await Promise.all(
-          pointChunks.map((points) => qdClient.delete(wid, { points }))
-        );
-      }
-
-      // Execute Firestore batches
+      // Execute Firestore batches (Qdrant collection is deleted via API route)
       await Promise.all(batches.map((batch) => batch.commit()));
     } catch (error: unknown) {
       console.error("Error deleting all text knowledge:", error);
@@ -619,14 +599,8 @@ class KnowledgeService {
       const batches: WriteBatch[] = [];
       let currentBatch = writeBatch(db);
       let count = 0;
-      const allPoints: string[] = [];
 
       for (const doc of teachSnap.docs) {
-        const data = doc.data() as ITeachKnowledge;
-        if (data.points && data.points.length > 0) {
-          allPoints.push(...data.points);
-        }
-
         currentBatch.delete(doc.ref);
         count++;
 
@@ -639,16 +613,7 @@ class KnowledgeService {
 
       if (count > 0) batches.push(currentBatch);
 
-      if (allPoints.length > 0) {
-        const pointChunks = [];
-        for (let i = 0; i < allPoints.length; i += 1000) {
-          pointChunks.push(allPoints.slice(i, i + 1000));
-        }
-        await Promise.all(
-          pointChunks.map((points) => qdClient.delete(wid, { points }))
-        );
-      }
-
+      // Execute Firestore batches (Qdrant collection is deleted via API route)
       await Promise.all(batches.map((batch) => batch.commit()));
     } catch (error: unknown) {
       console.error("Error deleting all teach knowledge:", error);
@@ -669,14 +634,10 @@ class KnowledgeService {
       const batches: WriteBatch[] = [];
       let currentBatch = writeBatch(db);
       let count = 0;
-      const allPoints: string[] = [];
       const storagePromises: Promise<void>[] = [];
 
       for (const doc of docsSnap.docs) {
         const data = doc.data() as IPdfKnowledge["files"][number];
-        if (data.points && data.points.length > 0) {
-          allPoints.push(...data.points);
-        }
 
         if (data.docUrl) {
           storagePromises.push(
@@ -698,16 +659,7 @@ class KnowledgeService {
 
       if (count > 0) batches.push(currentBatch);
 
-      if (allPoints.length > 0) {
-        const pointChunks = [];
-        for (let i = 0; i < allPoints.length; i += 1000) {
-          pointChunks.push(allPoints.slice(i, i + 1000));
-        }
-        await Promise.all(
-          pointChunks.map((points) => qdClient.delete(wid, { points }))
-        );
-      }
-
+      // Execute Firestore batches and storage cleanup (Qdrant collection is deleted via API route)
       await Promise.all([
         Promise.all(batches.map((batch) => batch.commit())),
         Promise.all(storagePromises),
@@ -731,14 +683,8 @@ class KnowledgeService {
       const batches: WriteBatch[] = [];
       let currentBatch = writeBatch(db);
       let count = 0;
-      const allPoints: string[] = [];
 
       for (const doc of webSnap.docs) {
-        const data = doc.data() as IWebKnowledge;
-        if (data.points && data.points.length > 0) {
-          allPoints.push(...data.points);
-        }
-
         currentBatch.delete(doc.ref);
         count++;
 
@@ -751,16 +697,7 @@ class KnowledgeService {
 
       if (count > 0) batches.push(currentBatch);
 
-      if (allPoints.length > 0) {
-        const pointChunks = [];
-        for (let i = 0; i < allPoints.length; i += 1000) {
-          pointChunks.push(allPoints.slice(i, i + 1000));
-        }
-        await Promise.all(
-          pointChunks.map((points) => qdClient.delete(wid, { points }))
-        );
-      }
-
+      // Execute Firestore batches (Qdrant collection is deleted via API route)
       await Promise.all(batches.map((batch) => batch.commit()));
     } catch (error: unknown) {
       console.error("Error deleting all web knowledge:", error);

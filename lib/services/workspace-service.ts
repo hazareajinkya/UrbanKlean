@@ -189,7 +189,28 @@ class WorkspaceService {
       // Delete web knowledge collection
       await deleteCollection(`workspaces/${wid}/knowledge/web/default`);
 
-      // Delete folders collection (includes all subcollections)
+      // Delete folder subcollections before deleting folders
+      try {
+        const folders = await folderService.getFolders(wid);
+        for (const folder of folders) {
+          const folderSubcollections = [
+            `workspaces/${wid}/folders/${folder.id}/documents`,
+            `workspaces/${wid}/folders/${folder.id}/websites`,
+            `workspaces/${wid}/folders/${folder.id}/texts`,
+            `workspaces/${wid}/folders/${folder.id}/teach`,
+          ];
+          await Promise.all(
+            folderSubcollections.map((path) => deleteCollection(path))
+          );
+        }
+      } catch (error) {
+        console.error(
+          `[WorkspaceService] Failed to delete folder subcollections:`,
+          error
+        );
+      }
+
+      // Delete folders collection
       await deleteCollection(`workspaces/${wid}/folders`);
 
       // Delete subcollections
