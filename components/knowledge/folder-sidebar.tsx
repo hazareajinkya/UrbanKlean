@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Plus, Folder, Settings2, Trash2, Pencil, Loader2 } from "lucide-react";
+import { Plus, Folder, Trash2, Pencil, Loader2, X } from "lucide-react";
 import { useFolders } from "@/lib/hooks/folders/use-folders";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,11 +19,13 @@ import { useFolderActions } from "@/lib/hooks/folders/use-folder-actions";
 interface FolderSidebarProps {
   selectedFolderId: string | null;
   onSelectFolder: (folderId: string | null) => void;
+  onMobileClose?: () => void;
 }
 
 export default function FolderSidebar({
   selectedFolderId,
   onSelectFolder,
+  onMobileClose,
 }: FolderSidebarProps) {
   const { wid } = useParams() as { wid: string };
   const { data: folders, isLoading } = useFolders(wid);
@@ -90,92 +92,125 @@ export default function FolderSidebar({
     setIsDeleteModalOpen(true);
   };
 
-  const getItemCount = (folder: IFolder) => {
-    return folder.itemCount.total;
-  };
-
   if (isLoading) {
     return (
-      <div className="w-[250px] border-r bg-card flex flex-col">
-        <div className="p-4 border-b">
-          <Skeleton className="h-10 w-full" />
+      <aside className="w-[280px] lg:w-[260px] xl:w-[280px] flex-shrink-0 border-r bg-secondary flex flex-col">
+        <div className="h-14 border-b bg-muted/10 px-4 grid place-items-center">
+          <Skeleton className="h-8 w-full" />
         </div>
         <div className="flex-1 p-4 space-y-2">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
         </div>
-      </div>
+      </aside>
     );
   }
 
   return (
     <>
-      <div className="w-[250px] border-r bg-card flex flex-col">
-        <div className="p-4 border-b">
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="w-full"
-            size="sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Folder
-          </Button>
+      <aside className="w-[280px] lg:w-[260px] xl:w-[280px] flex-shrink-0 border-r bg-secondary flex flex-col h-full">
+        {/* Header */}
+        <div className="h-14 border-b bg-muted/10 px-4 flex items-center justify-between flex-shrink-0">
+          <span className="text-sm font-medium text-foreground">Folders</span>
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            {/* Mobile close button */}
+            {onMobileClose && (
+              <Button
+                onClick={onMobileClose}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 lg:hidden"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
+        {/* Folder List */}
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
+          <div className="p-0">
             {folders && folders.length > 0 ? (
               folders.map((folder) => (
                 <div
                   key={folder.id}
                   className={clsx(
-                    "group relative flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors cursor-pointer",
+                    "group relative flex items-center justify-between px-4 py-3.5 border-b text-sm transition-all cursor-pointer hover:bg-card/70",
                     selectedFolderId === folder.id
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "hover:bg-accent hover:text-accent-foreground"
+                      ? "bg-card border-l-2 border-l-primary border-b-muted"
+                      : "border-l-2 border-l-transparent"
                   )}
                   onClick={() => onSelectFolder(folder.id)}
                 >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Folder className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{folder.name}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      ({getItemCount(folder)})
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Folder
+                      className={clsx(
+                        "w-4 h-4 shrink-0",
+                        selectedFolderId === folder.id
+                          ? "text-primary fill-primary/20"
+                          : "text-muted-foreground"
+                      )}
+                    />
+                    <span
+                      className={clsx(
+                        "truncate font-medium",
+                        selectedFolderId === folder.id
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {folder.name}
                     </span>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         openEditModal(folder);
                       }}
-                      className="p-1 hover:bg-accent rounded"
+                      className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
                       aria-label="Edit folder"
                     >
-                      <Pencil className="w-3 h-3" />
+                      <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         openDeleteModal(folder);
                       }}
-                      className="p-1 hover:bg-accent rounded text-destructive"
+                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
                       aria-label="Delete folder"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No folders yet. Create one to get started.
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                <Folder className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p>No folders yet</p>
+                <Button
+                  variant="link"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="mt-2"
+                >
+                  Create one now
+                </Button>
               </div>
             )}
           </div>
         </ScrollArea>
-      </div>
+      </aside>
 
       {/* Create Folder Modal */}
       <Modal
@@ -185,15 +220,28 @@ export default function FolderSidebar({
           setNewFolderName("");
         }}
       >
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Create Folder</h3>
-          <div>
+        <div className="">
+          <div className="flex items-center justify-between border-b pb-2 mb-6">
+            <h3 className="text-lg font-medium">Create Folder</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setNewFolderName("");
+              }}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="folder-name">Folder Name</Label>
             <Input
               id="folder-name"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name"
+              placeholder="e.g., Policies, Products, etc."
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleCreateFolder();
@@ -202,7 +250,7 @@ export default function FolderSidebar({
               autoFocus
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -217,9 +265,9 @@ export default function FolderSidebar({
               disabled={!newFolderName.trim() || createFolder.isPending}
             >
               {createFolder.isPending && (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <Loader2 className="w-4 h-4 animate-spin " />
               )}
-              Create
+              Create Folder
             </Button>
           </div>
         </div>
@@ -234,15 +282,29 @@ export default function FolderSidebar({
           setEditFolderName("");
         }}
       >
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Edit Folder</h3>
-          <div>
+        <div className="">
+          <div className="flex items-center justify-between border-b pb-2 mb-6">
+            <h3 className="text-lg font-medium">Edit Folder</h3>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setFolderToEdit(null);
+                setEditFolderName("");
+              }}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="edit-folder-name">Folder Name</Label>
             <Input
               id="edit-folder-name"
               value={editFolderName}
               onChange={(e) => setEditFolderName(e.target.value)}
-              placeholder="Enter folder name"
+              placeholder="Folder Name"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleEditFolder();
@@ -251,7 +313,7 @@ export default function FolderSidebar({
               autoFocus
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -266,7 +328,10 @@ export default function FolderSidebar({
               onClick={handleEditFolder}
               disabled={!editFolderName.trim() || updateFolder.isPending}
             >
-              {updateFolder.isPending ? "Saving..." : "Save"}
+              {updateFolder.isPending && (
+                <Loader2 className="w-4 h-4 animate-spin " />
+              )}
+              Save Changes
             </Button>
           </div>
         </div>

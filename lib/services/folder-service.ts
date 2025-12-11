@@ -16,6 +16,8 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultFolder, IFolder } from "../types/folder";
 import { deleteCollection } from "../utils";
+import knowledgeService from "./knowledge-service";
+import agentService from "./agent-service";
 
 class FolderService {
   async createFolder(wid: string, name: string) {
@@ -52,6 +54,7 @@ class FolderService {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+
     await updateDoc(
       doc(db, `workspaces/${wid}/folders/${folderId}`),
       updateData
@@ -60,18 +63,33 @@ class FolderService {
     if (updates.name) {
       const wsRef = doc(db, `workspaces/${wid}`);
       const wsSnap = await getDoc(wsRef);
+
       if (wsSnap.exists()) {
         const wsData = wsSnap.data();
         const folders = wsData.folders || [];
-        const updatedFolders = folders.map((f: any) =>
-          f.id === folderId ? { ...f, name: updates.name } : f
-        );
+
+        const updatedFolders = folders.map((f: any) => {
+          if (f.id === folderId) {
+            return { ...f, name: updates.name };
+          }
+          return f;
+        });
+
         await updateDoc(wsRef, { folders: updatedFolders });
       }
     }
   }
 
   async deleteFolder(wid: string, folderId: string) {
+    try {
+      await knowledgeService.deleteAllKnowledgeInFolder(wid, folderId);
+    } catch (e) {
+      console.error("Failed to delete Qdrant knowledge");
+      throw e;
+    }
+
+    await agentService.removeFolderFromAgents(wid, folderId);
+
     // Delete all subcollections
     const subCollections = [
       `workspaces/${wid}/folders/${folderId}/documents`,
@@ -82,7 +100,6 @@ class FolderService {
 
     await Promise.all(subCollections.map((path) => deleteCollection(path)));
 
-    // Get folder name for removing from workspace
     const folder = await this.getFolder(wid, folderId);
     if (folder) {
       await updateDoc(doc(db, `workspaces/${wid}`), {
@@ -90,55 +107,7 @@ class FolderService {
       });
     }
 
-    // Delete folder document
     await deleteDoc(doc(db, `workspaces/${wid}/folders/${folderId}`));
-  }
-
-  async updateFolderItemCount(
-    wid: string,
-    folderId: string,
-    type: "documents" | "websites" | "texts" | "teach",
-    delta: number
-  ): Promise<void> {
-    const folderRef = doc(db, `workspaces/${wid}/folders/${folderId}`);
-    const folder = await this.getFolder(wid, folderId);
-    if (!folder) return;
-
-    const currentCounts = folder.itemCount || {
-      documents: 0,
-      websites: 0,
-      texts: 0,
-      teach: 0,
-      total: 0,
-    };
-
-    const currentTypeCount = currentCounts[type] || 0;
-    const newCount = Math.max(0, currentTypeCount + delta);
-
-    let total = 0;
-    total += currentCounts.documents || 0;
-    total += currentCounts.websites || 0;
-    total += currentCounts.texts || 0;
-    total += currentCounts.teach || 0;
-    const newTotal = Math.max(0, total + delta);
-
-    if (!folder.itemCount) {
-      const newItemCount = {
-        ...currentCounts,
-        [type]: newCount,
-        total: newTotal,
-      };
-      await updateDoc(folderRef, {
-        itemCount: newItemCount,
-        updatedAt: new Date().toISOString(),
-      });
-    } else {
-      await updateDoc(folderRef, {
-        [`itemCount.${type}`]: newCount,
-        "itemCount.total": newTotal,
-        updatedAt: new Date().toISOString(),
-      });
-    }
   }
 
   async getOrCreateMiscellaneousFolder(wid: string): Promise<IFolder> {

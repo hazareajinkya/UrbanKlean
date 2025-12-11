@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState } from "react";
+
 import { useParams } from "next/navigation";
 import {
   FileText,
@@ -7,7 +9,7 @@ import {
   Type,
   BookMarkedIcon,
   Plus,
-  Loader2,
+  Trash2,
 } from "lucide-react";
 import {
   useDocumentsKnowledge,
@@ -20,9 +22,16 @@ import { Button } from "@/components/ui/button";
 import { capitalize, formatDate } from "@/lib/utils";
 import { PDFIcon } from "@/lib/logos";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContentItem } from "./content-detail-panel";
 import clsx from "clsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 
 interface KnowledgeContentListProps {
   folderId: string;
@@ -70,6 +79,60 @@ export default function KnowledgeContentList({
     folderId
   );
 
+  const { deletePdf, deleteWebsite, deleteText, deleteTeachKnowledge } =
+    useKnowledgeActions();
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] =
+    useState<UnifiedContentItem | null>(null);
+
+  const handleDelete = (e: React.MouseEvent, item: UnifiedContentItem) => {
+    e.stopPropagation();
+    setContentToDelete(item);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!contentToDelete) return;
+
+    const onSuccess = () => {
+      setDeleteModalOpen(false);
+      setContentToDelete(null);
+    };
+
+    switch (contentToDelete.type) {
+      case "document":
+        deletePdf.mutate(
+          { wid, folderId, did: contentToDelete.id },
+          { onSuccess }
+        );
+        break;
+      case "website":
+        deleteWebsite.mutate(
+          { wid, folderId, uid: contentToDelete.id },
+          { onSuccess }
+        );
+        break;
+      case "text":
+        deleteText.mutate(
+          { wid, folderId, textId: contentToDelete.id },
+          { onSuccess }
+        );
+        break;
+      case "teach":
+        deleteTeachKnowledge.mutate(
+          { wid, folderId, tid: contentToDelete.id },
+          { onSuccess }
+        );
+        break;
+    }
+  };
+
+  const getDeleteTitle = () => {
+    if (!contentToDelete) return "Are you sure you want to delete this item?";
+    return `Are you sure you want to delete "${contentToDelete.title}"?`;
+  };
+
   const isLoading =
     documentsLoading || websitesLoading || textsLoading || teachLoading;
 
@@ -81,7 +144,6 @@ export default function KnowledgeContentList({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Combine all content into a unified list
   const unifiedContent: UnifiedContentItem[] = [
     ...(documents || []).map((doc) => ({
       id: doc.id,
@@ -107,6 +169,9 @@ export default function KnowledgeContentList({
       id: text.id,
       type: "text" as const,
       title:
+        text.title ||
+        text.content.substring(0, 60) + (text.content.length > 60 ? "..." : ""),
+      subtitle:
         text.content.substring(0, 60) + (text.content.length > 60 ? "..." : ""),
       status: text.status,
       updatedAt: new Date(text.updatedAt),
@@ -129,28 +194,13 @@ export default function KnowledgeContentList({
       case "document":
         return <PDFIcon className="w-5 h-5" />;
       case "website":
-        return <Globe className="w-5 h-5 text-primary" />;
+        return <Globe className="w-5 h-5 text-blue-500" />;
       case "text":
-        return <Type className="w-5 h-5 text-primary" />;
+        return <Type className="w-5 h-5 text-green-500" />;
       case "teach":
-        return <BookMarkedIcon className="w-5 h-5 text-primary" />;
+        return <BookMarkedIcon className="w-5 h-5 text-purple-500" />;
       default:
         return <FileText className="w-5 h-5" />;
-    }
-  };
-
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case "document":
-        return "text-red-500 border-red-500";
-      case "website":
-        return "text-blue-500 border-blue-500";
-      case "text":
-        return "text-green-500 border-green-500";
-      case "teach":
-        return "text-purple-500 border-purple-500";
-      default:
-        return "";
     }
   };
 
@@ -162,89 +212,162 @@ export default function KnowledgeContentList({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 border-r">
-      {/* Toolbar */}
-      <div className="border-b bg-card px-4 py-3 flex gap-2 shrink-0">
-        <Button variant="outline" size="sm" onClick={onAddDocument}>
-          <Plus className="w-4 h-4 mr-1" />
-          Document
-        </Button>
-        <Button variant="outline" size="sm" onClick={onAddWebsite}>
-          <Plus className="w-4 h-4 mr-1" />
-          Website
-        </Button>
-        <Button variant="outline" size="sm" onClick={onAddUrl}>
-          <Plus className="w-4 h-4 mr-1" />
-          URL
-        </Button>
-        <Button variant="outline" size="sm" onClick={onAddText}>
-          <Plus className="w-4 h-4 mr-1" />
-          Text
-        </Button>
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      {/* Header */}
+      <div className="h-12 md:h-14 border-b bg-muted px-3 md:px-4 flex justify-between items-center shrink-0">
+        <div className="flex-1 min-w-0">
+          <h4 className="text-xs md:text-sm font-medium text-foreground mb-0.5">
+            Knowledge Assets
+          </h4>
+          <p className="text-[10px] md:text-xs text-muted-foreground">
+            {unifiedContent.length} items in this folder
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <Button variant={"outline"} onClick={onAddDocument}>
+            <PDFIcon className="w-4 h-4 " />
+            Document
+          </Button>
+          <Button variant={"outline"} onClick={onAddWebsite}>
+            <Globe className="w-4 h-4 " />
+            Website
+          </Button>
+          <Button variant={"outline"} onClick={onAddUrl}>
+            <Globe className="w-4 h-4 " />
+            URL
+          </Button>
+          <Button variant={"outline"} onClick={onAddText}>
+            <Type className="w-4 h-4 " />
+            Text
+          </Button>
+        </div>
       </div>
 
       {/* Content List */}
-      <ScrollArea className="flex-1">
-        <div className="p-4">
-          {isLoading ? (
-            <ContentListSkeleton />
-          ) : unifiedContent.length > 0 ? (
-            <div className="space-y-2">
-              {unifiedContent.map((item) => (
-                <div
-                  key={`${item.type}-${item.id}`}
-                  className={clsx(
-                    "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border border-transparent",
-                    isSelected(item)
-                      ? "bg-muted/50 border-l-primary border-l-4 rounded-l-none"
-                      : "hover:bg-accent hover:border-border"
-                  )}
-                  onClick={() => onSelectContent(item.data)}
-                >
-                  <div className="shrink-0">{getIcon(item.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.title}</p>
-                    {item.subtitle && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {item.subtitle}
-                      </p>
+      <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-3">
+        {isLoading ? (
+          <ContentListSkeleton />
+        ) : unifiedContent.length > 0 ? (
+          unifiedContent.map((item) => (
+            <div
+              key={`${item.type}-${item.id}`}
+              className={clsx(
+                "group flex items-start p-2.5 md:p-3 rounded-xl md:rounded-2xl cursor-pointer transition-all border",
+                isSelected(item)
+                  ? "bg-secondary border-primary/20 shadow-sm"
+                  : "bg-background border-transparent hover:bg-muted/50 hover:border-border/50"
+              )}
+              onClick={() => onSelectContent(item.data)}
+            >
+              <div className="shrink-0 mt-0.5 p-1.5 md:p-2 bg-muted/50 rounded-lg md:rounded-xl group-hover:bg-muted transition-colors">
+                {getIcon(item.type)}
+              </div>
+
+              <div className="flex-1 min-w-0 ml-2 md:ml-3 mr-2">
+                <div className="flex items-center mb-0.5">
+                  <h5
+                    className={clsx(
+                      "text-xs md:text-sm font-medium truncate",
+                      isSelected(item)
+                        ? "text-foreground"
+                        : "text-foreground/90"
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      {/* Only showing status and date for cleaner look */}
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 h-5 font-normal"
-                      >
-                        {capitalize(item.status)}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground">
-                        {formatDate(item.updatedAt.toISOString())}
-                      </span>
-                    </div>
-                  </div>
+                  >
+                    {item.title}
+                  </h5>
                 </div>
-              ))}
+
+                <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2 leading-relaxed">
+                  {item.subtitle || "No description available"}
+                </p>
+              </div>
+
+              <div className="flex flex-col items-end gap-2 shrink-0 ml-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className={clsx(
+                      "text-[10px] px-2 py-0 h-5 font-normal transition-colors",
+                      item.status === "trained"
+                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                        : item.status === "processing"
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {capitalize(item.status)}
+                  </Badge>
+                  <span className="text-[9px] md:text-[10px] text-muted-foreground shrink-0 hidden sm:block">
+                    {formatDate(item.updatedAt.toISOString())}
+                  </span>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 opacity-0 group-hover:opacity-100 transition-all"
+                  onClick={(e) => handleDelete(e, item)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-16 text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No content yet</p>
-              <p className="text-sm">
-                Add documents, websites, or text to this folder
-              </p>
+          ))
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground px-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3 md:mb-4">
+              <FileText className="w-6 h-6 md:w-8 md:h-8 opacity-50" />
             </div>
-          )}
-        </div>
-      </ScrollArea>
+            <p className="text-base md:text-lg font-medium mb-2 text-center">
+              No knowledge yet
+            </p>
+            <p className="text-xs md:text-sm max-w-xs text-center mb-4 md:mb-6">
+              This folder is empty. Add different types of knowledge to train
+              your agent.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <ConfirmationDialog
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setContentToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Content"
+        description={getDeleteTitle()}
+        warningMessage="This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={
+          deletePdf.isPending ||
+          deleteWebsite.isPending ||
+          deleteText.isPending ||
+          deleteTeachKnowledge.isPending
+        }
+        variant="destructive"
+      />
     </div>
   );
 }
 
 function ContentListSkeleton() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 md:space-y-3">
       {[1, 2, 3, 4, 5].map((i) => (
-        <Skeleton key={i} className="h-20 w-full" />
+        <div
+          key={i}
+          className="flex gap-3 md:gap-4 p-3 md:p-4 rounded-xl md:rounded-2xl bg-muted/5"
+        >
+          <Skeleton className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3 md:h-4 w-1/3" />
+            <Skeleton className="h-2.5 md:h-3 w-3/4" />
+          </div>
+        </div>
       ))}
     </div>
   );

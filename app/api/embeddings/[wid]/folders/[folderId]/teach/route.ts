@@ -48,7 +48,7 @@ export async function POST(
     );
   } catch (error) {
     console.error("Error in teach embedding: ", error);
-    console.log("7.0");
+
     if (error instanceof z.ZodError) {
       return errorResponse(error.message, 400);
     }

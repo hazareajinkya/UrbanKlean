@@ -21,14 +21,15 @@ export async function POST(
     if (!wid) return errorResponse("Workspace ID is required", 400);
     if (!folderId) return errorResponse("Folder ID is required", 400);
 
-    const { content } = await validateRequestBody(request);
+    const { content, title } = await validateRequestBody(request);
 
     const textId = v4();
     const { chunkSize, points } = await knowledgeService.s_embedText(
       wid,
       folderId,
       textId,
-      content
+      content,
+      title
     );
 
     await knowledgeService.s_saveText(
@@ -36,7 +37,8 @@ export async function POST(
       folderId,
       points,
       content,
-      chunkSize
+      chunkSize,
+      title
     );
 
     return successResponse(
@@ -56,6 +58,7 @@ export async function POST(
 
 const textEmbeddingSchema = z.object({
   content: z.string().min(1, "Content is required"),
+  title: z.string().min(1, "Title is required"),
 });
 
 const validateRequestBody = async (request: NextRequest) => {
@@ -93,6 +96,53 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("Error deleting text knowledge: ", error);
+    return serverErrorResponse(error);
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ wid: string; folderId: string }> }
+) {
+  try {
+    const { wid, folderId } = await params;
+    if (!wid) return errorResponse("Workspace ID is required", 400);
+    if (!folderId) return errorResponse("Folder ID is required", 400);
+
+    const { searchParams } = new URL(request.url);
+    const textId = searchParams.get("textId");
+
+    if (!textId) return errorResponse("Text ID is required", 400);
+
+    const { content, title } = await validateRequestBody(request);
+
+    const { chunkSize, points } = await knowledgeService.s_embedText(
+      wid,
+      folderId,
+      textId,
+      content,
+      title
+    );
+
+    await knowledgeService.s_updateTextKnowledge(
+      wid,
+      folderId,
+      textId,
+      title,
+      content,
+      points,
+      chunkSize
+    );
+
+    return successResponse(
+      { wid, folderId, textId, status: "trained" },
+      "Text updated successfully"
+    );
+  } catch (error) {
+    console.error("Error updating text knowledge: ", error);
+    if (error instanceof z.ZodError) {
+      return errorResponse(error.message, 400);
+    }
     return serverErrorResponse(error);
   }
 }

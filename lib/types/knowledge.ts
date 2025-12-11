@@ -6,6 +6,7 @@ export interface ITextKnowledge {
   id: string;
   wid: string;
   folderId: string;
+  title: string;
   points: string[];
   chunkSize: number;
   content: string;
@@ -66,14 +67,17 @@ export interface IWebPropsMetadata {
 export const generateDefaultTextKnowledge = (
   wid: string,
   folderId: string,
+  title: string,
   points: string[],
   content: string,
-  chunkSize: number
+  chunkSize: number,
+  id?: string
 ): ITextKnowledge => {
   return {
-    id: v4(),
+    id: id || v4(),
     wid,
     folderId,
+    title,
     points,
     chunkSize,
     content,

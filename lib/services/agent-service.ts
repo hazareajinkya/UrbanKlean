@@ -93,6 +93,25 @@ class AgentService {
       lastActivity: new Date().toISOString(),
     });
   };
+
+  removeFolderFromAgents = async (wid: string, folderId: string) => {
+    try {
+      const agents = await this.fetchAgents(wid);
+      const updatePromises = agents
+        .filter((agent) => agent.knowledgeFolders?.includes(folderId))
+        .map((agent) =>
+          updateDoc(doc(db, `agents/${agent.id}`), {
+            knowledgeFolders: agent.knowledgeFolders.filter(
+              (id) => id !== folderId
+            ),
+            updatedAt: new Date().toISOString(),
+          })
+        );
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error("Error removing folder from agents:", error);
+    }
+  };
 }
 
 const agentService = new AgentService();

@@ -24,6 +24,17 @@ export async function POST(
 
     const { urls, workspaceType } = await validateRequestBody(request);
 
+    await Promise.all(
+      urls.map((url) =>
+        knowledgeService.s_createPendingWebKnowledge(
+          wid,
+          folderId,
+          url,
+          new URL(url).hostname
+        )
+      )
+    );
+
     const webhookUrl = `${tunnelOrigin}/api/firecrawl-webhook`;
 
     const docId = v4();
@@ -68,7 +79,6 @@ const webEmbeddingSchema = z.object({
 const validateRequestBody = async (request: NextRequest) => {
   try {
     const body = await request.json();
-    console.log("Body : ", body);
     return webEmbeddingSchema.parse(body);
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -52,20 +52,53 @@ export const useKnowledgeActions = () => {
     onError: handleError,
   });
 
+  const updateText = useMutation({
+    mutationFn: async ({
+      wid,
+      folderId,
+      textId,
+      content,
+      title,
+    }: {
+      wid: string;
+      folderId: string;
+      textId: string;
+      content: string;
+      title: string;
+    }) => {
+      await axiosClient.put(
+        `/api/embeddings/${wid}/folders/${folderId}/text?textId=${textId}`,
+        {
+          content,
+          title,
+        }
+      );
+    },
+    onSuccess: (_, { wid, folderId }) => {
+      toast.success("Text updated successfully");
+      qc.invalidateQueries({ queryKey: textsKnowledgeKey(wid, folderId) });
+      qc.invalidateQueries({ queryKey: foldersKey(wid) });
+    },
+    onError: handleError,
+  });
+
   const embedAndSaveText = useMutation({
     mutationFn: async ({
       wid,
       folderId,
       content,
+      title,
     }: {
       wid: string;
       folderId: string;
       content: string;
+      title: string;
     }) => {
       await axiosClient.post(
         `/api/embeddings/${wid}/folders/${folderId}/text`,
         {
           content: content,
+          title: title,
         }
       );
     },
@@ -230,5 +263,6 @@ export const useKnowledgeActions = () => {
     crawlWebsites,
     deleteText,
     deleteTeachKnowledge,
+    updateText,
   };
 };

@@ -80,7 +80,7 @@ class PostmarkBotService {
           //   session.id,
           //   undefined
           // ),
-          searchKnowledge: searchKnowledge(agent),
+          searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
       //save ai message

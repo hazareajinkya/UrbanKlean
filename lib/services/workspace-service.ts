@@ -65,8 +65,7 @@ class WorkspaceService {
       updatedAt: new Date().toISOString(),
     });
 
-    // Create Miscellaneous folder
-    await folderService.createMiscellaneousFolder(wid);
+    await folderService.getOrCreateMiscellaneousFolder(wid);
 
     return workspace;
   }

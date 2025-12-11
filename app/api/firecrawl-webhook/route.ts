@@ -49,7 +49,13 @@ export async function POST(request: NextRequest) {
         title: result.metadata?.title ?? "",
       };
 
-      const websiteId = v4(); // Generate new ID for each page
+      const existingKnowledge = await knowledgeService.getUrlKnowledgeByUrl(
+        wid,
+        folderId,
+        me.url
+      );
+
+      const websiteId = existingKnowledge ? existingKnowledge.id : v4();
       const { chunkSize, points } = await knowledgeService.s_embedWeb(
         wid,
         folderId,
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ status: "ok" });
     } else if (event.type === "batch_scrape.completed") {
-      await knowledgeService.s_compeletedTraining(wid, folderId, docId);
+      await knowledgeService.s_completedTraining(wid, folderId, docId);
       if (workspaceType === "onboarding")
         backendClient.post("/onboard/completed", { wid });
       return NextResponse.json({ status: "ok" });

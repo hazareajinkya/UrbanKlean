@@ -243,9 +243,6 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                               <Folder className="w-4 h-4" />
                               <span className="font-medium">{folder.name}</span>
                             </div>
-                            <span className="text-sm text-muted-foreground">
-                              ({folder.itemCount.total} items)
-                            </span>
                           </div>
                         </label>
                       </div>

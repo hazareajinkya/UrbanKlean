@@ -28,7 +28,6 @@ export const saveTeachKnowledge = (wid: string) =>
           content,
           title
         );
-        console.log("Identified folder:", folderResult);
 
         const teachId = v4();
 
@@ -49,19 +48,6 @@ export const saveTeachKnowledge = (wid: string) =>
           description,
           points,
           chunkSize
-        );
-
-        // Update folder item count
-        await folderService.updateFolderItemCount(
-          wid,
-          folderResult.folderId,
-          "teach",
-          1
-        );
-
-        console.log(
-          "Teaching knowledge saved successfully to folder:",
-          folderResult.folderName
         );
 
         latency.end();
