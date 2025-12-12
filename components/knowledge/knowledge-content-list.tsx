@@ -36,7 +36,7 @@ import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 interface KnowledgeContentListProps {
   folderId: string;
   selectedContent: ContentItem | null;
-  onSelectContent: (content: ContentItem) => void;
+  onSelectContent: (content: ContentItem | null) => void;
   onAddDocument: () => void;
   onAddWebsite: () => void;
   onAddUrl: () => void;
@@ -126,6 +126,7 @@ export default function KnowledgeContentList({
         );
         break;
     }
+    onSelectContent(null);
   };
 
   const getDeleteTitle = () => {
@@ -291,7 +292,7 @@ export default function KnowledgeContentList({
                       "text-[10px] px-2 py-0 h-5 font-normal transition-colors",
                       item.status === "trained"
                         ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                        : item.status === "processing"
+                        : item.status === "training"
                         ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         : "bg-muted text-muted-foreground"
                     )}

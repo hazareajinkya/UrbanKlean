@@ -27,26 +27,21 @@ export const useKnowledgeActions = () => {
   const crawlWebsites = useMutation({
     mutationFn: async ({
       wid,
-      folderId,
-      baseUrl,
       urls,
     }: {
       wid: string;
-      folderId: string;
-      baseUrl: string;
-      urls: string[];
+      urls: { folderId: string; url: string }[];
     }) => {
-      await axiosClient.post(
-        `/api/embeddings/${wid}/folders/${folderId}/web/multi`,
-        {
-          baseUrl,
-          urls,
-        }
-      );
+      await axiosClient.post(`/api/embeddings/${wid}/web/multi`, {
+        urls,
+      });
     },
-    onSuccess: (_, { wid, folderId }) => {
+    onSuccess: (_, { wid, urls }) => {
       toast.success("Crawling started successfully");
-      qc.invalidateQueries({ queryKey: websitesKnowledgeKey(wid, folderId) });
+      const uniqueFolderIds = new Set(urls.map((u) => u.folderId));
+      uniqueFolderIds.forEach((folderId) => {
+        qc.invalidateQueries({ queryKey: websitesKnowledgeKey(wid, folderId) });
+      });
       qc.invalidateQueries({ queryKey: foldersKey(wid) });
     },
     onError: handleError,

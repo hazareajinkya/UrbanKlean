@@ -171,7 +171,12 @@ export default function FolderSidebar({
                       {folder.name}
                     </span>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity">
+                  <div
+                    className={clsx(
+                      "opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity",
+                      folder.name !== "Miscellaneous" ? "" : "hidden"
+                    )}
+                  >
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

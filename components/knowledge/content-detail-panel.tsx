@@ -33,7 +33,8 @@ export type ContentItem =
   | { type: "document"; data: IDocKnowledge }
   | { type: "website"; data: IWebKnowledge }
   | { type: "text"; data: ITextKnowledge }
-  | { type: "teach"; data: ITeachKnowledge };
+  | { type: "teach"; data: ITeachKnowledge }
+  | null;
 
 interface ContentDetailPanelProps {
   content: ContentItem | null;

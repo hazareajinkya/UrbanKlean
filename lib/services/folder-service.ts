@@ -16,8 +16,8 @@ import {
 import { db } from "../clients/firebase";
 import { generateDefaultFolder, IFolder } from "../types/folder";
 import { deleteCollection } from "../utils";
-import knowledgeService from "./knowledge-service";
 import agentService from "./agent-service";
+import axiosClient from "../clients/axios-client";
 
 class FolderService {
   async createFolder(wid: string, name: string) {
@@ -81,8 +81,11 @@ class FolderService {
   }
 
   async deleteFolder(wid: string, folderId: string) {
+    // Delete folder knowledge from Qdrant via API route (server-side)
     try {
-      await knowledgeService.deleteAllKnowledgeInFolder(wid, folderId);
+      await axiosClient.delete(
+        `/api/embeddings/${wid}/folders/${folderId}/qdrant-delete`
+      );
     } catch (e) {
       console.error("Failed to delete Qdrant knowledge");
       throw e;

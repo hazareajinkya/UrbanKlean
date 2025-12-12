@@ -140,25 +140,13 @@ export default function KnowledgeTab() {
 
   const handleAddMultipleUrls = async () => {
     if (selectedUrls.length === 0) return;
-    const urlsByFolder = selectedUrls.reduce((acc, curr) => {
-      if (!acc[curr.folderId]) {
-        acc[curr.folderId] = [];
-      }
-      acc[curr.folderId].push(curr.url);
-      return acc;
-    }, {} as Record<string, string[]>);
 
     try {
-      const promises = Object.entries(urlsByFolder).map(([folderId, urls]) =>
-        crawlWebsites.mutateAsync({
-          wid,
-          folderId,
-          baseUrl: websiteUrl,
-          urls,
-        })
-      );
+      await crawlWebsites.mutateAsync({
+        wid,
+        urls: selectedUrls,
+      });
 
-      await Promise.all(promises);
       handleCloseWebsiteModal();
     } catch (error) {
       console.error("Error adding URLs:", error);

@@ -11,41 +11,54 @@ import z from "zod";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ wid: string; folderId: string }> }
+  { params }: { params: Promise<{ wid: string }> }
 ) {
   const { TUNNEL_URL, NODE_ENV, NEXT_PUBLIC_BASE_URL } = process.env;
   const tunnelOrigin =
     NODE_ENV === "production" ? NEXT_PUBLIC_BASE_URL : TUNNEL_URL;
 
   try {
-    const { wid, folderId } = await params;
+    const { wid } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
-    if (!folderId) return errorResponse("Folder ID is required", 400);
 
-    const { urls, workspaceType } = await validateRequestBody(request);
+    const { urls: urlObjects, workspaceType } = await validateRequestBody(
+      request
+    );
+
+    const targetUrls: string[] = [];
+    const urlMetadata: Record<
+      string,
+      { folderId: string; knowledgeId: string }
+    > = {};
 
     await Promise.all(
-      urls.map((url) =>
-        knowledgeService.s_createPendingWebKnowledge(
+      urlObjects.map(async (obj) => {
+        const title = new URL(obj.url).hostname;
+        const knowledgeId = await knowledgeService.s_createPendingWebKnowledge(
           wid,
-          folderId,
-          url,
-          new URL(url).hostname
-        )
-      )
+          obj.folderId,
+          obj.url,
+          title
+        );
+
+        targetUrls.push(obj.url);
+        urlMetadata[obj.url] = {
+          folderId: obj.folderId,
+          knowledgeId,
+        };
+      })
     );
 
     const webhookUrl = `${tunnelOrigin}/api/firecrawl-webhook`;
+    const batchId = v4();
 
-    const docId = v4();
-
-    await firecrawl.startBatchScrape(urls, {
+    await firecrawl.startBatchScrape(targetUrls, {
       webhook: {
         url: webhookUrl,
         metadata: {
           wid,
-          folderId,
-          docId,
+          urlMetadata: JSON.stringify(urlMetadata),
+          batchId,
           type: "batch_scrape",
           workspaceType,
         },
@@ -55,7 +68,7 @@ export async function POST(
     });
 
     return successResponse(
-      { wid, folderId, urls, status: "scraping_started" },
+      { wid, status: "scraping_started", count: targetUrls.length },
       "Web scraping started"
     );
   } catch (error) {
@@ -69,7 +82,12 @@ export async function POST(
 }
 
 const webEmbeddingSchema = z.object({
-  urls: z.array(z.url("Invalid URL")),
+  urls: z.array(
+    z.object({
+      folderId: z.string(),
+      url: z.string().url("Invalid URL"),
+    })
+  ),
   workspaceType: z
     .enum(["onboarding", "default"])
     .optional()
