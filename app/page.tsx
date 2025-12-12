@@ -15,14 +15,19 @@ import { useRef } from "react";
 
 export default function LandingPage() {
   const whyRef = useRef(null);
+  const ctaRef = useRef(null);
 
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress: whyRefProgress } = useScroll({
     target: whyRef,
-    offset: ["start end", "end start"],
+    offset: ["start start", "end start"],
+  });
+  const { scrollYProgress: ctaRefProgress } = useScroll({
+    target: ctaRef,
+    offset: ["start start", "end start"],
   });
   return (
     <div className="bg-background min-h-screen">
-      <Navbar scrollYProgress={scrollYProgress} />
+      <Navbar whyRefProgress={whyRefProgress} ctaRefProgress={ctaRefProgress} />
 
       <HeroSection />
       <SocialProofStrip />
@@ -36,7 +41,7 @@ export default function LandingPage() {
       <HowItWorks />
 
       <FaqSection />
-      <div className="bg-background dark">
+      <div className="bg-background dark" ref={ctaRef}>
         <CtaSection />
         <Footer />
       </div>

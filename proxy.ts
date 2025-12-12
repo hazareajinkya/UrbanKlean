@@ -1,17 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextRequest, NextResponse } from "next/server";
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3002",
-  "https://www.magicalcx.com",
-];
-
-const corsOptions = {
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
 const INTERNAL_KEY = process.env.INTERNAL_SECRET;
 
 function proxy(request: NextRequest) {

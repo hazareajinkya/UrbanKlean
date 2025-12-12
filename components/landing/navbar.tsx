@@ -14,9 +14,11 @@ import {
 import { useDemoModal } from "./demo-modal";
 
 export const Navbar = ({
-  scrollYProgress,
+  whyRefProgress,
+  ctaRefProgress,
 }: {
-  scrollYProgress?: MotionValue<number>;
+  whyRefProgress?: MotionValue<number>;
+  ctaRefProgress?: MotionValue<number>;
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,15 +37,19 @@ export const Navbar = ({
   const handleCloseMenu = () => setIsMenuOpen(false);
 
   const navLinks = [
-    { href: "#features", label: "Features" },
+    { href: "/#features", label: "Features" },
     { href: "/pricing", label: "Pricing" },
     { href: "/blog", label: "Resources" },
     { href: "/about", label: "About" },
   ];
 
-  if (scrollYProgress) {
-    useMotionValueEvent(scrollYProgress, "change", (v) => {
-      if (v > 0.477 && v < 0.99) setIsInside(true);
+  if (whyRefProgress && ctaRefProgress) {
+    useMotionValueEvent(whyRefProgress, "change", (v) => {
+      if (v > 0 && v < 0.99) setIsInside(true);
+      else setIsInside(false);
+    });
+    useMotionValueEvent(ctaRefProgress, "change", (v) => {
+      if (v > 0 && v < 0.99) setIsInside(true);
       else setIsInside(false);
     });
   }
@@ -200,7 +206,12 @@ export const Navbar = ({
                   exit={{ opacity: 0, rotate: -90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Menu className="size-5" aria-hidden="true" />
+                  <Menu
+                    className={`${
+                      isInside ? "text-primary" : "text-foreground"
+                    }`}
+                    aria-hidden="true"
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
