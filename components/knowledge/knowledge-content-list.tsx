@@ -217,10 +217,10 @@ export default function KnowledgeContentList({
       {/* Header */}
       <div className="h-12 md:h-14 border-b bg-muted px-3 md:px-4 flex justify-between items-center shrink-0">
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs md:text-sm font-medium text-foreground mb-0.5">
+          <h4 className="text-xs md:text-sm font-medium text-foreground mb-0.5  truncate">
             Knowledge Assets
           </h4>
-          <p className="text-[10px] md:text-xs text-muted-foreground">
+          <p className="text-[10px] md:text-xs text-muted-foreground truncate">
             {unifiedContent.length} items in this folder
           </p>
         </div>
