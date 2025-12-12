@@ -10,8 +10,8 @@ export default function TermsPage() {
     <div className="bg-background min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow pt-24 pb-16 section-container section-content-padding border-x">
-        <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
+      <main className="flex-grow pt-24 pb-16 border-x section-container section-content-padding w-full ">
+        <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8">
             Terms of Service
           </h1>
