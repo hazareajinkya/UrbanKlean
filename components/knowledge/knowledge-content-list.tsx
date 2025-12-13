@@ -213,11 +213,11 @@ export default function KnowledgeContentList({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+    <div className="flex-1 flex flex-col  h-full overflow-hidden">
       {/* Header */}
       <div className="h-12 md:h-14 border-b bg-muted px-3 md:px-4 flex justify-between items-center shrink-0">
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs md:text-sm font-medium text-foreground mb-0.5  truncate">
+          <h4 className="text-xs md:text-sm font-medium text-foreground mb-0.5 truncate">
             Knowledge Assets
           </h4>
           <p className="text-[10px] md:text-xs text-muted-foreground truncate">
@@ -225,21 +225,51 @@ export default function KnowledgeContentList({
           </p>
         </div>
 
-        <div className="flex gap-2">
+        {/* Mobile: Dropdown menu */}
+        <div className="md:hidden shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onAddDocument}>
+                <PDFIcon className="w-4 h-4 mr-2" />
+                Document
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onAddWebsite}>
+                <Globe className="w-4 h-4 mr-2" />
+                Website
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onAddUrl}>
+                <Globe className="w-4 h-4 mr-2" />
+                URL
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onAddText}>
+                <Type className="w-4 h-4 mr-2" />
+                Text
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop: Inline buttons */}
+        <div className="hidden md:flex gap-2 shrink-0">
           <Button variant={"outline"} onClick={onAddDocument}>
-            <PDFIcon className="w-4 h-4 " />
+            <PDFIcon className="w-4 h-4" />
             Document
           </Button>
           <Button variant={"outline"} onClick={onAddWebsite}>
-            <Globe className="w-4 h-4 " />
+            <Globe className="w-4 h-4" />
             Website
           </Button>
           <Button variant={"outline"} onClick={onAddUrl}>
-            <Globe className="w-4 h-4 " />
+            <Globe className="w-4 h-4" />
             URL
           </Button>
           <Button variant={"outline"} onClick={onAddText}>
-            <Type className="w-4 h-4 " />
+            <Type className="w-4 h-4" />
             Text
           </Button>
         </div>
@@ -254,18 +284,18 @@ export default function KnowledgeContentList({
             <div
               key={`${item.type}-${item.id}`}
               className={clsx(
-                "group flex items-start p-2.5 md:p-3 rounded-xl md:rounded-2xl cursor-pointer transition-all border",
+                "group flex items-start p-2.5 md:p-3 rounded-xl flexw cursor-pointer transition-all border",
                 isSelected(item)
                   ? "bg-secondary border-primary/20 shadow-sm"
                   : "bg-background border-transparent hover:bg-muted/50 hover:border-border/50"
               )}
               onClick={() => onSelectContent(item.data)}
             >
-              <div className="shrink-0 mt-0.5 p-1.5 md:p-2 bg-muted/50 rounded-lg md:rounded-xl group-hover:bg-muted transition-colors">
+              <div className="shrink-0 mt-0.5 p-1.  5 md:p-2 bg-muted/50 rounded-lg md:rounded-xl group-hover:bg-muted transition-colors">
                 {getIcon(item.type)}
               </div>
 
-              <div className="flex-1 min-w-0 ml-2 md:ml-3 mr-2">
+              <div className="flex-1 ml-2 md:ml-3 mr-2 overflow-hidden">
                 <div className="flex items-center mb-0.5">
                   <h5
                     className={clsx(
@@ -279,7 +309,7 @@ export default function KnowledgeContentList({
                   </h5>
                 </div>
 
-                <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2 leading-relaxed">
+                <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1 md:line-clamp-2 leading-relaxed truncate">
                   {item.subtitle || "No description available"}
                 </p>
               </div>

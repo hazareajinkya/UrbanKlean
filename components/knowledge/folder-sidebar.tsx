@@ -94,7 +94,7 @@ export default function FolderSidebar({
 
   if (isLoading) {
     return (
-      <aside className="w-[280px] lg:w-[260px] xl:w-[280px] flex-shrink-0 border-r bg-secondary flex flex-col">
+      <aside className="w-[260px] lg:w-[280px] flex-shrink-0 border-r bg-secondary flex flex-col">
         <div className="h-14 border-b bg-muted/10 px-4 grid place-items-center">
           <Skeleton className="h-8 w-full" />
         </div>
@@ -109,7 +109,7 @@ export default function FolderSidebar({
 
   return (
     <>
-      <aside className="w-[280px] lg:w-[260px] xl:w-[280px] flex-shrink-0 border-r bg-secondary flex flex-col h-full">
+      <aside className="w-[260px] lg:w-[280px]  flex-shrink-0 border-r bg-secondary flex flex-col h-full">
         {/* Header */}
         <div className="h-14 border-b bg-muted/10 px-4 flex items-center justify-between flex-shrink-0">
           <span className="text-sm font-medium text-foreground">Folders</span>
@@ -144,7 +144,7 @@ export default function FolderSidebar({
                 <div
                   key={folder.id}
                   className={clsx(
-                    "group relative flex items-center justify-between px-4 py-3.5 border-b text-sm transition-all cursor-pointer hover:bg-card/70",
+                    "group relative flex items-center justify-between px-4 py-3.5 border-b text-sm transition-all cursor-pointer hover:bg-card/70 ",
                     selectedFolderId === folder.id
                       ? "bg-card border-l-2 border-l-primary border-b-muted"
                       : "border-l-2 border-l-transparent"
@@ -162,7 +162,7 @@ export default function FolderSidebar({
                     />
                     <span
                       className={clsx(
-                        "truncate font-medium",
+                        "font-medium line-clamp-1",
                         selectedFolderId === folder.id
                           ? "text-foreground"
                           : "text-muted-foreground"

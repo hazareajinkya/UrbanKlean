@@ -57,7 +57,7 @@ export default function KnowledgeBasePage() {
       {/* Tab Content */}
       <div className="flex-1 flex min-h-0 bg-background/50">
         {activeTab === "knowledge" && (
-          <div className="flex-1 flex min-h-0 p-4">
+          <div className="flex-1 flex min-h-0 p-4 overflow-hidden">
             <KnowledgeTab />
           </div>
         )}
