@@ -1,142 +1,74 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Trash } from "lucide-react";
-
+import { Settings2, Globe, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
-import { normalizeDomain, validateDomain } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { GeneralTab } from "@/components/worksapce/settings/general-tab";
+import { DomainsTab } from "@/components/worksapce/settings/domains-tab";
+import MembersTab from "@/components/worksapce/settings/members-tab";
+
+const sections = [
+  {
+    id: "general",
+    label: "General",
+    icon: Settings2,
+    description: "Basic workspace information",
+  },
+  {
+    id: "domains",
+    label: "Domains",
+    icon: Globe,
+    description: "Domain access settings",
+  },
+  {
+    id: "members",
+    label: "Members",
+    icon: User,
+    description: "Manage workspace members",
+  },
+];
 
 export default function SettingsPage() {
   const { wid } = useParams() as { wid: string };
-  const {
-    workspace,
-    isLoading: isWorkspaceLoading,
-    isFetching,
-  } = useWorkspace(wid);
-  const { updateWorkspace, addWorkspaceDomain, removeWorkspaceDomain } =
-    useWorkspaceActions();
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [workspaceDescription, setWorkspaceDescription] = useState("");
-  const [companyDomain, setCompanyDomain] = useState("");
-  const [domainError, setDomainError] = useState("");
-  const [removingDomain, setRemovingDomain] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeSection = searchParams.get("section") || "general";
 
-  const domains = workspace?.domains || [];
+  const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(wid);
+  useWorkspaceActions();
 
-  useEffect(() => {
-    if (!workspace) return;
-    setWorkspaceName(workspace.name || "");
-    setWorkspaceDescription(workspace.oneLiner || "");
-  }, [workspace]);
-
-  const disableDomainActions = useMemo(
-    () => addWorkspaceDomain.isPending || removeWorkspaceDomain.isPending,
-    [addWorkspaceDomain.isPending, removeWorkspaceDomain.isPending]
-  );
-
-  const handleDomainChange = (value: string) => {
-    setCompanyDomain(value);
-    if (value && !validateDomain(value)) {
-      setDomainError("Please enter a valid domain (e.g., magicalcx.com)");
-    } else {
-      setDomainError("");
-    }
-  };
-
-  const handleDomainPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-    const pastedValue = event.clipboardData.getData("text");
-    const normalized = normalizeDomain(pastedValue);
-    if (!normalized) return;
-    event.preventDefault();
-    handleDomainChange(normalized);
-  };
-
-  const isDomainInvalid = Boolean(domainError);
-  const canAddDomain =
-    Boolean(companyDomain.trim()) && !isDomainInvalid && !disableDomainActions;
-
-  const handleAddDomain = async () => {
-    const normalized = normalizeDomain(companyDomain);
-    if (!normalized) {
-      setDomainError("Please enter a domain before adding.");
-      return;
-    }
-
-    if (!validateDomain(normalized)) {
-      setDomainError("Please enter a valid domain (e.g., magicalcx.com)");
-      return;
-    }
-
-    if (domains.includes(normalized)) {
-      setDomainError("This domain is already linked.");
-      return;
-    }
-
-    setCompanyDomain("");
-    setDomainError("");
-
-    await addWorkspaceDomain.mutateAsync({ wid, domain: normalized });
-  };
-
-  const handleRemoveDomain = async (domain: string) => {
-    setRemovingDomain(domain);
-    await removeWorkspaceDomain.mutateAsync({ wid, domain });
-    setRemovingDomain(null);
-  };
-
-  const handleDomainKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleAddDomain();
-    }
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (companyDomain && !validateDomain(companyDomain)) {
-      setDomainError("Please enter a valid domain (e.g., magicalcx.com)");
-      return;
-    }
-
-    await updateWorkspace.mutateAsync({
-      wid,
-      updates: {
-        name: workspaceName.trim(),
-        oneLiner: workspaceDescription.trim(),
-      },
+  const handleSectionChange = (sectionId: string) => {
+    router.push(`/workspaces/${wid}/settings?section=${sectionId}`, {
+      scroll: false,
     });
   };
 
   if (isWorkspaceLoading) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6 p-6">
-        {[...Array(3)].map((_, index) => (
-          <Card key={index} className="space-y-4 p-6">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-44" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-40" />
-          </Card>
-        ))}
+      <div className="flex flex-col h-full">
+        <div className="border-b p-4">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <div className="flex gap-2 mt-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-10 w-28 rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
+          <Skeleton className="h-6 w-40 mb-2" />
+          <Skeleton className="h-4 w-64 mb-6" />
+          <Skeleton className="h-48 w-full rounded-lg" />
+        </div>
       </div>
     );
   }
@@ -158,212 +90,75 @@ export default function SettingsPage() {
   }
 
   return (
-    <div
-      className="p-6 max-w-4xl mx-auto space-y-6"
-      aria-busy={updateWorkspace.isPending || isFetching}
-    >
-      <div className="mb-6">
-        <h1 className="text-xl">Workspace Settings</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage your workspace information and settings.
-        </p>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>General Information</CardTitle>
-            <CardDescription>
-              Update your workspace informations.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label>
-                Workspace Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                placeholder="Enter your workspace name"
-                value={workspaceName}
-                onChange={(e) => setWorkspaceName(e.target.value)}
-                required
-                disabled={updateWorkspace.isPending}
-                className=" "
-              />
-            </div>
+    <div className="flex flex-col h-full">
+      {/* Top Rail Navigation */}
+      <header className="border-b bg-card/50 px-6 pt-4 pb-0">
+        <div className="mb-4">
+          <h1 className="text-xl font-semibold">Workspace Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your workspace information and settings
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label>Workspace Description</Label>
-              <Textarea
-                placeholder="Describe what this workspace is used for (optional)"
-                value={workspaceDescription}
-                onChange={(e) => setWorkspaceDescription(e.target.value)}
-                disabled={updateWorkspace.isPending}
-                rows={4}
-                className="transition-all resize-none"
-              />
-            </div>
+        <nav className="flex gap-1" role="tablist">
+          {sections.map((section) => {
+            const isActive = activeSection === section.id;
+            const isDanger = section.id === "danger";
 
-            <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                disabled={updateWorkspace.isPending || !workspaceName.trim()}
-                className="min-w-[120px] transition-all"
-              >
-                {updateWorkspace.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin " />
+            return (
+              <button
+                key={section.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handleSectionChange(section.id)}
+                className={cn(
+                  "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-t-lg",
+                  isActive
+                    ? isDanger
+                      ? "text-destructive"
+                      : "text-primary"
+                    : isDanger
+                    ? "text-muted-foreground hover:text-destructive"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
-                Save Changes
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
-      <Card>
-        <CardHeader className="space-y-4">
-          <CardTitle>Domain Settings</CardTitle>
-          <CardDescription>
-            Allow only approved company domains to access workspace agents.
-          </CardDescription>
-        </CardHeader>
+              >
+                <section.icon className="h-4 w-4" />
+                {section.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={cn(
+                      "absolute bottom-0 left-0 right-0 h-0.5",
+                      isDanger ? "bg-destructive" : "bg-primary"
+                    )}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </header>
 
-        <CardContent className="space-y-6">
-          <div className="">
-            <div className="space-y-2">
-              <Label>Company domain</Label>
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                <Input
-                  type="text"
-                  placeholder="magicalcx.com"
-                  value={companyDomain}
-                  onChange={(e) => handleDomainChange(e.target.value)}
-                  onPaste={handleDomainPaste}
-                  onKeyDown={handleDomainKeyDown}
-                  className={`w-full transition-all ${
-                    isDomainInvalid && "border-destructive"
-                  }`}
-                />
-                <Button
-                  type="button"
-                  disabled={!canAddDomain}
-                  onClick={handleAddDomain}
-                  className="w-full sm:w-auto transition-all disabled:opacity-50"
-                >
-                  {addWorkspaceDomain.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin " />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                  Add domain
-                </Button>
-              </div>
-              {isDomainInvalid ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {domainError}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Use your apex domain (e.g., magicalcx.com). Subdomains aren't
-                  required.
-                </p>
-              )}
-            </div>
-          </div>
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-3xl mx-auto p-6 space-y-6">
+          <AnimatePresence mode="wait">
+            {activeSection === "general" && (
+              <GeneralTab workspace={workspace} wid={wid} />
+            )}
 
-          <Separator className="bg-border/80" />
+            {activeSection === "domains" && (
+              <DomainsTab workspace={workspace} wid={wid} />
+            )}
 
-          <div className="rounded-xl" role="list">
-            <AnimatePresence initial={false} mode="wait">
-              {domains.length === 0 ? (
-                <motion.div
-                  key="empty-state"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-1 text-center"
-                >
-                  <p className="text-sm font-medium">No domains linked yet</p>
-                  <p className="text-xs text-muted-foreground">
-                    Add your first domain to secure workspace access.
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="domain-list"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col gap-3"
-                >
-                  <AnimatePresence initial={false}>
-                    {domains.map((domain) => (
-                      <motion.div
-                        key={domain}
-                        layout
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -12 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="flex flex-col gap-2 rounded-lg border border-transparent bg-background/70 p-3 transition hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between"
-                        role="listitem"
-                        tabIndex={0}
-                      >
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-medium tracking-tight">
-                            {domain}
-                          </p>
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveDomain(domain)}
-                          disabled={removeWorkspaceDomain.isPending}
-                          className="hover:text-destructive transition-colors"
-                        >
-                          {removeWorkspaceDomain.isPending &&
-                          removingDomain === domain ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible and destructive actions that permanently affect your
-            workspace.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Delete Workspace</h4>
-            <p className="text-sm text-muted-foreground">
-              Once you delete a workspace, there is no going back. This action
-              will permanently delete all workspace data, including agents,
-              knowledge bases, members, and all associated content. This cannot
-              be undone.
-            </p>
-          </div>
-          <div className="flex justify-end">
-            <Button variant="destructive" disabled>
-              Delete Workspace
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            {activeSection === "members" && (
+              // <MembersTab workspace={workspace} wid={wid} />
+              <MembersTab />
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
   );
 }
