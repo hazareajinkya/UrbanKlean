@@ -40,7 +40,7 @@ export const generateDefaultAgent = (
     wid: wid,
     ownerId: workspace.ownerId,
     channels: [],
-    knowledgeFolders: [],
+    knowledgeFolders: workspace.folders.map((folder) => folder.id),
     customization: {
       name: name,
       greetingMessage: "Hello, how can I help you today?",
