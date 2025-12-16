@@ -7,6 +7,7 @@ import { DefaultChatTransport, ToolUIPart } from "ai";
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatHeader } from "@/components/chat/chat-header";
+import { StarterMessages } from "@/components/chat/starter-messages";
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import {
   chatInitKey,
@@ -203,14 +204,29 @@ export default function ChatPage() {
         {messagesLoading ? (
           <div></div>
         ) : (
-          <MessageList
-            agent={agent}
-            messages={messages as IChatMessage[]}
-            status={status}
-            isWidget={isWidget}
-          />
+          <>
+            <MessageList
+              agent={agent}
+              messages={messages as IChatMessage[]}
+              status={status}
+              isWidget={isWidget}
+            />
+            {!messages.some((m) => m.role === "user") && (
+              <StarterMessages
+                agent={agent}
+                onSelectMessage={(message) => {
+                  sendMessage({
+                    text: message,
+                    metadata: { createdAt: new Date().toISOString() },
+                  });
+                }}
+                disabled={status !== "ready"}
+              />
+            )}
+          </>
         )}
       </div>
+
       <ChatInput
         agent={agent}
         input={input}

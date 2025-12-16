@@ -252,6 +252,15 @@ class WorkspaceService {
 
     await setDoc(doc(db, `workspaces/${wid}/members/${userEmail}`), data);
   }
+
+  async generateWorkspaceInfo({ wid, url }: { wid: string; url: string }) {
+    console.log("Generating workspace info for", wid, url);
+    const { data } = await axiosClient.post("/api/workspace/generate-info", {
+      wid,
+      url,
+    });
+    return data;
+  }
 }
 
 const workspaceService = new WorkspaceService();

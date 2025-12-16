@@ -56,11 +56,21 @@ export const useWorkspaceActions = () => {
     onError: handleError,
   });
 
+  const generateWorkspaceInfo = useMutation({
+    mutationFn: workspaceService.generateWorkspaceInfo,
+    onSuccess: (_, variables) => {
+      toast.success("Workspace info generated successfully");
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   return {
     createWorkspace,
     updateWorkspace,
     addWorkspaceDomain,
     removeWorkspaceDomain,
     deleteWorkspace,
+    generateWorkspaceInfo,
   };
 };

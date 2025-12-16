@@ -138,9 +138,7 @@
   body {
     @apply bg-background text-foreground;
   }
-
 }
-
 
 @layer utilities {
   .section-container {
@@ -168,8 +166,6 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-
 
 /* Message Loading animation */
 spinner {
@@ -208,5 +204,15 @@ spinner {
   40% {
     -webkit-transform: translateY(-5.5px);
     transform: translateY(-5.5px);
+  }
+}
+
+/* Shimmer animation for AI loading */
+@keyframes shimmer-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
   }
 }

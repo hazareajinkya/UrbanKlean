@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useMembers } from "@/lib/hooks/members/use-members";
 import { useMemberActions } from "@/lib/hooks/members/use-member-actions";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
@@ -38,6 +38,8 @@ import {
   EllipsisVertical,
   Edit,
   PencilLine,
+  Send,
+  UserPlus,
 } from "lucide-react";
 import {
   MemberRole,
@@ -160,33 +162,38 @@ export default function MembersPage() {
       transition={{ duration: 0.2 }}
     >
       <div className="mb-6">
-        <h2 className="text-xl font-medium">Team Members</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-xl">Team Members</h1>
+        <p className="text-muted-foreground text-sm">
           Manage your workspace members and their permissions.
         </p>
       </div>
 
       <Card>
-        <CardContent className="space-y-6 pt-6">
-          {/* Invite Member Section */}
-          {canInviteMembers(currentUserRole) && (
-            <>
-              <div className="space-y-2">
-                <Label>Invite New Member</Label>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+        {canInviteMembers(currentUserRole) && (
+          <CardHeader>
+            <div className="">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email address
+                  </label>
                   <Input
                     type="email"
                     placeholder="steve.jobs@apple.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={handleEmailKeyDown}
                     className="w-full"
                   />
+                </div>
+                <div className="w-36">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role
+                  </label>
                   <Select
                     value={role}
                     onValueChange={(value: MemberRole) => setRole(value)}
                   >
-                    <SelectTrigger className="w-full sm:w-32">
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -194,238 +201,225 @@ export default function MembersPage() {
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="mt-6.5">
                   <Button
                     onClick={handleInviteMember}
                     disabled={!email.trim() || isInviting}
-                    className="w-full sm:w-auto"
                   >
                     {isInviting ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Send className="w-4 h-4" />
                     )}
-                    Add Member
+                    Send Invitation
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter an email address to invite a new team member.
-                </p>
               </div>
+            </div>
+          </CardHeader>
+        )}
 
-              <Separator />
-            </>
+        <CardContent
+          className={canInviteMembers(currentUserRole) ? "" : "pt-6"}
+        >
+          {canInviteMembers(currentUserRole) && (
+            <div className="border-t"></div>
           )}
 
-          {/* Active Members Section */}
-          <div>
-            <h3 className="text-sm font-medium mb-3">Active Members</h3>
-            <div className="rounded-lg border" role="list">
-              <AnimatePresence initial={false} mode="popLayout">
-                {isLoading ? (
-                  <>
-                    <MemberSkeleton />
-                    <MemberSkeleton />
-                    <MemberSkeleton />
-                  </>
-                ) : activeMembers.length === 0 ? (
-                  <motion.div
-                    key="empty-state"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="p-8 text-center"
-                  >
-                    <Users className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                    <p className="text-sm font-medium">No members yet</p>
-                    <p className="text-xs text-muted-foreground">
-                      Invite your first team member to get started.
-                    </p>
-                  </motion.div>
-                ) : (
-                  activeMembers.map((member, index) => (
-                    <motion.div
-                      key={member.email}
-                      layout
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className={cn(
-                        "flex items-center justify-between p-3 hover:bg-accent/50 transition-colors",
-                        index !== activeMembers.length - 1 && "border-b"
-                      )}
-                      role="listitem"
+          <div
+            className={`divide-y ${
+              canInviteMembers(currentUserRole) ? "mt-6" : ""
+            } divide-gray-200`}
+          >
+            {isLoading ? (
+              <>
+                <MemberSkeleton />
+                <MemberSkeleton />
+                <MemberSkeleton />
+              </>
+            ) : (
+              activeMembers.map((member) => (
+                <div
+                  key={member.email}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage
+                        src={
+                          member.user?.photoUrl ||
+                          `https://api.dicebear.com/7.x/initials/svg?seed=${member.email}`
+                        }
+                      />
+                      <AvatarFallback className="bg-blue-100 text-blue-600">
+                        {member.user?.name?.charAt(0)?.toUpperCase() ||
+                          member.email.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {member.user?.name ||
+                          member.email
+                            .split("@")[0]
+                            .replace(/[._]/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {member.email}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={
+                        "text-xs px-3 py-1 rounded-md bg-primary/5 text-primary"
+                      }
+                      aria-label={`Role: ${getRoleDisplayName(member.role)}`}
+                      tabIndex={0}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Avatar>
-                            <AvatarFallback>
-                              {member.user?.name?.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                            <AvatarImage src={member.user?.photoUrl} />
-                          </Avatar>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium">
-                            {member.user?.name ||
-                              member.email
-                                .split("@")[0]
-                                .replace(/[._]/g, " ")
-                                .replace(/\b\w/g, (l) => l.toUpperCase())}
-                          </span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {member.email}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                          {getRoleDisplayName(member.role)}
-                        </span>
-                        {canManageMembers(currentUserRole) &&
-                          member.email !== user?.email && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                >
-                                  <EllipsisVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    const newRole =
-                                      member.role === "admin"
-                                        ? "member"
-                                        : "admin";
-                                    handleUpdateRole(member.email, newRole);
-                                  }}
-                                >
-                                  <PencilLine className="w-4 h-4 mr-2" />
-                                  Change to{" "}
-                                  {member.role === "admin" ? "Member" : "Admin"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setMemberToRemove({
-                                      email: member.email,
-                                      name:
-                                        member.user?.name ||
-                                        member.email
-                                          .split("@")[0]
-                                          .replace(/[._]/g, " ")
-                                          .replace(/\b\w/g, (l) =>
-                                            l.toUpperCase()
-                                          ),
-                                      isPending: false,
-                                    })
-                                  }
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <UserMinus className="w-4 h-4 mr-2" />
-                                  Remove Member
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                      </div>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </div>
+                      {getRoleDisplayName(member.role)}
+                    </span>
+
+                    {canManageMembers(currentUserRole) &&
+                      member.email !== user?.email && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const newRole =
+                                  member.role === "admin" ? "member" : "admin";
+                                handleUpdateRole(member.email, newRole);
+                              }}
+                            >
+                              Change Role
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setMemberToRemove({
+                                  email: member.email,
+                                  name:
+                                    member.user?.name ||
+                                    member.email
+                                      .split("@")[0]
+                                      .replace(/[._]/g, " ")
+                                      .replace(/\b\w/g, (l) => l.toUpperCase()),
+                                  isPending: false,
+                                })
+                              }
+                              className="text-red-600"
+                            >
+                              <UserMinus className="w-4 h-4 mr-2" />
+                              Remove Member
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Pending Invitations Section */}
           {pendingMembers.length > 0 && !isLoading && (
-            <>
-              <Separator />
+            <div className="mt-6 border-t pt-6">
+              <h3 className="text-muted-foreground">Pending Invitations</h3>
 
-              <div>
-                <h3 className="text-sm font-medium mb-3">
-                  Pending Invitations
-                </h3>
-                <div className="rounded-lg border" role="list">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {pendingMembers.map((member, index) => (
-                      <motion.div
-                        key={member.email}
-                        layout
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={cn(
-                          "flex items-center justify-between p-3 hover:bg-accent/50 transition-colors",
-                          index !== pendingMembers.length - 1 && "border-b"
-                        )}
-                        role="listitem"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <span className="text-sm font-medium">
-                            {member.email}
-                          </span>
+              <div className="divide-y divide-gray-200 mt-4">
+                {pendingMembers.map((member) => (
+                  <div
+                    key={member.email}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback className="bg-muted text-muted-foreground">
+                          <Mail className="w-4 h-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="">{member.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Invitation sent
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                            {getRoleDisplayName(member.role)}
-                          </span>
-                          {canManageMembers(currentUserRole) && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleResendInvitation(member.email)
-                                  }
-                                >
-                                  {resendInvitation.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                  ) : (
-                                    <RefreshCcw className="w-4 h-4 mr-2" />
-                                  )}
-                                  Resend Invitation
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setMemberToRemove({
-                                      email: member.email,
-                                      name: member.email,
-                                      isPending: true,
-                                    })
-                                  }
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <XIcon className="w-4 h-4 mr-2" />
-                                  Cancel Invitation
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-xs px-3 py-1 rounded-md bg-primary/5 text-primary">
+                        {getRoleDisplayName(member.role)}
+                      </div>
+                      {canManageMembers(currentUserRole) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleResendInvitation(member.email)
+                              }
+                            >
+                              {resendInvitation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <RefreshCcw className="w-4 h-4" />
+                              )}
+                              Resend Invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setMemberToRemove({
+                                  email: member.email,
+                                  name: member.email,
+                                  isPending: true,
+                                })
+                              }
+                              className="text-red-600"
+                            >
+                              <XIcon className="w-4 h-4 mr-2" />
+                              Cancel Invitation
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {!isLoading && members.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">No members found</div>
+          {canInviteMembers(currentUserRole) && (
+            <Button
+              onClick={() => setEmail("")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Invite your first member
+            </Button>
+          )}
+        </div>
+      )}
 
       <ConfirmationDialog
         isOpen={!!memberToRemove}

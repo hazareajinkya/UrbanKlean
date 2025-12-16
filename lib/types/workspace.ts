@@ -1,5 +1,16 @@
 import { v4 } from "uuid";
 export type IWorkspaceType = "onboarding" | "default";
+export interface IWorkspaceInfo {
+  email: string;
+  tagline: string;
+  industry: string;
+  businessType: string;
+  description: string;
+  toneGuidelines: string;
+  targetAudience: string;
+  primaryColor: string;
+  logo: string;
+}
 export interface IWorkspace {
   id: string;
   name: string;
@@ -9,14 +20,7 @@ export interface IWorkspace {
   ownerId: string;
   folders: { id: string; name: string }[];
   type: IWorkspaceType;
-  info: {
-    email: string;
-    tagline: string;
-    industry: string;
-    businessType: string;
-    description: string;
-    toneGuidelines: string;
-  };
+  info: IWorkspaceInfo;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
@@ -38,6 +42,9 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       industry: "",
       tagline: "",
       toneGuidelines: "",
+      targetAudience: "",
+      primaryColor: "",
+      logo: "",
     },
     type: "default",
     thumbnail: getRandomThumbnail(),

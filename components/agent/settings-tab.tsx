@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { models } from "@/lib/models";
 import { IAgent } from "@/lib/types/agent";
 import { Settings, Save, FileText, Brain, Loader2, Folder } from "lucide-react";
 import { useState } from "react";
@@ -61,28 +62,6 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
         : [...prev, folderId]
     );
   };
-
-  const models = [
-    { value: "gpt-4.1", label: "GPT-4.1", provider: "openai" },
-    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini", provider: "openai" },
-    { value: "gpt-4.1-nano", label: "GPT-4.1 Nano", provider: "openai" },
-    {
-      value: "gemini-2.5-pro",
-      label: "Gemini 2.5 Pro",
-      provider: "google",
-    },
-    {
-      value: "gemini-2.5-flash",
-      label: "Gemini 2.5 Flash",
-      provider: "google",
-    },
-
-    {
-      value: "gemini-2.0-flash",
-      label: "Gemini 2.0 Flash",
-      provider: "google",
-    },
-  ];
 
   const router = useRouter();
 

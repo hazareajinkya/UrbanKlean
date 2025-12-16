@@ -9,32 +9,35 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Settings2, Globe, User } from "lucide-react";
+import { Settings2, Globe, User, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GeneralTab } from "@/components/worksapce/settings/general-tab";
 import { DomainsTab } from "@/components/worksapce/settings/domains-tab";
 import MembersTab from "@/components/worksapce/settings/members-tab";
+import BillingTab from "@/components/worksapce/settings/billing-tab";
 
 const sections = [
   {
     id: "general",
     label: "General",
     icon: Settings2,
-    description: "Basic workspace information",
   },
   {
     id: "domains",
     label: "Domains",
     icon: Globe,
-    description: "Domain access settings",
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    icon: CreditCard,
   },
   {
     id: "members",
     label: "Members",
     icon: User,
-    description: "Manage workspace members",
   },
 ];
 
@@ -91,58 +94,33 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Top Rail Navigation */}
-      <header className="border-b bg-card/50 px-6 pt-4 pb-0">
-        <div className="mb-4">
-          <h1 className="text-xl font-semibold">Workspace Settings</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your workspace information and settings
-          </p>
-        </div>
-
-        <nav className="flex gap-1" role="tablist">
+      {/* Top Navigation Rail */}
+      <div className="flex justify-between border-b bg-card p-1 items-center animate-in slide-in-from-left-5 fade-in">
+        <div className="flex gap-1 items-center px-2">
           {sections.map((section) => {
             const isActive = activeSection === section.id;
-            const isDanger = section.id === "danger";
-
             return (
               <button
                 key={section.id}
-                role="tab"
-                aria-selected={isActive}
                 onClick={() => handleSectionChange(section.id)}
                 className={cn(
-                  "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-t-lg",
+                  "flex items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200",
                   isActive
-                    ? isDanger
-                      ? "text-destructive"
-                      : "text-primary"
-                    : isDanger
-                    ? "text-muted-foreground hover:text-destructive"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-secondary text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 )}
               >
-                <section.icon className="h-4 w-4" />
+                <section.icon className="w-4 h-4" />
                 {section.label}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className={cn(
-                      "absolute bottom-0 left-0 right-0 h-0.5",
-                      isDanger ? "bg-destructive" : "bg-primary"
-                    )}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
               </button>
             );
           })}
-        </nav>
-      </header>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="max-w-3xl mx-auto p-6 space-y-6">
+        <div className="mx-auto p-8 space-y-6 max-w-5xl">
           <AnimatePresence mode="wait">
             {activeSection === "general" && (
               <GeneralTab workspace={workspace} wid={wid} />
@@ -152,10 +130,9 @@ export default function SettingsPage() {
               <DomainsTab workspace={workspace} wid={wid} />
             )}
 
-            {activeSection === "members" && (
-              // <MembersTab workspace={workspace} wid={wid} />
-              <MembersTab />
-            )}
+            {activeSection === "members" && <MembersTab />}
+
+            {activeSection === "billing" && <BillingTab />}
           </AnimatePresence>
         </div>
       </main>
