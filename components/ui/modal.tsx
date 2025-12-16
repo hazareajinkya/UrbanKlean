@@ -1,16 +1,11 @@
 import {
-  Description,
   Dialog,
   DialogBackdrop,
   DialogPanel,
-  DialogTitle,
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { XIcon } from "lucide-react";
-import { Fragment, useState } from "react";
-import { Button } from "./button";
-import clsx from "clsx";
+import { Fragment } from "react";
 
 export interface IModal {
   isOpen: boolean;
@@ -25,14 +20,9 @@ export default function Modal({
   isOpen,
   closeModal,
   clickOutsideToClose = true,
-  size = "lg",
   children,
-  className,
+  className = "max-w-lg bg-white dark:bg-black rounded-2xl p-6",
 }: IModal) {
-  const classNames = clsx(
-    "max-w-lg bg-white dark:bg-black rounded-2xl p-6",
-    className
-  );
   return (
     <>
       <Transition appear show={isOpen} as={Fragment}>
@@ -65,7 +55,7 @@ export default function Modal({
                 leaveTo="opacity-0 scale-95"
               >
                 <DialogPanel
-                  className={`w-full transform overflow-hidden text-left align-middle shadow-xl transition-all ${classNames} `}
+                  className={`w-full transform overflow-hidden text-left align-middle shadow-xl transition-all ${className} `}
                 >
                   {children}
                 </DialogPanel>
