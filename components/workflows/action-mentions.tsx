@@ -4,7 +4,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
 import { IAction } from "@/lib/types/actions";
 import { getwid } from "@/lib/utils";
-import { Popover, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverAnchor,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Zap } from "lucide-react";
 import { Textarea } from "../ui/textarea";
@@ -102,7 +106,6 @@ const ActionMentions = ({
       const mentionStart = cursorPosition - mentionMatch[0].length;
       const search = mentionMatch[1];
       const position = getCursorPosition(textareaRef.current, mentionStart);
-
       setMentionState({
         isOpen: true,
         search,
@@ -178,15 +181,23 @@ const ActionMentions = ({
       />
 
       <Popover open={mentionState.isOpen}>
+        <PopoverAnchor asChild>
+          <div
+            style={{
+              position: "fixed",
+              top: mentionState.position.top,
+              left: mentionState.position.left,
+              width: 1,
+              height: 1,
+              pointerEvents: "none",
+            }}
+          />
+        </PopoverAnchor>
         <PopoverContent
-          className="w-72 p-0 z-[10000000]"
-          style={{
-            position: "fixed",
-            top: mentionState.position.top,
-            left: mentionState.position.left,
-            zIndex: 50,
-          }}
+          className="w-72 p-0 z-[100]"
           onOpenAutoFocus={(e) => e.preventDefault()}
+          align="start"
+          side="bottom"
         >
           <ScrollArea className="max-h-64">
             {isLoading ? (
