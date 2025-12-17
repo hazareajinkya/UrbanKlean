@@ -102,11 +102,11 @@ export default function AuthPageV2() {
         <div className="text-xs text-gray-500">
           <p>
             By signing up, you confirm to have read MagicalCX's{" "}
-            <Link href="#" className="underline hover:text-black">
+            <Link href="/legal/privacy" className="underline hover:text-black">
               Privacy Policy
             </Link>{" "}
             and agree to the{" "}
-            <Link href="#" className="underline hover:text-black">
+            <Link href="/legal/terms" className="underline hover:text-black">
               Terms of Service
             </Link>
             .
