@@ -12,6 +12,8 @@ import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
+import { usageService } from "@/lib/services/usage-service";
+import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -125,14 +127,26 @@ export async function POST(req: Request) {
           ...responseMessage,
           id: v4(),
           metadata: {
-            totalTokens,
-            creditCost: creditCosts.query,
             createdAt: new Date().toISOString(),
           },
         } as IChatMessage;
 
         await chatService.saveMessage(agent.id, sessionId, aiMessage);
         await creditService.decreaseCredit(creditCosts.query, creditInfo);
+
+        const usage = defaultUsage(
+          agent.wid,
+          agent.id,
+          sessionId,
+          "chat_response"
+        );
+        usage.amount = -creditCosts.query;
+        usage.metadata = {
+          model: model.modelId,
+          tokenUsage: totalTokens || 0,
+        };
+
+        await usageService.addUsage(agent.ownerId, usage);
       },
     });
   } catch (error: any) {
