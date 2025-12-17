@@ -611,7 +611,7 @@ export default function KnowledgeTab() {
           setTextContent("");
           setTextTitle("");
         }}
-        className="max-h-[75vh] overflow-y-auto"
+        className="max-h-[75vh] overflow-y-auto bg-white dark:bg-black rounded-2xl p-6 max-w-lg"
       >
         <div>
           <div className="flex items-center justify-between border-b pb-2 mb-6">

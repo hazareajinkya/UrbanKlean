@@ -6,6 +6,7 @@ import { INSTAGRAM_OAUTH_API_BASE, instaconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import instaService from "@/lib/services/instagram/insta-service";
+import storageService from "@/lib/services/storage-service";
 import { getProtocol } from "@/lib/utils";
 
 const instagramAuthSchema = z.object({
@@ -102,6 +103,26 @@ export async function GET(req: NextRequest) {
     };
 
     const data = await instaService.getProfile(credentials.access_token);
+
+    if (data.profile_picture_url) {
+      try {
+        const response = await axios.get(data.profile_picture_url, {
+          responseType: "arraybuffer",
+        });
+        const buffer = response.data;
+        const contentType = response.headers["content-type"] || "image/jpeg";
+        const fileName = `channels/${wid}/instagram/${user_id}.jpg`;
+
+        const uploadResult = await storageService.uploadBuffer(
+          buffer,
+          fileName,
+          contentType
+        );
+        data.profile_picture_url = uploadResult.downloadURL;
+      } catch (e) {
+        console.error("Failed to upload profile image to storage", e);
+      }
+    }
 
     const metadata = { ...data };
 

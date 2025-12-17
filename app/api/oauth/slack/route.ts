@@ -4,6 +4,7 @@ import axios from "axios";
 
 import { slackconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
+import storageService from "@/lib/services/storage-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import { getProtocol } from "@/lib/utils";
 
@@ -89,6 +90,27 @@ export async function GET(req: NextRequest) {
     console.log("Slack team info:", teamInfo);
 
     // Prepare credentials and metadata for storage
+    let teamIconUrl = teamInfo.team?.icon?.image_88 || "";
+
+    if (teamIconUrl) {
+      try {
+        const response = await axios.get(teamIconUrl, {
+          responseType: "arraybuffer",
+        });
+        const contentType = response.headers["content-type"] || "image/png";
+
+        const storagePath = `channels/${wid}/slack/${team.id}.png`;
+
+        const { downloadURL } = await storageService.uploadBuffer(
+          response.data,
+          storagePath,
+          contentType
+        );
+        teamIconUrl = downloadURL;
+      } catch (error) {
+        console.error("Error uploading Slack icon:", error);
+      }
+    }
     const credentials = {
       access_token,
       scope,
@@ -101,7 +123,7 @@ export async function GET(req: NextRequest) {
       teamName: team.name,
       teamDomain: teamInfo.team?.domain || "",
       teamUrl: teamInfo.team?.url || "",
-      teamIcon: teamInfo.team?.icon?.image_88 || "",
+      teamIcon: teamIconUrl,
       authedUserId: authed_user.id,
       bot_user_id: bot_user_id,
       scope: scope,

@@ -1,6 +1,12 @@
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import agentService from "../agent-service";
-import { convertToModelMessages, generateText, stepCountIs, tool } from "ai";
+import {
+  convertToModelMessages,
+  generateText,
+  stepCountIs,
+  tool,
+  ToolSet,
+} from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
@@ -18,6 +24,9 @@ import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import slackService from "./slack-service";
 import z from "zod";
+import actionService from "../action-service";
+import { IAction } from "@/lib/types/actions";
+import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 
 class SlackBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -73,7 +82,8 @@ class SlackBotService {
 
       const model = getModel(agent);
       const systemPrompt = await getSystemPrompt(agent, query, channel);
-
+      const actions = await actionService.getActions(agent.wid);
+      const customTools = this.getCustomTools(actions);
       const result = await generateText({
         model,
         system: `
@@ -81,12 +91,22 @@ class SlackBotService {
 
         This following is Slack's channel conversation history use it if you find it useful
         ${slackHistory}
+
+        always use searchKnowledge tool to search knowledgebase in all responses
         `,
+        // TODO: Want to improve the prompt
 
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "slack",
+            teamId
+          ),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
@@ -173,6 +193,24 @@ class SlackBotService {
     }
     return session;
   }
+  getCustomTools = (actions: IAction[]): ToolSet => {
+    return actions.reduce((acc, action) => {
+      acc[action.slug] = tool({
+        name: action.name,
+        description: action.description,
+        inputSchema: z.object({
+          ...action.inputs.reduce((acc: Record<string, any>, input) => {
+            acc[input.key] = z.string().describe(input.description || "");
+            return acc;
+          }, {} as Record<string, any>),
+        }),
+        execute: async (params) => {
+          return executeAPIAction(action, params);
+        },
+      });
+      return acc;
+    }, {} as ToolSet);
+  };
 }
 
 const slackBotService = new SlackBotService();

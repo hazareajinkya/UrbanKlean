@@ -117,6 +117,7 @@ export async function POST(req: Request) {
       },
     });
 
+    const totalTokens = (await result.usage).totalTokens;
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
       onFinish: async ({ responseMessage }) => {
@@ -124,7 +125,8 @@ export async function POST(req: Request) {
           ...responseMessage,
           id: v4(),
           metadata: {
-            ...responseMessage.metadata,
+            totalTokens,
+            creditCost: creditCosts.query,
             createdAt: new Date().toISOString(),
           },
         } as IChatMessage;
