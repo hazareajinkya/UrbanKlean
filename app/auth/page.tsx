@@ -14,6 +14,7 @@ import {
   ScanLine,
   Sparkles,
   Zap,
+  LoaderIcon,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
@@ -454,7 +455,7 @@ const TypingIndicator = ({
 const Spinner = () => {
   return (
     <div className="flex-1 flex items-center justify-center">
-      <Loader2 className="w-6 h-6 animate-spin text-black" />
+      <LoaderIcon className="w-6 h-6 animate-spin text-primary" />
     </div>
   );
 };

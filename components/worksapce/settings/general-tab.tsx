@@ -173,7 +173,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
       {/* General Information Section */}
       <div>
         <div className="mb-6">
-          <h2 className="text-xl font-medium">General Information</h2>
+          <h2 className="text-xl ">General Information</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Update your workspace name and description.
           </p>

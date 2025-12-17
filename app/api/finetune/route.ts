@@ -34,6 +34,7 @@ export async function POST(req: Request) {
       question,
       "web",
       undefined,
+      undefined,
       true,
       reasoning,
       suggestion

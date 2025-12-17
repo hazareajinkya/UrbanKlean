@@ -6,9 +6,26 @@ export interface IUserWorkspace {
   role: string;
 }
 
-export interface IUserCredit {
-  monthly: number;
+export interface ICreditBalance {
+  recurring: number;
   purchased: number;
+}
+
+export interface IUserSubscription {
+  subscriptionId?: string;
+  customerId?: string;
+  planId?: string;
+  tierId?: string;
+  paddlePriceId?: string;
+  status?: "active" | "canceled" | "past_due" | "paused" | "trialing";
+  recurringQuota?: number;
+  trialEndsAt?: string;
+  trialUsed?: boolean;
+  startedAt?: string;
+  renewsAt?: string;
+  canceledAt?: string;
+  lastPaymentAt?: string;
+  nextPaymentAt?: string;
 }
 
 export interface IUser {
@@ -17,7 +34,8 @@ export interface IUser {
   name?: string;
   photoUrl?: string;
   workspaces: IUserWorkspace[];
-  credit: IUserCredit;
+  credit: ICreditBalance;
+  subscription?: IUserSubscription;
   lastCreditEmailSent?: string;
   createdAt: string;
   updatedAt: string;
@@ -31,7 +49,7 @@ export const generateDefaultUser = (): IUser => {
     photoUrl: DEFAULT_PROFILE_PIC,
     workspaces: [],
     credit: {
-      monthly: 0,
+      recurring: 0,
       purchased: 0,
     },
     createdAt: new Date().toISOString(),

@@ -4,9 +4,12 @@ import { google } from "@ai-sdk/google";
 import workflowservice from "../services/workflow-service";
 import {
   coreSystemPrompt,
+  geminiHumanPrompt,
+  getRequestPromptFromHints,
   identityCollectionPrompt,
 } from "@/prompts/system-prompt";
 import { IChannelProvider } from "../types/channel";
+import { Geo } from "@vercel/functions";
 
 export const getModel = (agent: IAgent) => {
   let model = openai("gpt-4.1-mini");
@@ -24,16 +27,24 @@ export const getSystemPrompt = async (
   query: string,
   channel: IChannelProvider,
   personId?: string,
+  geo?: Geo,
   isFinetuning?: boolean,
   reasoning?: string,
   suggestion?: string
 ) => {
   const workflowstext = await retrieveWorkflow(agent.id, query);
+  const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
+  // ${coreSystemPrompt}
+  console.log("geoInfo: ", geoInfo);
 
   return `
+  ${geminiHumanPrompt}
+
+  ${!isFinetuning && geoInfo}
+
+
   ${agent.settings.systemPrompt}
 
-  ${coreSystemPrompt}
 
   ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
 

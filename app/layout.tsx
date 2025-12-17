@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Magical CX - Conversational AI for magical customer experience",
+  title: "MagicalCX - Conversational AI for magical customer experience",
   description:
     "MagicalCX.ai is in the business of making your business successful and profitable—by improving your customers’ experience. We help you sell more, keep more, and spend less. We make your operations simpler, your teams more efficient, and your brand feel warm, effortless, and magical.",
 

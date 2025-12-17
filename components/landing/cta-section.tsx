@@ -57,7 +57,8 @@ export const CtaSection = () => {
             {/* Right: Hero Image */}
             <div className="relative h-full min-h-[500px] lg:min-h-[600px] pt-8 pl-0 md:pt-10 md:pl-10 lg:pt-12 lg:pl-12">
               <img
-                src={"/bg-hero-2.png"}
+                // src={"/bg-hero-2.png"}
+                src={"/cta-img.png"}
                 alt="Customer support dashboard preview"
                 className="w-full h-full object-cover object-left-top md:rounded-tl-md"
                 loading="lazy"

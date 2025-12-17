@@ -18,7 +18,7 @@ import {
   Check,
   Circle,
   Globe,
-  Loader2,
+  Loader,
   MailIcon,
   MessageCircleMoreIcon,
   PanelRightClose,
@@ -124,7 +124,7 @@ const assistantMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tr-2xl "
+      ? "rounded-t-2xl rounded-br-2xl "
       : "rounded-2xl"
   );
 
@@ -133,7 +133,7 @@ const userMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-3 py-1 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tl-2xl"
+      ? "rounded-t-2xl rounded-bl-2xl"
       : "rounded-2xl"
   );
 
@@ -194,7 +194,7 @@ const SessionList = ({
           hasMore={hasMore}
           loader={
             <div className="py-4 text-center mx-auto w-full">
-              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+              <Loader className="w-4 h-4 animate-spin mx-auto" />
             </div>
           }
           endMessage={

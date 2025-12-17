@@ -97,14 +97,14 @@ export function DomainsTab({ workspace, wid }: DomainsTabProps) {
       transition={{ duration: 0.2 }}
     >
       <div className="mb-6">
-        <h2 className="text-xl font-medium">Domain Settings</h2>
+        <h2 className="text-xl ">Domain Settings</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Allow only approved company domains to access workspace agents.
         </p>
       </div>
 
       <Card>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-6 pt-2">
           <div className="space-y-2">
             <Label>Company Domain</Label>
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -128,9 +128,9 @@ export function DomainsTab({ workspace, wid }: DomainsTabProps) {
                 className="w-full sm:w-auto"
               >
                 {addWorkspaceDomain.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="h-4 w-4 animate-spin " />
                 ) : (
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 " />
                 )}
                 Add Domain
               </Button>

@@ -339,7 +339,7 @@ export default function RefundPage() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>
                 Use the <strong>cancellation option</strong> available in your
-                MagicalCX account settings (if enabled), or
+                MagicalCX account settings or
               </li>
               <li>
                 Contact us at <strong>billing@magicalcx.com</strong> with your

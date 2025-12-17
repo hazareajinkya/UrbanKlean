@@ -25,6 +25,7 @@ import {
   saveLocalSession,
 } from "../../components/chat/chat-utils";
 import peopleService from "./people-service";
+import { Geo } from "@vercel/functions";
 
 class ChatService {
   async createSession(
@@ -33,7 +34,8 @@ class ChatService {
     personId?: string,
     sessionId?: string,
     providerId?: string,
-    fromPage?: string
+    fromPage?: string,
+    geo?: Geo
   ) {
     const session = generateDefaultSession(
       wid,
@@ -46,6 +48,7 @@ class ChatService {
 
     if (personId) {
       session.personId = personId;
+      if (geo) session.geo = geo;
       peopleService.updatePastSessionIds(wid, personId, session.id);
     }
 
@@ -83,19 +86,22 @@ class ChatService {
     sid: string,
     personId?: string,
     providerId?: string,
-    fromPage?: string
+    fromPage?: string,
+    geo?: Geo
   ) {
     let session = await this.getSession(sid, aid);
 
     if (!session) {
       // Session doesn't exist, create it
+      const geoDetails = geo?.country ? geo : undefined;
       session = await this.createSession(
         wid,
         aid,
         personId,
         sid,
         providerId,
-        fromPage
+        fromPage,
+        geoDetails
       );
     } else if (personId && session.personId !== personId) {
       // Session exists but personId changed or being added, update it

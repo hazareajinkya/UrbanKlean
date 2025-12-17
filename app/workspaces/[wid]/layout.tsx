@@ -24,16 +24,7 @@ import Link from "next/link";
 import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
 import { useHotkeys } from "react-hotkeys-hook";
-import {
-  sidebarCollapseShortcut,
-  navDashboardShortcut,
-  navKnowledgeShortcut,
-  navAgentsShortcut,
-  navChannelsShortcut,
-  navActionsShortcut,
-  navMembersShortcut,
-  navSettingsShortcut,
-} from "@/lib/utils/shortcuts";
+import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
 import { useMember } from "@/lib/hooks/members/use-members";
 
@@ -204,30 +195,6 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     enableOnFormTags: false,
   });
 
-  useHotkeys(
-    "g+1,g+2,g+3,g+4,g+5,g+6,g+7",
-    (event) => {
-      const key = event.key;
-      const index = parseInt(key) - 1;
-      if (index >= 0 && index < navigation.length) {
-        router.push(`/workspaces/${wid}${navigation[index].href}`);
-      }
-    },
-    {
-      enableOnFormTags: false,
-    }
-  );
-
-  const navShortcuts = [
-    navDashboardShortcut,
-    navKnowledgeShortcut,
-    navAgentsShortcut,
-    navChannelsShortcut,
-    navActionsShortcut,
-    navMembersShortcut,
-    navSettingsShortcut,
-  ];
-
   const handleModalOpen = () => {
     setIsModelOpen(true);
   };
@@ -282,10 +249,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
       {/* Navigation */}
       <div className="flex-1 px-3 py-4">
         <nav className={`${isCollapsed ? "space-y-2" : "space-y-1"}`}>
-          {navigation.map((item, index) => {
+          {navigation.map((item) => {
             const href = `/workspaces/${wid}${item.href}`;
             const isActive = pathname.includes(href);
-            const shortcutKey = navShortcuts[index];
 
             return (
               <Link
@@ -300,7 +266,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                       ? "bg-primary/10 text-primary"
                       : "text-neutral-600 -foreground hover:text-primary"
                   }
-                  ${isCollapsed ? "justify-center" : "justify-between"}
+                  ${isCollapsed ? "justify-center" : ""}
                 `}
                 title={isCollapsed ? item.title : undefined}
               >
@@ -316,11 +282,6 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     </span>
                   )}
                 </div>
-                {!isCollapsed && shortcutKey && (
-                  <Kbd className="opacity-60 text-[10px] shrink-0">
-                    {shortcutKey}
-                  </Kbd>
-                )}
               </Link>
             );
           })}

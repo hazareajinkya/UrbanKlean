@@ -1,6 +1,6 @@
 import { doc, getDoc, increment, updateDoc } from "firebase/firestore";
 import { db } from "../clients/firebase";
-import { IUser, IUserCredit } from "../types/user";
+import { IUser, ICreditBalance } from "../types/user";
 import resendService from "./resend/resend-service";
 
 const CREDIT_THRESHOLDS = [100, 0];
@@ -8,7 +8,7 @@ const EMAIL_COOLDOWN_HOURS = 24;
 
 interface ICreditInfo {
   name?: string;
-  credit: IUserCredit;
+  credit: ICreditBalance;
   userId: string;
   email: string;
   lastCreditEmailSent?: string;
@@ -22,35 +22,34 @@ class CreditService {
 
     const data = snap.data() as IUser;
 
-    console.log("data: ", data);
-    const monthly = Number(data.credit?.monthly ?? 0);
+    const recurring = Number(data.credit?.recurring ?? 0);
     const purchased = Number(data.credit?.purchased ?? 0);
 
     return {
-      credit: { monthly, purchased },
+      credit: { recurring, purchased },
       userId: uid,
       name: data.name,
       email: data.email,
       lastCreditEmailSent: data.lastCreditEmailSent,
-      availableCredit: monthly + purchased,
+      availableCredit: recurring + purchased,
     };
   }
 
   async decreaseCredit(amountToDeduct: number, creditObj: ICreditInfo) {
     const { credit, userId, email, lastCreditEmailSent, name } = creditObj;
-    let monthly = Number(credit.monthly);
+    let recurring = Number(credit.recurring);
     let purchased = Number(credit.purchased);
-    const availableBefore = monthly + purchased;
+    const availableBefore = recurring + purchased;
 
-    if (monthly >= amountToDeduct) {
-      monthly -= amountToDeduct;
+    if (recurring >= amountToDeduct) {
+      recurring -= amountToDeduct;
     } else {
-      purchased = Math.max(0, purchased - (amountToDeduct - monthly));
-      monthly = 0;
+      purchased = Math.max(0, purchased - (amountToDeduct - recurring));
+      recurring = 0;
     }
-    const availableAfter = monthly + purchased;
+    const availableAfter = recurring + purchased;
     await updateDoc(doc(db, `users/${userId}`), {
-      credit: { monthly, purchased },
+      credit: { recurring, purchased },
     });
     for (const threshold of CREDIT_THRESHOLDS) {
       if (availableBefore >= threshold && availableAfter < threshold) {
@@ -65,7 +64,7 @@ class CreditService {
       }
     }
     return {
-      credit: { monthly, purchased } as IUserCredit,
+      credit: { recurring, purchased } as ICreditBalance,
       userId,
       availableCredit: availableAfter,
     };
@@ -83,29 +82,29 @@ class CreditService {
     }
   }
 
-  async updateCredit(userId: string, monthly: number, purchased: number) {
+  async updateCredit(userId: string, recurring: number, purchased: number) {
     try {
       await updateDoc(doc(db, `users/${userId}`), {
-        credit: { monthly, purchased },
+        credit: { recurring, purchased },
       });
       return {
-        credit: { monthly, purchased } as IUserCredit,
+        credit: { recurring, purchased } as ICreditBalance,
         userId,
-        availableCredit: monthly + purchased,
+        availableCredit: recurring + purchased,
       };
     } catch (error) {
       console.error("Error updating credit: ", error);
     }
   }
 
-  renewQuota = async (userId: string, newMonthlyAmount: number) => {
+  renewQuota = async (userId: string, newRecurringAmount: number) => {
     try {
       await updateDoc(doc(db, `users/${userId}`), {
-        "credit.monthly": newMonthlyAmount,
+        "credit.recurring": newRecurringAmount,
       });
       return { success: true };
     } catch (error) {
-      console.error("Error renewing monthly credits:", error);
+      console.error("Error renewing recurring credits:", error);
       return { success: false };
     }
   };

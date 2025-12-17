@@ -12,10 +12,13 @@ import {
   UITools,
 } from "ai";
 import z from "zod";
+import type { Geo } from "@vercel/functions";
+
 export interface ISession {
   id: string;
   aid: string;
   wid: string;
+  geo?: Geo;
   personId?: string;
   providerId: string;
   channel: IChannelProvider;

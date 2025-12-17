@@ -1,6 +1,8 @@
 import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
 import creditService from "@/lib/services/credit-service";
+
+import { Geo, geolocation } from "@vercel/functions";
 import { creditCosts } from "@/lib/constants";
 import { stepCountIs, streamText, tool, ToolSet } from "ai";
 import { z } from "zod";
@@ -70,6 +72,8 @@ export async function POST(req: Request) {
       });
     }
 
+    const geo = geolocation(req);
+
     // Ensure session exists in DB before processing the message
     await chatService.ensureSession(
       agent.wid,
@@ -77,7 +81,8 @@ export async function POST(req: Request) {
       sessionId,
       personId,
       deviceId,
-      fromPage
+      fromPage,
+      geo
     );
 
     // Save the user message after session is ensured
@@ -93,7 +98,8 @@ export async function POST(req: Request) {
       agent,
       lastMessage,
       "web",
-      personId
+      personId,
+      geo
     );
     const convertedMessages = convertToMyModelMessages(messages);
 

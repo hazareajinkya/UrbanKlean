@@ -1,58 +1,150 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { useDemoModal } from "../landing/demo-modal";
+import { MESSAGE_TIERS, PLANS } from "@/lib/plans";
+import { usePaddleCheckout } from "@/lib/hooks/use-paddle-checkout";
+import { initializePaddle } from "@/lib/clients/paddle";
 
 export const PricingContent = () => {
   const [usage, setUsage] = useState([10]); // 10k default
+  const { initiateCheckout } = usePaddleCheckout();
+  const { openDemoModal } = useDemoModal();
+
+  // Initialize Paddle SDK on mount
+  useEffect(() => {
+    initializePaddle().catch((error) => {
+      console.error("Failed to initialize Paddle:", error);
+    });
+  }, []);
 
   const handleSliderChange = (value: number[]) => {
     setUsage(value);
   };
 
-  const currentUsage = usage[0];
+  const currentUsage = usage[0] * 1000; // Convert to actual message count
+
+  // Find the closest tier that matches or is just above the current usage
+  const findClosestTier = (usageValue: number) => {
+    return (
+      MESSAGE_TIERS.find((tier) => tier >= usageValue) ||
+      MESSAGE_TIERS[MESSAGE_TIERS.length - 1]
+    );
+  };
 
   // Dynamic pricing logic
   const getPricingData = () => {
-    const tiers = [
-      {
-        id: "growth",
-        name: "Growth",
-        description: "Perfect for startups and early-stage products.",
-        basePrice: 149,
-        badgeText: "Recommended",
-        features: [
-          "Standard AI Models",
-          "Email Support",
-          "5 Team Members",
-          "Basic Analytics",
-        ],
-      },
-      {
-        id: "scale",
-        name: "Scale",
-        description: "For growing teams requiring higher volume.",
-        basePrice: 299,
-        badgeText: "Best Value",
-        features: [
-          "Everything in Growth",
-          "Advanced AI Models (GPT-4)",
-          "Priority Support",
-          "Unlimited Team Members",
-          "API Access",
-        ],
-      },
-      {
+    const selectedTier = findClosestTier(currentUsage);
+    const selectedTierInK = selectedTier / 1000;
+
+    const growthPlan = PLANS.growth;
+    const scalePlan = PLANS.scale;
+
+    const growthPlanData = (() => {
+      const maxMessages = growthPlan.maxMessages;
+      const isWithinGrowthLimit = currentUsage <= maxMessages;
+      const tierData = growthPlan.tiers.find(
+        (t) => t.messages === selectedTier
+      );
+
+      let price: number | null = null;
+      let isRecommended = false;
+      let isActive = false;
+      let messages = "";
+      let messagePrefix = "Starts at";
+      let buttonText = "Choose Plan";
+
+      if (isWithinGrowthLimit && tierData) {
+        price = tierData.price;
+        isActive = true;
+        messages = `${selectedTierInK}k`;
+        messagePrefix = "Includes";
+        if (currentUsage <= 10000) isRecommended = true;
+      } else {
+        const maxTier = growthPlan.tiers.find((t) => t.messages === 10000);
+        price = maxTier?.price || null;
+        messages = "10k";
+        messagePrefix = "Includes";
+        buttonText = "Available up to 10k only";
+      }
+
+      return {
+        id: growthPlan.id,
+        name: growthPlan.name,
+        description: growthPlan.description,
+        price,
+        isRecommended,
+        isActive,
+        messages,
+        messagePrefix,
+        buttonText,
+        features: growthPlan.features,
+        badgeText: isRecommended ? "Recommended" : undefined,
+        planId: growthPlan.id as "growth" | "scale",
+        tier: selectedTier,
+        paddlePriceId: tierData?.paddlePriceId,
+      };
+    })();
+
+    const scalePlanData = (() => {
+      const tierData = scalePlan.tiers.find((t) => t.messages === selectedTier);
+
+      let price: number | null = null;
+      let isRecommended = false;
+      let isActive = false;
+      let messages = "";
+      let messagePrefix = "Starts at";
+      let buttonText = "Choose Plan";
+
+      if (tierData && currentUsage <= 30000) {
+        price = tierData.price;
+        isActive = true;
+        messages = `${selectedTierInK}k`;
+        messagePrefix = "Includes";
+        if (currentUsage > 10000 && currentUsage <= 30000) isRecommended = true;
+      } else if (currentUsage > 30000) {
+        const maxTier = scalePlan.tiers.find((t) => t.messages === 30000);
+        price = maxTier?.price || null;
+        messages = "30k";
+        messagePrefix = "Includes";
+        buttonText = "Available up to 30k only";
+      }
+
+      return {
+        id: scalePlan.id,
+        name: scalePlan.name,
+        description: scalePlan.description,
+        price,
+        isRecommended,
+        isActive,
+        messages,
+        messagePrefix,
+        buttonText,
+        features: scalePlan.features,
+        badgeText: isRecommended ? "Best Value" : undefined,
+        planId: scalePlan.id as "growth" | "scale",
+        tier: selectedTier,
+        paddlePriceId: tierData?.paddlePriceId,
+      };
+    })();
+
+    const enterprisePlanData = (() => {
+      const isActive = currentUsage > 30000;
+      const isRecommended = currentUsage > 30000;
+      return {
         id: "enterprise",
         name: "Enterprise",
         description: "Custom solutions for large scale operations.",
-        basePrice: null,
-        badgeText: "High Value",
+        price: null,
+        isRecommended,
+        isActive,
+        messages: "30k+",
+        messagePrefix: "Includes",
+        buttonText: "Talk to Sales",
         features: [
           "Everything in Scale",
           "Custom Model Fine-tuning",
@@ -60,90 +152,43 @@ export const PricingContent = () => {
           "SSO & Enterprise Security",
           "SLA Guarantee",
         ],
-      },
-    ];
-
-    return tiers.map((tier) => {
-      let price = tier.basePrice;
-      let isRecommended = false;
-      let isActive = false;
-      let messages = "";
-      let messagePrefix = "Starts at";
-
-      // Determine which tier is active based on slider
-      if (currentUsage <= 10) {
-        if (tier.id === "growth") {
-          isRecommended = true;
-          isActive = true;
-          if (currentUsage === 5) price = 99;
-          else price = 149;
-          messages = `${currentUsage}k`;
-          messagePrefix = "Includes";
-        } else if (tier.id === "scale") {
-          isActive = true;
-          if (currentUsage === 5) price = 129;
-          else price = 169;
-          messages = `${currentUsage}k`;
-          messagePrefix = "Includes";
-        } else {
-          messages = "35k+";
-        }
-      } else if (currentUsage <= 30) {
-        if (tier.id === "scale") {
-          isRecommended = true;
-          isActive = true;
-          if (currentUsage === 15) price = 189;
-          else if (currentUsage === 20) price = 229;
-          else if (currentUsage === 25) price = 269;
-          else price = 299;
-          messages = `${currentUsage}k`;
-          messagePrefix = "Includes";
-        } else if (tier.id === "growth") {
-          price = 149; // Max price for Growth
-          messages = "10k";
-          messagePrefix = "Includes";
-        } else {
-          messages = "35k+";
-        }
-      } else {
-        if (tier.id === "enterprise") {
-          isRecommended = true;
-          isActive = true;
-          messages = "35k+";
-          messagePrefix = "Includes";
-        } else if (tier.id === "growth") {
-          price = 149; // Max price for Growth
-          messages = "10k";
-          messagePrefix = "Includes";
-        } else if (tier.id === "scale") {
-          price = 299; // Max price for Scale
-          messages = "30k";
-          messagePrefix = "Includes";
-        }
-      }
-
-      let buttonText = price ? "Choose Plan" : "Talk to Sales";
-
-      if (!isActive) {
-        if (tier.id === "growth") buttonText = "Available up to 10k only";
-        else if (tier.id === "scale") buttonText = "Available up to 30k only";
-        else if (tier.id === "enterprise") buttonText = "Talk to Sales";
-      }
-
-      return {
-        ...tier,
-        price,
-        isRecommended,
-        isActive,
-        messages,
-        messagePrefix,
-        buttonText,
+        badgeText: isRecommended ? "High Value" : undefined,
+        planId: undefined as "growth" | "scale" | undefined,
+        tier: undefined as number | undefined,
+        paddlePriceId: undefined as string | undefined,
       };
-    });
+    })();
+
+    return [growthPlanData, scalePlanData, enterprisePlanData];
   };
 
-  const pricingTiers = getPricingData();
-  const { openDemoModal } = useDemoModal();
+  const pricingTiers = useMemo(() => getPricingData(), [currentUsage]);
+
+  const handleCheckout = (tier: (typeof pricingTiers)[0]) => {
+    if (tier.id === "enterprise") {
+      openDemoModal();
+      return;
+    }
+    console.log("process.env: ", process.env);
+
+    // In production, open demo modal for all pricing buttons
+    if (process.env.NEXT_PUBLIC_ENV === "production") {
+      openDemoModal();
+      return;
+    }
+
+    if (tier.planId && tier.tier !== undefined) {
+      initiateCheckout({
+        planId: tier.planId,
+        tier: tier.tier,
+      });
+    }
+  };
+
+  const tierValues = MESSAGE_TIERS.map((tier) => tier / 1000);
+  const minTier = tierValues[0];
+  const maxTier = tierValues[tierValues.length - 1];
+  const currentUsageInK = currentUsage / 1000;
 
   return (
     <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6">
@@ -165,7 +210,7 @@ export const PricingContent = () => {
           </h3>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-2xl md:text-3xl font-medium text-primary tracking-tight">
-              {currentUsage}k
+              {currentUsageInK}k
             </span>
             <span className="text-lg md:text-xl font-medium text-muted-foreground">
               messages/mo
@@ -177,26 +222,27 @@ export const PricingContent = () => {
         </div>
 
         <div className="px-4">
-          <div className=" relative">
+          <div className="relative">
             <Slider
               defaultValue={[10]}
-              max={50}
-              min={5}
+              max={maxTier}
+              min={minTier}
               step={5}
               value={usage}
               onValueChange={handleSliderChange}
               className="mb-8 py-4"
             />
             <div className="absolute top-12 left-0 right-0 h-6 pointer-events-none">
-              {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map((value) => {
-                const percentage = ((value - 5) / 45) * 100;
+              {tierValues.map((value) => {
+                const percentage =
+                  ((value - minTier) / (maxTier - minTier)) * 100;
                 return (
                   <span
                     key={value}
                     className="absolute text-sm font-medium text-muted-foreground/50 uppercase tracking-widest -translate-x-1/2"
                     style={{ left: `${percentage}%` }}
                   >
-                    {value}k{value === 50 ? "+" : ""}
+                    {value}k{value === maxTier ? "+" : ""}
                   </span>
                 );
               })}
@@ -218,7 +264,7 @@ export const PricingContent = () => {
               !tier.isActive && "opacity-60 cursor-not-allowed"
             )}
           >
-            {tier.isRecommended && (
+            {tier.isRecommended && tier.badgeText && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                 {tier.badgeText}
               </div>
@@ -249,9 +295,9 @@ export const PricingContent = () => {
 
             <Button
               disabled={!tier.isActive}
-              onClick={openDemoModal}
+              onClick={() => handleCheckout(tier)}
               className={cn(
-                "w-full mb-8",
+                "w-full mb-8 rounded-full",
                 tier.isRecommended
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : !tier.isActive
@@ -259,9 +305,7 @@ export const PricingContent = () => {
                   : "bg-foreground text-background"
               )}
             >
-              {!tier.isActive && tier.id !== "enterprise" && (
-                <Lock className="w-4 h-4 mr-2" />
-              )}
+              {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
               {tier.buttonText}
             </Button>
 
@@ -279,13 +323,13 @@ export const PricingContent = () => {
 
       {/* Footer CTA */}
       <div className="text-center mt-16 text-muted-foreground text-sm">
-        Need more than 100k messages?{" "}
-        <Link
-          href="https://calendly.com/echorift-ai"
-          className="text-primary underline underline-offset-4 hover:text-primary/80"
+        Need more than 30k messages?{" "}
+        <button
+          onClick={openDemoModal}
+          className="text-primary underline underline-offset-4 hover:text-primary/80 cursor-pointer"
         >
           Book a meeting
-        </Link>{" "}
+        </button>{" "}
         with our engineering team.
       </div>
     </div>
