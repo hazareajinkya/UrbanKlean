@@ -11,8 +11,8 @@ export const models = [
     provider: "google",
   },
   {
-    value: "gemini-3-flash",
-    label: "Gemini 3 Flash",
+    value: "gemini-3-flash-preview",
+    label: "Gemini 3 Flash Preview",
     provider: "google",
   },
   //   {
