@@ -12,6 +12,8 @@ import {
   Variants,
 } from "framer-motion";
 import { useDemoModal } from "./demo-modal";
+import { coreConf } from "@/lib/utils/conf";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 
 export const Navbar = ({
   whyRefProgress,
@@ -23,6 +25,8 @@ export const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isInside, setIsInside] = useState(false);
+
+  const { user } = useCurrentUser();
 
   const { openDemoModal } = useDemoModal();
   useEffect(() => {
@@ -157,14 +161,18 @@ export const Navbar = ({
               </Link>
             ))}
             <div className="flex items-center gap-6 ml-0">
-              <Link
-                href="/auth"
-                aria-label="Sign in"
-                tabIndex={0}
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                Sign in
-              </Link>
+              {coreConf.isProd ? (
+                <></>
+              ) : (
+                <Link
+                  href={user ? "/workspaces" : "/auth"}
+                  aria-label={user ? "Dashboard" : "Sign in"}
+                  tabIndex={0}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {user ? "Dashboard" : "Sign in"}
+                </Link>
+              )}
               <button
                 onClick={openDemoModal}
                 aria-label="Book Demo"

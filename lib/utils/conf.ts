@@ -46,6 +46,10 @@ export const waconf = {
   baseURL: FACEBOOK_GRAPH_API_BASE,
 };
 
+export const coreConf = {
+  isProd: process.env.NEXT_PUBLIC_ENV === "production",
+};
+
 export const instaconf = {
   version: "v23.0",
   id: INSTA_ID,
