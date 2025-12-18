@@ -54,7 +54,7 @@ export const generateDefaultAgent = (
     },
     settings: {
       temperature: 0.5,
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
         workspace.oneLiner

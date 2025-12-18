@@ -41,16 +41,33 @@ class CreditService {
     let purchased = Number(credit.purchased);
     const availableBefore = recurring + purchased;
 
+    let recurringDeduction = 0;
+    let purchasedDeduction = 0;
+
     if (recurring >= amountToDeduct) {
+      recurringDeduction = amountToDeduct;
       recurring -= amountToDeduct;
     } else {
-      purchased = Math.max(0, purchased - (amountToDeduct - recurring));
+      recurringDeduction = recurring;
+      const remainder = amountToDeduct - recurring;
+      purchasedDeduction = Math.min(purchased, remainder);
+
       recurring = 0;
+      purchased -= purchasedDeduction;
     }
+
     const availableAfter = recurring + purchased;
-    await updateDoc(doc(db, `users/${userId}`), {
-      credit: { recurring, purchased },
-    });
+    const updates: any = {};
+    if (recurringDeduction > 0) {
+      updates["credit.recurring"] = increment(-recurringDeduction);
+    }
+    if (purchasedDeduction > 0) {
+      updates["credit.purchased"] = increment(-purchasedDeduction);
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await updateDoc(doc(db, `users/${userId}`), updates);
+    }
     for (const threshold of CREDIT_THRESHOLDS) {
       if (availableBefore >= threshold && availableAfter < threshold) {
         this.sendLowCreditEmail(

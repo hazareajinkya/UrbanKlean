@@ -19,6 +19,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { getCustomTools } from "@/lib/utils";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -92,8 +93,12 @@ export async function POST(req: Request) {
     let model = getModel(agent);
 
     const lastMessage = getLastMessage(messages);
-    const actions = await actionService.getActions(agent.wid);
+    const actions = await actionService.getActionsInWorkflow(
+      agent.wid,
+      agent.id
+    );
     const customTools = getCustomTools(actions);
+
     const systemPrompt = await getSystemPrompt(
       agent,
       lastMessage,
@@ -162,25 +167,6 @@ export async function POST(req: Request) {
     });
   }
 }
-
-const getCustomTools = (actions: IAction[]): ToolSet => {
-  return actions.reduce((acc, action) => {
-    acc[action.slug] = tool({
-      name: action.name,
-      description: action.description,
-      inputSchema: z.object({
-        ...action.inputs.reduce((acc: Record<string, any>, input) => {
-          acc[input.key] = z.string().describe(input.description || "");
-          return acc;
-        }, {} as Record<string, any>),
-      }),
-      execute: async (params) => {
-        return executeAPIAction(action, params);
-      },
-    });
-    return acc;
-  }, {} as ToolSet);
-};
 
 const getLastMessage = (messages: IChatMessage[]): string => {
   return messages[messages.length - 1].parts

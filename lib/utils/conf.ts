@@ -11,13 +11,13 @@ export const WA_WINDOW_EXPIRATION_HOURS = 24;
 export const WA_PHONE_ID = "848214531709464";
 
 // Facebook Configuration
-export const FB_ID = "776850275516982";
+export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
 export const FB_APP_ID = process.env.NEXT_PUBLIC_FB_APP_ID ?? "";
 export const FB_APP_SECRET = process.env.FB_APP_SECRET ?? "";
 export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
 
 // Instagram Configuration
-export const INSTA_ID = "17841474192453121";
+export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
 export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
 export const INSTAGRAM_REDIRECT_URI =

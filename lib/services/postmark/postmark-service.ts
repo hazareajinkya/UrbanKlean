@@ -142,6 +142,20 @@ class PostmarkService {
       throw error;
     }
   }
+
+  async deleteSenderSignature(signatureId: string): Promise<any> {
+    try {
+      const response = await postmarkClient.delete(`/senders/${signatureId}`);
+      console.log(`Deleted sender signature with ID: ${signatureId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        "Error deleting sender signature:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  }
 }
 
 const postmarkService = new PostmarkService();

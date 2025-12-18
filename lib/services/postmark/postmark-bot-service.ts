@@ -16,6 +16,12 @@ import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
+import creditService from "../credit-service";
+import { creditCosts } from "@/lib/constants";
+import { defaultUsage } from "@/lib/types/usage";
+import usageService from "../usage-service";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -29,11 +35,18 @@ class PostmarkBotService {
     try {
       //   //supercx ai agent id
       const aid = await channelService.resolveAgent(email, channel);
+
       console.log("resolved agent: ", aid);
       if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
+
+      const creditInfo = await creditService.getCredit(agent.ownerId);
+      if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
+        console.log("Insufficient credits: ", creditInfo);
+        throw this.ERROR_MESSAGE;
+      }
 
       let session = await this.getOrCreateSession(email, agent, channel);
 
@@ -51,41 +64,59 @@ class PostmarkBotService {
       );
       console.log("person: ", person);
       console.log("personId: ", session.personId);
-
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
       //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
       //prepare messages for ai
-      const chatHistory: IChatMessage[] = [
-        ...session.messages,
-        userMsg,
-        {
-          id: v4(),
-          role: "system",
-          metadata: { createdAt: new Date().toISOString() },
-          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
-        },
-      ];
+      const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
       const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(agent, query, channel);
+      const systemPrompt = await getSystemPrompt(
+        agent,
+        query,
+        channel,
+        session.personId
+      );
       const result = await generateText({
         model,
         system: systemPrompt,
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(
-          //   agent.wid,
-          //   agent.id,
-          //   session.id,
-          //   undefined
-          // ),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "email",
+            session.providerId
+          ),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
       //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
+
+      const totalTokens = result.usage.totalTokens;
+      await creditService.decreaseCredit(creditCosts.query, creditInfo);
+      const usage = defaultUsage(
+        agent.wid,
+        agent.id,
+        session.id,
+        "chat_response"
+      );
+      usage.amount = -creditCosts.query;
+      usage.metadata = {
+        model: model.modelId,
+        tokenUsage: totalTokens || 0,
+      };
+      await usageService.addUsage(agent.ownerId, usage);
+
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
     } catch (error) {

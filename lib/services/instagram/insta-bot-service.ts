@@ -16,6 +16,12 @@ import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
+import creditService from "../credit-service";
+import { creditCosts } from "@/lib/constants";
+import { defaultUsage } from "@/lib/types/usage";
+import usageService from "../usage-service";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -37,6 +43,12 @@ class InstaBotService {
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
+      const creditInfo = await creditService.getCredit(agent.ownerId);
+      if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
+        console.log("Insufficient credits: ", creditInfo);
+        return { success: false, message: "Insufficient credits" };
+      }
+
       let session = await this.getOrCreateSession(instaUserId, agent, channel);
 
       const query = instaMsg.text ?? "";
@@ -48,6 +60,11 @@ class InstaBotService {
 
       //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
 
       //prepare messages for ai
       const chatHistory: IChatMessage[] = [
@@ -71,7 +88,14 @@ class InstaBotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "instagram",
+            session.providerId
+          ),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
@@ -79,6 +103,21 @@ class InstaBotService {
       //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
+
+      const totalTokens = result.usage.totalTokens;
+      await creditService.decreaseCredit(creditCosts.query, creditInfo);
+      const usage = defaultUsage(
+        agent.wid,
+        agent.id,
+        session.id,
+        "chat_response"
+      );
+      usage.amount = -creditCosts.query;
+      usage.metadata = {
+        model: model.modelId,
+        tokenUsage: totalTokens || 0,
+      };
+      await usageService.addUsage(agent.ownerId, usage);
 
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };

@@ -58,7 +58,9 @@ export async function POST(req: Request) {
     // Step 2: Generate AI response using your bot service
     const { success, message: ans } = await postmarkBotService.generateResponse(
       parsedMessage,
-      parsedMessage.from,
+      // ?: Provider Account Id is the to id ?? from id means the user who send the email
+      // parsedMessage.from,
+      parsedMessage.to,
       "email"
     );
 
@@ -76,6 +78,8 @@ export async function POST(req: Request) {
 
       await postmarkService.sendReply({
         to: parsedMessage.from,
+        // Change this get approval
+        // from: parsedMessage.to,
         from: parsedMessage.from,
         subject: subject,
         textBody: ans,

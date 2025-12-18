@@ -7,6 +7,10 @@ import { NextRequest } from "next/server";
 import { collection, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "./clients/firebase";
 import { IPerson } from "./types/person";
+import { IAction } from "./types/actions";
+import { tool, ToolSet } from "ai";
+import z from "zod";
+import { executeAPIAction } from "./utils/api-actions-utils";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -203,4 +207,23 @@ export const checkRecentlyActive = (
 export const isMac = (): boolean => {
   if (typeof window === "undefined") return false;
   return navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+};
+
+export const getCustomTools = (actions: IAction[]): ToolSet => {
+  return actions.reduce((acc, action) => {
+    acc[action.slug] = tool({
+      name: action.name,
+      description: action.description,
+      inputSchema: z.object({
+        ...action.inputs.reduce((acc: Record<string, any>, input) => {
+          acc[input.key] = z.string().describe(input.description || "");
+          return acc;
+        }, {} as Record<string, any>),
+      }),
+      execute: async (params) => {
+        return executeAPIAction(action, params);
+      },
+    });
+    return acc;
+  }, {} as ToolSet);
 };

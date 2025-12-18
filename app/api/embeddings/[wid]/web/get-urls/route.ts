@@ -59,7 +59,7 @@ const categorizeUrls = async (
 ) => {
   try {
     const mainContentUrlResult = await generateObject({
-      model: google("gemini-2.0-flash-exp"),
+      model: google("gemini-2.5-flash"),
       schema: categorizeUrlSchema,
       prompt: `Categorize ALL input URLs (every single one) into 4-5 folders:
       folders: ${JSON.stringify(folders, null, 2)}

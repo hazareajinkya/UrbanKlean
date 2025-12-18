@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { IAction } from "../types/actions";
 import { db } from "../clients/firebase";
+import workflowservice from "./workflow-service";
 
 class ActionService {
   async getActions(wid: string) {
@@ -40,6 +41,13 @@ class ActionService {
 
   async deleteAction({ wid, actionId }: { wid: string; actionId: string }) {
     await deleteDoc(doc(db, `workspaces/${wid}/actions/${actionId}`));
+  }
+
+  async getActionsInWorkflow(wid: string, aid: string) {
+    const actions = await this.getActions(wid);
+    const workflows = await workflowservice.getWorkflows(aid);
+    const actionIds = new Set(workflows.flatMap((w) => w.toolIds));
+    return actions.filter((action) => actionIds.has(action.id));
   }
 }
 
