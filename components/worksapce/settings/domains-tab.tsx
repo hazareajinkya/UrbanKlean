@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Trash, Globe } from "lucide-react";
+import { Loader, Plus, Trash, Globe } from "lucide-react";
 import { normalizeDomain, validateDomain, cn } from "@/lib/utils";
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
 import { IWorkspace } from "@/lib/types/workspace";
@@ -128,7 +128,7 @@ export function DomainsTab({ workspace, wid }: DomainsTabProps) {
                 className="w-full sm:w-auto"
               >
                 {addWorkspaceDomain.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin " />
+                  <Loader className="h-4 w-4 animate-spin " />
                 ) : (
                   <Plus className="h-4 w-4 " />
                 )}
@@ -197,7 +197,7 @@ export function DomainsTab({ workspace, wid }: DomainsTabProps) {
                       >
                         {removeWorkspaceDomain.isPending &&
                         removingDomain === domain ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader className="h-4 w-4 animate-spin" />
                         ) : (
                           <Trash className="h-4 w-4" />
                         )}

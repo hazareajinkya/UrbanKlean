@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Modal from "@/components/ui/modal";
-import { Loader2, Trash, Palette, Sparkles } from "lucide-react";
+import { Loader, Trash, Palette, Sparkles } from "lucide-react";
 
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
 import { IWorkspace } from "@/lib/types/workspace";
@@ -332,7 +332,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
                   className="min-w-[120px]"
                 >
                   {updateWorkspace.isPending && (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader className="h-4 w-4 animate-spin mr-2" />
                   )}
                   Save Changes
                 </Button>

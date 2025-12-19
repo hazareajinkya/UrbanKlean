@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Loader2,
+  Loader,
   Mail,
   MoreHorizontal,
   UserMinus,
@@ -208,7 +208,7 @@ export default function MembersPage() {
                     disabled={!email.trim() || isInviting}
                   >
                     {isInviting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader className="w-4 h-4 animate-spin" />
                     ) : (
                       <Send className="w-4 h-4" />
                     )}
@@ -375,7 +375,7 @@ export default function MembersPage() {
                               }
                             >
                               {resendInvitation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader className="w-4 h-4 animate-spin" />
                               ) : (
                                 <RefreshCcw className="w-4 h-4" />
                               )}

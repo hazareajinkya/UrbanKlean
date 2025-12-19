@@ -284,7 +284,7 @@ export default function KnowledgeContentList({
             <div
               key={`${item.type}-${item.id}`}
               className={clsx(
-                "group flex items-start p-2.5 md:p-3 rounded-xl flexw cursor-pointer transition-all border",
+                "group flex items-start p-2.5 md:p-3 rounded-xl  cursor-pointer transition-all border",
                 isSelected(item)
                   ? "bg-secondary border-primary/20 shadow-sm"
                   : "bg-background border-transparent hover:bg-muted/50 hover:border-border/50"

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import {
-  Loader2,
+  Loader,
   Users,
   LogOut,
   Zap,
@@ -50,7 +50,7 @@ export default function WorkspaceLayout({
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
           <span className="text-lg">Authenticating...</span>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function WorkspaceLayout({
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
           <span className="text-lg">Checking access...</span>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function WorkspaceLayout({
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
           <span className="text-lg">Loading workspace...</span>
         </div>
       </div>

@@ -9,7 +9,7 @@ import ContentDetailPanel, {
 } from "@/components/knowledge/content-detail-panel";
 import { useFolders } from "@/lib/hooks/folders/use-folders";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
-import { Globe, Loader2, Plus, X, Search, UploadCloud } from "lucide-react";
+import { Globe, Loader, Plus, X, Search, UploadCloud } from "lucide-react";
 import Modal from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -260,7 +260,7 @@ export default function KnowledgeTab() {
   return (
     <div className="h-full w-full relative">
       <div className="bg-card border rounded-xl h-full overflow-hidden flex shadow-sm relative">
-        <div className="bg-secondary border-r z-10 hidden md:flex">
+        <div className="bg-secondary z-10 hidden md:flex">
           <FolderSidebar
             selectedFolderId={selectedFolderId}
             onSelectFolder={(id) => {
@@ -390,7 +390,7 @@ export default function KnowledgeTab() {
                 disabled={!selectedFile || embedAndSavePdf.isPending}
               >
                 {embedAndSavePdf.isPending && (
-                  <Loader2 className="w-4 h-4 animate-spin " />
+                  <Loader className="w-4 h-4 animate-spin " />
                 )}
                 Upload
               </Button>
@@ -469,7 +469,7 @@ export default function KnowledgeTab() {
                       }
                     >
                       {embedAndSaveWebsite.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin " />
+                        <Loader className="w-4 h-4 animate-spin " />
                       ) : (
                         <Plus className="w-4 h-4 " />
                       )}
@@ -485,7 +485,7 @@ export default function KnowledgeTab() {
                       }
                     >
                       {scrapeWebsite.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin " />
+                        <Loader className="w-4 h-4 animate-spin " />
                       ) : (
                         <Globe className="w-4 h-4 " />
                       )}
@@ -591,7 +591,7 @@ export default function KnowledgeTab() {
                   }
                 >
                   {crawlWebsites.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin " />
+                    <Loader className="w-4 h-4 animate-spin " />
                   ) : (
                     <Plus className="w-4 h-4 mr-2" />
                   )}
@@ -672,7 +672,7 @@ export default function KnowledgeTab() {
               }
             >
               {embedAndSaveText.isPending && (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader className="w-4 h-4 animate-spin" />
               )}
               Add Text
             </Button>

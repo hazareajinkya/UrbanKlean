@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
-import { ArrowRight, Loader2, Pencil, RefreshCcw, Send } from "lucide-react";
+import { ArrowRight, Loader, Pencil, RefreshCcw, Send } from "lucide-react";
 
 import { useEffect, useState } from "react";
 import {
@@ -181,7 +181,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                 className="transition-all"
               >
                 {sendVerificationEmail.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader className="size-4 animate-spin" />
                 ) : (
                   <Send className="size-4" />
                 )}
@@ -226,7 +226,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                   className="transition-all"
                 >
                   {resendVerificationEmail.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader className="size-4 animate-spin" />
                   ) : (
                     <RefreshCcw className="size-4" />
                   )}
@@ -239,7 +239,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                   className="transition-all"
                 >
                   {checkIfEmailVerified.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader className="size-4 animate-spin" />
                   ) : (
                     <ArrowRight className="size-4" />
                   )}

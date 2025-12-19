@@ -36,7 +36,7 @@ import {
   X,
   RefreshCw,
   Settings,
-  Loader2,
+  Loader,
   TestTube,
   EyeOff,
   Play,
@@ -634,7 +634,7 @@ const AddApiActionModal = ({
                 }
               >
                 {saveAction.isPending || updateAction.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                 ) : undefined}
                 {editingAction ? "Update Custom Action" : "Save Custom Action"}
               </Button>

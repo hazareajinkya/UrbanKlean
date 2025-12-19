@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Modal from "@/components/ui/modal";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader } from "lucide-react";
 import ActionMentions from "./action-mentions";
 import WorkflowActionsList from "./workflow-actions-list";
 import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
@@ -159,7 +159,7 @@ const WorkflowModal = ({
               Cancel
             </Button>
             <Button type="submit" disabled={!formData.name.trim() || isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin " />}
+              {isLoading && <Loader className="w-4 h-4 animate-spin " />}
               {isEditing ? "Update Workflow" : "Create Workflow"}
             </Button>
           </div>

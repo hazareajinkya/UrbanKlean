@@ -3,7 +3,7 @@
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { Button } from "@/components/ui/button";
 import {
-  Loader2,
+  Loader,
   ArrowLeft,
   MessageCircle,
   Palette,
@@ -44,7 +44,7 @@ export default function AgentPage() {
       <div className="p-4">
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader className="w-6 h-6 animate-spin" />
             <span className="text-lg">Loading agent...</span>
           </div>
         </div>

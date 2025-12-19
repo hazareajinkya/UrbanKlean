@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Loader2,
+  Loader,
   Mail,
   CheckCircle2,
   Box,
@@ -15,7 +15,6 @@ import {
   Sparkles,
   Zap,
   LoaderIcon,
-  Loader,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";

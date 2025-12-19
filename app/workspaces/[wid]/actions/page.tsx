@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { RefreshCw, Plus, Code, Edit, Trash2, Loader2 } from "lucide-react";
+import { RefreshCw, Plus, Code, Edit, Trash2, Loader } from "lucide-react";
 import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
 import { formatDate } from "@/lib/utils";
@@ -55,7 +55,7 @@ export default function ActionsPage() {
 
       {isLoading ? (
         <div className="text-center py-12">
-          <Loader2 className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
+          <Loader className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
           <p className="text-muted-foreground">Loading actions...</p>
         </div>
       ) : actions && actions.length > 0 ? (
