@@ -27,6 +27,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
 import { useMember } from "@/lib/hooks/members/use-members";
+import { GeminiLogo } from "@/lib/logos";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -219,19 +220,22 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
           {!isCollapsed && (
             <>
               <h2 className="font-medium truncate">Magical CX</h2>
-              <img
-                src={"/temp-logo-transparent.png"}
+              <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
+              {/* <img
+                src={"/logos/magicalcx-icon-trans-dark.png"}
                 // src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
-                className="size-7 rounded-md"
-              />
+                className="w-4 rounded-md"
+              /> */}
             </>
           )}
           {isCollapsed && (
             <div className="flex justify-center w-full">
-              <img
-                src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
-                className="w-6 h-6 rounded-md"
-              />
+              {/* <img
+                // src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
+                src="/logos/magicalcx-appicon-dark.png"
+                className="w-6 h-6 rounded-sm"
+              /> */}
+              <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
             </div>
           )}
         </Link>
