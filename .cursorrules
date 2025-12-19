@@ -118,8 +118,8 @@ use this schema when calling these routes using axios
 
 ## Function params structure
 
-Used named params for functions but don't create separate types for it use like this
+Whenever there are more than 2 input params for functions or methods then used named params following below standard don't create separate types
 
-async createUser(params: {name:string, email:string, password:string, photoUrl?:string}){
-const user = userService.getUser(params.name);
+async createUser(arg: {name:string, email:string, password:string, photoUrl?:string}){
+const user = userService.getUser(arg.name);
 }
