@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Loader2,
+  Loader,
   Mail,
   CheckCircle2,
   Box,
@@ -77,14 +77,18 @@ export default function AuthPageV2() {
       {/* Left Column - Auth Form */}
       <div className="flex flex-col justify-between p-8 lg:p-16 bg-white text-black relative">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            {/* <img src="/magical-cx-logo.png" alt="" /> */}
+        {/* <div className="flex items-center justify-between gap-3">
+          <div className="h-10 w-10  rounded-md flex items-center justify-center">
+            <img
+              src="/logos/magicalcx-appicon-dark.png"
+              alt=""
+              className="rounded-md"
+            />
           </div>
-          <span className="font-semibold text-xl tracking-tight text-black">
+          <span className="font-medium text-xl tracking-tight text-black">
             MagicalCX
           </span>
-        </div>
+        </div> */}
 
         <div className="w-full max-w-[440px] mx-auto flex flex-col justify-center flex-1 py-12">
           {status === "loading" ? (
@@ -101,11 +105,11 @@ export default function AuthPageV2() {
         {/* Footer */}
         <div className="text-xs text-gray-500">
           <p>
-            By signing up, you confirm to have read MagicalCX's{" "}
+            By signing up, you agree to our{" "}
             <Link href="/legal/privacy" className="underline hover:text-black">
               Privacy Policy
             </Link>{" "}
-            and agree to the{" "}
+            and{" "}
             <Link href="/legal/terms" className="underline hover:text-black">
               Terms of Service
             </Link>
@@ -466,7 +470,7 @@ const SignedIn = () => {
 
   return (
     <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-4">
-      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+      <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center mb-2">
         <span className="text-4xl">👋</span>
       </div>
 
@@ -474,7 +478,7 @@ const SignedIn = () => {
         <h2 className="text-3xl font-medium tracking-tight text-black">
           Welcome back
         </h2>
-        <p className="text-gray-500 text-base">
+        <p className="text-muted-foreground text-base">
           You are currently signed in as
         </p>
       </div>
@@ -534,27 +538,45 @@ const SignInForm = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <div className="space-y-4">
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-black leading-[1.1]">
+      <div className="">
+        <img
+          src="/logos/magicalcx-appicon-dark.png"
+          alt=""
+          className="rounded-md size-12"
+        />
+        <h1 className="text-4xl md:text-3xl leading-tight mt-6 mb-4">
           Welcome to the <br />
           HumanlyClear era.
+          {/* Sign in to MagicalCX */}
         </h1>
-        <p className="text-lg text-gray-500 leading-relaxed max-w-sm">
+        <p className="text-lg text-muted-foreground leading-relaxed max-w-sm">
           Empathy-first support that actually cares. Sign up to start
           orchestration.
         </p>
       </div>
 
+      {/* <div className="flex flex-col items-center ">
+        <div className="w-20 h-20 bg-black p-0 rounded-md flex items-center justify-center mb-2">
+          <span className="text-4xl font-medium">👋</span>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-3xl tracking-tight text-black">MagicalCX</h2>
+          <p className="text-muted-foreground text-base">
+            Empathy-first support that actually cares
+          </p>
+        </div>
+      </div> */}
       <div className="space-y-4 pt-4">
         <Button
-          variant="outline"
+          variant="default"
           type="button"
-          className="w-full h-14 gap-3 bg-white hover:bg-gray-50 text-black border-gray-200 shadow-sm hover:shadow transition-all text-base font-medium rounded-xl"
+          className="w-full h-14 gap-3 shadow-sm hover:shadow transition-all text-base font-medium rounded-xl"
           disabled={signInGoogle.isPending}
           onClick={handleGoogleSignIn}
         >
           {signInGoogle.isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader className="w-5 h-5 animate-spin" />
           ) : (
             <GoogleLogo className="w-5 h-5" />
           )}
@@ -583,15 +605,15 @@ const SignInForm = () => {
               disabled={sendLoginEmail.isPending}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-14 px-4 bg-white border-gray-200 focus:border-black transition-colors rounded-xl text-base placeholder:text-gray-400 pr-12"
+              className="h-14 px-4 transition-colors rounded-xl text-base pr-12"
             />
             <button
               type="submit"
               disabled={sendLoginEmail.isPending || !email}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all disabled:opacity-50"
             >
               {sendLoginEmail.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader className="w-5 h-5 animate-spin" />
               ) : (
                 <ArrowRight className="w-5 h-5" />
               )}
@@ -611,10 +633,8 @@ function VerifyRequest({ email }: { email: string }) {
       </div>
 
       <div className="space-y-3">
-        <h1 className="text-3xl font-medium tracking-tight text-black">
-          Check your email
-        </h1>
-        <p className="text-gray-500 max-w-xs mx-auto text-base">
+        <h1 className="text-3xl tracking-tight text-black">Check your email</h1>
+        <p className="text-muted-foreground w-full mx-auto text-base">
           We have sent a sign-in link to{" "}
           <span className="font-medium text-black block mt-1">{email}</span>
         </p>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAgent } from "@/lib/types/agent";
-import { Loader2, Upload, Building, Plus, X, GripVertical } from "lucide-react";
+import { Loader, Upload, Building, Plus, X, GripVertical } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
@@ -214,7 +214,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                 disabled={isSaving || updateAgent.isPending}
               >
                 {isSaving || updateAgent.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                 ) : null}
                 Save
               </Button>

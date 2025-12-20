@@ -218,7 +218,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                 tabIndex={0}
               >
                 {sendVerificationEmail.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader className="size-4 animate-spin" />
                 ) : (
                   "Send verification email"
                 )}
@@ -259,7 +259,7 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
                   tabIndex={0}
                 >
                   {resendVerificationEmail.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader className="size-4 animate-spin" />
                   ) : (
                     <RefreshCcw className="size-4" />
                   )}

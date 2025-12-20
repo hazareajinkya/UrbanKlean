@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Plus, Folder, Trash2, Pencil, Loader2, X } from "lucide-react";
+import { Plus, Folder, Trash2, Pencil, Loader, X } from "lucide-react";
 import { useFolders } from "@/lib/hooks/folders/use-folders";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -270,7 +270,7 @@ export default function FolderSidebar({
               disabled={!newFolderName.trim() || createFolder.isPending}
             >
               {createFolder.isPending && (
-                <Loader2 className="w-4 h-4 animate-spin " />
+                <Loader className="w-4 h-4 animate-spin " />
               )}
               Create Folder
             </Button>
@@ -334,7 +334,7 @@ export default function FolderSidebar({
               disabled={!editFolderName.trim() || updateFolder.isPending}
             >
               {updateFolder.isPending && (
-                <Loader2 className="w-4 h-4 animate-spin " />
+                <Loader className="w-4 h-4 animate-spin " />
               )}
               Save Changes
             </Button>

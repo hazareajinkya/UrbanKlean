@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { models } from "@/lib/models";
 import { IAgent } from "@/lib/types/agent";
-import { Settings, Save, FileText, Brain, Loader2, Folder } from "lucide-react";
+import { Settings, Save, FileText, Brain, Loader, Folder } from "lucide-react";
 import { useState } from "react";
 import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
@@ -83,7 +83,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                 disabled={updateAgent.isPending}
               >
                 {updateAgent.isPending && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                 )}
                 Save
               </Button>
@@ -188,7 +188,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                 disabled={updateAgent.isPending}
               >
                 {updateAgent.isPending && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                 )}
                 Save
               </Button>

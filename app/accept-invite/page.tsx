@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, CheckCircle, XCircle, Mail, Users } from "lucide-react";
+import { Loader, CheckCircle, XCircle, Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 
 function AcceptInviteContent() {
@@ -104,7 +104,7 @@ function AcceptInviteContent() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center space-y-4">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <Loader className="w-8 h-8 animate-spin text-blue-600" />
               <div>
                 <h2 className="text-lg font-semibold">Processing Invitation</h2>
                 <p className="text-sm text-gray-600">
@@ -199,7 +199,7 @@ export default function AcceptInvitePage() {
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <Loader className="w-8 h-8 animate-spin text-blue-600" />
                 <div>
                   <h2 className="text-lg font-semibold">Loading...</h2>
                   <p className="text-sm text-gray-600">

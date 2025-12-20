@@ -87,16 +87,14 @@ export const Footer = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
           {/* Logo and Description */}
           <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 mb-4 sm:mb-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-0">
               <img
-                src="/logo-transparent.png"
+                src="/logos/magicalcx-full-trans-light.png"
                 alt="Magical CX Logo"
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-md"
+                className="w-10 h-10 sm:w-30 sm:h-12 object-contain rounded-md"
               />
             </div>
-            <span className="text-base sm:text-lg text-foreground">
-              Magical CX
-            </span>
+
             <p className="text-sm sm:text-sm text-muted-foreground max-w-sm">
               Every brand, everywhere, can deliver magical customer experience
             </p>

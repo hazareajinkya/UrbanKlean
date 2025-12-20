@@ -11,7 +11,7 @@ import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions
 import { IUserWorkspace } from "@/lib/types/user";
 import { IWorkspace } from "@/lib/types/workspace";
 import { formatDate } from "@/lib/utils";
-import { Edit2, Loader2, Plus, Trash2, X } from "lucide-react";
+import { Edit2, Loader, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -185,7 +185,7 @@ export default function WorkspacesPage() {
                     disabled={deleteWorkspace.isPending}
                   >
                     {deleteWorkspace.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader className="w-4 h-4 animate-spin" />
                     ) : (
                       <Trash2 className="w-4 h-4" />
                     )}
@@ -326,7 +326,7 @@ const WorkspaceModal = ({
               Cancel
             </Button>
             <Button type="submit" disabled={!workspaceName.trim() || isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin " />}
+              {isLoading && <Loader className="w-4 h-4 animate-spin " />}
               {isEditing ? "Update Workspace" : "Create Workspace"}
             </Button>
           </div>

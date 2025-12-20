@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
 import { useParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 
 export type ContentItem =
   | { type: "document"; data: IDocKnowledge }
@@ -187,7 +187,7 @@ export default function ContentDetailPanel({
                   disabled={!editContent.trim() || updateText.isPending}
                 >
                   {updateText.isPending && (
-                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    <Loader className="w-3.5 h-3.5 animate-spin" />
                   )}
                   Save Changes
                 </Button>

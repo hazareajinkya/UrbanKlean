@@ -81,6 +81,7 @@ lib/services - user-service.ts
 don't use this inside class
 class UserService {
 ....
+async getUser() {}
 }
 const userService = new UserService()
 export default userService;
@@ -114,3 +115,11 @@ For API routes
 In api routes use successResponse and errorResponse
 
 use this schema when calling these routes using axios
+
+## Function params structure
+
+Whenever there are more than 2 input params for functions or methods then used named params following below standard don't create separate types
+
+async createUser(arg: {name:string, email:string, password:string, photoUrl?:string}){
+const user = userService.getUser(arg.name);
+}

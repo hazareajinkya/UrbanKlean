@@ -3,7 +3,7 @@
 import { ISession } from "@/lib/types/session";
 import { formatDate } from "@/lib/utils";
 import {
-  Loader2,
+  Loader,
   Mail,
   Phone,
   MapPin,
@@ -99,7 +99,7 @@ export const InfoSidebar = ({
   if (!person) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        <Loader className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -334,7 +334,7 @@ export const InfoSidebar = ({
                     }`}
                   >
                     {isLoading ? (
-                      <Loader2 className="w-3 h-3 flex-shrink-0 animate-spin" />
+                      <Loader className="w-3 h-3 flex-shrink-0 animate-spin" />
                     ) : (
                       <MessageSquare className="w-3 h-3 flex-shrink-0" />
                     )}

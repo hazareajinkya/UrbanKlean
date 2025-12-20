@@ -10,7 +10,7 @@ import {
   useEffect,
 } from "react";
 import Modal from "@/components/ui/modal";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 
 interface DemoModalContextType {
   openDemoModal: () => void;
@@ -55,7 +55,7 @@ export const DemoModalProvider = ({ children }: { children: ReactNode }) => {
         <div className="relative w-full h-[80vh]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
           <iframe

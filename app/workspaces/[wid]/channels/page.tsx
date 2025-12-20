@@ -29,6 +29,7 @@ import {
   Check,
   Copy,
   Instagram,
+  Loader,
   Loader2,
   Settings2,
   SettingsIcon,
@@ -44,7 +45,6 @@ import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 
 const ChannelsPage = () => {
-  const router = useRouter();
   const { wid } = useParams() as { wid: string };
 
   const { channels, isLoading } = useChannels(wid);
@@ -137,7 +137,7 @@ const ChannelsPage = () => {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
         </div>
       ) : channels && channels.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
@@ -367,7 +367,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
                   disabled={assignChannelToAgent.isPending}
                 >
                   {assignChannelToAgent.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader className="w-4 h-4 animate-spin" />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
@@ -421,7 +421,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
               }
             >
               {disconnectChannel.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader className="w-4 h-4 animate-spin" />
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}

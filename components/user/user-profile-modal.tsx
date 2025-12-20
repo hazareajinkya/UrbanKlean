@@ -4,7 +4,7 @@ import { IUser } from "@/lib/types/user";
 import { useEffect, useRef, useState } from "react";
 import Modal from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2, X } from "lucide-react";
+import { Camera, Loader, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -163,7 +163,7 @@ const UserProfileForm = ({
           disabled={isLoading || name === ""}
           className="gap-2"
         >
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isLoading && <Loader className="w-4 h-4 animate-spin" />}
           Save Changes
         </Button>
       </div>
