@@ -8,7 +8,7 @@ export const RESEND_API_BASE = "https://api.resend.com";
 
 // WhatsApp Configuration
 export const WA_WINDOW_EXPIRATION_HOURS = 24;
-export const WA_PHONE_ID = "848214531709464";
+export const WA_PHONE_ID = "859793977226436";
 
 // Facebook Configuration
 export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";

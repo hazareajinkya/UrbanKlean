@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  allowedDevOrigins: ["magicalcx.ratcat.in"],
   experimental: {},
   devIndicators: false,
 };

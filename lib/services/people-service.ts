@@ -7,16 +7,21 @@ import {
   getDoc,
   getDocs,
   limit,
+  orderBy,
   query,
   setDoc,
+  startAfter,
   updateDoc,
   where,
+  getCountFromServer,
 } from "firebase/firestore";
 import { db } from "../clients/firebase";
 import { normEmail, normNote, normPhone, normWord } from "../utils";
 import { kMaxLength } from "buffer";
 import { v4 } from "uuid";
 import { generateDefaultPerson, IExternalIds, IPerson } from "../types/person";
+
+export const PEOPLE_PAGE_LIMIT = 20;
 
 class PeopleService {
   async identifyPerson({
@@ -351,6 +356,36 @@ class PeopleService {
     const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
     await setDoc(personRef, person);
     return person;
+  }
+
+  async getPeoplePage(
+    wid: string,
+    lastDoc: DocumentSnapshot | null,
+    limitCount: number = PEOPLE_PAGE_LIMIT
+  ) {
+    const peopleCol = collection(db, `workspaces/${wid}/people`);
+    let q = query(peopleCol, orderBy("updatedAt", "desc"), limit(limitCount));
+
+    if (lastDoc) {
+      q = query(
+        peopleCol,
+        orderBy("updatedAt", "desc"),
+        startAfter(lastDoc),
+        limit(limitCount)
+      );
+    }
+
+    const snapshot = await getDocs(q);
+    const people = snapshot.docs.map((doc) => doc.data() as IPerson);
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+
+    return { people, lastVisible };
+  }
+
+  async getPeopleCount(wid: string) {
+    const peopleCol = collection(db, `workspaces/${wid}/people`);
+    const snapshot = await getCountFromServer(peopleCol);
+    return snapshot.data().count;
   }
 }
 

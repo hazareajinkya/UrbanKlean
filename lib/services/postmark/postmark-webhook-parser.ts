@@ -2,6 +2,7 @@ import {
   IPostmarkInboundWebhook,
   IPostmarkMessage,
 } from "@/lib/types/postmark-api";
+import { htmlToText } from "html-to-text";
 
 class PostmarkWebhookParser {
   parseInboundEmail(body: IPostmarkInboundWebhook): IPostmarkMessage {
@@ -11,7 +12,12 @@ class PostmarkWebhookParser {
       fromName: body.FromFull.Name || body.FromName,
       to: body.ToFull[0]?.Email || body.To,
       subject: body.Subject,
-      textBody: body.TextBody,
+      textBody:
+        body.TextBody ||
+        htmlToText(body.HtmlBody || "", {
+          wordwrap: false,
+          selectors: [{ selector: "img", format: "skip" }],
+        }),
       htmlBody: body.HtmlBody,
       strippedTextReply: body.StrippedTextReply,
       timestamp: body.Date,

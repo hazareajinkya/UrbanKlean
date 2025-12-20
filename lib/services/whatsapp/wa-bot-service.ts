@@ -16,6 +16,10 @@ import { metadata } from "@/app/layout";
 import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
+import creditService from "../credit-service";
+import { creditCosts } from "@/lib/constants";
+import { defaultUsage } from "@/lib/types/usage";
+import usageService from "../usage-service";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -29,13 +33,19 @@ class WABotService {
   ) {
     try {
       //supercx ai agent id
-      const aid = await channelService.resolveAgent(userId, channel);
+      // const aid = await channelService.resolveAgent(userId, channel);
+      const aid = "c0e54882-04fc-489e-975b-e2b7edbf2adf";
       console.log("resolved agent: ", aid);
 
       if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
+      const creditInfo = await creditService.getCredit(agent.ownerId);
+      if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
+        console.log("Insufficient credits: ", creditInfo);
+        throw this.ERROR_MESSAGE;
+      }
 
       let session = await this.getOrCreateSession(waPhoneId, agent, channel);
 
@@ -50,16 +60,7 @@ class WABotService {
       chatService.saveMessage(agent.id, session.id, userMsg);
 
       //prepare messages for ai
-      const chatHistory: IChatMessage[] = [
-        ...session.messages,
-        userMsg,
-        {
-          id: v4(),
-          role: "system",
-          metadata: { createdAt: new Date().toISOString() },
-          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
-        },
-      ];
+      const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
 
       const model = getModel(agent);
@@ -71,14 +72,35 @@ class WABotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
-          searchKnowledge: searchKnowledge(agent.wid, agent),
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "whatsapp",
+            waPhoneId,
+            session.personId
+          ),
+          searchKnowledge: searchKnowledge(agent.wid!, agent),
         },
       });
 
       //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
+      const totalTokens = result.usage?.totalTokens;
+      await creditService.decreaseCredit(creditCosts.query, creditInfo);
+      const usage = defaultUsage(
+        agent.wid,
+        agent.id,
+        session.id,
+        "chat_response"
+      );
+      usage.amount = -creditCosts.query;
+      usage.metadata = {
+        model: model.modelId,
+        tokenUsage: totalTokens || 0,
+      };
+      await usageService.addUsage(agent.ownerId, usage);
 
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };

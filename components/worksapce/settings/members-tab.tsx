@@ -46,6 +46,7 @@ import {
   getRoleDisplayName,
   canInviteMembers,
   canManageMembers,
+  ROLE_HIERARCHY,
 } from "@/lib/types/member";
 
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -140,7 +141,20 @@ export default function MembersPage() {
     }
   };
 
-  const activeMembers = members.filter((m) => m.status === "accepted");
+  const activeMembers = members
+    .filter((m) => m.status === "accepted")
+    .sort((a, b) => {
+      // Sort by role hierarchy (Owner > Admin > Member)
+      const roleDiff =
+        (ROLE_HIERARCHY[b.role] || 0) - (ROLE_HIERARCHY[a.role] || 0);
+
+      if (roleDiff !== 0) return roleDiff;
+
+      // Secondary sort by name/email
+      const nameA = a.user?.name || a.email;
+      const nameB = b.user?.name || b.email;
+      return nameA.localeCompare(nameB);
+    });
   const pendingMembers = members.filter((m) => m.status === "pending");
 
   const MemberSkeleton = () => (
@@ -242,7 +256,7 @@ export default function MembersPage() {
               activeMembers.map((member) => (
                 <div
                   key={member.email}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between py-4"
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="w-10 h-10">
@@ -338,7 +352,7 @@ export default function MembersPage() {
                 {pendingMembers.map((member) => (
                   <div
                     key={member.email}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between py-4"
                   >
                     <div className="flex items-center gap-4">
                       <Avatar className="w-10 h-10">

@@ -2,7 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
-import { ArrowRight, Loader2, Pencil, RefreshCcw, Send } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Copy,
+  Loader2,
+  Mail,
+  RefreshCcw,
+} from "lucide-react";
 
 import { useEffect, useState } from "react";
 import {
@@ -12,8 +19,7 @@ import {
 import { toast } from "sonner";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import channelService from "@/lib/services/channel-service";
-import { getwid } from "@/lib/utils";
-import { useChannelActions } from "@/hooks/channels/use-channel-actions";
+import { generateForwardingEmail, getwid } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { channelsKey } from "@/hooks/channels/use-channels";
 
@@ -23,9 +29,12 @@ interface EmailSetupModalProps {
 }
 
 const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
+  const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [forwardingEmail, setForwardingEmail] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const [signatureId, setSignatureId] = useState(
     localStorage.getItem("signatureId") ?? ""
@@ -47,10 +56,6 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
     } catch (error) {}
   };
 
-  const handleChangeEmail = () => {
-    setEmailSent(false);
-  };
-
   const handleResendEmail = async () => {
     if (!email) return;
     const signatureId = localStorage.getItem("signatureId");
@@ -70,15 +75,16 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
     });
 
     if (data.confirmed) {
-      ///save email channel
-      await createEmailChannel(data);
-      closeModal();
+      const fwdEmail = await createEmailChannel(data);
+      setForwardingEmail(fwdEmail);
+      setStep(2);
     } else {
       toast.warning("You haven't verified your email yet");
     }
   };
 
-  const createEmailChannel = async (data: any) => {
+  const createEmailChannel = async (data: any): Promise<string> => {
+    const fwdEmail = generateForwardingEmail();
     const metadata = {
       id: data.emailAddress,
       email: data.emailAddress,
@@ -87,7 +93,9 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
       domain: data.domain,
       replyToEmail: data.replyToEmail,
       returnPathDomain: data.returnPathDomain,
+      forwardingEmail: fwdEmail,
     };
+    console.log(metadata);
     const creds = { signatureId: data.signatureId };
     const emailChannel = generateDefaultChannel(
       data.emailAddress,
@@ -98,6 +106,29 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
 
     await channelService.addChannel(getwid(), emailChannel);
     qc.invalidateQueries({ queryKey: channelsKey(getwid()) });
+    return fwdEmail;
+  };
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(forwardingEmail);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy");
+    }
+  };
+
+  const handleFinish = () => {
+    setStep(1);
+    setEmail("");
+    setDisplayName("");
+    setEmailSent(false);
+    setForwardingEmail("");
+    setCopied(false);
+    localStorage.removeItem("signatureId");
+    closeModal();
   };
 
   useEffect(() => {
@@ -120,138 +151,198 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
     <Modal
       isOpen={isOpen}
       closeModal={closeModal}
-      className="max-w-2xl bg-white dark:bg-black rounded-2xl p-6"
+      className="max-w-md bg-background rounded-xl p-6 shadow-xl"
     >
-      <div>
-        <div className="mb-6">
-          <h2 className="text-lg font-medium">Verify your email</h2>
-          <p className="text-sm text-muted-foreground">
-            Enter email address where you want to automate emails.
-          </p>
-        </div>
+      {step === 1 ? (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold">Connect your email</h2>
+            <p className="text-sm text-muted-foreground">
+              We&apos;ll send a verification link to confirm ownership.
+            </p>
+          </div>
 
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendVerification();
-          }}
-          aria-label="Email Setup Form"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="support@company.com"
-              className="w-full"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              aria-label="Email Address"
-              required
-              disabled={emailSent}
-              tabIndex={0}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Email Display Name</Label>
-            <Input
-              id="displayName"
-              type="text"
-              placeholder="Support at Company"
-              className="w-full"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              autoComplete="off"
-              aria-label="Email Display Name"
-              required
-              disabled={emailSent}
-              tabIndex={0}
-            />
-          </div>
-          {!emailSent && (
-            <div className="flex justify-end w-full">
+          {/* Form */}
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendVerification();
+            }}
+            aria-label="Email Setup Form"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="support@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                aria-label="Email Address"
+                required
+                disabled={emailSent}
+                tabIndex={0}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display name</Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="Company Support"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                autoComplete="off"
+                aria-label="Email Display Name"
+                required
+                disabled={emailSent}
+                tabIndex={0}
+              />
+              <p className="text-xs text-muted-foreground">
+                This name appears in emails sent to customers.
+              </p>
+            </div>
+
+            {!emailSent && (
               <Button
                 type="submit"
+                className="w-full"
                 disabled={
                   sendVerificationEmail.isPending || !email || !displayName
                 }
                 aria-label="Send Verification Email"
-                className="transition-all"
+                tabIndex={0}
               >
                 {sendVerificationEmail.isPending ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
-                  <Send className="size-4" />
+                  "Send verification email"
                 )}
-                Send Verification Email
               </Button>
-            </div>
-          )}
-        </form>
+            )}
+          </form>
 
-        {emailSent && (
-          <div className="mt-6 p-4 border border-primary/10 bg-primary/5 text-primary rounded-lg  animate-fade-in">
-            <p className="text-sm ">
-              Verification email has been sent to{" "}
-              <span className="font-semibold">{email}</span> <br />
-              <br />
-              Please check your inbox and click on the verification link sent
-              <br />
-              <br />
-              Once verified, come back here and click on the continue setup
-              button.
-            </p>
-          </div>
-        )}
+          {/* Verification Sent State */}
+          {emailSent && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                <Mail className="size-5 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium">Check your inbox</p>
+                  <p className="text-muted-foreground">
+                    We sent a verification link to{" "}
+                    <span className="font-medium text-foreground">{email}</span>
+                  </p>
+                </div>
+              </div>
 
-        {emailSent ? (
-          <div className="flex flex-row items-center justify-between mt-6 gap-2">
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setEmailSent(false)}
-                aria-label="Change Email"
-                className="transition-all"
-              >
-                Change email
-              </Button>
-              <div className="flex flex-row gap-2">
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
+                  className="flex-1"
+                  onClick={() => setEmailSent(false)}
+                  aria-label="Change Email"
+                  tabIndex={0}
+                >
+                  Change email
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => handleResendEmail()}
                   aria-label="Resend Email"
                   disabled={resendVerificationEmail.isPending}
-                  className="transition-all"
+                  tabIndex={0}
                 >
                   {resendVerificationEmail.isPending ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <RefreshCcw className="size-4" />
                   )}
-                  Resend Email
-                </Button>
-                <Button
-                  onClick={handleVerifiedEmail}
-                  disabled={checkIfEmailVerified.isPending}
-                  aria-label="I've Verified Email"
-                  className="transition-all"
-                >
-                  {checkIfEmailVerified.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="size-4" />
-                  )}
-                  Continue setup
                 </Button>
               </div>
-            </>
+
+              <Button
+                className="w-full"
+                onClick={handleVerifiedEmail}
+                disabled={checkIfEmailVerified.isPending}
+                aria-label="Continue to Next Step"
+                tabIndex={0}
+              >
+                {checkIfEmailVerified.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    I&apos;ve verified my email
+                    <ArrowRight className="size-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold">Set up forwarding</h2>
+            <p className="text-sm text-muted-foreground">
+              Forward emails to the address below to receive them in MagicalCX.
+            </p>
           </div>
-        ) : (
-          <></>
-        )}
-      </div>
+
+          {/* Forwarding Email */}
+          <div className="space-y-3">
+            <Label>Forwarding address</Label>
+            <div className="flex gap-2">
+              <div
+                className="flex-1 px-3 py-2.5 bg-muted rounded-lg font-mono text-sm cursor-text select-all break-all"
+                onClick={handleCopyEmail}
+                role="button"
+                tabIndex={0}
+                aria-label="Click to copy forwarding email"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") handleCopyEmail();
+                }}
+              >
+                {forwardingEmail}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCopyEmail}
+                aria-label="Copy forwarding email"
+                tabIndex={0}
+                className="shrink-0"
+              >
+                {copied ? (
+                  <Check className="size-4 text-green-500" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add this address in your email provider&apos;s forwarding settings
+              (Gmail, Outlook, etc.)
+            </p>
+          </div>
+
+          {/* Done */}
+          <Button
+            className="w-full"
+            onClick={handleFinish}
+            tabIndex={0}
+            aria-label="Complete setup"
+          >
+            Done
+          </Button>
+        </div>
+      )}
     </Modal>
   );
 };

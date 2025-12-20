@@ -61,6 +61,7 @@ class ChannelService {
   }
 
   async resolveAgent(providerAccountId: string, provider: IChannelProvider) {
+    console.log("Resolving agent for provider: ", providerAccountId);
     const q = query(
       collectionGroup(db, "channels"),
       where("metadata.id", "==", providerAccountId),

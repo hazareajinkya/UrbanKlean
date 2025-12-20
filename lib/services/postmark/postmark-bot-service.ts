@@ -30,6 +30,7 @@ class PostmarkBotService {
   async generateResponse(
     postmarkMsg: IPostmarkMessage,
     email: string,
+    personEmail: string,
     channel: IChannelProvider // userId: string, // waMsg: IWAMessage,
   ) {
     try {
@@ -48,7 +49,7 @@ class PostmarkBotService {
         throw this.ERROR_MESSAGE;
       }
 
-      let session = await this.getOrCreateSession(email, agent, channel);
+      let session = await this.getOrCreateSession(personEmail, agent, channel);
 
       // Format textBody to preserve intended line breaks and structure
       //   const query = (postmarkMsg.textBody ?? "").replace(/\r\n|\r|\n/g, "\n");

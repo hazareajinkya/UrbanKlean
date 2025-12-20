@@ -11,6 +11,7 @@ import { IAction } from "./types/actions";
 import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
+import { v4 } from "uuid";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -226,4 +227,33 @@ export const getCustomTools = (actions: IAction[]): ToolSet => {
     });
     return acc;
   }, {} as ToolSet);
+};
+
+export const generateForwardingEmail = () => {
+  const prefix = "magical";
+  const id = v4().replace(/-/g, "").slice(0, 6); // short, clean
+  return `${prefix}+${id}@magicalcx-mail.com`;
+};
+
+export const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+};
+
+export const formatPhone = (phone?: string) => {
+  if (!phone) return "";
+
+  return phone;
+};
+
+export const getPrimaryEmail = (person: IPerson) => {
+  return person.emails?.[0] || "";
+};
+
+export const getPrimaryPhone = (person: IPerson) => {
+  return person.phones?.[0] || "";
 };
