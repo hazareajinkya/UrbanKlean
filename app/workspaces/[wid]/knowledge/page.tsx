@@ -41,7 +41,7 @@ export default function KnowledgeBasePage() {
               key={tabItem.id}
               onClick={() => handleTabChange(tabItem.id)}
               className={clsx(
-                "flex items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary/80",
+                "flex cursor-pointer items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary/80",
                 activeTab === tabItem.id
                   ? "text-primary font-medium"
                   : "text-muted-foreground hover:text-foreground"

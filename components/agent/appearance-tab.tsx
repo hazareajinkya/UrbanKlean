@@ -65,6 +65,8 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
           greetingMessage,
           primaryColor,
           botIcon: botIconUrl,
+          starterMessagesEnabled,
+          starterMessages: starterMessages.filter((msg) => msg.trim() !== ""),
         },
       };
 
@@ -85,34 +87,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
       console.error(error);
       setIsSaving(false);
     }
-  };
-
-  const handleSaveStarterMessages = () => {
-    setIsSavingStarters(true);
-
-    const filteredStarterMessages = starterMessages.filter(
-      (msg) => msg.trim() !== ""
-    );
-
-    const updates = {
-      customization: {
-        ...agent.customization,
-        starterMessagesEnabled,
-        starterMessages: filteredStarterMessages,
-      },
-    };
-
-    updateAgent.mutate(
-      { aid: agent.id, updates },
-      {
-        onSuccess: () => {
-          setStarterMessages(filteredStarterMessages);
-        },
-        onSettled: () => {
-          setIsSavingStarters(false);
-        },
-      }
-    );
   };
 
   const handleUploadClick = () => {
@@ -199,7 +173,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
       {/* Settings Column */}
-      <div className="space-y-6">
+      <div className="space-y-6 mb-24">
         {/* Agent Appearance Card */}
         <Card className="py-4">
           <CardHeader>
@@ -306,17 +280,18 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
               </div>
               <div className="border-t pt-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="">
                     <h1>Starter Messages</h1>
-                    <Switch
-                      checked={starterMessagesEnabled}
-                      onCheckedChange={setStarterMessagesEnabled}
-                    />
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Show quick suggestions when users start a new conversation
+                    </p>
                   </div>
+
+                  <Switch
+                    checked={starterMessagesEnabled}
+                    onCheckedChange={setStarterMessagesEnabled}
+                  />
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Show quick suggestions when users start a new conversation
-                </p>
               </div>
               <div className="space-y-2">
                 {starterMessages.map((message, index) => (

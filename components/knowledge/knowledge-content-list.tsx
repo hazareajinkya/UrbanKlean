@@ -284,9 +284,9 @@ export default function KnowledgeContentList({
             <div
               key={`${item.type}-${item.id}`}
               className={clsx(
-                "group flex items-start p-2.5 md:p-3 rounded-xl  cursor-pointer transition-all border",
+                "group flex items-start p-2.5 md:p-3 rounded-md  cursor-pointer transition-all border",
                 isSelected(item)
-                  ? "bg-secondary border-primary/20 shadow-sm"
+                  ? "bg-card border-primary/20 "
                   : "bg-background border-transparent hover:bg-muted/50 hover:border-border/50"
               )}
               onClick={() => onSelectContent(item.data)}
@@ -334,14 +334,14 @@ export default function KnowledgeContentList({
                   </span>
                 </div>
 
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 opacity-0 group-hover:opacity-100 transition-all"
                   onClick={(e) => handleDelete(e, item)}
                 >
                   <Trash2 className="w-4 h-4" />
-                </Button>
+                </Button> */}
               </div>
             </div>
           ))
