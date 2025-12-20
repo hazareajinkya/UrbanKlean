@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         parsed.msg,
         parsed.contact.waId,
         parsed.contact.waId,
+        parsed.contact.name,
         "whatsapp"
       );
 

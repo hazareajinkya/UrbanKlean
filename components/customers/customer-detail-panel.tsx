@@ -1,9 +1,7 @@
 "use client";
 
-import Modal from "@/components/ui/modal";
 import { IPerson } from "@/lib/types/person";
 import {
-  Loader2,
   Mail,
   Phone,
   MapPin,
@@ -13,11 +11,10 @@ import {
   Clock,
   Copy,
   Link2,
-  Tag,
-  Heart,
   Brain,
   FileText,
   MessageSquare,
+  Pencil,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,11 +23,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-interface CustomerViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface CustomerDetailPanelProps {
   person: IPerson | null;
-  isLoading?: boolean;
+  onEdit: (person: IPerson) => void;
+  onClose?: () => void;
 }
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -75,47 +71,24 @@ const CopyableItem = ({
   );
 };
 
-export default function CustomerViewModal({
-  isOpen,
-  onClose,
+export default function CustomerDetailPanel({
   person,
-  isLoading = false,
-}: CustomerViewModalProps) {
-  if (isLoading) {
-    return (
-      <Modal
-        isOpen={isOpen}
-        closeModal={onClose}
-        size="2xl"
-        className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border rounded-2xl p-6"
-      >
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      </Modal>
-    );
-  }
-
+  onEdit,
+  onClose,
+}: CustomerDetailPanelProps) {
   if (!person) {
     return (
-      <Modal
-        isOpen={isOpen}
-        closeModal={onClose}
-        size="2xl"
-        className="max-w-2xl bg-card border rounded-2xl p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-semibold">Customer Details</h2>
-            <p className="text-sm text-muted-foreground">
-              No customer selected
-            </p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground px-6">
+        <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+          <User className="w-5 h-5" />
         </div>
-      </Modal>
+        <p className="text-sm font-medium text-foreground/70">
+          No Customer Selected
+        </p>
+        <p className="text-xs text-center mt-1">
+          Select a customer from the list to view details
+        </p>
+      </div>
     );
   }
 
@@ -132,39 +105,49 @@ export default function CustomerViewModal({
   const hasExternalIds = person.externalIds?.length > 0;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      closeModal={onClose}
-      size="2xl"
-      className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border rounded-2xl p-6"
-    >
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold">Customer Details</h2>
-          <p className="text-sm text-muted-foreground">
-            View all information about this customer
-          </p>
+    <div className="h-full flex flex-col bg-card">
+      {/* Panel Header */}
+      <div className="h-12 border-b bg-muted/10 px-4 flex items-center justify-between flex-shrink-0">
+        <p className="text-sm font-medium text-foreground">Customer Details</p>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(person)}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            aria-label="Edit customer"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              aria-label="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
       </div>
 
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 pb-4 border-b">
-          <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
+      {/* Customer Info Header */}
+      <div className="px-5 py-5 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-11 w-11 border-2 border-background shadow-sm flex-shrink-0">
             <AvatarImage src="" />
-            <AvatarFallback className="text-lg bg-primary/10 text-primary">
+            <AvatarFallback className="text-base bg-primary/10 text-primary font-medium">
               {getInitials(person.name || "Unknown")}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-semibold text-foreground truncate">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-medium text-foreground">
               {person.name || "Unknown Customer"}
             </h3>
             {hasWorkInfo && (
-              <p className="text-sm text-muted-foreground truncate mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {person.title}
                 {person.title && person.company && " · "}
                 {person.company}
@@ -172,10 +155,13 @@ export default function CustomerViewModal({
             )}
           </div>
         </div>
+      </div>
 
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Contact Info */}
         {hasContactInfo && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Contact</SectionLabel>
             <div className="space-y-1">
               {person.emails?.map((email, i) => (
@@ -193,7 +179,7 @@ export default function CustomerViewModal({
 
         {/* Work Info */}
         {hasWorkInfo && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Work</SectionLabel>
             <div className="space-y-2.5">
               {person.title && (
@@ -218,7 +204,7 @@ export default function CustomerViewModal({
 
         {/* External IDs */}
         {hasExternalIds && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>External IDs</SectionLabel>
             <div className="space-y-1">
               {person.externalIds.map((extId, i) => (
@@ -227,7 +213,7 @@ export default function CustomerViewModal({
                   className="flex items-center gap-2.5 min-w-0 text-xs text-foreground"
                 >
                   <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="font-mono">
+                  <span className="font-mono truncate flex-1">
                     {extId.provider}: {extId.id}
                   </span>
                 </div>
@@ -238,7 +224,7 @@ export default function CustomerViewModal({
 
         {/* Tags */}
         {hasTags && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Tags</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {person.tags.map((tag, i) => (
@@ -255,7 +241,7 @@ export default function CustomerViewModal({
 
         {/* Interests */}
         {hasInterests && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Interests</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {person.interests.map((interest, i) => (
@@ -272,7 +258,7 @@ export default function CustomerViewModal({
 
         {/* Summary */}
         {hasSummary && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Summary</SectionLabel>
             <p className="text-xs text-foreground/80 leading-relaxed">
               {person.summary}
@@ -282,7 +268,7 @@ export default function CustomerViewModal({
 
         {/* Memories (AI insights) */}
         {hasMemories && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Insights</SectionLabel>
             <div className="space-y-2">
               {person.memories.map((memory, i) => (
@@ -299,7 +285,7 @@ export default function CustomerViewModal({
 
         {/* Notes (human notes) */}
         {hasNotes && (
-          <div>
+          <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Notes</SectionLabel>
             <div className="space-y-2">
               {person.notes.map((note, i) => (
@@ -316,12 +302,12 @@ export default function CustomerViewModal({
 
         {/* Past Sessions */}
         {hasPastSessions && (
-          <div>
+          <div className="px-5 py-4">
             <SectionLabel>
               Conversations ({person.pastSessionIds.length})
             </SectionLabel>
             <div className="space-y-1">
-              {person.pastSessionIds.slice(0, 10).map((sessionId, i) => (
+              {person.pastSessionIds.map((sessionId, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground font-mono"
@@ -330,28 +316,23 @@ export default function CustomerViewModal({
                   <span className="truncate flex-1">{sessionId}</span>
                 </div>
               ))}
-              {person.pastSessionIds.length > 10 && (
-                <p className="text-[10px] text-muted-foreground px-2 pt-1">
-                  +{person.pastSessionIds.length - 10} more conversations
-                </p>
-              )}
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        {person.createdAt && (
-          <div className="pt-4 border-t flex items-center gap-1.5 text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span className="text-[10px]">
-              Added {formatDate(person.createdAt)}
-              {person.updatedAt !== person.createdAt && (
-                <> · Updated {formatDate(person.updatedAt)}</>
-              )}
-            </span>
-          </div>
-        )}
       </div>
-    </Modal>
+
+      {/* Footer */}
+      {person.createdAt && (
+        <div className="px-5 py-3 border-t border-border/30 flex items-center gap-1.5 text-muted-foreground">
+          <Clock className="w-3 h-3" />
+          <span className="text-[10px]">
+            Added {formatDate(person.createdAt)}
+            {person.updatedAt !== person.createdAt && (
+              <> · Updated {formatDate(person.updatedAt)}</>
+            )}
+          </span>
+        </div>
+      )}
+    </div>
   );
 }

@@ -5,21 +5,13 @@ import Modal from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { IPerson } from "@/lib/types/person";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { usePeopleActions } from "@/lib/hooks/people/use-people-actions";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
@@ -88,7 +80,7 @@ export default function CustomerEditForm({
     }
   }, [person, isOpen, form]);
 
-  const onSubmit = async (data: PersonFormValues) => {
+  const handleSubmit = (data: PersonFormValues) => {
     if (!person) return;
 
     updatePerson.mutate(
@@ -116,28 +108,24 @@ export default function CustomerEditForm({
     );
   };
 
-  const addArrayItem = (
-    fieldName: "emails" | "phones" | "tags" | "interests" | "notes",
-    value?: string
+  const handleAddArrayItem = (
+    fieldName: "emails" | "phones" | "tags" | "interests" | "notes"
   ) => {
     const current = form.getValues(fieldName) || [];
-    if (value !== undefined) {
-      // For emails, phones, and notes, allow empty strings to be added
-      if (fieldName === "emails" || fieldName === "phones" || fieldName === "notes") {
-        form.setValue(fieldName, [...current, ""]);
-      } else {
-        // For tags and interests, only add non-empty values
-        if (value.trim() && !current.includes(value.trim())) {
-          form.setValue(fieldName, [...current, value.trim()]);
-        }
-      }
-    } else {
-      // Add empty string for emails/phones/notes
-      form.setValue(fieldName, [...current, ""]);
-    }
+    form.setValue(fieldName, [...current, ""]);
   };
 
-  const removeArrayItem = (
+  const handleUpdateArrayItem = (
+    fieldName: "emails" | "phones" | "tags" | "interests" | "notes",
+    index: number,
+    value: string
+  ) => {
+    const current = [...(form.getValues(fieldName) || [])];
+    current[index] = value;
+    form.setValue(fieldName, current);
+  };
+
+  const handleRemoveArrayItem = (
     fieldName: "emails" | "phones" | "tags" | "interests" | "notes",
     index: number
   ) => {
@@ -148,383 +136,328 @@ export default function CustomerEditForm({
     );
   };
 
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = e.currentTarget.value.trim();
+      const current = form.getValues("tags") || [];
+      if (value && !current.includes(value)) {
+        form.setValue("tags", [...current, value]);
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  const handleInterestKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const value = e.currentTarget.value.trim();
+      const current = form.getValues("interests") || [];
+      if (value && !current.includes(value)) {
+        form.setValue("interests", [...current, value]);
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  const emails = form.watch("emails") || [];
+  const phones = form.watch("phones") || [];
+  const tags = form.watch("tags") || [];
+  const interests = form.watch("interests") || [];
+  const notes = form.watch("notes") || [];
+  const watchedName = form.watch("name");
+
+  if (!isOpen) return null;
+
   return (
     <Modal
       isOpen={isOpen}
       closeModal={onClose}
-      size="2xl"
-      className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border rounded-2xl p-6"
+      className="max-w-3xl max-h-[75vh] overflow-hidden flex flex-col bg-card rounded-xl border shadow-lg"
     >
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold">Edit Customer</h2>
-          <p className="text-sm text-muted-foreground">
-            {isLoading
-              ? "Loading customer details..."
-              : "Update customer information and details."}
-          </p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
+        <h2 className="text-sm font-medium">Edit Customer</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="h-8 w-8 rounded-full"
+          aria-label="Close modal"
+        >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <div className="flex-1 flex items-center justify-center py-16">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : !person ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-muted-foreground">No customer selected</p>
+        <div className="flex-1 flex items-center justify-center py-16 text-sm text-muted-foreground">
+          No customer selected
         </div>
       ) : (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Avatar and Name */}
-            <div className="flex items-center gap-4 pb-4 border-b">
-              <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                <AvatarImage src="" />
-                <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                  {getInitials(form.watch("name") || person.name || "Unknown")}
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="flex flex-col flex-1 overflow-hidden"
+        >
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            {/* Section 1: Avatar + Name */}
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14 flex-shrink-0">
+                <AvatarImage src="" alt={watchedName || person.name} />
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  {getInitials(watchedName || person.name || "?")}
                 </AvatarFallback>
               </Avatar>
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Contact Information</h3>
-
-              <FormField
-                control={form.control}
-                name="emails"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emails</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {field.value?.map((email, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Input
-                              value={email}
-                              onChange={(e) => {
-                                const newEmails = [...(field.value || [])];
-                                newEmails[index] = e.target.value;
-                                field.onChange(newEmails);
-                              }}
-                              placeholder="email@example.com"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeArrayItem("emails", index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addArrayItem("emails", "")}
-                        >
-                          Add Email
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phones"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Numbers</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {field.value?.map((phone, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Input
-                              value={phone}
-                              onChange={(e) => {
-                                const newPhones = [...(field.value || [])];
-                                newPhones[index] = e.target.value;
-                                field.onChange(newPhones);
-                              }}
-                              placeholder="+1 234 567 8900"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeArrayItem("phones", index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addArrayItem("phones", "")}
-                        >
-                          Add Phone
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="New York, USA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Work Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Work Information</h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Acme Inc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Manager" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="flex-1 space-y-1.5">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Full name"
+                  {...form.register("name")}
+                  aria-required="true"
                 />
               </div>
             </div>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Additional Information</h3>
-
-              <FormField
-                control={form.control}
-                name="summary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Summary</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Brief summary about the customer..."
-                        rows={3}
-                        {...field}
+            {/* Section 2: Company, Title, Location, Emails, Phones - 2 Column Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Company</Label>
+                <Input
+                  id="company"
+                  placeholder="Company name"
+                  {...form.register("company")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="title">Job Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Job title"
+                  {...form.register("title")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  placeholder="City, Country"
+                  {...form.register("location")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Emails</Label>
+                <div className="space-y-2">
+                  {emails.map((email, index) => (
+                    <div key={index} className="flex gap-2 group">
+                      <Input
+                        value={email}
+                        onChange={(e) =>
+                          handleUpdateArrayItem("emails", index, e.target.value)
+                        }
+                        placeholder="email@example.com"
+                        type="email"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          {field.value?.map((tag, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
-                            >
-                              <span>{tag}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeArrayItem("tags", index)}
-                                className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                        onClick={() => handleRemoveArrayItem("emails", index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => handleAddArrayItem("emails")}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1.5 col-span-2 grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Phones</Label>
+                  <div className="space-y-2">
+                    {phones.map((phone, index) => (
+                      <div key={index} className="flex gap-2 group">
                         <Input
-                          placeholder="Add tag and press Enter"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const value = e.currentTarget.value;
-                              if (value.trim()) {
-                                addArrayItem("tags", value);
-                                e.currentTarget.value = "";
-                              }
-                            }
-                          }}
+                          value={phone}
+                          onChange={(e) =>
+                            handleUpdateArrayItem(
+                              "phones",
+                              index,
+                              e.target.value
+                            )
+                          }
+                          placeholder="+1 234 567 8900"
+                          type="tel"
                         />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="interests"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Interests</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          {field.value?.map((interest, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-1 px-2 py-1 bg-secondary text-foreground rounded-full text-xs"
-                            >
-                              <span>{interest}</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeArrayItem("interests", index)
-                                }
-                                className="ml-1 hover:bg-secondary/80 rounded-full p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                        <Input
-                          placeholder="Add interest and press Enter"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const value = e.currentTarget.value;
-                              if (value.trim()) {
-                                addArrayItem("interests", value);
-                                e.currentTarget.value = "";
-                              }
-                            }
-                          }}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {field.value?.map((note, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Textarea
-                              value={note}
-                              onChange={(e) => {
-                                const newNotes = [...(field.value || [])];
-                                newNotes[index] = e.target.value;
-                                field.onChange(newNotes);
-                              }}
-                              placeholder="Add a note..."
-                              rows={2}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeArrayItem("notes", index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
                         <Button
                           type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addArrayItem("notes", "")}
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                          onClick={() => handleRemoveArrayItem("phones", index)}
                         >
-                          Add Note
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => handleAddArrayItem("phones")}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Summary - Full Width */}
+            <div className="space-y-1.5">
+              <Label htmlFor="summary">Summary</Label>
+              <Textarea
+                id="summary"
+                placeholder="Brief description about this customer..."
+                rows={3}
+                className="resize-none"
+                {...form.register("summary")}
               />
             </div>
 
-            {/* Footer Actions */}
-            <div className="flex gap-2 justify-end pt-4 border-t">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onClose}
-                disabled={updatePerson.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updatePerson.isPending}>
-                {updatePerson.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                )}
-                Save Changes
-              </Button>
+            {/* Section 4: Tags & Interests - 2 Column Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Tags</Label>
+                <div className="space-y-2">
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveArrayItem("tags", index)}
+                            className="hover:text-primary/70 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <Input
+                    placeholder="Type and press Enter"
+                    onKeyDown={handleTagKeyDown}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Interests</Label>
+                <div className="space-y-2">
+                  {interests.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {interests.map((interest, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-secondary text-secondary-foreground rounded-md text-xs font-medium"
+                        >
+                          {interest}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayItem("interests", index)
+                            }
+                            className="hover:text-secondary-foreground/70 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <Input
+                    placeholder="Type and press Enter"
+                    onKeyDown={handleInterestKeyDown}
+                  />
+                </div>
+              </div>
             </div>
-          </form>
-        </Form>
+
+            {/* Section 5: Notes - Full Width */}
+            <div className="space-y-1.5">
+              <Label>Notes</Label>
+              <div className="space-y-2">
+                {notes.map((note, index) => (
+                  <div key={index} className="flex gap-2 group">
+                    <Textarea
+                      value={note}
+                      onChange={(e) =>
+                        handleUpdateArrayItem("notes", index, e.target.value)
+                      }
+                      placeholder="Add a note..."
+                      rows={2}
+                      className="flex-1 resize-none"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity self-start"
+                      onClick={() => handleRemoveArrayItem("notes", index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => handleAddArrayItem("notes")}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Note
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t flex-shrink-0">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={updatePerson.isPending}>
+              {updatePerson.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </div>
+        </form>
       )}
     </Modal>
   );
 }
-

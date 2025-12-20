@@ -10,6 +10,7 @@ import {
 } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import peopleService from "../people-service";
+import { IExternalIds } from "@/lib/types/person";
 import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
@@ -48,11 +49,11 @@ class MessengerBotService {
         return { success: false, message: "Insufficient credits" };
       }
 
-      let session = await this.getOrCreateSession(
+      let session = await this.getOrCreateSession({
         messengerUserId,
         agent,
-        channel
-      );
+        channel,
+      });
 
       const query = messengerMsg.text ?? "";
       const userMsg = defaultUserMessage(query, messengerMsg.id);
@@ -128,30 +129,56 @@ class MessengerBotService {
     }
   }
 
-  async getOrCreateSession(
-    messengerUserId: string,
-    agent: IAgent,
-    channel: IChannelProvider
-  ) {
+  async getOrCreateSession({
+    messengerUserId,
+    agent,
+    channel,
+  }: {
+    messengerUserId: string;
+    agent: IAgent;
+    channel: IChannelProvider;
+  }) {
     let session = await chatService.getSessionByProviderId(
       messengerUserId,
       agent.id
     );
-    if (!session) {
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        phone: messengerUserId,
-        externalIds: { messenger: messengerUserId },
-      });
+    if (session) return session;
 
-      session = await chatService.createMessengerSession(
-        agent.wid,
-        agent.id,
-        messengerUserId,
-        personId,
-        channel
-      );
+    const externalIds: IExternalIds = [
+      { provider: channel, id: messengerUserId },
+    ];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      emails: [],
+      externalIds,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        wid: agent.wid,
+        emails: [],
+        phones: [],
+        externalIds,
+      });
     }
+
+    session = await chatService.createMessengerSession(
+      agent.wid,
+      agent.id,
+      messengerUserId,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }

@@ -230,6 +230,18 @@ class ChatService {
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;
   }
+  async createPostmarkSession(
+    wid: string,
+    aid: string,
+    providerId: string,
+    personId: string,
+    provider: IChannelProvider
+  ) {
+    const session = generateDefaultSession(wid, aid, provider, providerId);
+    session.personId = personId;
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
 }
 
 const chatService = new ChatService();

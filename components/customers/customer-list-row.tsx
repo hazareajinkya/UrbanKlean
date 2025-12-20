@@ -1,109 +1,114 @@
-"use client";
-
 import { IPerson } from "@/lib/types/person";
+import { cn, getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import {
-  MoreVertical,
-  Eye,
-  Pencil,
-  Phone,
-  Building2,
-  Briefcase,
-  MapPin,
-} from "lucide-react";
-import { getInitials, getPrimaryEmail, getPrimaryPhone } from "@/lib/utils";
-import clsx from "clsx";
+import { formatDistanceToNow } from "date-fns";
 
 interface CustomerListRowProps {
   person: IPerson;
-  onView: (person: IPerson) => void;
+  onSelect: (person: IPerson) => void;
   onEdit: (person: IPerson) => void;
   isSelected?: boolean;
 }
 
 export default function CustomerListRow({
   person,
-  onView,
-  onEdit,
-  isSelected = false,
+  onSelect,
+  onEdit, // Currently not using onEdit, but keeping it in props as passed
+  isSelected,
 }: CustomerListRowProps) {
-  const handleRowClick = () => {
-    onView(person);
-  };
-
-  const handleView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onView(person);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit(person);
-  };
-
-  const primaryEmail = getPrimaryEmail(person);
-  const primaryPhone = getPrimaryPhone(person);
-
   return (
     <div
-      className={clsx(
-        "flex items-center justify-between gap-4 px-4 py-3 border-b border-border cursor-pointer transition-colors group",
-        isSelected ? "bg-primary/5" : "hover:bg-muted/50"
+      onClick={() => onSelect(person)}
+      className={cn(
+        "flex items-center gap-3 p-3 cursor-pointer transition-colors border-b border-border/40 hover:bg-muted/50",
+        isSelected && "bg-muted border-l-2 border-l-primary pl-[11px]" // slightly adjust padding to account for border
       )}
-      onClick={handleRowClick}
     >
-      <div className="flex items-center gap-3  min-w-0">
-        <Avatar className="h-10 w-10 border border-border bg-background flex-shrink-0">
-          <AvatarImage src="" />
-          <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
-            {getInitials(person.name || "Unknown")}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium text-foreground truncate">
-            {person.name || "Unnamed Customer"}
-          </span>
-          {primaryEmail ? (
-            <span className="text-xs text-muted-foreground truncate">
-              {primaryEmail}
+      <Avatar className="h-10 w-10 border border-border/50">
+        <AvatarImage src="" /> {/* person doesn't have avatar url yet */}
+        <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+          {getInitials(person.name || "Unknown")}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-0.5">
+          <h4
+            className={cn(
+              "text-sm font-medium truncate",
+              isSelected ? "text-foreground" : "text-foreground/90"
+            )}
+          >
+            {person.name || "Unknown Customer"}
+          </h4>
+          {person.createdAt && (
+            <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">
+              {formatDistanceToNow(new Date(person.createdAt), {
+                addSuffix: true,
+              })}
             </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
           )}
         </div>
-      </div>
 
-      <div className="flex items-center justify-end flex-shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem onClick={handleView}>
-              <Eye className="h-4 w-4 mr-2" />
-              View Customer
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleEdit}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Customer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 min-w-0">
+            {person.emails && person.emails.length > 0 ? (
+              <span className="truncate">{person.emails[0]}</span>
+            ) : person.phones && person.phones.length > 0 ? (
+              <span className="truncate">{person.phones[0]}</span>
+            ) : (
+              <span className="italic opacity-70 whitespace-nowrap">
+                No contact info
+              </span>
+            )}
+
+            {person.company && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30 flex-shrink-0" />
+                <span className="truncate">{person.company}</span>
+              </>
+            )}
+          </div>
+
+          {person.tags && person.tags.length > 0 && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {person.tags.slice(0, 2).map((tag, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/50 font-medium whitespace-nowrap"
+                >
+                  {tag}
+                </span>
+              ))}
+              {person.tags.length > 2 && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{person.tags.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+
+          {person.interests && person.interests.length > 0 && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {person.tags && person.tags.length > 0 && (
+                <div className="w-px h-3 bg-border mx-1" />
+              )}
+              {person.interests.slice(0, 2).map((interest, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/5 text-primary border border-primary/20 font-medium whitespace-nowrap"
+                >
+                  {interest}
+                </span>
+              ))}
+              {person.interests.length > 2 && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{person.interests.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

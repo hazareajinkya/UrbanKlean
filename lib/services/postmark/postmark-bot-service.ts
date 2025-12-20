@@ -22,6 +22,7 @@ import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
+import { IExternalIds } from "@/lib/types/person";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -49,7 +50,12 @@ class PostmarkBotService {
         throw this.ERROR_MESSAGE;
       }
 
-      let session = await this.getOrCreateSession(personEmail, agent, channel);
+      let session = await this.getOrCreateSession({
+        email: personEmail,
+        agent,
+        channel,
+        name: postmarkMsg.fromName,
+      });
 
       // Format textBody to preserve intended line breaks and structure
       //   const query = (postmarkMsg.textBody ?? "").replace(/\r\n|\r|\n/g, "\n");
@@ -126,27 +132,54 @@ class PostmarkBotService {
     }
   }
 
-  async getOrCreateSession(
-    email: string,
-    agent: IAgent,
-    channel: IChannelProvider
-  ) {
-    let session = await chatService.getSession(email, agent.id);
-    if (!session) {
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        email: email,
-        externalIds: { email: email },
-      });
+  async getOrCreateSession({
+    email,
+    name,
+    agent,
+    channel,
+  }: {
+    email: string;
+    name: string | undefined;
+    agent: IAgent;
+    channel: IChannelProvider;
+  }) {
+    let session = await chatService.getSessionByProviderId(email, agent.id);
+    if (session) return session;
 
-      session = await chatService.createWASession(
-        agent.wid,
-        agent.id,
-        email,
-        personId,
-        channel
-      );
+    const externalIds: IExternalIds = [{ provider: channel, id: email }];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      emails: [email],
+      externalIds,
+      name,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        wid: agent.wid,
+        emails: [email],
+        phones: [],
+        externalIds,
+        name,
+      });
     }
+    session = await chatService.createPostmarkSession(
+      agent.wid,
+      agent.id,
+      email,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }

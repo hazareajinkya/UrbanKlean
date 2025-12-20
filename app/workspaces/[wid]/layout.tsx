@@ -157,11 +157,7 @@ const navigation = [
     href: "/actions",
     icon: Zap,
   },
-  {
-    title: "Members",
-    href: "/members",
-    icon: Shield,
-  },
+
   {
     title: "Settings",
     href: "/settings",

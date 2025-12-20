@@ -20,6 +20,7 @@ import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
+import { IExternalIds } from "@/lib/types/person";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -29,6 +30,7 @@ class WABotService {
     waMsg: IWAMessage,
     userId: string,
     waPhoneId: string,
+    name: string,
     channel: IChannelProvider
   ) {
     try {
@@ -47,7 +49,12 @@ class WABotService {
         throw this.ERROR_MESSAGE;
       }
 
-      let session = await this.getOrCreateSession(waPhoneId, agent, channel);
+      let session = await this.getOrCreateSession({
+        agent,
+        channel,
+        waPhoneId,
+        name,
+      });
 
       const query = waMsg.text ?? "";
       const userMsg = defaultUserMessage(query, waMsg.id);
@@ -109,28 +116,53 @@ class WABotService {
       return { success: false, message: this.ERROR_MESSAGE };
     }
   }
-
-  async getOrCreateSession(
-    waPhoneId: string,
-    agent: IAgent,
-    channel: IChannelProvider
-  ) {
+  async getOrCreateSession({
+    waPhoneId,
+    agent,
+    channel,
+    name,
+  }: {
+    waPhoneId: string;
+    agent: IAgent;
+    channel: IChannelProvider;
+    name: string;
+  }) {
     let session = await chatService.getSessionByProviderId(waPhoneId, agent.id);
-    if (!session) {
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        phone: waPhoneId,
-        externalIds: { wa: waPhoneId },
-      });
+    if (session) return session;
 
-      session = await chatService.createWASession(
-        agent.wid,
-        agent.id,
-        waPhoneId,
-        personId,
-        channel
-      );
+    const externalIds: IExternalIds = [{ provider: channel, id: waPhoneId }];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      phones: [waPhoneId],
+      externalIds,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        wid: agent.wid,
+        emails: [],
+        phones: [waPhoneId],
+        externalIds,
+        name,
+      });
     }
+    session = await chatService.createWASession(
+      agent.wid,
+      agent.id,
+      waPhoneId,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }
