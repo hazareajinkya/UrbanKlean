@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Check,
   Copy,
+  Loader,
   Loader2,
   Mail,
   RefreshCcw,
