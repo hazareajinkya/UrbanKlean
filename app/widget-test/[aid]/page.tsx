@@ -281,7 +281,7 @@ export default function WidgetTestPage() {
 
       {/* Load the actual widget script */}
       <Script
-        src={`/api/widget2/${aid}`}
+        src={`/api/widget/${aid}`}
         async
         // strategy="lazyOnload"
         onLoad={() => {

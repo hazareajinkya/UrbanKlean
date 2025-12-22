@@ -5,6 +5,7 @@ import { ClientProvider } from "./client-provider";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import { coreConf } from "@/lib/utils/conf";
+import { WidgetScript } from "@/components/widget-script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -48,6 +49,7 @@ export default function RootLayout({
       >
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
+        <WidgetScript />
         <Script
           defer
           data-website-id="dfid_Y7xkducRuPS0Flwujh232"
