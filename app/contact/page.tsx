@@ -48,10 +48,10 @@ export default function ContactPage() {
             <p className="text-sm text-muted-foreground">
               Prefer email? Reach us at{" "}
               <a
-                href="mailto:hello@magicalcx.com"
+                href="mailto:support@magicalcx.com"
                 className="underline hover:text-foreground transition-colors"
               >
-                hello@magicalcx.com
+                support@magicalcx.com
               </a>
             </p>
           </div>

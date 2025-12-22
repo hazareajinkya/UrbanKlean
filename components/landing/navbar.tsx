@@ -245,15 +245,17 @@ export const Navbar = ({
                 </motion.div>
               ))}
 
-              <motion.div custom={navLinks.length} variants={itemVariants}>
-                <Link
-                  href="/auth"
-                  onClick={handleCloseMenu}
-                  className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
-                >
-                  Sign in
-                </Link>
-              </motion.div>
+              {!coreConf.isProd && (
+                <motion.div custom={navLinks.length} variants={itemVariants}>
+                  <Link
+                    href={user ? "/workspaces" : "/auth"}
+                    onClick={handleCloseMenu}
+                    className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
+                  >
+                    {user ? "Dashboard" : "Sign in"}
+                  </Link>
+                </motion.div>
+              )}
 
               <motion.div variants={buttonVariants} className="mt-8">
                 <button

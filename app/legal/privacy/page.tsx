@@ -826,10 +826,10 @@ export default function PrivacyPage() {
           <p>
             <strong>Email:</strong>{" "}
             <a
-              href="mailto:admin@magicalcx.com"
+              href="mailto:support@magicalcx.com"
               className="text-primary hover:underline"
             >
-              admin@magicalcx.com
+              support@magicalcx.com
             </a>
           </p>
         </div>
