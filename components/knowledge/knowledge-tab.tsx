@@ -259,7 +259,7 @@ export default function KnowledgeTab() {
 
   return (
     <div className="h-full w-full relative">
-      <div className="bg-card border rounded-xl h-full overflow-hidden flex shadow-sm relative">
+      <div className="bg-card border rounded-xl h-full overflow-hidden flex relative">
         <div className="bg-secondary z-10 hidden md:flex">
           <FolderSidebar
             selectedFolderId={selectedFolderId}

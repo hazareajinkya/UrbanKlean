@@ -34,8 +34,16 @@ const PersonInfo = z.object({
   location: z.string().optional(),
 
   // Interests of users
-  interests: z.array(z.string()).optional(),
-
+  interests: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "High-signal interests, preferences, or intent markers. " +
+        "FOCUS ON: 1. Buying Intent (e.g., 'interested in enterprise plan', 'budget conscious'), " +
+        "2. Product/Feature Preferences (e.g., 'needs API access', 'prefers dark mode'), " +
+        "3. User Goals (e.g., 'migrating from HubSpot', 'automating customer support'). " +
+        "AVOID: Generic terms like 'asking questions', 'curious', or temporary states."
+    ),
   // Insights about conversations and issues about the person
   memories: z
     .array(z.string())

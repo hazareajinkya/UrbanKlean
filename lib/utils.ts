@@ -257,3 +257,15 @@ export const getPrimaryEmail = (person: IPerson) => {
 export const getPrimaryPhone = (person: IPerson) => {
   return person.phones?.[0] || "";
 };
+
+export const toSlug = (str: string) => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]/g, "");
+};
+
+export const fromSlug = (slug: string) => {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+};

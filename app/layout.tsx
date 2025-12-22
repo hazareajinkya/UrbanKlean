@@ -3,6 +3,7 @@ import { Bodoni_Moda, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ClientProvider } from "./client-provider";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +39,12 @@ export default function RootLayout({
       >
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
+        <Script
+          defer
+          data-website-id="dfid_Y7xkducRuPS0Flwujh232"
+          data-domain="magicalcx.com"
+          src="https://datafa.st/js/script.js"
+        />
       </body>
     </html>
   );

@@ -46,9 +46,17 @@ class ChatService {
       fromPage
     );
 
+    if (geo) session.geo = geo;
     if (personId) {
       session.personId = personId;
-      if (geo) session.geo = geo;
+      if (geo) {
+        const location = [geo.city, geo.country].filter(Boolean).join(", ");
+        peopleService.update({
+          wid: wid,
+          personId: personId,
+          updates: { location },
+        });
+      }
       peopleService.updatePastSessionIds(wid, personId, session.id);
     }
 

@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDate } from "@/lib/utils";
+import { formatDate, fromSlug } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -107,7 +107,7 @@ export default function CustomerDetailPanel({
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Panel Header */}
-      <div className="h-12 border-b bg-muted/10 px-4 flex items-center justify-between flex-shrink-0">
+      <div className="h-10 border-b bg-muted/10 px-4 pr-2 flex items-center justify-between flex-shrink-0">
         <p className="text-sm font-medium text-foreground">Customer Details</p>
         <div className="flex items-center gap-1">
           <Button
@@ -232,7 +232,7 @@ export default function CustomerDetailPanel({
                   key={i}
                   className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium"
                 >
-                  {tag}
+                  {fromSlug(tag)}
                 </span>
               ))}
             </div>

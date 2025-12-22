@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import peopleService from "@/lib/services/people-service";
 import { toast } from "sonner";
 import { IPerson } from "@/lib/types/person";
+import queryClient from "@/lib/clients/query-client";
+import { peopleCountKey, peopleKey } from "./use-people";
 
 export const usePeopleActions = () => {
   const updatePerson = useMutation({
@@ -16,7 +18,12 @@ export const usePeopleActions = () => {
     }) => {
       return await peopleService.updatePerson(wid, personId, updates);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: peopleKey(variables.wid) });
+      queryClient.invalidateQueries({
+        queryKey: peopleCountKey(variables.wid),
+      });
+
       toast.success("Customer updated successfully");
     },
     onError: (error: any) => {
@@ -29,4 +36,3 @@ export const usePeopleActions = () => {
     updatePerson,
   };
 };
-

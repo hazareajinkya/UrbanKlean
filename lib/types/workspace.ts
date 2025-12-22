@@ -1,4 +1,6 @@
 import { v4 } from "uuid";
+import { getTagsForIndustry } from "../utils/industry-tags";
+
 export type IWorkspaceType = "onboarding" | "default";
 export interface IWorkspaceInfo {
   email: string;
@@ -19,6 +21,7 @@ export interface IWorkspace {
   thumbnail: string;
   ownerId: string;
   folders: { id: string; name: string }[];
+  availableTags: string[];
   type: IWorkspaceType;
   info: IWorkspaceInfo;
   createdAt: string;
@@ -34,6 +37,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     oneLiner: "",
     ownerId: "",
     folders: [],
+    availableTags: getTagsForIndustry(),
     domains: [],
     info: {
       businessType: "",
