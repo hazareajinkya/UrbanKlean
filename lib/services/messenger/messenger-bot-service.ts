@@ -10,10 +10,18 @@ import {
 } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import peopleService from "../people-service";
+import { IExternalIds } from "@/lib/types/person";
 import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IMessengerMessage } from "@/lib/types/messenger-api";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
+import { collectInformation } from "@/lib/tools/collect-info";
+import creditService from "../credit-service";
+import { creditCosts } from "@/lib/constants";
+import { defaultUsage } from "@/lib/types/usage";
+import usageService from "../usage-service";
 
 class MessengerBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -26,8 +34,8 @@ class MessengerBotService {
     channel: IChannelProvider
   ) {
     try {
-      //supercx ai agent id
       const aid = await channelService.resolveAgent(userId, channel);
+
       console.log("resolved agent: ", aid);
 
       if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
@@ -35,11 +43,17 @@ class MessengerBotService {
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      let session = await this.getOrCreateSession(
+      const creditInfo = await creditService.getCredit(agent.ownerId);
+      if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
+        console.log("Insufficient credits: ", creditInfo);
+        return { success: false, message: "Insufficient credits" };
+      }
+
+      let session = await this.getOrCreateSession({
         messengerUserId,
         agent,
-        channel
-      );
+        channel,
+      });
 
       const query = messengerMsg.text ?? "";
       const userMsg = defaultUserMessage(query, messengerMsg.id);
@@ -51,21 +65,24 @@ class MessengerBotService {
       //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
 
+      // Custom tools geting actions from the workflow
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
+
       //prepare messages for ai
-      const chatHistory: IChatMessage[] = [
-        ...session.messages,
-        userMsg,
-        {
-          id: v4(),
-          role: "system",
-          metadata: { createdAt: new Date().toISOString() },
-          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
-        },
-      ];
+      const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
 
       const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(agent, query, channel);
+      const systemPrompt = await getSystemPrompt(
+        agent,
+        query,
+        channel,
+        session.personId
+      );
 
       const result = await generateText({
         model,
@@ -73,14 +90,36 @@ class MessengerBotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
-          searchKnowledge: searchKnowledge(agent.wid),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "messenger",
+            messengerUserId
+          ),
+          searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
 
       //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
+
+      const totalTokens = result.usage.totalTokens;
+      await creditService.decreaseCredit(creditCosts.query, creditInfo);
+      const usage = defaultUsage(
+        agent.wid,
+        agent.id,
+        session.id,
+        "chat_response"
+      );
+      usage.amount = -creditCosts.query;
+      usage.metadata = {
+        model: model.modelId,
+        tokenUsage: totalTokens || 0,
+      };
+      await usageService.addUsage(agent.ownerId, usage);
 
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
@@ -90,30 +129,56 @@ class MessengerBotService {
     }
   }
 
-  async getOrCreateSession(
-    messengerUserId: string,
-    agent: IAgent,
-    channel: IChannelProvider
-  ) {
+  async getOrCreateSession({
+    messengerUserId,
+    agent,
+    channel,
+  }: {
+    messengerUserId: string;
+    agent: IAgent;
+    channel: IChannelProvider;
+  }) {
     let session = await chatService.getSessionByProviderId(
       messengerUserId,
       agent.id
     );
-    if (!session) {
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        phone: messengerUserId,
-        externalIds: { messenger: messengerUserId },
-      });
+    if (session) return session;
 
-      session = await chatService.createMessengerSession(
-        agent.wid,
-        agent.id,
-        messengerUserId,
-        personId,
-        channel
-      );
+    const externalIds: IExternalIds = [
+      { provider: channel, id: messengerUserId },
+    ];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      emails: [],
+      externalIds,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        wid: agent.wid,
+        emails: [],
+        phones: [],
+        externalIds,
+      });
     }
+
+    session = await chatService.createMessengerSession(
+      agent.wid,
+      agent.id,
+      messengerUserId,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }

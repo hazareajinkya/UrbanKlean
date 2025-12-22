@@ -26,6 +26,30 @@ class StorageService {
     };
   }
 
+  async uploadBuffer(
+    buffer: ArrayBuffer | Uint8Array,
+    storageRef: string,
+    contentType: string
+  ) {
+    const sref = ref(storage, storageRef);
+    const metadata = {
+      contentType: contentType,
+    };
+    const snapshot = await uploadBytes(sref, buffer, metadata);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    return {
+      downloadURL,
+      metadata: {
+        name: snapshot.ref.name,
+        fullPath: snapshot.ref.fullPath,
+        size: snapshot.metadata.size,
+        contentType: contentType,
+        timeCreated: new Date().toISOString(),
+      },
+    };
+  }
+
   async deleteStoredFile(storageRef: string) {
     const sref = ref(storage, storageRef);
     await deleteObject(sref);

@@ -15,7 +15,7 @@ import {
   Bot,
   Plus,
   Trash2,
-  Loader2,
+  Loader,
   X,
   MessageCircle,
   Palette,
@@ -205,7 +205,7 @@ export default function AgentsPage() {
                         >
                           {deleteAgent.isPending &&
                           deletingAgent?.id === agent.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader className="w-4 h-4 animate-spin" />
                           ) : (
                             <Trash2 className="w-4 h-4 " />
                           )}
@@ -322,7 +322,7 @@ const CreateAgentModal = ({
               Cancel
             </Button>
             <Button type="submit" disabled={!agentName.trim() || isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isLoading && <Loader className="w-4 h-4 animate-spin" />}
               Create Agent
             </Button>
           </div>

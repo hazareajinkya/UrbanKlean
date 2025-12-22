@@ -2,22 +2,23 @@ import { blogService } from "@/lib/services/blog-service";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Calendar } from "lucide-react";
+import { Clock, Calendar, ArrowRight } from "lucide-react";
+import { coreConf } from "@/lib/utils/conf";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "Blog | MagicalCX",
   description:
-    "Explore the latest blog posts, tutorials, and news from Magical CX.",
+    "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
   openGraph: {
-    title: "Blog",
+    title: "Blog | MagicalCX",
     description:
-      "Explore the latest blog posts, tutorials, and news from Magical CX.",
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/blog`,
+      "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
+    url: `${coreConf.baseUrl}/blog`,
   },
   alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/blog`,
+    canonical: `${coreConf.baseUrl}/blog`,
   },
 };
 
@@ -25,19 +26,16 @@ export default async function BlogListPage() {
   const { blogs } = await blogService.getAllBlogs();
 
   return (
-    <div className="min-h-screen bg-card">
-      <div className="max-w-7xl mx-auto min-h-screen px-4 ">
-        <div className=" py-6 sm:py-8 lg:py-10 mt-5">
-          <div className="space-y-4 max-w-4xl">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font- tracking-tight leading-tight">
-              Exploring New Blogs
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed tracking-normal">
-              Thoughts on web development, design, and technology.
-            </p>
-          </div>
-        </div>
+    <div className="">
+      <div className="section-container border-x flex flex-col items-center text-center py-16 sm:py-20 lg:py-24 px-4">
+        <h1 className="section-heading">The MagicalCX Blog</h1>
+        <p className="section-subheadline">
+          Thoughtful writing on empathy-first customer experience, AI-powered
+          support, and building better customer relationships.
+        </p>
+      </div>
 
+      <div className="section-container border-x pb-20">
         {!blogs ? (
           <div className="flex flex-col items-center justify-center min-h-96 px-4 sm:px-6 lg:px-8 border-b border-r border-border">
             <div className="text-center space-y-4">
@@ -51,53 +49,50 @@ export default async function BlogListPage() {
             </div>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border-y rounded-none overflow-hidden">
             {blogs.map((blog) => (
               <Link
                 key={blog.id}
                 href={`/blog/${blog.slug}`}
-                className="group flex flex-col  transition-colors hover:bg-muted/30"
+                className="group flex flex-col bg-card hover:bg-muted/50 transition-colors duration-300 h-full"
               >
                 {blog.featuredImage && (
-                  <div className="relative w-full aspect-video  overflow-hidden bg-muted">
+                  <div className="relative w-full aspect-video overflow-hidden bg-muted border-b">
                     <Image
                       src={blog.featuredImage || "/placeholder.svg"}
                       alt={blog.title}
                       fill
-                      className="object-cover opacity-100 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 )}
 
-                <div className="flex flex-col gap-3 py-6 sm:py-7 flex-1">
-                  <h2 className="text-xl sm:text-2xl text-foreground group-hover:text-primary transition-colors  leading-snug tracking-tight">
+                <div className="flex flex-col flex-1 p-6 md:p-8">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium mb-3">
+                    <span>
+                      {new Date(
+                        blog.publishedAt || blog.updatedAt
+                      ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    {blog.readingTime && (
+                      <>
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+                        <span>{blog.readingTime} min read</span>
+                      </>
+                    )}
+                  </div>
+
+                  <h2 className="text-xl font-medium text-foreground group-hover:text-primary transition-colors leading-snug mb-4 line-clamp-2">
                     {blog.title}
                   </h2>
-                  {/* <p className="text-sm sm:text-base text-muted-foreground">
-                    {blog.excerpt}
-                  </p> */}
-                  <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium">
-                    <div className="flex items-center gap-2">
-                      {/* <Calendar className="h-4 w-4 flex-shrink-0" /> */}
-                      <span className="leading-normal">
-                        {new Date(
-                          blog.publishedAt || blog.updatedAt
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
-                    {blog.readingTime && (
-                      <div className="flex items-center gap-2">
-                        {/* <Clock className="h-4 w-4 flex-shrink-0" /> */}
-                        <span className="leading-normal">
-                          {blog.readingTime} min
-                        </span>
-                      </div>
-                    )}
+
+                  <div className="mt-auto flex items-center text-sm font-medium text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                    Read Post <ArrowRight className="ml-2 h-4 w-4" />
                   </div>
                 </div>
               </Link>

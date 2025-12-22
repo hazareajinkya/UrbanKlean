@@ -27,6 +27,7 @@ class ResendService {
         from: params.from || "Magical CX <noreply@magicalcx.com>",
         to: [params.to],
         subject: params.subject,
+        template: params.template,
         html: params.html,
       };
 

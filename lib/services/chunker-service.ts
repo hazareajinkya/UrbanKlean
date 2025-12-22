@@ -74,14 +74,24 @@ export async function chunkPdfContent(
   try {
     const { chunkSize = 1000, chunkOverlap = 200 } = options;
 
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error("PDF buffer is empty or invalid");
+    }
+
     // Create a Blob from the buffer
     const blob = new Blob([new Uint8Array(pdfBuffer)], {
       type: "application/pdf",
     });
 
     // Load PDF content
-    const loader = new PDFLoader(blob);
+    const loader = new PDFLoader(blob, {
+      splitPages: false, // Load entire document at once for better chunking
+    });
     const docs = await loader.load();
+
+    if (!docs || docs.length === 0) {
+      throw new Error("No content could be extracted from PDF");
+    }
 
     // Split content into chunks
     const splitter = new RecursiveCharacterTextSplitter({
@@ -90,9 +100,14 @@ export async function chunkPdfContent(
     });
 
     const chunks = await splitter.splitDocuments(docs);
+    
+    if (!chunks || chunks.length === 0) {
+      throw new Error("PDF chunking resulted in no chunks");
+    }
+    
     return chunks;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error chunking PDF content:", error);
-    throw new Error("Failed to chunk PDF content");
+    throw new Error(`Failed to chunk PDF content: ${error.message || "Unknown error"}`);
   }
 }

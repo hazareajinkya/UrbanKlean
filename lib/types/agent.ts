@@ -6,10 +6,11 @@ import { IWorkspace } from "./workspace";
 export interface IAgent {
   id: string;
   wid: string;
-
   customization: IAgentChatCustomization;
   channels: string[];
   settings: IAgentSettings;
+  knowledgeFolders: string[];
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
@@ -26,6 +27,8 @@ export interface IAgentChatCustomization {
   greetingMessage: string;
   botIcon: string;
   primaryColor: string;
+  starterMessagesEnabled: boolean;
+  starterMessages: string[];
 }
 
 export const generateDefaultAgent = (
@@ -37,18 +40,21 @@ export const generateDefaultAgent = (
   return {
     id: id,
     wid: wid,
-
+    ownerId: workspace.ownerId,
     channels: [],
+    knowledgeFolders: workspace.folders.map((folder) => folder.id),
     customization: {
       name: name,
-      greetingMessage: "Hello, how can I help you today?",
+      greetingMessage: "Hey 👋! \n\n How can I help you today?",
       botIcon:
-        "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6",
-      primaryColor: `#640d5f`,
+        "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/magicalcx-star-logo-transparent.png?alt=media&token=9359724b-68de-4b6c-b5ea-a66235a79ab1",
+      primaryColor: `#000000`,
+      starterMessagesEnabled: false,
+      starterMessages: [],
     },
     settings: {
       temperature: 0.5,
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
         workspace.oneLiner

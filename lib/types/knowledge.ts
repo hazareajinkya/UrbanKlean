@@ -5,6 +5,8 @@ export type ITrainingStatus = "pending" | "trained" | "failed" | "training";
 export interface ITextKnowledge {
   id: string;
   wid: string;
+  folderId: string;
+  title: string;
   points: string[];
   chunkSize: number;
   content: string;
@@ -14,6 +16,7 @@ export interface ITextKnowledge {
 export interface ITeachKnowledge {
   id: string;
   wid: string;
+  folderId: string;
   title: string;
   points: string[];
   chunkSize: number;
@@ -26,6 +29,7 @@ export interface IPdfKnowledge {
   files: {
     id: string;
     wid: string;
+    folderId: string;
     docName: string;
     points: string[];
     docUrl: string;
@@ -36,9 +40,13 @@ export interface IPdfKnowledge {
   }[];
 }
 
+// Type alias for individual document items
+export type IDocKnowledge = IPdfKnowledge["files"][number];
+
 export interface IWebKnowledge {
   id: string;
   wid: string;
+  folderId: string;
   title: string;
   urls: {
     url: string;
@@ -58,13 +66,18 @@ export interface IWebPropsMetadata {
 
 export const generateDefaultTextKnowledge = (
   wid: string,
+  folderId: string,
+  title: string,
   points: string[],
   content: string,
-  chunkSize: number
+  chunkSize: number,
+  id?: string
 ): ITextKnowledge => {
   return {
-    id: v4(),
+    id: id || v4(),
     wid,
+    folderId,
+    title,
     points,
     chunkSize,
     content,
@@ -75,14 +88,17 @@ export const generateDefaultTextKnowledge = (
 
 export const generateDefaultTeachKnowledge = (
   wid: string,
+  folderId: string,
   points: string[],
   title: string,
   content: string,
-  chunkSize: number
+  chunkSize: number,
+  id?: string
 ): ITeachKnowledge => {
   return {
-    id: v4(),
+    id: id || v4(),
     wid,
+    folderId,
     points,
     title,
     content,
@@ -94,12 +110,14 @@ export const generateDefaultTeachKnowledge = (
 
 export const generateDefaultPdfKnowledge = (
   wid: string,
+  folderId: string,
   points: string[],
   chunkSize: number
 ): IPdfKnowledge["files"][number] => {
   return {
     id: v4(),
     wid,
+    folderId,
     points,
     docName: "",
     docUrl: "",
@@ -113,6 +131,7 @@ export const generateDefaultPdfKnowledge = (
 export const generateDefaultWebKnowledge = (
   id: string,
   wid: string,
+  folderId: string,
   title: string,
   baseUrl: string,
   urls: {
@@ -125,6 +144,7 @@ export const generateDefaultWebKnowledge = (
   return {
     id,
     wid,
+    folderId,
     title,
     baseUrl,
     urls,

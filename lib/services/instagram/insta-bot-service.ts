@@ -11,11 +11,18 @@ import {
 } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import peopleService from "../people-service";
-import { metadata } from "@/app/layout";
+
 import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
+import creditService from "../credit-service";
+import { creditCosts } from "@/lib/constants";
+import { defaultUsage } from "@/lib/types/usage";
+import usageService from "../usage-service";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
+import { IExternalIds } from "@/lib/types/person";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -37,7 +44,18 @@ class InstaBotService {
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      let session = await this.getOrCreateSession(instaUserId, agent, channel);
+      const creditInfo = await creditService.getCredit(agent.ownerId);
+      if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
+        console.log("Insufficient credits: ", creditInfo);
+        return { success: false, message: "Insufficient credits" };
+      }
+
+      let session = await this.getOrCreateSession({
+        instaUserId,
+        agent,
+        name: instaMsg.from,
+        channel,
+      });
 
       const query = instaMsg.text ?? "";
       const userMsg = defaultUserMessage(query, instaMsg.id);
@@ -48,6 +66,11 @@ class InstaBotService {
 
       //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
 
       //prepare messages for ai
       const chatHistory: IChatMessage[] = [
@@ -71,14 +94,36 @@ class InstaBotService {
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
-          searchKnowledge: searchKnowledge(agent.wid),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "instagram",
+            session.providerId
+          ),
+          searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
 
       //save ai message
       const aiMsg = defaultAImessage(result.text);
       chatService.saveMessage(agent.id, session.id, aiMsg);
+
+      const totalTokens = result.usage.totalTokens;
+      await creditService.decreaseCredit(creditCosts.query, creditInfo);
+      const usage = defaultUsage(
+        agent.wid,
+        agent.id,
+        session.id,
+        "chat_response"
+      );
+      usage.amount = -creditCosts.query;
+      usage.metadata = {
+        model: model.modelId,
+        tokenUsage: totalTokens || 0,
+      };
+      await usageService.addUsage(agent.ownerId, usage);
 
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
@@ -88,30 +133,56 @@ class InstaBotService {
     }
   }
 
-  async getOrCreateSession(
-    instaUserId: string,
-    agent: IAgent,
-    channel: IChannelProvider
-  ) {
+  async getOrCreateSession({
+    instaUserId,
+    agent,
+    name,
+    channel,
+  }: {
+    instaUserId: string;
+    agent: IAgent;
+    name: string;
+    channel: IChannelProvider;
+  }) {
     let session = await chatService.getSessionByProviderId(
       instaUserId,
       agent.id
     );
-    if (!session) {
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        phone: instaUserId,
-        externalIds: { insta: instaUserId },
-      });
+    if (session) return session;
 
-      session = await chatService.createInstaSession(
-        agent.wid,
-        agent.id,
-        instaUserId,
-        personId,
-        channel
-      );
+    const externalIds: IExternalIds = [{ provider: channel, id: instaUserId }];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      phones: [],
+      externalIds,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        name: name,
+        wid: agent.wid,
+        emails: [],
+        phones: [],
+        externalIds,
+      });
     }
+    session = await chatService.createInstaSession(
+      agent.wid,
+      agent.id,
+      instaUserId,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }

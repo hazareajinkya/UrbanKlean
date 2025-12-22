@@ -5,8 +5,6 @@ import {
   serverErrorResponse,
   successResponse,
 } from "@/lib/types/api-response";
-import { IWebPropsMetadata } from "@/lib/types/knowledge";
-import { AxiosError } from "axios";
 import { NextRequest } from "next/server";
 import { v4 } from "uuid";
 import z from "zod";
@@ -16,9 +14,6 @@ export async function POST(
   { params }: { params: Promise<{ wid: string }> }
 ) {
   const { TUNNEL_URL, NODE_ENV, NEXT_PUBLIC_BASE_URL } = process.env;
-  console.log("TUNNEL_URL: ", TUNNEL_URL);
-  console.log("NODE_ENV: ", NODE_ENV);
-  console.log("NEXT_PUBLIC_BASE_URL: ", NEXT_PUBLIC_BASE_URL);
   const tunnelOrigin =
     NODE_ENV === "production" ? NEXT_PUBLIC_BASE_URL : TUNNEL_URL;
 
@@ -26,26 +21,44 @@ export async function POST(
     const { wid } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
 
-    const { baseUrl, urls, workspaceType } = await validateRequestBody(request);
+    const { urls: urlObjects, workspaceType } = await validateRequestBody(
+      request
+    );
 
-    // const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl-webhook`;
+    const targetUrls: string[] = [];
+    const urlMetadata: Record<
+      string,
+      { folderId: string; knowledgeId: string }
+    > = {};
+
+    await Promise.all(
+      urlObjects.map(async (obj) => {
+        const title = new URL(obj.url).hostname;
+        const knowledgeId = await knowledgeService.s_createPendingWebKnowledge(
+          wid,
+          obj.folderId,
+          obj.url,
+          title
+        );
+
+        targetUrls.push(obj.url);
+        urlMetadata[obj.url] = {
+          folderId: obj.folderId,
+          knowledgeId,
+        };
+      })
+    );
+
     const webhookUrl = `${tunnelOrigin}/api/firecrawl-webhook`;
+    const batchId = v4();
 
-    const result = await firecrawl.scrape(baseUrl, {
-      formats: [],
-    });
-
-    const title = result.metadata?.title ?? "";
-
-    const docId = await knowledgeService.s_startedCrawl(wid, baseUrl, title);
-    console.log("webhookUrl: ", webhookUrl);
-
-    await firecrawl.startBatchScrape(urls, {
+    await firecrawl.startBatchScrape(targetUrls, {
       webhook: {
         url: webhookUrl,
         metadata: {
           wid,
-          docId,
+          urlMetadata: JSON.stringify(urlMetadata),
+          batchId,
           type: "batch_scrape",
           workspaceType,
         },
@@ -55,11 +68,11 @@ export async function POST(
     });
 
     return successResponse(
-      { wid, urls, status: "scraping_started" },
+      { wid, status: "scraping_started", count: targetUrls.length },
       "Web scraping started"
     );
   } catch (error) {
-    console.error("Error Training on URl ", error);
+    console.error("Error Training on URL ", error);
 
     if (error instanceof z.ZodError) {
       return errorResponse(error.message, 400);
@@ -69,8 +82,12 @@ export async function POST(
 }
 
 const webEmbeddingSchema = z.object({
-  baseUrl: z.url("Invalid Url"),
-  urls: z.array(z.url("Invalid URL")),
+  urls: z.array(
+    z.object({
+      folderId: z.string(),
+      url: z.string().url("Invalid URL"),
+    })
+  ),
   workspaceType: z
     .enum(["onboarding", "default"])
     .optional()

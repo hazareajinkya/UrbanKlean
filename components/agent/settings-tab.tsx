@@ -12,14 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { models } from "@/lib/models";
 import { IAgent } from "@/lib/types/agent";
-import { Settings, Save, FileText, Brain, Loader2 } from "lucide-react";
+import { Settings, Save, FileText, Brain, Loader, Folder } from "lucide-react";
 import { useState } from "react";
 import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useFolders } from "@/lib/hooks/folders/use-folders";
 
 interface SettingsTabProps {
   agent: IAgent;
@@ -29,9 +32,13 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
   const [model, setModel] = useState(agent.settings.model);
   const [temperature, setTemperature] = useState(agent.settings.temperature);
   const [systemPrompt, setSystemPrompt] = useState(agent.settings.systemPrompt);
+  const [knowledgeFolders, setKnowledgeFolders] = useState<string[]>(
+    agent.knowledgeFolders || []
+  );
 
   const wid = getwid();
   const { updateAgent } = useAgentActions(wid);
+  const { data: folders } = useFolders(wid);
 
   const handleSave = () => {
     updateAgent.mutate({
@@ -43,31 +50,18 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
           temperature: temperature,
           systemPrompt,
         },
+        knowledgeFolders,
       },
     });
   };
 
-  const models = [
-    { value: "gpt-4.1", label: "GPT-4.1", provider: "openai" },
-    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini", provider: "openai" },
-    { value: "gpt-4.1-nano", label: "GPT-4.1 Nano", provider: "openai" },
-    {
-      value: "gemini-2.5-pro",
-      label: "Gemini 2.5 Pro",
-      provider: "google",
-    },
-    {
-      value: "gemini-2.5-flash",
-      label: "Gemini 2.5 Flash",
-      provider: "google",
-    },
-
-    {
-      value: "gemini-2.0-flash",
-      label: "Gemini 2.0 Flash",
-      provider: "google",
-    },
-  ];
+  const handleFolderToggle = (folderId: string) => {
+    setKnowledgeFolders((prev) =>
+      prev.includes(folderId)
+        ? prev.filter((id) => id !== folderId)
+        : [...prev, folderId]
+    );
+  };
 
   const router = useRouter();
 
@@ -89,7 +83,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                 disabled={updateAgent.isPending}
               >
                 {updateAgent.isPending && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                 )}
                 Save
               </Button>
@@ -175,6 +169,73 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
               </CardContent>
             </div>
           </div>
+        </Card>
+      </div>
+
+      {/* Knowledge Base Access */}
+      <div className="mt-4">
+        <Card className="gap-0 pb-0">
+          <CardHeader className="border-b pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Folder className="w-4 h-4" />
+                Knowledge Base Access
+              </CardTitle>
+              <Button
+                onClick={handleSave}
+                size={"sm"}
+                className="rounded-full px-4"
+                disabled={updateAgent.isPending}
+              >
+                {updateAgent.isPending && (
+                  <Loader className="w-4 h-4 animate-spin" />
+                )}
+                Save
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="py-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select which folders this agent can access. If no folders are
+                  selected, the agent will have no access to the knowledge base.
+                </p>
+                {folders && folders.length > 0 ? (
+                  <div className="space-y-3">
+                    {folders.map((folder) => (
+                      <div
+                        key={folder.id}
+                        className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent/50"
+                      >
+                        <Checkbox
+                          id={`folder-${folder.id}`}
+                          checked={knowledgeFolders.includes(folder.id)}
+                          onCheckedChange={() => handleFolderToggle(folder.id)}
+                        />
+                        <label
+                          htmlFor={`folder-${folder.id}`}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Folder className="w-4 h-4" />
+                              <span className="font-medium">{folder.name}</span>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No folders available. Create folders in the Knowledge Base
+                    first.
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

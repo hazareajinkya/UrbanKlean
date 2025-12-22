@@ -125,7 +125,7 @@ export async function GET(req: Request) {
   const challenge = searchParams.get("hub.challenge");
   console.log(mode, token, challenge);
 
-  if (mode === "subscribe" && token === process.env.MESSENGER_VERIFY_TOKEN) {
+  if (mode === "subscribe" && token === process.env.FB_VERIFY_TOKEN) {
     return new Response(challenge, { status: 200 });
   } else {
     return new Response("Verification failed", { status: 403 });

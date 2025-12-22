@@ -24,26 +24,100 @@ import {
   getLocalDeviceId,
   saveLocalSession,
 } from "../../components/chat/chat-utils";
+import peopleService from "./people-service";
+import { Geo } from "@vercel/functions";
 
 class ChatService {
-  async createSession(wid: string, aid: string, personId?: string) {
-    const deviceId = getLocalDeviceId(wid);
+  async createSession(
+    wid: string,
+    aid: string,
+    personId?: string,
+    sessionId?: string,
+    providerId?: string,
+    fromPage?: string,
+    geo?: Geo
+  ) {
+    const session = generateDefaultSession(
+      wid,
+      aid,
+      "web",
+      providerId,
+      sessionId,
+      fromPage
+    );
 
-    const session = generateDefaultSession(wid, aid, "web", deviceId);
+    if (geo) session.geo = geo;
     if (personId) {
       session.personId = personId;
+      if (geo) {
+        const location = [geo.city, geo.country].filter(Boolean).join(", ");
+        peopleService.update({
+          wid: wid,
+          personId: personId,
+          updates: { location },
+        });
+      }
+      peopleService.updatePastSessionIds(wid, personId, session.id);
     }
-    saveLocalSession(aid, session.id);
+
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+
     return session;
   }
 
   async updateSession(aid: string, sid: string, updates: Partial<ISession>) {
     const ref = doc(db, `agents/${aid}/sessions/${sid}`);
+    const session = updates.personId ? await this.getSession(sid, aid) : null;
+
     await updateDoc(ref, {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
+
+    // Update pastSessionIds if personId changed
+    if (
+      updates.personId &&
+      session?.wid &&
+      session?.personId !== updates.personId
+    ) {
+      await peopleService.updatePastSessionIds(
+        session.wid,
+        updates.personId,
+        sid
+      );
+    }
+  }
+
+  async ensureSession(
+    wid: string,
+    aid: string,
+    sid: string,
+    personId?: string,
+    providerId?: string,
+    fromPage?: string,
+    geo?: Geo
+  ) {
+    let session = await this.getSession(sid, aid);
+
+    if (!session) {
+      // Session doesn't exist, create it
+      const geoDetails = geo?.country ? geo : undefined;
+      session = await this.createSession(
+        wid,
+        aid,
+        personId,
+        sid,
+        providerId,
+        fromPage,
+        geoDetails
+      );
+    } else if (personId && session.personId !== personId) {
+      // Session exists but personId changed or being added, update it
+      await this.updateSession(aid, sid, { personId });
+      session.personId = personId;
+    }
+
+    return session;
   }
 
   async createWASession(
@@ -160,6 +234,18 @@ class ChatService {
     provider: IChannelProvider
   ) {
     const session = generateDefaultSession(wid, aid, provider, messengerUserId);
+    session.personId = personId;
+    await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
+    return session;
+  }
+  async createPostmarkSession(
+    wid: string,
+    aid: string,
+    providerId: string,
+    personId: string,
+    provider: IChannelProvider
+  ) {
+    const session = generateDefaultSession(wid, aid, provider, providerId);
     session.personId = personId;
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
     return session;

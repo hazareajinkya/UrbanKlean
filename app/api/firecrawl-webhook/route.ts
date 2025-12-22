@@ -3,32 +3,40 @@ import knowledgeService from "@/lib/services/knowledge-service";
 import { IWebPropsMetadata } from "@/lib/types/knowledge";
 import { doc } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
+import { v4 } from "uuid";
 
 export async function POST(request: NextRequest) {
   try {
     const signature = request.headers.get("X-Firecrawl-Signature");
     const webhookSecret = process.env.FIRECRAWL_WEBHOOK_SECRET;
 
-    const e = request.body;
+    const bodyRaw = await request.text();
 
     if (!signature || !webhookSecret) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 402 });
     }
 
-    // Get raw body for signature verification
-    const body = await request.text();
-
-    // Verify signature
-    if (!verifySignature(signature, body, webhookSecret)) {
+    if (!verifySignature(signature, bodyRaw, webhookSecret)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    // Parse and process verified webhook
-    const event = JSON.parse(body);
+    const event = JSON.parse(bodyRaw);
+    const { wid, workspaceType, urlMetadata: metaRaw } = event.metadata;
 
-    const { wid, docId, workspaceType } = event.metadata;
+    let urlMetadata: Record<
+      string,
+      { folderId: string; knowledgeId: string }
+    > | null = null;
+    if (metaRaw) {
+      try {
+        urlMetadata =
+          typeof metaRaw === "string" ? JSON.parse(metaRaw) : metaRaw;
+      } catch (e) {
+        console.error("Failed to parse urlMetadata", e);
+      }
+    }
 
-    if (!wid || !docId) {
+    if (!wid) {
       return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
     }
 
@@ -41,15 +49,51 @@ export async function POST(request: NextRequest) {
         title: result.metadata?.title ?? "",
       };
 
+      let folderId = event.metadata.folderId;
+      let websiteId = event.metadata.docId;
+
+      if (urlMetadata && me.url) {
+        const exact = urlMetadata[me.url];
+        const altUrl = me.url.endsWith("/")
+          ? me.url.slice(0, -1)
+          : me.url + "/";
+        const alt = urlMetadata[altUrl];
+
+        const match = exact || alt;
+        if (match) {
+          folderId = match.folderId;
+          websiteId = match.knowledgeId;
+        }
+      }
+
+      if (!folderId) {
+        return NextResponse.json(
+          { error: "Folder ID is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!websiteId) {
+        const existingKnowledge = await knowledgeService.getUrlKnowledgeByUrl(
+          wid,
+          folderId,
+          me.url
+        );
+        websiteId = existingKnowledge ? existingKnowledge.id : v4();
+      }
+
       const { chunkSize, points } = await knowledgeService.s_embedWeb(
         wid,
+        folderId,
+        websiteId,
         content,
         me
       );
 
-      await knowledgeService.s_saveMultiUrlKnowledge(
+      await knowledgeService.s_saveScrapedWebPage(
         wid,
-        docId,
+        folderId,
+        websiteId,
         me,
         points,
         chunkSize
@@ -57,9 +101,31 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ status: "ok" });
     } else if (event.type === "batch_scrape.completed") {
-      await knowledgeService.s_compeletedTraining(wid, docId);
-      if (workspaceType === "onboarding")
-        backendClient.post("/onboard/completed", { wid });
+      if (urlMetadata) {
+        const uniqueEntries = Object.values(urlMetadata);
+        const uniqueKnowledgeIds = new Set<string>();
+        const updatePromises: Promise<void>[] = [];
+
+        for (const entry of uniqueEntries) {
+          if (!uniqueKnowledgeIds.has(entry.knowledgeId)) {
+            uniqueKnowledgeIds.add(entry.knowledgeId);
+            updatePromises.push(
+              knowledgeService.s_completedTraining(
+                wid,
+                entry.folderId,
+                entry.knowledgeId
+              )
+            );
+          }
+        }
+
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises);
+        }
+      }
+      if (workspaceType === "onboarding") {
+        await backendClient.post("/onboard/completed", { wid });
+      }
       return NextResponse.json({ status: "ok" });
     }
   } catch (error) {

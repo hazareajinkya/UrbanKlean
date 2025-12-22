@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EmailSetupModal from "@/components/channels/email-setup-modal";
+import Modal from "@/components/ui/modal";
 import { useChannelActions } from "@/hooks/channels/use-channel-actions";
 import { useChannels } from "@/hooks/channels/use-channels";
 import { fbconf, instaconf, slackconf } from "@/lib/utils/conf";
@@ -25,7 +26,10 @@ import { IAgent } from "@/lib/types/agent";
 import { IChannel } from "@/lib/types/channel";
 import { getwid } from "@/lib/utils";
 import {
+  Check,
+  Copy,
   Instagram,
+  Loader,
   Loader2,
   Settings2,
   SettingsIcon,
@@ -35,11 +39,12 @@ import {
   UserMinus,
   UserPlus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
 
 const ChannelsPage = () => {
-  const router = useRouter();
   const { wid } = useParams() as { wid: string };
 
   const { channels, isLoading } = useChannels(wid);
@@ -132,7 +137,7 @@ const ChannelsPage = () => {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
         </div>
       ) : channels && channels.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
@@ -285,130 +290,242 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     });
   };
 
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+
+  const handleCopyForwardingEmail = async () => {
+    const fwdEmail = info.forwardingEmail;
+    if (!fwdEmail) return;
+
+    try {
+      await navigator.clipboard.writeText(fwdEmail);
+      setCopiedEmail(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy");
+    }
+  };
+
+  const handleSettingsClick = () => {
+    if (channel.provider === "email") {
+      setShowEmailSettings(true);
+    }
+  };
+
   return (
-    <Card className="gap-4">
-      <CardContent className="">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            {providerIcon()}
-          </div>
+    <>
+      <Card className="gap-4">
+        <CardContent className="">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              {providerIcon()}
+            </div>
 
-          <div className="flex-1">
-            <h3 className="font-medium text-sm mb-0.5">{titleText()}</h3>
-            <p className="text-xs text-muted-foreground ">
-              {descriptionText()}
-            </p>
-            {assignedAgent && (
-              <div className="flex items-center gap-1 mt-1">
-                <User className="w-3 h-3 text-blue-600" />
-                <span className="text-xs text-blue-600">
-                  {assignedAgent.customization.name}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span className="text-xs text-muted-foreground">Active</span>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="">
-        <div className="flex items-center justify-between w-full">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-min h-min"
-            onClick={() => {}}
-          >
-            <Settings2 className="w-4 h-4" />
-          </Button>
-
-          {/* Agent Assignment Dropdown */}
-          <DropdownMenu
-            open={showAgentSelect}
-            onOpenChange={setShowAgentSelect}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-min"
-                disabled={assignChannelToAgent.isPending}
-              >
-                {assignChannelToAgent.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <User className="w-4 h-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Assign Agent</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
+            <div className="flex-1">
+              <h3 className="font-medium text-sm mb-0.5">{titleText()}</h3>
+              <p className="text-xs text-muted-foreground ">
+                {descriptionText()}
+              </p>
               {assignedAgent && (
-                <>
-                  <DropdownMenuItem
-                    onClick={handleUnassignAgent}
-                    className="text-red-600"
-                  >
-                    <UserMinus className="w-4 h-4 mr-2" />
-                    Unassign {assignedAgent.customization.name}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
+                <div className="flex items-center gap-1 mt-1">
+                  <User className="w-3 h-3 text-blue-600" />
+                  <span className="text-xs text-blue-600">
+                    {assignedAgent.customization.name}
+                  </span>
+                </div>
               )}
+            </div>
 
-              {availableAgents.length > 0 ? (
-                availableAgents.map((agent) => (
-                  <DropdownMenuItem
-                    key={agent.id}
-                    onClick={() => handleAssignAgent(agent.id)}
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    {agent.customization.name}
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-xs text-muted-foreground">Active</span>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="">
+          <div className="flex items-center justify-between w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-min h-min"
+              onClick={handleSettingsClick}
+            >
+              <Settings2 className="w-4 h-4" />
+            </Button>
+
+            {/* Agent Assignment Dropdown */}
+            <DropdownMenu
+              open={showAgentSelect}
+              onOpenChange={setShowAgentSelect}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-min"
+                  disabled={assignChannelToAgent.isPending}
+                >
+                  {assignChannelToAgent.isPending ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Assign Agent</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {assignedAgent && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={handleUnassignAgent}
+                      className="text-red-600"
+                    >
+                      <UserMinus className="w-4 h-4 mr-2" />
+                      Unassign {assignedAgent.customization.name}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+
+                {availableAgents.length > 0 ? (
+                  availableAgents.map((agent) => (
+                    <DropdownMenuItem
+                      key={agent.id}
+                      onClick={() => handleAssignAgent(agent.id)}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      {agent.customization.name}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>
+                    No available agents
                   </DropdownMenuItem>
-                ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-min"
+              onClick={() =>
+                disconnectChannel.mutate({
+                  wid: wid,
+                  channelId: channel.id,
+                  provider: channel.provider,
+                })
+              }
+            >
+              {disconnectChannel.isPending ? (
+                <Loader className="w-4 h-4 animate-spin" />
               ) : (
-                <DropdownMenuItem disabled>
-                  No available agents
-                </DropdownMenuItem>
+                <Trash2 className="w-4 h-4" />
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-min"
-            onClick={() =>
-              disconnectChannel.mutate({
-                wid: wid,
-                channelId: channel.id,
-                provider: channel.provider,
-              })
-            }
-          >
-            {disconnectChannel.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
+            {channel.provider === "instagram" && (
+              <InstagramIcon className="w-4 h-4" />
             )}
-          </Button>
+            {channel.provider === "email" && <EmailIcon className="w-4 h-4" />}
+            {channel.provider === "messenger" && (
+              <MessengerIcon className="w-4 h-4" />
+            )}
+            {channel.provider === "whatsapp" && <WAIcon className="w-4 h-4" />}
+            {channel.provider === "slack" && <SlackLogo className="w-4 h-4" />}
+          </div>
+        </CardFooter>
+      </Card>
 
-          {channel.provider === "instagram" && (
-            <InstagramIcon className="w-4 h-4" />
-          )}
-          {channel.provider === "email" && <EmailIcon className="w-4 h-4" />}
-          {channel.provider === "messenger" && (
-            <MessengerIcon className="w-4 h-4" />
-          )}
-          {channel.provider === "whatsapp" && <WAIcon className="w-4 h-4" />}
-          {channel.provider === "slack" && <SlackLogo className="w-4 h-4" />}
+      {/* Email Settings Modal */}
+      {showEmailSettings && channel.provider === "email" && (
+        <EmailChannelSettingsModal
+          isOpen={showEmailSettings}
+          onClose={() => setShowEmailSettings(false)}
+          forwardingEmail={info.forwardingEmail}
+          channelName={info.name}
+          onCopy={handleCopyForwardingEmail}
+          copied={copiedEmail}
+        />
+      )}
+    </>
+  );
+};
+
+interface EmailChannelSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  forwardingEmail: string;
+  channelName: string;
+  onCopy: () => void;
+  copied: boolean;
+}
+
+const EmailChannelSettingsModal = ({
+  isOpen,
+  onClose,
+  forwardingEmail,
+  channelName,
+  onCopy,
+  copied,
+}: EmailChannelSettingsModalProps) => {
+  return (
+    <Modal
+      isOpen={isOpen}
+      closeModal={onClose}
+      className="max-w-md bg-background rounded-xl p-6 shadow-xl"
+    >
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold">Email settings</h2>
+          <p className="text-sm text-muted-foreground">{channelName}</p>
         </div>
-      </CardFooter>
-    </Card>
+
+        <div className="space-y-3">
+          <Label>Forwarding address</Label>
+          <div className="flex gap-2">
+            <div
+              className="flex-1 px-3 py-2.5 bg-muted rounded-lg font-mono text-sm cursor-text select-all break-all"
+              onClick={onCopy}
+              role="button"
+              tabIndex={0}
+              aria-label="Click to copy forwarding email"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onCopy();
+              }}
+            >
+              {forwardingEmail}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onCopy}
+              aria-label="Copy forwarding email"
+              tabIndex={0}
+              className="shrink-0"
+            >
+              {copied ? (
+                <Check className="size-4 text-green-500" />
+              ) : (
+                <Copy className="size-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Forward your incoming emails to this address to receive them in
+            MagicalCX.
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={onClose} className="w-full" tabIndex={0}>
+            Done
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 };

@@ -1,8 +1,6 @@
 "use client";
 
 import { useAgent } from "@/lib/hooks/agent/use-agent";
-import { useSession } from "@/lib/hooks/session/use-session";
-import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function ChatLayout({

@@ -20,6 +20,7 @@ import { deleteCollection } from "../utils";
 import memberService from "./member-service";
 import { IAgent } from "../types/agent";
 import knowledgeService from "./knowledge-service";
+import folderService from "./folder-service";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -63,6 +64,8 @@ class WorkspaceService {
       workspaces: arrayUnion({ id: wid, name: name, role: "owner" }),
       updatedAt: new Date().toISOString(),
     });
+
+    await folderService.getOrCreateMiscellaneousFolder(wid);
 
     return workspace;
   }
@@ -186,6 +189,30 @@ class WorkspaceService {
       // Delete web knowledge collection
       await deleteCollection(`workspaces/${wid}/knowledge/web/default`);
 
+      // Delete folder subcollections before deleting folders
+      try {
+        const folders = await folderService.getFolders(wid);
+        for (const folder of folders) {
+          const folderSubcollections = [
+            `workspaces/${wid}/folders/${folder.id}/documents`,
+            `workspaces/${wid}/folders/${folder.id}/websites`,
+            `workspaces/${wid}/folders/${folder.id}/texts`,
+            `workspaces/${wid}/folders/${folder.id}/teach`,
+          ];
+          await Promise.all(
+            folderSubcollections.map((path) => deleteCollection(path))
+          );
+        }
+      } catch (error) {
+        console.error(
+          `[WorkspaceService] Failed to delete folder subcollections:`,
+          error
+        );
+      }
+
+      // Delete folders collection
+      await deleteCollection(`workspaces/${wid}/folders`);
+
       // Delete subcollections
       const subCollections = [
         `workspaces/${wid}/channels`,
@@ -224,6 +251,15 @@ class WorkspaceService {
     };
 
     await setDoc(doc(db, `workspaces/${wid}/members/${userEmail}`), data);
+  }
+
+  async generateWorkspaceInfo({ wid, url }: { wid: string; url: string }) {
+    console.log("Generating workspace info for", wid, url);
+    const { data } = await axiosClient.post("/api/workspace/generate-info", {
+      wid,
+      url,
+    });
+    return data;
   }
 }
 

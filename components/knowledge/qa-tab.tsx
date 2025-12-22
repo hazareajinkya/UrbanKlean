@@ -27,7 +27,7 @@ export default function QATab() {
 
   if (isLoading) {
     return (
-      <div className="h-full p-4">
+      <div className="h-full">
         <div className="bg-card border rounded-xl h-full overflow-hidden flex">
           <div className="p-0 border-r w-full">
             <div className="bg-card h-full flex flex-col">
@@ -114,7 +114,7 @@ export default function QATab() {
     qa?.questions?.filter((q) => !q.satisfied).length || 0;
 
   return (
-    <div className="h-full p-4">
+    <div className="h-full ">
       <div className="bg-card border rounded-xl h-full overflow-hidden flex  ">
         <div className="p-0 border-r w-full">
           <div className="bg-card h-full flex flex-col">

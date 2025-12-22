@@ -21,6 +21,7 @@ const axiosClient: AxiosInstance = axios.create({
   timeout: 120000, // 2 minutes
   headers: {
     "Content-Type": "application/json",
+    "x-internal-auth": process.env.INTERNAL_SECRET,
   },
 });
 

@@ -36,12 +36,16 @@ export async function POST(req: Request) {
         msgType === "image" ? parsed.msg.image?.url : parsed.msg.text;
 
       console.log("user query: ", query);
+
+      console.log("Whatsapp body: ", parsed);
+
       await waService.sendTypingIndicator(parsed.msg.id);
 
       const { success, message: ans } = await waBotService.generateResponse(
         parsed.msg,
         parsed.contact.waId,
         parsed.contact.waId,
+        parsed.contact.name,
         "whatsapp"
       );
 

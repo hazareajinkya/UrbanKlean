@@ -18,7 +18,7 @@ import {
   Check,
   Circle,
   Globe,
-  Loader2,
+  Loader,
   MailIcon,
   MessageCircleMoreIcon,
   PanelRightClose,
@@ -78,7 +78,7 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
 
   return (
     <div className="h-full p-4">
-      <div className={`bg-white border rounded-xl h-full overflow-hidden flex`}>
+      <div className={`bg-card border rounded-xl h-full overflow-hidden flex`}>
         {/* Chats Sidebar */}
         <aside className="w-[280px] flex-shrink-0 p-0 border-r">
           <SessionList
@@ -124,7 +124,7 @@ const assistantMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-4 py-2 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tr-2xl "
+      ? "rounded-t-2xl rounded-br-2xl "
       : "rounded-2xl"
   );
 
@@ -133,7 +133,7 @@ const userMessageStyle = (message: UIMessage) =>
     "bg-secondary text-secondary-foreground px-3 md:px-3 py-1 md:py-2",
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
-      ? "rounded-b-2xl rounded-tl-2xl"
+      ? "rounded-t-2xl rounded-bl-2xl"
       : "rounded-2xl"
   );
 
@@ -174,9 +174,9 @@ const SessionList = ({
   };
   return (
     <div className="bg-secondary h-full flex flex-col">
-      <div className="h-14 border-b bg-gray-100 px-4 grid place-items-center flex-shrink-0">
+      <div className="h-14 border-b bg-muted/10 px-4 grid place-items-center flex-shrink-0">
         <div className="w-full">
-          <p className="text-sm">Conversations</p>
+          <p className="text-sm text-foreground">Conversations</p>
           <p className="text-xs text-muted-foreground ">
             Showing {sessions.length}/{nChats} chats
           </p>
@@ -194,7 +194,7 @@ const SessionList = ({
           hasMore={hasMore}
           loader={
             <div className="py-4 text-center mx-auto w-full">
-              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+              <Loader className="w-4 h-4 animate-spin mx-auto" />
             </div>
           }
           endMessage={
@@ -212,19 +212,18 @@ const SessionList = ({
             return (
               <div
                 key={session.id}
-                className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3.5 border-b ${
+                className={`px-4 flex items-center justify-between gap-2 transition-all duration-100 cursor-pointer py-3.5 border-b hover:bg-card/70 ${
                   currentSession?.id === session.id
                     ? "bg-card border-l-2 border-b-0 border-primary"
                     : ""
                 }`}
                 onClick={() => setcurrentSession(session)}
               >
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-medium text-foreground mb-0.5 ">
                     {person ? person.name : renderVisitorID(session)}
-                    {/* {renderVisitorID(session)} */}
                   </h4>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {formatHistoryDateTime(session.updatedAt)}
                   </p>
                 </div>
@@ -233,15 +232,15 @@ const SessionList = ({
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full flex gap-1 items-center ${
                       session.status === "open"
-                        ? "text-green-700 bg-green-400/20"
-                        : "text-muted-foreground bg-muted-foreground/20"
+                        ? "text-green-700 dark:text-green-400 bg-green-400/20 dark:bg-green-500/20"
+                        : "text-muted-foreground bg-muted-foreground/10"
                     } `}
                   >
                     <div
                       className={`h-1.5 w-1.5 rounded-full ${
                         session.status === "open"
-                          ? "bg-green-500 "
-                          : "bg-muted-foreground"
+                          ? "bg-green-500 dark:bg-green-400 "
+                          : "bg-muted-foreground "
                       }`}
                     ></div>
                     {session.status === "open" ? "Open" : "Closed"}
@@ -302,9 +301,9 @@ const HistoryMessageList = ({
     <div className="h-full flex flex-col">
       {currentSession && (
         <>
-          <div className="border-b bg-gray-100 h-14 px-4 flex justify-between items-center flex-shrink-0">
-            <div className="w-full">
-              <h4 className="text-sm font-medium text-gray-700 mb-0.5 ">
+          <div className="border-b bg-muted h-14 px-4 flex justify-between items-center flex-shrink-0">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-foreground mb-0.5">
                 {currentSession.personId && persons[currentSession.personId]
                   ? persons[currentSession.personId].name
                   : `Visitor-${currentSession.id.split("-")[0]}`}
@@ -318,7 +317,7 @@ const HistoryMessageList = ({
                 variant={"ghost"}
                 size={"icon"}
                 onClick={() => onCollapsedChange(!isCollapsed)}
-                className="transition-all text-muted-foreground hover:text-primary pr-0 w-min"
+                className="transition-all text-muted-foreground hover:text-primary pr-0 w-min flex-shrink-0"
               >
                 {isCollapsed ? (
                   <PanelRightOpen className="size-4.5" />
@@ -408,7 +407,7 @@ const HistoryMessageList = ({
                                       href={href}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="font-medium text-blue-600 hover:text-blue-700 transition-colors underline underline-offset-2"
+                                      className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
                                     >
                                       {children}
                                     </a>

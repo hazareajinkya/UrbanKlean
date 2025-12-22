@@ -1,58 +1,78 @@
 "use client";
 
-import { Globe, FileText, Type, NotebookPenIcon, Bot } from "lucide-react";
-import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
-
-// Import tab components
-import {
-  WebsiteTab,
-  DocumentsTab,
-  TextTab,
-  TrainTab,
-} from "@/components/knowledge";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import QATab from "@/components/knowledge/qa-tab";
+import TrainTab from "@/components/knowledge/train-tab";
+import { Book, GraduationCap, MessageSquare } from "lucide-react";
+import clsx from "clsx";
+import KnowledgeTab from "@/components/knowledge/knowledge-tab";
+
+type TabType = "knowledge" | "training" | "qa";
 
 export default function KnowledgeBasePage() {
-  const searchParams = useSearchParams();
   const { wid } = useParams() as { wid: string };
-  const tab = searchParams.get("tab") || "website";
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as TabType | null;
+  const activeTab: TabType = tabParam || "knowledge";
+
+  const handleTabChange = (tab: TabType) => {
+    router.push(
+      `/workspaces/${wid}/knowledge${tab === "knowledge" ? "" : `?tab=${tab}`}`
+    );
+  };
 
   const tabs = [
-    { id: "website", label: "Website", icon: Globe },
-    { id: "documents", label: "Documents", icon: FileText },
-    { id: "text", label: "Text", icon: Type },
-    { id: "train", label: "Train", icon: Bot },
-    { id: "qa", label: "QA", icon: NotebookPenIcon },
+    { id: "knowledge" as const, label: "Knowledge", icon: Book },
+    {
+      id: "training" as const,
+      label: "Training",
+      icon: GraduationCap,
+    },
+    { id: "qa" as const, label: "QA", icon: MessageSquare },
   ];
 
   return (
-    <div className="h-full min-h-0 flex flex-col ">
-      {/* Tab Navigation */}
-      <div className="flex w-full bg-card p-1 border-b rounded-ull  gap-0 items-center animate-in fade-in slide-in-from-left-2 duration-300 ">
-        {tabs.map((tabItem) => (
-          <Link
-            key={tabItem.id}
-            href={`/workspaces/${wid}/knowledge?tab=${tabItem.id}`}
-            className={`flex font-medium rounded-md items-center gap-2 px-3 py-2 text-sm hover:bg-secondary hover:text-primary transition-colors ${
-              tab === tabItem.id
-                ? "bg-primay/10 border-b-0 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <tabItem.icon className="w-4 h-4" />
-            {tabItem.label}
-          </Link>
-        ))}
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between border-b bg-card p-1 items-center animate-in slide-in-from-left-5 fade-in">
+        <div className="flex gap-1 items-center">
+          {tabs.map((tabItem) => (
+            <button
+              key={tabItem.id}
+              onClick={() => handleTabChange(tabItem.id)}
+              className={clsx(
+                "flex cursor-pointer items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary/80",
+                activeTab === tabItem.id
+                  ? "text-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <tabItem.icon className="w-4 h-4" />
+              {tabItem.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
-      <div className="p-4 flex-1 overflow-hidden">
-        {tab === "website" && <WebsiteTab />}
-        {tab === "documents" && <DocumentsTab />}
-        {tab === "text" && <TextTab />}
-        {tab === "train" && <TrainTab />}
-        {tab === "qa" && <QATab />}
+      <div className="flex-1 flex min-h-0 bg-background/50">
+        {activeTab === "knowledge" && (
+          <div className="flex-1 flex min-h-0 p-4 overflow-hidden">
+            <KnowledgeTab />
+          </div>
+        )}
+
+        {activeTab === "training" && (
+          <div className="flex-1 overflow-hidden">
+            <TrainTab />
+          </div>
+        )}
+
+        {activeTab === "qa" && (
+          <div className="flex-1 overflow-hidden p-4">
+            <QATab />
+          </div>
+        )}
       </div>
     </div>
   );

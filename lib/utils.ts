@@ -7,6 +7,11 @@ import { NextRequest } from "next/server";
 import { collection, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "./clients/firebase";
 import { IPerson } from "./types/person";
+import { IAction } from "./types/actions";
+import { tool, ToolSet } from "ai";
+import z from "zod";
+import { executeAPIAction } from "./utils/api-actions-utils";
+import { v4 } from "uuid";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -29,6 +34,20 @@ export function formatTime(date?: string) {
 export function formatDateTime(date?: string) {
   if (!date) return "";
   return format(new Date(date), "dd MMM yyyy hh:mm a");
+}
+
+export function formatAgentTime(date?: string) {
+  if (!date) return "";
+  const inputDate = new Date(date);
+  const now = new Date();
+
+  const msDifference = now.getTime() - inputDate.getTime();
+  const msInDay = 24 * 60 * 60 * 1000;
+
+  if (msDifference > msInDay) {
+    return format(inputDate, "dd MMM yy");
+  }
+  return format(inputDate, "hh:mm a");
 }
 
 export const formatHistoryDateTime = (date?: string) => {
@@ -184,4 +203,69 @@ export const checkRecentlyActive = (
   const diffMs = now.getTime() - new Date(lastActivity).getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
   return diffHours < hour;
+};
+
+export const isMac = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+};
+
+export const getCustomTools = (actions: IAction[]): ToolSet => {
+  return actions.reduce((acc, action) => {
+    acc[action.slug] = tool({
+      name: action.name,
+      description: action.description,
+      inputSchema: z.object({
+        ...action.inputs.reduce((acc: Record<string, any>, input) => {
+          acc[input.key] = z.string().describe(input.description || "");
+          return acc;
+        }, {} as Record<string, any>),
+      }),
+      execute: async (params) => {
+        return executeAPIAction(action, params);
+      },
+    });
+    return acc;
+  }, {} as ToolSet);
+};
+
+export const generateForwardingEmail = () => {
+  const prefix = "magical";
+  const id = v4().replace(/-/g, "").slice(0, 6); // short, clean
+  return `${prefix}+${id}@magicalcx-mail.com`;
+};
+
+export const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+};
+
+export const formatPhone = (phone?: string) => {
+  if (!phone) return "";
+
+  return phone;
+};
+
+export const getPrimaryEmail = (person: IPerson) => {
+  return person.emails?.[0] || "";
+};
+
+export const getPrimaryPhone = (person: IPerson) => {
+  return person.phones?.[0] || "";
+};
+
+export const toSlug = (str: string) => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]/g, "");
+};
+
+export const fromSlug = (slug: string) => {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };

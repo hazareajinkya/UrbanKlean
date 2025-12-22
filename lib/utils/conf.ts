@@ -8,16 +8,16 @@ export const RESEND_API_BASE = "https://api.resend.com";
 
 // WhatsApp Configuration
 export const WA_WINDOW_EXPIRATION_HOURS = 24;
-export const WA_PHONE_ID = "440211032500301";
+export const WA_PHONE_ID = "859793977226436";
 
 // Facebook Configuration
-export const FB_ID = "776850275516982";
+export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
 export const FB_APP_ID = process.env.NEXT_PUBLIC_FB_APP_ID ?? "";
 export const FB_APP_SECRET = process.env.FB_APP_SECRET ?? "";
 export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
 
 // Instagram Configuration
-export const INSTA_ID = "17841473564869425";
+export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
 export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
 export const INSTAGRAM_REDIRECT_URI =
@@ -39,11 +39,16 @@ export const SLACK_WEBHOOK_VERIFY_TOKEN =
 
 // API Configs
 export const waconf = {
-  version: "v23.0",
+  version: "v24.0",
   phoneID: WA_PHONE_ID,
   accessToken: process.env.WA_ACCESS_TOKEN,
   expirationWindow: WA_WINDOW_EXPIRATION_HOURS,
   baseURL: FACEBOOK_GRAPH_API_BASE,
+};
+
+export const coreConf = {
+  isProd: process.env.NEXT_PUBLIC_ENV === "production",
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
 };
 
 export const instaconf = {

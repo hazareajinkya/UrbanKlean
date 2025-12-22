@@ -14,3 +14,7 @@ export const embeddingConfig = {
 
 export const SESSION_PASSWORD =
   process.env.SESSION_PASSWORD ?? "dM8d7#2%L!sA9pG*rT$wZ@fQ";
+
+export const creditCosts = {
+  query: 2,
+} as const;

@@ -3,8 +3,9 @@ import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import {
-  Loader2,
+  Loader,
   Users,
   LogOut,
   Zap,
@@ -17,11 +18,17 @@ import {
   ChevronLeft,
   Rss,
   Settings2,
+  Shield,
 } from "lucide-react";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
+import { useHotkeys } from "react-hotkeys-hook";
+import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
+import { useSession } from "next-auth/react";
+import { useMember } from "@/lib/hooks/members/use-members";
+import { GeminiLogo } from "@/lib/logos";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -33,12 +40,48 @@ export default function WorkspaceLayout({
   const { wid } = useParams() as { wid: string };
   const { workspace, isLoading } = useWorkspace(wid);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { data: session, status } = useSession();
+  const userEmail = session?.user?.email ?? "";
+  const { data: member, isLoading: isMemberLoading } = useMember(
+    wid,
+    userEmail
+  );
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <Loader className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Authenticating...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" || !session?.user?.email) {
+    redirect("/auth");
+  }
+
+  if (isMemberLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <Loader className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Checking access...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!member) {
+    redirect("/workspaces");
+  }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="w-6 h-6 animate-spin" />
+          <Loader className="w-6 h-6 animate-spin" />
           <span className="text-lg">Loading workspace...</span>
         </div>
       </div>
@@ -105,15 +148,16 @@ const navigation = [
     icon: Rss,
   },
   {
+    title: "Customers",
+    href: "/customers",
+    icon: Users,
+  },
+  {
     title: "Actions",
     href: "/actions",
     icon: Zap,
   },
-  {
-    title: "Members",
-    href: "/members",
-    icon: Users,
-  },
+
   {
     title: "Settings",
     href: "/settings",
@@ -134,7 +178,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+    if (typeof window !== "undefined")
+      return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
     return false;
   });
   const [isModalOpen, setIsModelOpen] = useState(false);
@@ -148,6 +193,11 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     setIsCollapsed(newState);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newState));
   };
+
+  useHotkeys("ctrl+b,meta+b", handleToggleCollapse, {
+    enableOnFormTags: false,
+  });
+
   const handleModalOpen = () => {
     setIsModelOpen(true);
   };
@@ -172,19 +222,22 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
           {!isCollapsed && (
             <>
               <h2 className="font-medium truncate">Magical CX</h2>
-              <img
-                src={"/temp-logo-transparent.png"}
+              <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
+              {/* <img
+                src={"/logos/magicalcx-icon-trans-dark.png"}
                 // src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
-                className="size-7 rounded-md"
-              />
+                className="w-4 rounded-md"
+              /> */}
             </>
           )}
           {isCollapsed && (
             <div className="flex justify-center w-full">
-              <img
-                src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
-                className="w-6 h-6 rounded-md"
-              />
+              {/* <img
+                // src="https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/w%2Fe846a44e-988d-492a-ac46-629fd479ae5b%2Fagents%2F94fbefb7-df52-438c-8a86-de1ef901ff49%2Flogo?alt=media&token=7c7a28ec-362e-4a54-a64b-6adcec4a07e6"
+                src="/logos/magicalcx-appicon-dark.png"
+                className="w-6 h-6 rounded-sm"
+              /> */}
+              <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
             </div>
           )}
         </Link>
@@ -223,16 +276,18 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 `}
                 title={isCollapsed ? item.title : undefined}
               >
-                <item.icon
-                  className={`h-4 w-4 shrink-0 ${
-                    isCollapsed ? "h-4.5 w-4.5" : ""
-                  }`}
-                />
-                {!isCollapsed && (
-                  <span className="line-clamp-1 overflow-hidden truncate">
-                    {item.title}
-                  </span>
-                )}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <item.icon
+                    className={`h-4 w-4 shrink-0 ${
+                      isCollapsed ? "h-4.5 w-4.5" : ""
+                    }`}
+                  />
+                  {!isCollapsed && (
+                    <span className="line-clamp-1 overflow-hidden truncate">
+                      {item.title}
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}
@@ -253,11 +308,18 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {!isCollapsed && <span className="text-sm">Collapse</span>}
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
+          <div className="flex items-center gap-1.5">
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <>
+                <Kbd className="hidden lg:inline-flex opacity-60 text-[10px]">
+                  {sidebarCollapseShortcut}
+                </Kbd>
+                <ChevronLeft className="h-4 w-4" />
+              </>
+            )}
+          </div>
         </Button>
       </div>
 

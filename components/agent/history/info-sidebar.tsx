@@ -3,7 +3,7 @@
 import { ISession } from "@/lib/types/session";
 import { formatDate } from "@/lib/utils";
 import {
-  Loader2,
+  Loader,
   Mail,
   Phone,
   MapPin,
@@ -13,9 +13,16 @@ import {
   Clock,
   MessageSquare,
   Copy,
+  Link2,
 } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history-store";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Link from "next/link";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -92,7 +99,7 @@ export const InfoSidebar = ({
   if (!person) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        <Loader className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -109,7 +116,7 @@ export const InfoSidebar = ({
     person.pastSessionIds && person.pastSessionIds.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-card">
       {/* Header */}
       <div className="px-5 py-6 border-b border-border/50">
         <div className="flex items-center gap-3">
@@ -134,7 +141,7 @@ export const InfoSidebar = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Contact Info */}
-        {hasContactInfo && (
+        {(hasContactInfo || currentSession.fromPage) && (
           <div className="px-5 py-4 border-b border-border/30">
             <SectionLabel>Contact</SectionLabel>
             <div className="space-y-1">
@@ -146,6 +153,35 @@ export const InfoSidebar = ({
               ))}
               {person.location && (
                 <CopyableItem icon={MapPin} value={person.location} />
+              )}
+              {currentSession.fromPage && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={currentSession.fromPage}
+                      target="_blank"
+                      className="flex items-center gap-2.5 min-w-0 hover:bg-secondary/50 -mx-2 px-2 py-1 rounded-md transition-colors"
+                    >
+                      <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs text-foreground truncate flex-1">
+                        {(() => {
+                          try {
+                            return (
+                              new URL(currentSession.fromPage).pathname || "/"
+                            );
+                          } catch {
+                            return currentSession.fromPage;
+                          }
+                        })()}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs break-all">
+                      {currentSession.fromPage}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>
@@ -298,7 +334,7 @@ export const InfoSidebar = ({
                     }`}
                   >
                     {isLoading ? (
-                      <Loader2 className="w-3 h-3 flex-shrink-0 animate-spin" />
+                      <Loader className="w-3 h-3 flex-shrink-0 animate-spin" />
                     ) : (
                       <MessageSquare className="w-3 h-3 flex-shrink-0" />
                     )}

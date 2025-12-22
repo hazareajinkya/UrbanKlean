@@ -12,15 +12,19 @@ import {
   UITools,
 } from "ai";
 import z from "zod";
+import type { Geo } from "@vercel/functions";
+
 export interface ISession {
   id: string;
   aid: string;
   wid: string;
+  geo?: Geo;
   personId?: string;
   providerId: string;
   channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
+  fromPage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,16 +55,19 @@ export const generateDefaultSession = (
   wid: string,
   aid: string,
   channel: IChannelProvider,
-  pid?: string
+  pid?: string,
+  id?: string,
+  fromPage?: string
 ): ISession => {
   return {
-    id: v4(),
+    id: id ?? v4(),
     aid,
     wid,
     channel,
     status: "open",
     providerId: pid || "",
     messages: [],
+    ...(fromPage && { fromPage }),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

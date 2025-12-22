@@ -12,12 +12,6 @@ export async function POST(req: Request) {
     console.log("Postmark webhook received");
     const body = (await req.json()) as IPostmarkInboundWebhook;
 
-    console.log("From:", body.From);
-    console.log("Subject:", body.Subject);
-    console.log("To:", body.To);
-    console.log("MailboxHash:", body.MailboxHash);
-    console.log("References:", body.Headers);
-
     // Check if it's spam
     if (postmarkParser.isSpam(body)) {
       console.log("Email marked as spam, ignoring");
@@ -39,25 +33,26 @@ export async function POST(req: Request) {
     // Parse the inbound email
     const parsedMessage = postmarkParser.parseInboundEmail(body);
 
-    console.log("Parsed message:", {
-      id: parsedMessage.id,
-      from: parsedMessage.from,
-      subject: parsedMessage.subject,
-      to: parsedMessage.to,
-      textBody: parsedMessage.textBody,
-      type: parsedMessage.type,
-      references: parsedMessage.references,
-      inReplyTo: parsedMessage.inReplyTo,
-      replyTo: parsedMessage.replyTo,
-      hasAttachments: postmarkParser.hasAttachments(body),
-      attachmentCount: postmarkParser.getAttachmentCount(body),
-    });
+    // console.log("Parsed message:", {
+    //   id: parsedMessage.id,
+    //   from: parsedMessage.from,
+    //   subject: parsedMessage.subject,
+    //   to: parsedMessage.to,
+    //   textBody: parsedMessage.textBody,
+    //   type: parsedMessage.type,
+    //   references: parsedMessage.references,
+    //   inReplyTo: parsedMessage.inReplyTo,
+    //   replyTo: parsedMessage.replyTo,
+    //   hasAttachments: postmarkParser.hasAttachments(body),
+    //   attachmentCount: postmarkParser.getAttachmentCount(body),
+    // });
 
     // Check if the email needs to be replied or not by checking
 
     // Step 2: Generate AI response using your bot service
     const { success, message: ans } = await postmarkBotService.generateResponse(
       parsedMessage,
+      parsedMessage.to,
       parsedMessage.from,
       "email"
     );
@@ -76,7 +71,9 @@ export async function POST(req: Request) {
 
       await postmarkService.sendReply({
         to: parsedMessage.from,
-        from: parsedMessage.from,
+        // Change this get approval
+        from: parsedMessage.to,
+        // from: parsedMessage.from,
         subject: subject,
         textBody: ans,
         inReplyTo: parsedMessage.inReplyTo,

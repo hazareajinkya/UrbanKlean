@@ -2,7 +2,7 @@
 
 import { Streamdown } from "streamdown";
 import { UIMessage } from "ai";
-import { formatDateTime, getContrastingColor } from "@/lib/utils";
+import { formatDateTime, formatTime, getContrastingColor } from "@/lib/utils";
 import { getMessageStyle, heightClass } from "@/lib/utils/message-utils";
 import { useEffect, useRef, memo, useMemo, useState } from "react";
 import clsx from "clsx";
@@ -13,6 +13,7 @@ import { ArrowDown, Globe, User } from "lucide-react";
 import { IChatMessage } from "@/lib/types/session";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../ui/button";
+import { MessageLoading } from "./message-loading";
 
 interface MessageListProps {
   agent: IAgent;
@@ -217,54 +218,46 @@ ToolBadge.displayName = "ToolBadge";
 interface MessagePartsProps {
   parts: IChatMessage["parts"];
   brandColor: string;
+  isLast: boolean;
 }
 
-const MessageParts = memo(({ parts, brandColor }: MessagePartsProps) => (
-  <>
-    {parts?.map((part, index) => {
-      if (part.type === "tool-searchKnowledge") {
-        return (
-          <ToolBadge
-            key={index}
-            isCalling={part.state !== "output-available"}
-            brandColor={brandColor}
-            Icon={Globe}
-            callingText="Searching knowledge..."
-            completedText="Searched knowledge"
-          />
-        );
-      }
+const MessageParts = memo(
+  ({ parts, brandColor, isLast }: MessagePartsProps) => (
+    <>
+      {parts?.map((part, index) => {
+        if (
+          part.type === "tool-collectInformation" ||
+          part.type === "tool-searchKnowledge"
+        ) {
+          const nextParts = parts.slice(index + 1);
+          const hasSubsequentText = nextParts.some(
+            (p) => p.type === "text" && p.text && p.text.length > 0
+          );
 
-      if (part.type === "tool-collectInformation") {
-        return (
-          <ToolBadge
-            key={index}
-            isCalling={part.state !== "output-available"}
-            brandColor={brandColor}
-            Icon={User}
-            callingText="Personalizing response..."
-            completedText="Personalized response"
-          />
-        );
-      }
+          if (isLast && !hasSubsequentText) {
+            return <MessageLoading key={index} style={{ padding: 0 }} />;
+          }
+          return null;
+        }
 
-      if (part.type === "text") {
-        return (
-          <div
-            key={index}
-            className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0"
-          >
-            <Streamdown components={streamdownComponents}>
-              {part.text}
-            </Streamdown>
-          </div>
-        );
-      }
+        if (part.type === "text") {
+          return (
+            <div
+              key={index}
+              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0 "
+            >
+              <Streamdown components={streamdownComponents}>
+                {part.text}
+              </Streamdown>
+            </div>
+          );
+        }
 
-      return null;
-    })}
-  </>
-));
+        return null;
+      })}
+    </>
+  )
+);
 
 MessageParts.displayName = "MessageParts";
 
@@ -285,7 +278,7 @@ const LoadingIndicator = memo(() => (
   <div className="flex justify-start">
     <div
       className={clsx(
-        "max-w-[90%] md:max-w-[75%] leading-7 px-3 py-3",
+        "max-w-[90%] md:max-w-[75%] leading-7",
         getMessageStyle(
           {
             id: "loading",
@@ -296,15 +289,7 @@ const LoadingIndicator = memo(() => (
         )
       )}
     >
-      <div className="flex gap-1.5 py-1">
-        {[0, 0.13, 0.3].map((delay, i) => (
-          <div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full animate-bounce bg-neutral-500"
-            style={{ animationDelay: `${delay}s` }}
-          />
-        ))}
-      </div>
+      <MessageLoading />
     </div>
   </div>
 ));
@@ -327,13 +312,17 @@ const AssistantMessage = memo(
             getMessageStyle(message, "assistant")
           )}
         >
-          <MessageParts parts={message.parts} brandColor={brandColor} />
+          <MessageParts
+            parts={message.parts}
+            brandColor={brandColor}
+            isLast={isLast}
+          />
         </div>
       </div>
       {isLast && (
-        <div className="flex items-center gap-4 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
-          <p className="text-left flex-1 text-xs text-muted-foreground">
-            {formatDateTime(message.metadata?.createdAt ?? "")}
+        <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
+          <p className="text-xs text-muted-foreground">
+            {formatTime(message.metadata?.createdAt ?? "")}
           </p>
         </div>
       )}

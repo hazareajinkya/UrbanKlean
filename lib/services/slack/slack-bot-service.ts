@@ -1,6 +1,12 @@
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import agentService from "../agent-service";
-import { convertToModelMessages, generateText, stepCountIs, tool } from "ai";
+import {
+  convertToModelMessages,
+  generateText,
+  stepCountIs,
+  tool,
+  ToolSet,
+} from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
@@ -12,12 +18,17 @@ import {
 } from "@/lib/types/session";
 import { ISlackMessage } from "@/lib/types/slack-api";
 import { IAgent } from "@/lib/types/agent";
+import { IExternalIds } from "@/lib/types/person";
 import peopleService from "../people-service";
 import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import slackService from "./slack-service";
 import z from "zod";
+import actionService from "../action-service";
+import { IAction } from "@/lib/types/actions";
+import { executeAPIAction } from "@/lib/utils/api-actions-utils";
+import { getCustomTools } from "@/lib/utils";
 
 class SlackBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -39,13 +50,13 @@ class SlackBotService {
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      let session = await this.getOrCreateSession(
+      let session = await this.getOrCreateSession({
         userId,
-        slackMsg.channel,
+        channelId: slackMsg.channel,
         agent,
         channel,
-        teamId
-      );
+        teamId,
+      });
 
       const query = slackMsg.text ?? "";
       const userMsg = defaultUserMessage(query, slackMsg.id);
@@ -73,7 +84,8 @@ class SlackBotService {
 
       const model = getModel(agent);
       const systemPrompt = await getSystemPrompt(agent, query, channel);
-
+      const actions = await actionService.getActions(agent.wid);
+      const customTools = getCustomTools(actions);
       const result = await generateText({
         model,
         system: `
@@ -81,13 +93,23 @@ class SlackBotService {
 
         This following is Slack's channel conversation history use it if you find it useful
         ${slackHistory}
+
+        always use searchKnowledge tool to search knowledgebase in all responses
         `,
+        // TODO: Want to improve the prompt
 
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          // collectInformation: collectInformation(agent.wid),
-          searchKnowledge: searchKnowledge(agent.wid),
+          ...customTools,
+          collectInformation: collectInformation(
+            agent.wid,
+            agent.id,
+            session.id,
+            "slack",
+            teamId
+          ),
+          searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
       console.log("result.text: ", result.text);
@@ -122,55 +144,73 @@ class SlackBotService {
     }
   }
 
-  async getOrCreateSession(
-    userId: string,
-    channelId: string,
-    agent: IAgent,
-    channel: "slack",
-    teamId: string
-  ) {
+  async getOrCreateSession({
+    userId,
+    channelId,
+    agent,
+    channel,
+    teamId,
+  }: {
+    userId: string;
+    channelId: string;
+    agent: IAgent;
+    channel: "slack";
+    teamId: string;
+  }) {
     // Create a unique session ID combining user and channel
     const sessionId = `${userId}_${channelId}`;
 
     let session = await chatService.getSessionByProviderId(sessionId, agent.id);
-    if (!session) {
-      // Get user info from Slack
-      let userInfo;
-      try {
-        userInfo = await slackService.getUserInfo(userId, teamId);
+    if (session) return session;
 
-        console.log("userinfo: ", userInfo);
-      } catch (error) {
-        console.warn("Could not fetch Slack user info:", error);
-        userInfo = { real_name: "Slack User", profile: { email: "" } };
-      }
+    // Get user info from Slack
+    let userInfo;
+    try {
+      userInfo = await slackService.getUserInfo(userId, teamId);
 
-      const { personId } = await peopleService.identifyPerson({
-        wid: agent.wid,
-        phone: userId, // Use Slack user ID as phone for identification
-        externalIds: {
-          slack: userId,
-          slackTeam: teamId,
-          slackChannel: channelId,
-        },
-        name: userInfo.real_name || userInfo.name || "Slack User",
-        email: userInfo.profile?.email || "",
-      });
-
-      session = await chatService.createSlackSession(
-        agent.wid,
-        agent.id,
-        sessionId,
-        personId,
-        channel
-        // {
-        //   slackUserId: userId,
-        //   slackChannelId: channelId,
-        //   slackTeamId: teamId,
-        //   userName: userInfo.real_name || userInfo.name || "Slack User",
-        // }
-      );
+      console.log("userinfo: ", userInfo);
+    } catch (error) {
+      console.warn("Could not fetch Slack user info:", error);
+      userInfo = { real_name: "Slack User", profile: { email: "" } };
     }
+
+    const email = userInfo.profile?.email;
+    const name = userInfo.real_name || userInfo.name || "Slack User";
+    const externalIds: IExternalIds = [{ provider: channel, id: userId }];
+
+    let { existing, person } = await peopleService.identify({
+      wid: agent.wid,
+      emails: email ? [email] : [],
+      externalIds,
+      name,
+    });
+
+    let personData = person;
+
+    if (!existing || !personData) {
+      personData = await peopleService.create2({
+        wid: agent.wid,
+        emails: email ? [email] : [],
+        phones: [],
+        externalIds,
+        name,
+      });
+    }
+
+    session = await chatService.createSlackSession(
+      agent.wid,
+      agent.id,
+      sessionId,
+      personData!.id,
+      channel
+    );
+
+    await peopleService.updatePastSessionIds(
+      agent.wid,
+      personData!.id,
+      session.id
+    );
+
     return session;
   }
 }

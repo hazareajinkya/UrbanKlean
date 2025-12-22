@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChatHeader } from "./chat-header";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { StarterMessages } from "./starter-messages";
 import { IAgent } from "@/lib/types/agent";
 import { IChatMessage } from "@/lib/types/session";
 import { Button } from "@/components/ui/button";
@@ -150,6 +151,13 @@ export const ChatPreview = ({
 
       {/* Preview overlay to indicate it's not interactive */}
       <div className="absolute inset-0 bg-transparent pointer-events-none" />
+
+      {/* Show starter messages in preview if enabled */}
+      <StarterMessages
+        agent={previewAgent}
+        onSelectMessage={() => {}}
+        disabled={true}
+      />
 
       <div className="relative">
         <ChatInput

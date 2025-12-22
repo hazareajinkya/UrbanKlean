@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Play, Send, X } from "lucide-react";
+import { Loader, Play, Send, X } from "lucide-react";
 import {
   IActionInput,
   IRequestType,
@@ -271,7 +271,7 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
               className="w-full gap-2 bg-white"
             >
               {isTestingRequest ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader className="w-4 h-4 animate-spin" />
               ) : (
                 <Send className="w-4 h-4" />
               )}
