@@ -119,6 +119,7 @@ class PeopleService {
     if (data.company !== undefined) update.company = data.company;
     if (data.title !== undefined) update.title = data.title;
     if (data.location !== undefined) update.location = data.location;
+    if (data.summary !== undefined) update.summary = data.summary;
 
     // externalIds (shallow merge)
     if (data.externalIds) {
@@ -154,6 +155,56 @@ class PeopleService {
     if (data.memories?.length) {
       const memories = data.memories.map(normNote).filter(Boolean);
       if (memories.length) update.memories = arrayUnion(...memories);
+    }
+
+    await updateDoc(personRef, update);
+    const person = await this.getPerson(wid, personId);
+    return person;
+  }
+  async replacePersonDetails(
+    wid: string,
+    personId: string,
+    data: Partial<IPerson>
+  ) {
+    const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
+    console.log("Updating person: ", personId, data);
+
+    const update: Record<string, any> = { updatedAt: new Date().toISOString() };
+
+    if (data.name !== undefined) update.name = data.name;
+    if (data.company !== undefined) update.company = data.company;
+    if (data.title !== undefined) update.title = data.title;
+    if (data.location !== undefined) update.location = data.location;
+    if (data.summary !== undefined) update.summary = data.summary;
+
+    // externalIds (shallow merge)
+    if (data.externalIds) {
+      for (const [k, v] of Object.entries(data.externalIds)) {
+        update[`externalIds.${k}`] = v;
+      }
+    }
+    if (data.emails?.length) {
+      update.emails = data.emails;
+    }
+
+    if (data.phones?.length) {
+      update.phones = data.phones;
+    }
+
+    if (data.tags?.length) {
+      update.tags = data.tags;
+    }
+
+    if (data.interests?.length) {
+      update.interests = data.interests;
+    }
+
+    if (data.notes?.length) {
+      update.notes = data.notes;
+    }
+
+    if (data.memories?.length) {
+      update.memories = data.memories;
     }
 
     await updateDoc(personRef, update);

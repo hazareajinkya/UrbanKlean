@@ -269,3 +269,77 @@ export const toSlug = (str: string) => {
 export const fromSlug = (slug: string) => {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+// Blocked personal email domains (prevent spam signups)
+export const BLOCKED_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "yahoo.co.in",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "msn.com",
+  "aol.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "protonmail.com",
+  "proton.me",
+  "zoho.com",
+  "yandex.com",
+  "mail.com",
+  "gmx.com",
+  "gmx.net",
+  "inbox.com",
+  "fastmail.com",
+  "tutanota.com",
+  "rediffmail.com",
+];
+
+// Blocked major company domains (prevent test/spam signups)
+export const BLOCKED_COMPANY_DOMAINS = [
+  "google.com",
+  "amazon.com",
+  "microsoft.com",
+  "apple.com",
+  "facebook.com",
+  "meta.com",
+  "netflix.com",
+  "twitter.com",
+  "x.com",
+  "linkedin.com",
+  "uber.com",
+  "airbnb.com",
+  "salesforce.com",
+  "oracle.com",
+  "ibm.com",
+  "intel.com",
+  "adobe.com",
+  "spotify.com",
+  "snap.com",
+  "tiktok.com",
+  "bytedance.com",
+  "paypal.com",
+  "stripe.com",
+  "shopify.com",
+  "tesla.com",
+  "nvidia.com",
+  "samsung.com",
+  "alibaba.com",
+  "tencent.com",
+  "baidu.com",
+];
+
+export const isBlockedEmailDomain = (email: string): boolean => {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return false;
+  return BLOCKED_EMAIL_DOMAINS.includes(domain);
+};
+
+export const isBlockedCompanyDomain = (domain: string): boolean => {
+  const normalized = normalizeDomain(domain).toLowerCase();
+  if (!normalized) return false;
+  return BLOCKED_COMPANY_DOMAINS.some(
+    (blocked) => normalized === blocked || normalized.endsWith(`.${blocked}`)
+  );
+};

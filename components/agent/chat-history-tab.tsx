@@ -220,8 +220,14 @@ const SessionList = ({
                 onClick={() => setcurrentSession(session)}
               >
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-medium text-foreground mb-0.5 ">
-                    {person ? person.name : renderVisitorID(session)}
+                  <h4 className="text-sm font-medium text-foreground mb-0.5 truncate ">
+                    {person
+                      ? person.name
+                        ? person.name
+                        : person.emails
+                        ? person.emails[0]
+                        : renderVisitorID(session)
+                      : renderVisitorID(session)}
                   </h4>
                   <p className="text-xs text-muted-foreground">
                     {formatHistoryDateTime(session.updatedAt)}
