@@ -221,7 +221,9 @@ const SessionList = ({
               >
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-medium text-foreground mb-0.5 ">
-                    {person ? person.name : renderVisitorID(session)}
+                    {person
+                      ? person.name || person.emails[0]
+                      : renderVisitorID(session)}
                   </h4>
                   <p className="text-xs text-muted-foreground">
                     {formatHistoryDateTime(session.updatedAt)}
@@ -246,6 +248,13 @@ const SessionList = ({
                     {session.status === "open" ? "Open" : "Closed"}
                   </span>
 
+                  <div>
+                    {session.geo?.city && (
+                      <span className="text-lg text-muted-foreground">
+                        {session.geo.flag}
+                      </span>
+                    )}
+                  </div>
                   <div>
                     {channel === "web" ? (
                       <Globe className="size-4.5" />
