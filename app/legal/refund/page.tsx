@@ -1,7 +1,22 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { coreConf } from "@/lib/utils/conf";
+
+export const metadata: Metadata = {
+  title: "Refund & Cancellation Policy | MagicalCX",
+  description:
+    "Learn about MagicalCX's refund and cancellation policy. Understand our transparent billing terms and cancellation process.",
+  openGraph: {
+    title: "Refund & Cancellation Policy | MagicalCX",
+    description:
+      "Learn about MagicalCX's refund and cancellation policy. Understand our transparent billing terms and cancellation process.",
+    url: `${coreConf.baseUrl}/legal/refund`,
+  },
+  alternates: {
+    canonical: `${coreConf.baseUrl}/legal/refund`,
+  },
+};
 
 export default function RefundPage() {
   return (

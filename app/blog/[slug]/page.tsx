@@ -1,5 +1,5 @@
 import { blogService } from "@/lib/services/blog-service";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -188,17 +188,42 @@ export default async function BlogPage({
       />
 
       <div className="w-full">
-        <header className="px-4 py-8 sm:py-12 border-b">
+        <header className="px-4 py-8 md:px-10 md:py-12 border-b">
           <div className="max-w-4xl mt-10">
             <div className="flex justify-between items-center mb-6">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-                aria-label="Back to blog listing"
+              <nav
+                aria-label="Breadcrumb"
+                className="flex items-center gap-2 text-sm"
               >
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                <span>Back to Blog</span>
-              </Link>
+                <Link
+                  href="/"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Home"
+                >
+                  Home
+                </Link>
+                <ChevronRight
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Link
+                  href="/blog"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Blog"
+                >
+                  Blog
+                </Link>
+                <ChevronRight
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <span
+                  className="text-foreground truncate max-w-[200px] sm:max-w-none"
+                  aria-current="page"
+                >
+                  {metaTitle}
+                </span>
+              </nav>
               <div className="md:hidden">
                 <BlogShareSidebar
                   url={canonicalUrl}
@@ -251,7 +276,7 @@ export default async function BlogPage({
         </header>
 
         {blog.featuredImage && (
-          <div className="relative w-full aspect-[21/9] overflow-hidden border-b">
+          <div className="relative w-full aspect-[21/9] overflow-hidden ">
             <Image
               src={blog.featuredImage || "/placeholder.svg"}
               alt={blog.title}

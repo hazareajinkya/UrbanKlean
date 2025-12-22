@@ -1,9 +1,22 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
-import { useScroll } from "framer-motion";
-import { useRef } from "react";
+import { coreConf } from "@/lib/utils/conf";
+
+export const metadata: Metadata = {
+  title: "Terms of Service | MagicalCX",
+  description:
+    "Terms of Service for MagicalCX. Review the rules, responsibilities, and conditions for using our website and AI-powered services.",
+  openGraph: {
+    title: "Terms of Service | MagicalCX",
+    description:
+      "Terms of Service for MagicalCX. Review the rules, responsibilities, and conditions for using our website and AI-powered services.",
+    url: `${coreConf.baseUrl}/legal/terms`,
+  },
+  alternates: {
+    canonical: `${coreConf.baseUrl}/legal/terms`,
+  },
+};
 
 export default function TermsPage() {
   return (

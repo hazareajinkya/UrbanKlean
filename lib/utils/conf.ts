@@ -48,6 +48,7 @@ export const waconf = {
 
 export const coreConf = {
   isProd: process.env.NEXT_PUBLIC_ENV === "production",
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
 };
 
 export const instaconf = {

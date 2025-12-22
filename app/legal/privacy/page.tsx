@@ -1,7 +1,22 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { coreConf } from "@/lib/utils/conf";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | MagicalCX",
+  description:
+    "Privacy Policy for MagicalCX. Learn how we collect, use, store, and protect your personal data when you use our website and services.",
+  openGraph: {
+    title: "Privacy Policy | MagicalCX",
+    description:
+      "Privacy Policy for MagicalCX. Learn how we collect, use, store, and protect your personal data when you use our website and services.",
+    url: `${coreConf.baseUrl}/legal/privacy`,
+  },
+  alternates: {
+    canonical: `${coreConf.baseUrl}/legal/privacy`,
+  },
+};
 
 export default function PrivacyPage() {
   return (

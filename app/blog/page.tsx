@@ -3,21 +3,22 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Calendar, ArrowRight } from "lucide-react";
+import { coreConf } from "@/lib/utils/conf";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "Blog | MagicalCX",
   description:
-    "Explore the latest blog posts, tutorials, and news from Magical CX.",
+    "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
   openGraph: {
-    title: "Blog",
+    title: "Blog | MagicalCX",
     description:
-      "Explore the latest blog posts, tutorials, and news from Magical CX.",
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/blog`,
+      "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
+    url: `${coreConf.baseUrl}/blog`,
   },
   alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/blog`,
+    canonical: `${coreConf.baseUrl}/blog`,
   },
 };
 
@@ -27,11 +28,10 @@ export default async function BlogListPage() {
   return (
     <div className="">
       <div className="section-container border-x flex flex-col items-center text-center py-16 sm:py-20 lg:py-24 px-4">
-        <h1 className="text-3xl leading-normal md:text-4xl mb-4 px-4 font-medium">
-          Exploring New Blogs
-        </h1>
-        <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
-          Thoughts on web development, design, and technology.
+        <h1 className="section-heading">The MagicalCX Blog</h1>
+        <p className="section-subheadline">
+          Thoughtful writing on empathy-first customer experience, AI-powered
+          support, and building better customer relationships.
         </p>
       </div>
 
