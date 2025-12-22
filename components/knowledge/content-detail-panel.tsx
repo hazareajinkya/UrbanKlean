@@ -175,7 +175,7 @@ export default function ContentDetailPanel({
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 placeholder="Enter content"
-                className="w-full text-sm leading-relaxed resize-none h-[300px]"
+                className="w-full bg-card text-sm leading-relaxed resize-none h-[300px]"
               />
             </div>
             {hasChanges && (

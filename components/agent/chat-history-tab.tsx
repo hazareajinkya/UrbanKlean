@@ -253,6 +253,13 @@ const SessionList = ({
                   </span>
 
                   <div>
+                    {session.geo?.city && (
+                      <span className="text-lg text-muted-foreground">
+                        {session.geo.flag}
+                      </span>
+                    )}
+                  </div>
+                  <div>
                     {channel === "web" ? (
                       <Globe className="size-4.5" />
                     ) : channel === "whatsapp" ? (

@@ -347,7 +347,7 @@ export const FeaturesSection = () => {
           {/* Features built to{" "}
           <span className="text-muted-foreground">scale your support</span> */}
           <span className="text-muted-foreground">Everything you need to</span>{" "}
-          deliver magical experience
+          deliver a magical experience
           {/* Why your team works better with{" "}
           <span className="font-serif italic">MagicalCX</span> */}
         </h2>

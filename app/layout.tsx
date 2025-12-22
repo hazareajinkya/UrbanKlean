@@ -4,6 +4,8 @@ import "./globals.css";
 import { ClientProvider } from "./client-provider";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { coreConf } from "@/lib/utils/conf";
+import { WidgetScript } from "@/components/widget-script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,11 +22,19 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "MagicalCX - Conversational AI for magical customer experience",
+  title: "MagicalCX | Empathy-First AI for magical customer experience",
   description:
-    "MagicalCX.ai is in the business of making your business successful and profitable—by improving your customers’ experience. We help you sell more, keep more, and spend less. We make your operations simpler, your teams more efficient, and your brand feel warm, effortless, and magical.",
-
-  // "Transform your customer support with Magical CX's AI-powered conversation platform. Deliver magical customer experiences through intelligent automation, seamless integrations, and personalized interactions that delight your customers and boost satisfaction.",
+    "MagicalCX is an empathy-first AI platform that transforms customer support into a growth engine—reducing costs, increasing revenue, and creating human-like customer experiences at scale.",
+  openGraph: {
+    title: "MagicalCX | Empathy-First AI for magical customer experience",
+    description:
+      "MagicalCX is an empathy-first AI platform that transforms customer support into a growth engine—reducing costs, increasing revenue, and creating human-like customer experiences at scale.",
+    url: coreConf.baseUrl,
+    type: "website",
+  },
+  alternates: {
+    canonical: coreConf.baseUrl,
+  },
 };
 
 export default function RootLayout({
@@ -39,6 +49,7 @@ export default function RootLayout({
       >
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
+        <WidgetScript />
         <Script
           defer
           data-website-id="dfid_Y7xkducRuPS0Flwujh232"

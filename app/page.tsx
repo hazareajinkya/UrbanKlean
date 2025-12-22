@@ -30,7 +30,7 @@ export default function LandingPage() {
       <Navbar whyRefProgress={whyRefProgress} ctaRefProgress={ctaRefProgress} />
 
       <HeroSection />
-      <SocialProofStrip />
+      {/* <SocialProofStrip /> */}
       <OldNewWay />
       <FeaturesSection />
 

@@ -44,7 +44,7 @@ export const Navbar = ({
   const navLinks = [
     { href: "/#features", label: "Features" },
     { href: "/pricing", label: "Pricing" },
-    { href: "/blog", label: "Resources" },
+    { href: "/blog", label: "Blog" },
     { href: "/about", label: "About" },
   ];
 
@@ -172,7 +172,7 @@ export const Navbar = ({
                 onClick={openDemoModal}
                 aria-label="Book Demo"
                 tabIndex={0}
-                className={`text-sm rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
+                className={`cursor-pointer text-sm rounded-full font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary ${
                   isScrolled
                     ? "px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
                     : "px-0 py-1.5 text-foreground hover:bg-muted focus:border-2 focus:border-muted-foreground"

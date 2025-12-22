@@ -134,6 +134,8 @@ export const Footer = () => {
             <Link
               key={social.name}
               href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={social.name}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
