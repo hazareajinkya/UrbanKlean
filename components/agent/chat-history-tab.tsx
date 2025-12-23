@@ -220,9 +220,13 @@ const SessionList = ({
                 onClick={() => setcurrentSession(session)}
               >
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-medium text-foreground mb-0.5 ">
+                  <h4 className="text-sm font-medium text-foreground mb-0.5 truncate ">
                     {person
-                      ? person.name || person.emails[0]
+                      ? person.name
+                        ? person.name
+                        : person.emails
+                        ? person.emails[0]
+                        : renderVisitorID(session)
                       : renderVisitorID(session)}
                   </h4>
                   <p className="text-xs text-muted-foreground">

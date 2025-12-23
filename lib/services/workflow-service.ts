@@ -26,12 +26,12 @@ class WorkflowService {
     workflowId,
     updates,
   }: {
-    aid: string;
+    aid: string;  
     workflowId: string;
     updates: Partial<IWorkflow>;
   }) {
     await updateDoc(doc(db, `agents/${aid}/workflows/${workflowId}`), {
-      updates,
+      ...updates,
       updatedAt: new Date().toISOString(),
     });
   }

@@ -16,7 +16,7 @@ export const usePeopleActions = () => {
       personId: string;
       updates: Partial<IPerson>;
     }) => {
-      return await peopleService.updatePerson(wid, personId, updates);
+      return await peopleService.replacePersonDetails(wid, personId, updates);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: peopleKey(variables.wid) });
