@@ -133,6 +133,7 @@ export async function POST(req: Request) {
     const totalTokens = (await result.usage).totalTokens;
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
+      sendReasoning: false,
       onFinish: async ({ responseMessage }) => {
         const aiMessage = {
           ...responseMessage,
