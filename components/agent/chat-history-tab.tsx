@@ -581,47 +581,14 @@ const HistoryMessageList = ({
   const brandColor = agent.customization.primaryColor;
   const fontColor = getContrastingColor(brandColor);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  const summaryScrollRef = useRef<HTMLDivElement>(null);
-  const [accordionValue, setAccordionValue] = useState<string>("chat");
 
   const scrollToBottom = () => {
-    if (accordionValue === "chat" && chatScrollRef.current) {
-      chatScrollRef.current.scrollTo({
-        top: chatScrollRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentSession?.messages, accordionValue]);
-
-  useEffect(() => {
-    // Reset to chat when session changes
-    setAccordionValue("chat");
-  }, [currentSession?.id]);
-
-  const handleAccordionChange = (value: string) => {
-    const newValue = value || "chat";
-    setAccordionValue(newValue);
-
-    // Scroll to top when switching to summary, or to bottom when switching to chat
-    setTimeout(() => {
-      if (newValue === "summary" && summaryScrollRef.current) {
-        summaryScrollRef.current.scrollTo({
-          top: 0,
-          behavior: "smooth",
-        });
-      } else if (newValue === "chat" && chatScrollRef.current) {
-        chatScrollRef.current.scrollTo({
-          top: chatScrollRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 100);
-  };
+  }, [currentSession?.messages]);
 
   const persons = useHistoryStore((state) => state.persons);
   return (
@@ -655,221 +622,450 @@ const HistoryMessageList = ({
             )}
           </div>
 
-          {/* Chat Messages and Summary Accordion */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <Accordion
-              type="single"
-              collapsible
-              value={accordionValue}
-              onValueChange={handleAccordionChange}
-              className="flex-1 flex flex-col overflow-hidden"
-            >
-              <AccordionItem
-                value="chat"
-                className={clsx(
-                  "border-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-                  accordionValue === "chat" ? "flex-1" : "flex-shrink-0"
-                )}
+          {/* Chat Messages */}
+          <div className="p-4 pb-8 space-y-4 prose-p:my-0 flex-1 overflow-y-auto">
+            {currentSession.messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
               >
-                <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
-                  Chat
-                </AccordionTrigger>
-                <AccordionContent
-                  disableAnimation
-                  containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
-                  className="flex-1 flex flex-col min-h-0 h-full p-0"
-                >
-                  <div
-                    ref={chatScrollRef}
-                    className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 space-y-4 prose-p:my-0 scroll-smooth transition-opacity duration-200"
-                    style={{ opacity: accordionValue === "chat" ? 1 : 0 }}
-                  >
-                    {currentSession.messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${
-                          message.role === "user"
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={clsx(
-                            "max-w-[90%] md:max-w-[75%] leading-7",
-                            message.role === "user" &&
-                              userMessageStyle(message),
-                            message.role === "assistant" && [
-                              assistantMessageStyle(message),
-                            ]
-                          )}
-                          style={{
-                            backgroundColor:
-                              message.role === "user" ? brandColor : "",
-                            color: message.role === "user" ? fontColor : "",
-                          }}
-                        >
-                          {message.role === "assistant" ? (
-                            message.parts?.map((part, partIndex) => {
-                              if (part.type === "tool-collectInformation") {
-                                return (
-                                  <div
-                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                                    key={partIndex}
-                                  >
-                                    <div className="flex items-center gap-2 text-sm md:text-sm">
-                                      <User className="w-4 h-4" />
-                                      Personalized response
-                                    </div>
-                                  </div>
-                                );
-                              }
-
-                              if (part.type === "dynamic-tool") {
-                                return (
-                                  <div
-                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                                    key={partIndex}
-                                  >
-                                    <div className="flex items-center gap-2 text-sm md:text-sm">
-                                      <User className="w-4 h-4" />
-                                      {part.toolName}
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              if (part.type === "tool-searchKnowledge") {
-                                return (
-                                  <div
-                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                                    key={partIndex}
-                                  >
-                                    <div className="flex items-center gap-2 text-sm md:text-sm">
-                                      <User className="w-4 h-4" />
-                                      Searched knowledge base
-                                    </div>
-                                  </div>
-                                );
-                              }
-
-                              if (part.type === "text") {
-                                return (
-                                  <div key={partIndex}>
-                                    <div
-                                      className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
-                                      key={partIndex}
-                                    >
-                                      <Streamdown
-                                        components={{
-                                          a: ({ href, children }) => (
-                                            <a
-                                              href={href}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
-                                            >
-                                              {children}
-                                            </a>
-                                          ),
-                                        }}
-                                      >
-                                        {part.text}
-                                      </Streamdown>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                            })
-                          ) : message.role === "user" ? (
-                            <div
-                              className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
-                              style={{ color: fontColor }}
-                            >
-                              {message.parts?.map((part, partIndex) => (
-                                <div key={partIndex} className="">
-                                  <Streamdown
-                                    components={{
-                                      a: ({ href, children }) => (
-                                        <a
-                                          href={href}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="font-medium  transition-colors underline underline-offset-2"
-                                          style={{ color: fontColor }}
-                                        >
-                                          {children}
-                                        </a>
-                                      ),
-                                    }}
-                                  >
-                                    {part.type === "text"
-                                      ? part.text ?? ""
-                                      : ""}
-                                  </Streamdown>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <></>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {currentSession.messages.length === 0 && (
-                      <div className="text-center text-muted-foreground py-8">
-                        No messages in this conversation yet.
-                      </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              {(currentSession.chatSummary ||
-                currentSession.status === "closed" ||
-                (currentSession as any).status === "inactive" ||
-                (currentSession as any).closedAt) && (
-                <AccordionItem
-                  value="summary"
+                <div
                   className={clsx(
-                    "border-0 border-t flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
-                    accordionValue === "summary" ? "flex-1" : "flex-shrink-0"
+                    "max-w-[90%] md:max-w-[75%] leading-7",
+                    message.role === "user" && userMessageStyle(message),
+                    message.role === "assistant" && [
+                      assistantMessageStyle(message),
+                    ]
                   )}
+                  style={{
+                    backgroundColor: message.role === "user" ? brandColor : "",
+                    color: message.role === "user" ? fontColor : "",
+                  }}
                 >
-                  <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
-                    Summary
-                  </AccordionTrigger>
-                  <AccordionContent
-                    disableAnimation
-                    containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
-                    className="flex-1 flex flex-col min-h-0 h-full p-0"
-                  >
+                  {message.role === "assistant" ? (
+                    message.parts?.map((part, partIndex) => {
+                      if (part.type === "tool-collectInformation") {
+                        return (
+                          <div
+                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                            key={partIndex}
+                          >
+                            <div className="flex items-center gap-2 text-sm md:text-sm">
+                              <User className="w-4 h-4" />
+                              Personalized response
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (part.type === "dynamic-tool") {
+                        return (
+                          <div
+                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                            key={partIndex}
+                          >
+                            <div className="flex items-center gap-2 text-sm md:text-sm">
+                              <User className="w-4 h-4" />
+                              {part.toolName}
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (part.type === "tool-searchKnowledge") {
+                        return (
+                          <div
+                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                            key={partIndex}
+                          >
+                            <div className="flex items-center gap-2 text-sm md:text-sm">
+                              <User className="w-4 h-4" />
+                              Searched knowledge base
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (part.type === "text") {
+                        return (
+                          <div key={partIndex}>
+                            <div
+                              className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                              key={partIndex}
+                            >
+                              <Streamdown
+                                components={{
+                                  a: ({ href, children }) => (
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
+                                    >
+                                      {children}
+                                    </a>
+                                  ),
+                                }}
+                              >
+                                {part.text}
+                              </Streamdown>
+                            </div>
+                          </div>
+                        );
+                      }
+                    })
+                  ) : message.role === "user" ? (
                     <div
-                      ref={summaryScrollRef}
-                      className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 scroll-smooth transition-opacity duration-200"
-                      style={{ opacity: accordionValue === "summary" ? 1 : 0 }}
+                      className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                      style={{ color: fontColor }}
                     >
-                      {currentSession.chatSummary ? (
-                        <SummaryContent summary={currentSession.chatSummary} />
-                      ) : (
-                        <div className="text-center text-muted-foreground py-8">
-                          <p className="text-sm">
-                            No summary available for this session.
-                          </p>
+                      {message.parts?.map((part, partIndex) => (
+                        <div key={partIndex} className="">
+                          <Streamdown
+                            components={{
+                              a: ({ href, children }) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium  transition-colors underline underline-offset-2"
+                                  style={{ color: fontColor }}
+                                >
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {part.type === "text" ? part.text ?? "" : ""}
+                          </Streamdown>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-            </Accordion>
+                  ) : (
+                    <></>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {currentSession.messages.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                No messages in this conversation yet.
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
         </>
       )}
     </div>
   );
 };
+
+// const HistoryMessageList = ({
+//   agent,
+//   currentSession,
+//   isCollapsed,
+//   onCollapsedChange,
+// }: {
+//   agent: IAgent;
+//   currentSession?: ISession;
+//   isCollapsed: boolean;
+//   onCollapsedChange: (c: boolean) => void;
+// }) => {
+//   const brandColor = agent.customization.primaryColor;
+//   const fontColor = getContrastingColor(brandColor);
+//   const messagesEndRef = useRef<HTMLDivElement>(null);
+//   const chatScrollRef = useRef<HTMLDivElement>(null);
+//   const summaryScrollRef = useRef<HTMLDivElement>(null);
+//   const [accordionValue, setAccordionValue] = useState<string>("chat");
+
+//   const scrollToBottom = () => {
+//     if (accordionValue === "chat" && chatScrollRef.current) {
+//       chatScrollRef.current.scrollTo({
+//         top: chatScrollRef.current.scrollHeight,
+//         behavior: "smooth",
+//       });
+//     }
+//   };
+
+//   useEffect(() => {
+//     scrollToBottom();
+//   }, [currentSession?.messages, accordionValue]);
+
+//   useEffect(() => {
+//     // Reset to chat when session changes
+//     setAccordionValue("chat");
+//   }, [currentSession?.id]);
+
+//   const handleAccordionChange = (value: string) => {
+//     const newValue = value || "chat";
+//     setAccordionValue(newValue);
+
+//     // Scroll to top when switching to summary, or to bottom when switching to chat
+//     setTimeout(() => {
+//       if (newValue === "summary" && summaryScrollRef.current) {
+//         summaryScrollRef.current.scrollTo({
+//           top: 0,
+//           behavior: "smooth",
+//         });
+//       } else if (newValue === "chat" && chatScrollRef.current) {
+//         chatScrollRef.current.scrollTo({
+//           top: chatScrollRef.current.scrollHeight,
+//           behavior: "smooth",
+//         });
+//       }
+//     }, 100);
+//   };
+
+//   const persons = useHistoryStore((state) => state.persons);
+//   return (
+//     <div className="h-full flex flex-col">
+//       {currentSession && (
+//         <>
+//           <div className="border-b bg-muted h-14 px-4 flex justify-between items-center flex-shrink-0">
+//             <div className="flex-1 min-w-0">
+//               <h4 className="text-sm font-medium text-foreground mb-0.5">
+//                 {currentSession.personId && persons[currentSession.personId]
+//                   ? persons[currentSession.personId].name
+//                   : `Visitor-${currentSession.id.split("-")[0]}`}
+//               </h4>
+//               <p className="text-xs text-muted-foreground">
+//                 {formatDate(currentSession.updatedAt)}
+//               </p>
+//             </div>
+//             {currentSession.personId && (
+//               <Button
+//                 variant={"ghost"}
+//                 size={"icon"}
+//                 onClick={() => onCollapsedChange(!isCollapsed)}
+//                 className="transition-all text-muted-foreground hover:text-primary pr-0 w-min flex-shrink-0"
+//               >
+//                 {isCollapsed ? (
+//                   <PanelRightOpen className="size-4.5" />
+//                 ) : (
+//                   <PanelRightClose className="size-4.5" />
+//                 )}
+//               </Button>
+//             )}
+//           </div>
+
+//           {/* Chat Messages and Summary Accordion */}
+//           <div className="flex-1 overflow-hidden flex flex-col">
+//             <Accordion
+//               type="single"
+//               collapsible
+//               value={accordionValue}
+//               onValueChange={handleAccordionChange}
+//               className="flex-1 flex flex-col overflow-hidden"
+//             >
+//               <AccordionItem
+//                 value="chat"
+//                 className={clsx(
+//                   "border-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+//                   accordionValue === "chat" ? "flex-1" : "flex-shrink-0"
+//                 )}
+//               >
+//                 <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
+//                   Chat
+//                 </AccordionTrigger>
+//                 <AccordionContent
+//                   disableAnimation
+//                   containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
+//                   className="flex-1 flex flex-col min-h-0 h-full p-0"
+//                 >
+//                   <div
+//                     ref={chatScrollRef}
+//                     className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 space-y-4 prose-p:my-0 scroll-smooth transition-opacity duration-200"
+//                     style={{ opacity: accordionValue === "chat" ? 1 : 0 }}
+//                   >
+//                     {currentSession.messages.map((message) => (
+//                       <div
+//                         key={message.id}
+//                         className={`flex ${
+//                           message.role === "user"
+//                             ? "justify-end"
+//                             : "justify-start"
+//                         }`}
+//                       >
+//                         <div
+//                           className={clsx(
+//                             "max-w-[90%] md:max-w-[75%] leading-7",
+//                             message.role === "user" &&
+//                               userMessageStyle(message),
+//                             message.role === "assistant" && [
+//                               assistantMessageStyle(message),
+//                             ]
+//                           )}
+//                           style={{
+//                             backgroundColor:
+//                               message.role === "user" ? brandColor : "",
+//                             color: message.role === "user" ? fontColor : "",
+//                           }}
+//                         >
+//                           {message.role === "assistant" ? (
+//                             message.parts?.map((part, partIndex) => {
+//                               if (part.type === "tool-collectInformation") {
+//                                 return (
+//                                   <div
+//                                     className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+//                                     key={partIndex}
+//                                   >
+//                                     <div className="flex items-center gap-2 text-sm md:text-sm">
+//                                       <User className="w-4 h-4" />
+//                                       Personalized response
+//                                     </div>
+//                                   </div>
+//                                 );
+//                               }
+
+//                               if (part.type === "dynamic-tool") {
+//                                 return (
+//                                   <div
+//                                     className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+//                                     key={partIndex}
+//                                   >
+//                                     <div className="flex items-center gap-2 text-sm md:text-sm">
+//                                       <User className="w-4 h-4" />
+//                                       {part.toolName}
+//                                     </div>
+//                                   </div>
+//                                 );
+//                               }
+//                               if (part.type === "tool-searchKnowledge") {
+//                                 return (
+//                                   <div
+//                                     className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+//                                     key={partIndex}
+//                                   >
+//                                     <div className="flex items-center gap-2 text-sm md:text-sm">
+//                                       <User className="w-4 h-4" />
+//                                       Searched knowledge base
+//                                     </div>
+//                                   </div>
+//                                 );
+//                               }
+
+//                               if (part.type === "text") {
+//                                 return (
+//                                   <div key={partIndex}>
+//                                     <div
+//                                       className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+//                                       key={partIndex}
+//                                     >
+//                                       <Streamdown
+//                                         components={{
+//                                           a: ({ href, children }) => (
+//                                             <a
+//                                               href={href}
+//                                               target="_blank"
+//                                               rel="noopener noreferrer"
+//                                               className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
+//                                             >
+//                                               {children}
+//                                             </a>
+//                                           ),
+//                                         }}
+//                                       >
+//                                         {part.text}
+//                                       </Streamdown>
+//                                     </div>
+//                                   </div>
+//                                 );
+//                               }
+//                             })
+//                           ) : message.role === "user" ? (
+//                             <div
+//                               className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+//                               style={{ color: fontColor }}
+//                             >
+//                               {message.parts?.map((part, partIndex) => (
+//                                 <div key={partIndex} className="">
+//                                   <Streamdown
+//                                     components={{
+//                                       a: ({ href, children }) => (
+//                                         <a
+//                                           href={href}
+//                                           target="_blank"
+//                                           rel="noopener noreferrer"
+//                                           className="font-medium  transition-colors underline underline-offset-2"
+//                                           style={{ color: fontColor }}
+//                                         >
+//                                           {children}
+//                                         </a>
+//                                       ),
+//                                     }}
+//                                   >
+//                                     {part.type === "text"
+//                                       ? part.text ?? ""
+//                                       : ""}
+//                                   </Streamdown>
+//                                 </div>
+//                               ))}
+//                             </div>
+//                           ) : (
+//                             <></>
+//                           )}
+//                         </div>
+//                       </div>
+//                     ))}
+
+//                     {currentSession.messages.length === 0 && (
+//                       <div className="text-center text-muted-foreground py-8">
+//                         No messages in this conversation yet.
+//                       </div>
+//                     )}
+
+//                     <div ref={messagesEndRef} />
+//                   </div>
+//                 </AccordionContent>
+//               </AccordionItem>
+
+//               {(currentSession.chatSummary ||
+//                 currentSession.status === "closed" ||
+//                 (currentSession as any).status === "inactive" ||
+//                 (currentSession as any).closedAt) && (
+//                 <AccordionItem
+//                   value="summary"
+//                   className={clsx(
+//                     "border-0 border-t flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+//                     accordionValue === "summary" ? "flex-1" : "flex-shrink-0"
+//                   )}
+//                 >
+//                   <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
+//                     Summary
+//                   </AccordionTrigger>
+//                   <AccordionContent
+//                     disableAnimation
+//                     containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
+//                     className="flex-1 flex flex-col min-h-0 h-full p-0"
+//                   >
+//                     <div
+//                       ref={summaryScrollRef}
+//                       className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 scroll-smooth transition-opacity duration-200"
+//                       style={{ opacity: accordionValue === "summary" ? 1 : 0 }}
+//                     >
+//                       {currentSession.chatSummary ? (
+//                         <SummaryContent summary={currentSession.chatSummary} />
+//                       ) : (
+//                         <div className="text-center text-muted-foreground py-8">
+//                           <p className="text-sm">
+//                             No summary available for this session.
+//                           </p>
+//                         </div>
+//                       )}
+//                     </div>
+//                   </AccordionContent>
+//                 </AccordionItem>
+//               )}
+//             </Accordion>
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
 
 const getEmotionIcon = (sentiment: "positive" | "negative" | "neutral") => {
   switch (sentiment) {
