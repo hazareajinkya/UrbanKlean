@@ -27,6 +27,9 @@ export interface ISession {
   fromPage?: string;
   createdAt: string;
   updatedAt: string;
+  chatSummary?: {
+    sentiment: "positive" | "negative" | "neutral";
+  };
 }
 
 export interface ITraingSession {
