@@ -24,6 +24,10 @@ export interface ISession {
   channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
+
+  fromPage?: string;
+  createdAt: string;
+  updatedAt: string;
   chatSummary?: {
     questionUseAsked: string[];
     summary: string;
@@ -45,12 +49,6 @@ export interface ISession {
       | "other";
     riskLevel: "none" | "low" | "medium" | "high" | "critical";
     agentNotes: string | undefined;
-  };
-  fromPage?: string;
-  createdAt: string;
-  updatedAt: string;
-  chatSummary?: {
-    sentiment: "positive" | "negative" | "neutral";
   };
 }
 

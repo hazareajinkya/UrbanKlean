@@ -38,7 +38,7 @@ export const POST = async (req: Request) => {
     const mergedExternalIds: IExternalIds = persons
       .map((p) => p.externalIds)
       .flat();
-    const mergedPastSessionIds: string[] = persons
+    const mergedPastSessionIds: { aid: string; sid: string }[] = persons
       .map((p) => p.pastSessionIds)
       .flat();
     const mergedPerson: IPerson = {

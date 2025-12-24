@@ -58,7 +58,7 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     const q = buildQuery(aid);
 
     const newUnsubscribe = onSnapshot(q, (snapshot) => {
-      const { history, nextQuery } = get();
+      const { history, nextQuery, persons } = get();
       const snapshotSessions = snapshot.docs.map(
         (doc) => doc.data() as ISession
       );
@@ -83,9 +83,20 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
         }
       }
 
-      // 2. Update or Add sessions from the real-time snapshot.
+      // 2. Track sessions that are new or updated
+      const sessionsNeedingPersonFetch = new Set<string>();
+
       snapshotSessions.forEach((session) => {
+        const existing = historyMap.get(session.id);
+        const isNew = !existing;
+        const isUpdated = existing && existing.updatedAt !== session.updatedAt;
+
         historyMap.set(session.id, session);
+
+        // Fetch person if session is new or updated
+        if ((isNew || isUpdated) && session.personId) {
+          sessionsNeedingPersonFetch.add(session.personId);
+        }
       });
 
       // 3. Convert back to array.
@@ -95,10 +106,12 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       // Optimization: Sort using string comparison (ISO dates sort lexicographically)
       mergedHistory.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1));
 
-      const personIds = mergedHistory
-        .map((session) => session.personId)
-        .filter((id) => id !== undefined);
-      get().getPersonsInfo(personIds);
+      // 5. Only fetch people for new/updated sessions (and deduplicate)
+      const personIdsToFetch = Array.from(sessionsNeedingPersonFetch);
+
+      if (personIdsToFetch.length > 0) {
+        get().getPersonsInfo(personIdsToFetch, aid);
+      }
 
       set({
         history: mergedHistory,
@@ -112,15 +125,39 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     set({ unsubscribe: newUnsubscribe });
   },
 
-  getPersonsInfo: async (ids: string[]) => {
+  getPersonsInfo: async (ids: string[], aid?: string) => {
     const wid = getwid();
 
-    const people = await peopleService.getPersons(wid, ids);
+    // 1. Deduplicate IDs
+    const uniqueIds = [...new Set(ids)];
 
-    const map = people.reduce((acc, person) => {
+    if (uniqueIds.length === 0) return;
+
+    // 2. Chunk IDs into batches of 30 (Firestore 'in' query limit)
+    const CHUNK_SIZE = 30;
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+      chunks.push(uniqueIds.slice(i, i + CHUNK_SIZE));
+    }
+
+    // 3. Fetch all chunks in parallel and merge results
+    const allPeoplePromises = chunks.map((chunk) =>
+      peopleService.getPersons(wid, chunk)
+    );
+    const allPeopleArrays = await Promise.all(allPeoplePromises);
+    const allPeople = allPeopleArrays.flat();
+
+    // 4. Process and filter pastSessionIds for all fetched people
+    const map = allPeople.reduce((acc, person) => {
       person.pastSessionIds = person.pastSessionIds?.reverse() ?? [];
-      acc[person.id] = person;
 
+      if (aid) {
+        person.pastSessionIds = person.pastSessionIds.filter(
+          (s) => s.aid === aid
+        );
+      }
+
+      acc[person.id] = person;
       return acc;
     }, {} as Record<string, IPerson>);
 
@@ -170,10 +207,15 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
         b.updatedAt > a.updatedAt ? 1 : -1
       );
 
+      // Only fetch people for new sessions that aren't already loaded
+      const { persons } = get();
       const personIds = data
         .map((s) => s.personId)
-        .filter((id) => id !== undefined);
-      get().getPersonsInfo(personIds);
+        .filter((id): id is string => id !== undefined && !persons[id]);
+
+      if (personIds.length > 0) {
+        get().getPersonsInfo(personIds, aid);
+      }
 
       set({ history: updatedHistory, nextQuery: next });
 
@@ -213,7 +255,7 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
 
         // Fetch person info if session has a personId
         if (session.personId) {
-          get().getPersonsInfo([session.personId]);
+          get().getPersonsInfo([session.personId], aid);
         }
       }
     } catch (error) {
@@ -240,7 +282,7 @@ export interface IHistoryStore {
   sethasMore: (hasMore: boolean) => void;
   getChatsCount: (query: Query) => Promise<void>;
 
-  getPersonsInfo: (ids: string[]) => Promise<void>;
+  getPersonsInfo: (ids: string[], aid?: string) => Promise<void>;
   fetchNextSessions: (aid: string) => Promise<void>;
   fetchAndAddSessionToHistory: (
     sessionId: string,

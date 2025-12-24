@@ -3,8 +3,11 @@ import {
   collection,
   doc,
   getDocs,
+  limit,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../clients/firebase";
 import { IUsage } from "../types/usage";
@@ -42,7 +45,10 @@ class UsageService {
       }
 
       const ownerId = workspace.ownerId;
-      const usageCollection = collection(db, `users/${ownerId}/usage`);
+      const usageCollection = query(
+        collection(db, `users/${ownerId}/usage`),
+        limit(2)
+      );
       const snapshot = await getDocs(usageCollection);
       const allUsageEvents: IUsage[] = [];
 

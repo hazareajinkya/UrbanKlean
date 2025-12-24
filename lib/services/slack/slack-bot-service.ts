@@ -205,11 +205,12 @@ class SlackBotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds(
-      agent.wid,
-      personData!.id,
-      session.id
-    );
+    await peopleService.updatePastSessionIds({
+      wid: agent.wid,
+      personId: personData!.id,
+      sessionId: session.id,
+      aid: agent.id,
+    });
 
     return session;
   }

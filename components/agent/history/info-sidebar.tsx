@@ -112,8 +112,10 @@ export const InfoSidebar = ({
   const hasMemories = person.memories?.length > 0;
   const hasNotes = person.notes?.length > 0;
   const hasSummary = person.summary?.length > 0;
-  const hasPastSessions =
-    person.pastSessionIds && person.pastSessionIds.length > 0;
+  // Filtered in store
+  const filteredPastSessions = person.pastSessionIds || [];
+
+  const hasPastSessions = filteredPastSessions.length > 0;
 
   return (
     <div className="h-full flex flex-col bg-card">
@@ -304,10 +306,11 @@ export const InfoSidebar = ({
         {hasPastSessions && (
           <div className="px-5 py-4">
             <SectionLabel>
-              Conversations ({person.pastSessionIds.length})
+              Conversations ({filteredPastSessions.length})
             </SectionLabel>
             <div className="space-y-1">
-              {person.pastSessionIds.slice(0, 8).map((sessionId) => {
+              {filteredPastSessions.slice(0, 8).map((sessionItem) => {
+                const sessionId = sessionItem.sid;
                 const isCurrentSession = sessionId === currentSession.id;
                 const session = sessions.find((s) => s.id === sessionId);
                 const isLoading = loadingSessionIds.has(sessionId);
@@ -351,9 +354,9 @@ export const InfoSidebar = ({
                   </button>
                 );
               })}
-              {person.pastSessionIds.length > 8 && (
+              {filteredPastSessions.length > 8 && (
                 <p className="text-[10px] text-muted-foreground px-2 pt-1">
-                  +{person.pastSessionIds.length - 8} more conversations
+                  +{filteredPastSessions.length - 8} more conversations
                 </p>
               )}
             </div>

@@ -35,7 +35,7 @@ export const POST = async (req: Request) => {
     const mergedExternalIds: IExternalIds = persons
       .map((p) => p.externalIds)
       .flat();
-    const mergedPastSessionIds: string[] = persons
+    const mergedPastSessionIds: { aid: string; sid: string }[] = persons
       .map((p) => p.pastSessionIds)
       .flat();
     const mergedPerson: IPerson = {
@@ -91,7 +91,7 @@ const MockData: IPerson[] = [
     memories: ["Asks for multilingual nutritional labels frequently"],
     summary: "Returning customer, interested in detailed product info.",
     notes: ["Responds best at night"],
-    pastSessionIds: ["wa_sess_21"],
+    pastSessionIds: [{ aid: "agent_1", sid: "wa_sess_21" }],
     createdAt: "2025-10-22T09:15:00.000Z",
     updatedAt: "2025-11-11T09:01:00.000Z",
   },
@@ -114,7 +114,10 @@ const MockData: IPerson[] = [
     memories: ["Frequently buys ghee in bulk"],
     summary: "High-value customer, strong preference for premium food items.",
     notes: ["Requested express shipping multiple times"],
-    pastSessionIds: ["slack_sess_11", "slack_sess_12"],
+    pastSessionIds: [
+      { aid: "agent_2", sid: "slack_sess_11" },
+      { aid: "agent_2", sid: "slack_sess_12" },
+    ],
     createdAt: "2025-08-05T11:00:00.000Z",
     updatedAt: "2025-11-09T12:30:00.000Z",
   },
@@ -137,7 +140,10 @@ const MockData: IPerson[] = [
     memories: ["Asked about LAN extension setup", "Uses VPN for gaming"],
     summary: "Tech-savvy gamer. Mostly talks about networking issues.",
     notes: ["Prefers WhatsApp over other platforms"],
-    pastSessionIds: ["web_sess_01", "web_sess_02"],
+    pastSessionIds: [
+      { aid: "agent_3", sid: "web_sess_01" },
+      { aid: "agent_3", sid: "web_sess_02" },
+    ],
     createdAt: "2025-11-01T11:02:00.000Z",
     updatedAt: "2025-11-10T15:20:00.000Z",
   },
