@@ -9,6 +9,7 @@ import {
   formatDateTime,
   formatHistoryDateTime,
   getContrastingColor,
+  getEmotionIcon,
 } from "@/lib/utils";
 import clsx from "clsx";
 import { consumeStream, UIMessage } from "ai";
@@ -38,6 +39,8 @@ import {
   Flag,
   Shield,
   FileText,
+  EyeIcon,
+  MessageSquareIcon,
 } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { Button } from "../ui/button";
@@ -50,6 +53,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ChatSummary } from "./history/chat-summary";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -76,8 +80,6 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
     return () => unsubscribeHistory();
   }, [agent.id]);
 
-  // Optimize: Use simple find instead of rebuilding Map on every render
-  // Finding one item in an array is much cheaper (O(N) scan) than building a Map (O(N) allocations + hashing)
   const currentSession = useMemo(
     () => (sessionId ? history?.find((s) => s.id === sessionId) : undefined),
     [history, sessionId]
@@ -157,250 +159,6 @@ const userMessageStyle = (message: UIMessage) =>
       ? "rounded-t-2xl rounded-bl-2xl"
       : "rounded-2xl"
   );
-
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2.5">
-    {children}
-  </p>
-);
-
-const SummaryContent = ({
-  summary,
-}: {
-  summary: NonNullable<ISession["chatSummary"]>;
-}) => {
-  const getResolutionBadgeColor = (status: string) => {
-    return status === "resolved"
-      ? "text-green-700 dark:text-green-400 bg-green-400/20 dark:bg-green-500/20"
-      : "text-orange-700 dark:text-orange-400 bg-orange-400/20 dark:bg-orange-500/20";
-  };
-
-  const getSentimentBadgeColor = (sentiment: string) => {
-    switch (sentiment) {
-      case "positive":
-        return "text-green-700 dark:text-green-400 bg-green-400/20 dark:bg-green-500/20";
-      case "negative":
-        return "text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20";
-      default:
-        return "text-muted-foreground bg-muted-foreground/10";
-    }
-  };
-
-  const getRiskBadgeColor = (risk: string) => {
-    switch (risk) {
-      case "critical":
-        return "text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20";
-      case "high":
-        return "text-orange-700 dark:text-orange-400 bg-orange-400/20 dark:bg-orange-500/20";
-      case "medium":
-        return "text-yellow-700 dark:text-yellow-400 bg-yellow-400/20 dark:bg-yellow-500/20";
-      case "low":
-        return "text-blue-700 dark:text-blue-400 bg-blue-400/20 dark:bg-blue-500/20";
-      default:
-        return "text-muted-foreground bg-muted-foreground/10";
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Main Summary */}
-      {summary.summary && (
-        <div>
-          <SectionLabel>Summary</SectionLabel>
-          <p className="text-sm text-foreground leading-relaxed">
-            {summary.summary}
-          </p>
-        </div>
-      )}
-
-      {/* Status Badges Row */}
-      <div className="flex flex-wrap gap-3">
-        {summary.resolutionStatus && (
-          <div className="flex items-center gap-2">
-            <span
-              className={clsx(
-                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
-                getResolutionBadgeColor(summary.resolutionStatus)
-              )}
-            >
-              {summary.resolutionStatus === "resolved" ? (
-                <CheckCircle2 className="w-3 h-3" />
-              ) : (
-                <XCircle className="w-3 h-3" />
-              )}
-              {summary.resolutionStatus === "resolved"
-                ? "Resolved"
-                : "Unresolved"}
-            </span>
-          </div>
-        )}
-
-        {summary.sentiment && (
-          <div className="flex items-center gap-2">
-            <span
-              className={clsx(
-                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
-                getSentimentBadgeColor(summary.sentiment)
-              )}
-            >
-              <MessageSquare className="w-3 h-3" />
-              {summary.sentiment.charAt(0).toUpperCase() +
-                summary.sentiment.slice(1)}
-            </span>
-          </div>
-        )}
-
-        {summary.riskLevel && summary.riskLevel !== "none" && (
-          <div className="flex items-center gap-2">
-            <span
-              className={clsx(
-                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
-                getRiskBadgeColor(summary.riskLevel)
-              )}
-            >
-              <Shield className="w-3 h-3" />
-              Risk:{" "}
-              {summary.riskLevel.charAt(0).toUpperCase() +
-                summary.riskLevel.slice(1)}
-            </span>
-          </div>
-        )}
-
-        {summary.followUpRequired && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 text-blue-700 dark:text-blue-400 bg-blue-400/20 dark:bg-blue-500/20">
-              <Flag className="w-3 h-3" />
-              Follow-up Required
-            </span>
-          </div>
-        )}
-
-        {summary.isSuspicious && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20">
-              <AlertTriangle className="w-3 h-3" />
-              Suspicious
-              {summary.suspiciousType &&
-                summary.suspiciousType !== "none" &&
-                ` (${summary.suspiciousType.replace("_", " ")})`}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Customer Intent */}
-      {summary.customerIntent && (
-        <div>
-          <SectionLabel>Customer Intent</SectionLabel>
-          <p className="text-sm text-foreground leading-relaxed">
-            {summary.customerIntent}
-          </p>
-        </div>
-      )}
-
-      {/* Questions User Asked */}
-      {summary.questionUseAsked && summary.questionUseAsked.length > 0 && (
-        <div>
-          <SectionLabel>Questions Asked</SectionLabel>
-          <ul className="space-y-2">
-            {summary.questionUseAsked.map((question, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
-              >
-                <span className="text-muted-foreground mt-1">•</span>
-                <span>{question}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Tags */}
-      {summary.tags && summary.tags.length > 0 && (
-        <div>
-          <SectionLabel>Tags</SectionLabel>
-          <div className="flex flex-wrap gap-1.5">
-            {summary.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Insights */}
-      {summary.insights && summary.insights.length > 0 && (
-        <div>
-          <SectionLabel>Insights</SectionLabel>
-          <ul className="space-y-2">
-            {summary.insights.map((insight, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
-              >
-                <Lightbulb className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <span>{insight}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Interests */}
-      {summary.interests && summary.interests.length > 0 && (
-        <div>
-          <SectionLabel>Interests</SectionLabel>
-          <div className="flex flex-wrap gap-1.5">
-            {summary.interests.map((interest, index) => (
-              <span
-                key={index}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground"
-              >
-                {interest}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Actions Taken */}
-      {summary.actionsTaken && summary.actionsTaken.length > 0 && (
-        <div>
-          <SectionLabel>Actions Taken</SectionLabel>
-          <ul className="space-y-2">
-            {summary.actionsTaken.map((action, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
-              >
-                <ClipboardList className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <span>{action}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Agent Notes */}
-      {summary.agentNotes && (
-        <div>
-          <SectionLabel>Agent Notes</SectionLabel>
-          <div className="flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-foreground leading-relaxed flex-1">
-              {summary.agentNotes}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const SessionList = ({
   sessions,
@@ -759,6 +517,10 @@ const HistoryMessageList = ({
           </div>
         </>
       )}
+
+      {currentSession?.chatSummary && (
+        <ChatSummary summary={currentSession.chatSummary} />
+      )}
     </div>
   );
 };
@@ -1066,14 +828,3 @@ const HistoryMessageList = ({
 //     </div>
 //   );
 // };
-
-const getEmotionIcon = (sentiment: "positive" | "negative" | "neutral") => {
-  switch (sentiment) {
-    case "positive":
-      return "😊";
-    case "negative":
-      return "😞";
-    case "neutral":
-      return "🙂";
-  }
-};

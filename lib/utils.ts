@@ -343,3 +343,16 @@ export const isBlockedCompanyDomain = (domain: string): boolean => {
     (blocked) => normalized === blocked || normalized.endsWith(`.${blocked}`)
   );
 };
+
+export const getEmotionIcon = (
+  sentiment: "positive" | "negative" | "neutral"
+) => {
+  switch (sentiment) {
+    case "positive":
+      return "😊";
+    case "negative":
+      return "😞";
+    case "neutral":
+      return "🙂";
+  }
+};
