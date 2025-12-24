@@ -25,10 +25,10 @@ export const ChatSummary = ({
   if (!summary) return null;
 
   return (
-    <div className="bordr border-foreground/10 rounde-t-xl shadow-[0_-2px_8px_2px_rgba(0,0,0,0.1)]">
+    <div className="shadow-[0_-2px_8px_2px_rgba(0,0,0,0.1)]">
       <Accordion type="single" collapsible className="w-full rounded-t-2xl">
         <AccordionItem value="summary" className="border-none rounded-t-2xl ">
-          <AccordionTrigger className=" bg-card px-6 py-4 hover:no-underline [&[data-state=open]>svg]:rotate-0 [&>svg]:rotate-180">
+          <AccordionTrigger className=" bg-card px-6 cursor-pointer py-4 hover:no-underline [&[data-state=open]>svg]:rotate-0 [&>svg]:rotate-180">
             <div className="flex flex-col gap-3 items-cnter w-full">
               <h4 className="text-base font-normal">
                 {summary.customerIntent.slice(0, 40)}
