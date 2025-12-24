@@ -138,6 +138,9 @@ export async function POST(req: Request) {
           ...responseMessage,
           id: v4(),
           metadata: {
+            creditCost: creditCosts.query || 0,
+            tokenUsage: totalTokens || 0,
+            model: model.modelId,
             createdAt: new Date().toISOString(),
           },
         } as IChatMessage;

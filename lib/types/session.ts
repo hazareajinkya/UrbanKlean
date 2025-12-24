@@ -24,6 +24,28 @@ export interface ISession {
   channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
+  chatSummary?: {
+    questionUseAsked: string[];
+    summary: string;
+    tags: string[];
+    insights: string[];
+    interests: string[];
+    resolutionStatus: "resolved" | "unresolved";
+    customerIntent: string;
+    sentiment: "positive" | "neutral" | "negative";
+    actionsTaken: string[];
+    followUpRequired: boolean;
+    isSuspicious: boolean;
+    suspiciousType:
+      | "none"
+      | "phishing"
+      | "social_engineering"
+      | "impersonation"
+      | "data_harvesting"
+      | "other";
+    riskLevel: "none" | "low" | "medium" | "high" | "critical";
+    agentNotes: string | undefined;
+  };
   fromPage?: string;
   createdAt: string;
   updatedAt: string;
@@ -43,6 +65,9 @@ const dataPartSchema = z.object({
 });
 
 const metadataSchema = z.object({
+  creditCost: z.number().optional(),
+  tokenUsage: z.number().optional(),
+  model: z.string().optional(),
   createdAt: z.string(),
 });
 

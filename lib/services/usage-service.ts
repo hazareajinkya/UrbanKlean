@@ -1,6 +1,14 @@
-import { arrayUnion, doc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  arrayUnion,
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../clients/firebase";
 import { IUsage } from "../types/usage";
+import workspaceService from "./workspace-service";
 
 class UsageService {
   async addUsage(userId: string, usage: IUsage) {
@@ -23,6 +31,35 @@ class UsageService {
         console.error("Error adding usage: ", error);
         throw error;
       }
+    }
+  }
+
+  async getUsage(wid: string) {
+    try {
+      const workspace = await workspaceService.fetchWorkspace(wid);
+      if (!workspace || !workspace.ownerId) {
+        throw new Error("Workspace not found or has no owner");
+      }
+
+      const ownerId = workspace.ownerId;
+      const usageCollection = collection(db, `users/${ownerId}/usage`);
+      const snapshot = await getDocs(usageCollection);
+      const allUsageEvents: IUsage[] = [];
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.events && Array.isArray(data.events)) {
+          const filteredEvents = data.events.filter(
+            (event: IUsage) => event.wid === wid
+          );
+          allUsageEvents.push(...filteredEvents);
+        }
+      });
+
+      return allUsageEvents;
+    } catch (error) {
+      console.error("Error getting usage: ", error);
+      throw error;
     }
   }
 }

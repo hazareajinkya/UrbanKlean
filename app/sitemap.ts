@@ -14,9 +14,57 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [
-    { url: baseUrl, lastModified: new Date(), priority: 1.0 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), priority: 0.9 },
-    ...blogUrls,
+  // Static public routes
+  const staticRoutes = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      priority: 1.0,
+      changeFrequency: "daily" as const,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      priority: 0.9,
+      changeFrequency: "weekly" as const,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/pricing`,
+      lastModified: new Date(),
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/legal/privacy`,
+      lastModified: new Date(),
+      priority: 0.5,
+      changeFrequency: "yearly" as const,
+    },
+    {
+      url: `${baseUrl}/legal/terms`,
+      lastModified: new Date(),
+      priority: 0.5,
+      changeFrequency: "yearly" as const,
+    },
+    {
+      url: `${baseUrl}/legal/refund`,
+      lastModified: new Date(),
+      priority: 0.5,
+      changeFrequency: "yearly" as const,
+    },
   ];
+
+  return [...staticRoutes, ...blogUrls];
 }

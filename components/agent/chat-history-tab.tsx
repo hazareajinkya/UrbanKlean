@@ -24,11 +24,28 @@ import {
   PanelRightClose,
   PanelRightOpen,
   User,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  MessageSquare,
+  Tag,
+  Lightbulb,
+  Heart,
+  ClipboardList,
+  Flag,
+  Shield,
+  FileText,
 } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { Button } from "../ui/button";
 import { InfoSidebar } from "./history/info-sidebar";
 import { useQueryState } from "nuqs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -136,6 +153,250 @@ const userMessageStyle = (message: UIMessage) =>
       ? "rounded-t-2xl rounded-bl-2xl"
       : "rounded-2xl"
   );
+
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2.5">
+    {children}
+  </p>
+);
+
+const SummaryContent = ({
+  summary,
+}: {
+  summary: NonNullable<ISession["chatSummary"]>;
+}) => {
+  const getResolutionBadgeColor = (status: string) => {
+    return status === "resolved"
+      ? "text-green-700 dark:text-green-400 bg-green-400/20 dark:bg-green-500/20"
+      : "text-orange-700 dark:text-orange-400 bg-orange-400/20 dark:bg-orange-500/20";
+  };
+
+  const getSentimentBadgeColor = (sentiment: string) => {
+    switch (sentiment) {
+      case "positive":
+        return "text-green-700 dark:text-green-400 bg-green-400/20 dark:bg-green-500/20";
+      case "negative":
+        return "text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20";
+      default:
+        return "text-muted-foreground bg-muted-foreground/10";
+    }
+  };
+
+  const getRiskBadgeColor = (risk: string) => {
+    switch (risk) {
+      case "critical":
+        return "text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20";
+      case "high":
+        return "text-orange-700 dark:text-orange-400 bg-orange-400/20 dark:bg-orange-500/20";
+      case "medium":
+        return "text-yellow-700 dark:text-yellow-400 bg-yellow-400/20 dark:bg-yellow-500/20";
+      case "low":
+        return "text-blue-700 dark:text-blue-400 bg-blue-400/20 dark:bg-blue-500/20";
+      default:
+        return "text-muted-foreground bg-muted-foreground/10";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Main Summary */}
+      {summary.summary && (
+        <div>
+          <SectionLabel>Summary</SectionLabel>
+          <p className="text-sm text-foreground leading-relaxed">
+            {summary.summary}
+          </p>
+        </div>
+      )}
+
+      {/* Status Badges Row */}
+      <div className="flex flex-wrap gap-3">
+        {summary.resolutionStatus && (
+          <div className="flex items-center gap-2">
+            <span
+              className={clsx(
+                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
+                getResolutionBadgeColor(summary.resolutionStatus)
+              )}
+            >
+              {summary.resolutionStatus === "resolved" ? (
+                <CheckCircle2 className="w-3 h-3" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              {summary.resolutionStatus === "resolved"
+                ? "Resolved"
+                : "Unresolved"}
+            </span>
+          </div>
+        )}
+
+        {summary.sentiment && (
+          <div className="flex items-center gap-2">
+            <span
+              className={clsx(
+                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
+                getSentimentBadgeColor(summary.sentiment)
+              )}
+            >
+              <MessageSquare className="w-3 h-3" />
+              {summary.sentiment.charAt(0).toUpperCase() +
+                summary.sentiment.slice(1)}
+            </span>
+          </div>
+        )}
+
+        {summary.riskLevel && summary.riskLevel !== "none" && (
+          <div className="flex items-center gap-2">
+            <span
+              className={clsx(
+                "text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5",
+                getRiskBadgeColor(summary.riskLevel)
+              )}
+            >
+              <Shield className="w-3 h-3" />
+              Risk:{" "}
+              {summary.riskLevel.charAt(0).toUpperCase() +
+                summary.riskLevel.slice(1)}
+            </span>
+          </div>
+        )}
+
+        {summary.followUpRequired && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 text-blue-700 dark:text-blue-400 bg-blue-400/20 dark:bg-blue-500/20">
+              <Flag className="w-3 h-3" />
+              Follow-up Required
+            </span>
+          </div>
+        )}
+
+        {summary.isSuspicious && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 text-red-700 dark:text-red-400 bg-red-400/20 dark:bg-red-500/20">
+              <AlertTriangle className="w-3 h-3" />
+              Suspicious
+              {summary.suspiciousType &&
+                summary.suspiciousType !== "none" &&
+                ` (${summary.suspiciousType.replace("_", " ")})`}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Customer Intent */}
+      {summary.customerIntent && (
+        <div>
+          <SectionLabel>Customer Intent</SectionLabel>
+          <p className="text-sm text-foreground leading-relaxed">
+            {summary.customerIntent}
+          </p>
+        </div>
+      )}
+
+      {/* Questions User Asked */}
+      {summary.questionUseAsked && summary.questionUseAsked.length > 0 && (
+        <div>
+          <SectionLabel>Questions Asked</SectionLabel>
+          <ul className="space-y-2">
+            {summary.questionUseAsked.map((question, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
+              >
+                <span className="text-muted-foreground mt-1">•</span>
+                <span>{question}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Tags */}
+      {summary.tags && summary.tags.length > 0 && (
+        <div>
+          <SectionLabel>Tags</SectionLabel>
+          <div className="flex flex-wrap gap-1.5">
+            {summary.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Insights */}
+      {summary.insights && summary.insights.length > 0 && (
+        <div>
+          <SectionLabel>Insights</SectionLabel>
+          <ul className="space-y-2">
+            {summary.insights.map((insight, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
+              >
+                <Lightbulb className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <span>{insight}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Interests */}
+      {summary.interests && summary.interests.length > 0 && (
+        <div>
+          <SectionLabel>Interests</SectionLabel>
+          <div className="flex flex-wrap gap-1.5">
+            {summary.interests.map((interest, index) => (
+              <span
+                key={index}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Actions Taken */}
+      {summary.actionsTaken && summary.actionsTaken.length > 0 && (
+        <div>
+          <SectionLabel>Actions Taken</SectionLabel>
+          <ul className="space-y-2">
+            {summary.actionsTaken.map((action, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-2 text-sm text-foreground leading-relaxed"
+              >
+                <ClipboardList className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <span>{action}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Agent Notes */}
+      {summary.agentNotes && (
+        <div>
+          <SectionLabel>Agent Notes</SectionLabel>
+          <div className="flex items-start gap-2">
+            <FileText className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-foreground leading-relaxed flex-1">
+              {summary.agentNotes}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SessionList = ({
   sessions,
@@ -300,14 +561,47 @@ const HistoryMessageList = ({
   const brandColor = agent.customization.primaryColor;
   const fontColor = getContrastingColor(brandColor);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const summaryScrollRef = useRef<HTMLDivElement>(null);
+  const [accordionValue, setAccordionValue] = useState<string>("chat");
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (accordionValue === "chat" && chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentSession?.messages]);
+  }, [currentSession?.messages, accordionValue]);
+
+  useEffect(() => {
+    // Reset to chat when session changes
+    setAccordionValue("chat");
+  }, [currentSession?.id]);
+
+  const handleAccordionChange = (value: string) => {
+    const newValue = value || "chat";
+    setAccordionValue(newValue);
+
+    // Scroll to top when switching to summary, or to bottom when switching to chat
+    setTimeout(() => {
+      if (newValue === "summary" && summaryScrollRef.current) {
+        summaryScrollRef.current.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      } else if (newValue === "chat" && chatScrollRef.current) {
+        chatScrollRef.current.scrollTo({
+          top: chatScrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
+  };
 
   const persons = useHistoryStore((state) => state.persons);
   return (
@@ -341,140 +635,215 @@ const HistoryMessageList = ({
             )}
           </div>
 
-          {/* Chat Messages */}
-          <div className="p-4 pb-8 space-y-4 prose-p:my-0 flex-1 overflow-y-auto">
-            {currentSession.messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+          {/* Chat Messages and Summary Accordion */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <Accordion
+              type="single"
+              collapsible
+              value={accordionValue}
+              onValueChange={handleAccordionChange}
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <AccordionItem
+                value="chat"
+                className={clsx(
+                  "border-0 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+                  accordionValue === "chat" ? "flex-1" : "flex-shrink-0"
+                )}
               >
-                <div
-                  className={clsx(
-                    "max-w-[90%] md:max-w-[75%] leading-7",
-                    message.role === "user" && userMessageStyle(message),
-                    message.role === "assistant" && [
-                      assistantMessageStyle(message),
-                    ]
-                  )}
-                  style={{
-                    backgroundColor: message.role === "user" ? brandColor : "",
-                    color: message.role === "user" ? fontColor : "",
-                  }}
+                <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
+                  Chat
+                </AccordionTrigger>
+                <AccordionContent
+                  disableAnimation
+                  containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
+                  className="flex-1 flex flex-col min-h-0 h-full p-0"
                 >
-                  {message.role === "assistant" ? (
-                    message.parts?.map((part, partIndex) => {
-                      if (part.type === "tool-collectInformation") {
-                        return (
-                          <div
-                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                            key={partIndex}
-                          >
-                            <div className="flex items-center gap-2 text-sm md:text-sm">
-                              <User className="w-4 h-4" />
-                              Personalized response
-                            </div>
-                          </div>
-                        );
-                      }
+                  <div
+                    ref={chatScrollRef}
+                    className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 space-y-4 prose-p:my-0 scroll-smooth transition-opacity duration-200"
+                    style={{ opacity: accordionValue === "chat" ? 1 : 0 }}
+                  >
+                    {currentSession.messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${
+                          message.role === "user"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={clsx(
+                            "max-w-[90%] md:max-w-[75%] leading-7",
+                            message.role === "user" &&
+                              userMessageStyle(message),
+                            message.role === "assistant" && [
+                              assistantMessageStyle(message),
+                            ]
+                          )}
+                          style={{
+                            backgroundColor:
+                              message.role === "user" ? brandColor : "",
+                            color: message.role === "user" ? fontColor : "",
+                          }}
+                        >
+                          {message.role === "assistant" ? (
+                            message.parts?.map((part, partIndex) => {
+                              if (part.type === "tool-collectInformation") {
+                                return (
+                                  <div
+                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                                    key={partIndex}
+                                  >
+                                    <div className="flex items-center gap-2 text-sm md:text-sm">
+                                      <User className="w-4 h-4" />
+                                      Personalized response
+                                    </div>
+                                  </div>
+                                );
+                              }
 
-                      if (part.type === "dynamic-tool") {
-                        return (
-                          <div
-                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                            key={partIndex}
-                          >
-                            <div className="flex items-center gap-2 text-sm md:text-sm">
-                              <User className="w-4 h-4" />
-                              {part.toolName}
-                            </div>
-                          </div>
-                        );
-                      }
-                      if (part.type === "tool-searchKnowledge") {
-                        return (
-                          <div
-                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
-                            key={partIndex}
-                          >
-                            <div className="flex items-center gap-2 text-sm md:text-sm">
-                              <User className="w-4 h-4" />
-                              Searched knowledge base
-                            </div>
-                          </div>
-                        );
-                      }
+                              if (part.type === "dynamic-tool") {
+                                return (
+                                  <div
+                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                                    key={partIndex}
+                                  >
+                                    <div className="flex items-center gap-2 text-sm md:text-sm">
+                                      <User className="w-4 h-4" />
+                                      {part.toolName}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              if (part.type === "tool-searchKnowledge") {
+                                return (
+                                  <div
+                                    className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                                    key={partIndex}
+                                  >
+                                    <div className="flex items-center gap-2 text-sm md:text-sm">
+                                      <User className="w-4 h-4" />
+                                      Searched knowledge base
+                                    </div>
+                                  </div>
+                                );
+                              }
 
-                      if (part.type === "text") {
-                        return (
-                          <div key={partIndex}>
-                            <div
-                              className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
-                              key={partIndex}
-                            >
-                              <Streamdown
-                                components={{
-                                  a: ({ href, children }) => (
-                                    <a
-                                      href={href}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
+                              if (part.type === "text") {
+                                return (
+                                  <div key={partIndex}>
+                                    <div
+                                      className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                                      key={partIndex}
                                     >
-                                      {children}
-                                    </a>
-                                  ),
-                                }}
-                              >
-                                {part.text}
-                              </Streamdown>
+                                      <Streamdown
+                                        components={{
+                                          a: ({ href, children }) => (
+                                            <a
+                                              href={href}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors underline underline-offset-2"
+                                            >
+                                              {children}
+                                            </a>
+                                          ),
+                                        }}
+                                      >
+                                        {part.text}
+                                      </Streamdown>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            })
+                          ) : message.role === "user" ? (
+                            <div
+                              className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                              style={{ color: fontColor }}
+                            >
+                              {message.parts?.map((part, partIndex) => (
+                                <div key={partIndex} className="">
+                                  <Streamdown
+                                    components={{
+                                      a: ({ href, children }) => (
+                                        <a
+                                          href={href}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="font-medium  transition-colors underline underline-offset-2"
+                                          style={{ color: fontColor }}
+                                        >
+                                          {children}
+                                        </a>
+                                      ),
+                                    }}
+                                  >
+                                    {part.type === "text"
+                                      ? part.text ?? ""
+                                      : ""}
+                                  </Streamdown>
+                                </div>
+                              ))}
                             </div>
-                          </div>
-                        );
-                      }
-                    })
-                  ) : message.role === "user" ? (
-                    <div
-                      className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
-                      style={{ color: fontColor }}
-                    >
-                      {message.parts?.map((part, partIndex) => (
-                        <div key={partIndex} className="">
-                          <Streamdown
-                            components={{
-                              a: ({ href, children }) => (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-medium  transition-colors underline underline-offset-2"
-                                  style={{ color: fontColor }}
-                                >
-                                  {children}
-                                </a>
-                              ),
-                            }}
-                          >
-                            {part.type === "text" ? part.text ?? "" : ""}
-                          </Streamdown>
+                          ) : (
+                            <></>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <></>
+                      </div>
+                    ))}
+
+                    {currentSession.messages.length === 0 && (
+                      <div className="text-center text-muted-foreground py-8">
+                        No messages in this conversation yet.
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {(currentSession.chatSummary ||
+                currentSession.status === "closed" ||
+                (currentSession as any).status === "inactive" ||
+                (currentSession as any).closedAt) && (
+                <AccordionItem
+                  value="summary"
+                  className={clsx(
+                    "border-0 border-t flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+                    accordionValue === "summary" ? "flex-1" : "flex-shrink-0"
                   )}
-                </div>
-              </div>
-            ))}
-
-            {currentSession.messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                No messages in this conversation yet.
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
+                >
+                  <AccordionTrigger className="px-4 py-3 border-b hover:no-underline text-sm font-medium flex-shrink-0 transition-all duration-200">
+                    Summary
+                  </AccordionTrigger>
+                  <AccordionContent
+                    disableAnimation
+                    containerClassName="flex-1 flex flex-col min-h-0 h-0 data-[state=closed]:flex-none data-[state=closed]:h-0"
+                    className="flex-1 flex flex-col min-h-0 h-full p-0"
+                  >
+                    <div
+                      ref={summaryScrollRef}
+                      className="flex-1 h-0 min-h-0 overflow-y-auto p-4 pb-8 scroll-smooth transition-opacity duration-200"
+                      style={{ opacity: accordionValue === "summary" ? 1 : 0 }}
+                    >
+                      {currentSession.chatSummary ? (
+                        <SummaryContent summary={currentSession.chatSummary} />
+                      ) : (
+                        <div className="text-center text-muted-foreground py-8">
+                          <p className="text-sm">
+                            No summary available for this session.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
           </div>
         </>
       )}
