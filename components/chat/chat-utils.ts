@@ -41,7 +41,7 @@ export const initChat = async (agent: IAgent) => {
     session = sessions[0];
     sessionId = session.id;
   } else {
-    sessionId = sid ?? v4();
+    sessionId = v4();
     saveLocalSession(agent.id, sessionId);
   }
 

@@ -66,6 +66,7 @@ export async function POST(req: Request) {
     if (!agent) throw new Error("Agent not found");
 
     const creditInfo = await creditService.getCredit(agent.ownerId);
+
     if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
       console.log("Insufficient credits: ", creditInfo);
       return new Response("Insufficient credits", {
@@ -133,6 +134,7 @@ export async function POST(req: Request) {
     const totalTokens = (await result.usage).totalTokens;
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
+      sendReasoning: false,
       onFinish: async ({ responseMessage }) => {
         const aiMessage = {
           ...responseMessage,

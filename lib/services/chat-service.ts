@@ -171,6 +171,7 @@ class ChatService {
     if (personId) filters.push(where("personId", "==", personId));
     const q = query(colRef, ...filters, fetchOrder, lt);
     const snap = await getDocs(q);
+
     return snap.docs.map((doc) => doc.data() as ISession) ?? [];
   }
 

@@ -18,6 +18,7 @@ interface ICreditInfo {
 class CreditService {
   async getCredit(uid: string) {
     const snap = await getDoc(doc(db, `users/${uid}`));
+
     if (!snap.exists()) return null;
 
     const data = snap.data() as IUser;

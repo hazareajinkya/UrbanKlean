@@ -58,18 +58,51 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     const q = buildQuery(aid);
 
     const newUnsubscribe = onSnapshot(q, (snapshot) => {
-      const sessions = snapshot.docs.map((doc) => doc.data() as ISession);
+      const { history, nextQuery } = get();
+      const snapshotSessions = snapshot.docs.map(
+        (doc) => doc.data() as ISession
+      );
       const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      const next = buildQuery(aid, true, lastVisible);
 
-      const personIds = sessions
+      // Only update the pagination cursor if we are in the initial state
+      // (i.e., we haven't paginated yet or the list is small).
+      // If we have already paginated deep into history, do NOT reset the cursor based on the real-time "head".
+      let newNextQuery = nextQuery;
+      if (!nextQuery || history.length <= 15) {
+        newNextQuery = buildQuery(aid, true, lastVisible);
+      }
+
+      // Merge strategy:
+      // 1. Create a map of existing history to preserve loaded items.
+      const historyMap = new Map<string, ISession>();
+
+      // Optimization: Avoid creating intermediate arrays for Map constructor
+      if (history.length > 0) {
+        for (const session of history) {
+          historyMap.set(session.id, session);
+        }
+      }
+
+      // 2. Update or Add sessions from the real-time snapshot.
+      snapshotSessions.forEach((session) => {
+        historyMap.set(session.id, session);
+      });
+
+      // 3. Convert back to array.
+      const mergedHistory = Array.from(historyMap.values());
+
+      // 4. Sort by updatedAt desc to ensure correct order after updates.
+      // Optimization: Sort using string comparison (ISO dates sort lexicographically)
+      mergedHistory.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1));
+
+      const personIds = mergedHistory
         .map((session) => session.personId)
         .filter((id) => id !== undefined);
       get().getPersonsInfo(personIds);
 
       set({
-        history: sessions,
-        nextQuery: next,
+        history: mergedHistory,
+        nextQuery: newNextQuery,
       });
     });
 
@@ -103,11 +136,14 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
   },
 
   fetchNextSessions: async (aid: string) => {
-    const { nextQuery } = get();
+    const { nextQuery, history } = get();
 
     try {
       const first = buildQuery(aid);
-      const snaps = await getDocs(nextQuery ?? first);
+      // Fallback to first query if nextQuery is missing for some reason
+      const queryToUse = nextQuery ?? first;
+
+      const snaps = await getDocs(queryToUse);
 
       if (snaps.empty) {
         set({ hasMore: false });
@@ -117,7 +153,22 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       const data = snaps.docs.map((doc) => doc.data()) as ISession[];
       const lastVisible = snaps.docs[snaps.docs.length - 1];
       const next = buildQuery(aid, true, lastVisible);
-      const updatedHistory = [...get().history, ...data];
+
+      // Use map merge here too to prevent duplicates if real-time
+      // updates shifted the list boundaries.
+      const historyMap = new Map<string, ISession>();
+
+      if (history.length > 0) {
+        for (const session of history) {
+          historyMap.set(session.id, session);
+        }
+      }
+
+      data.forEach((s) => historyMap.set(s.id, s));
+
+      const updatedHistory = Array.from(historyMap.values()).sort((a, b) =>
+        b.updatedAt > a.updatedAt ? 1 : -1
+      );
 
       const personIds = data
         .map((s) => s.personId)
@@ -155,9 +206,8 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       const session = await chatService.getSession(sessionId, aid);
       if (session) {
         // Add to history and sort by updatedAt (newest first)
-        const updatedHistory = [...history, session].sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        const updatedHistory = [...history, session].sort((a, b) =>
+          b.updatedAt > a.updatedAt ? 1 : -1
         );
         set({ history: updatedHistory });
 

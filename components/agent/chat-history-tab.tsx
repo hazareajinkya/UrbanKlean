@@ -17,12 +17,15 @@ import { useHistoryStore } from "@/lib/stores/history-store";
 import {
   Check,
   Circle,
+  FrownIcon,
   Globe,
   Loader,
   MailIcon,
+  MehIcon,
   MessageCircleMoreIcon,
   PanelRightClose,
   PanelRightOpen,
+  SmileIcon,
   User,
   AlertTriangle,
   CheckCircle2,
@@ -46,6 +49,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -72,21 +76,21 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
     return () => unsubscribeHistory();
   }, [agent.id]);
 
-  //map is better approach than useState
-  const sessionsMap = useMemo(
-    () => new Map(history?.map((s) => [s.id, s]) ?? []),
-    [history]
+  // Optimize: Use simple find instead of rebuilding Map on every render
+  // Finding one item in an array is much cheaper (O(N) scan) than building a Map (O(N) allocations + hashing)
+  const currentSession = useMemo(
+    () => (sessionId ? history?.find((s) => s.id === sessionId) : undefined),
+    [history, sessionId]
   );
-  const currentSession = sessionId ? sessionsMap.get(sessionId) : undefined;
   const handleSetSession = (session: ISession) => setSessionId(session.id);
   const handleSetSessionId = (id: string) => setSessionId(id);
 
-  // Fetch session when URL changes and it's not in map
+  // Fetch session when URL changes and it's not in history
   useEffect(() => {
     if (!sessionId) return;
 
-    const session = sessionsMap.get(sessionId);
-    if (session) return; // Already in map
+    // Use currentSession derived above
+    if (currentSession) return; // Already loaded
 
     if (loadingSessionIds.has(sessionId)) return; // Already loading
 
@@ -489,7 +493,23 @@ const SessionList = ({
                         ? person.emails[0]
                         : renderVisitorID(session)
                       : renderVisitorID(session)}
+
+                    {session.chatSummary?.sentiment && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-2 inline-flex cursor-default">
+                            {getEmotionIcon(session.chatSummary.sentiment)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="capitalize">
+                            {session.chatSummary.sentiment}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </h4>
+                  <p></p>
                   <p className="text-xs text-muted-foreground">
                     {formatHistoryDateTime(session.updatedAt)}
                   </p>
@@ -849,4 +869,15 @@ const HistoryMessageList = ({
       )}
     </div>
   );
+};
+
+const getEmotionIcon = (sentiment: "positive" | "negative" | "neutral") => {
+  switch (sentiment) {
+    case "positive":
+      return "😊";
+    case "negative":
+      return "😞";
+    case "neutral":
+      return "🙂";
+  }
 };

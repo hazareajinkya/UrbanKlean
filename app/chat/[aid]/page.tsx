@@ -137,6 +137,7 @@ export default function ChatPage() {
       };
     }
   }, [isWidget]);
+
   if (!agent)
     return (
       <div className="flex items-center justify-center flex-col h-screen bg-background px-6">
