@@ -58,18 +58,64 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     const q = buildQuery(aid);
 
     const newUnsubscribe = onSnapshot(q, (snapshot) => {
-      const sessions = snapshot.docs.map((doc) => doc.data() as ISession);
+      const { history, nextQuery, persons } = get();
+      const snapshotSessions = snapshot.docs.map(
+        (doc) => doc.data() as ISession
+      );
       const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      const next = buildQuery(aid, true, lastVisible);
 
-      const personIds = sessions
-        .map((session) => session.personId)
-        .filter((id) => id !== undefined);
-      get().getPersonsInfo(personIds);
+      // Only update the pagination cursor if we are in the initial state
+      // (i.e., we haven't paginated yet or the list is small).
+      // If we have already paginated deep into history, do NOT reset the cursor based on the real-time "head".
+      let newNextQuery = nextQuery;
+      if (!nextQuery || history.length <= 15) {
+        newNextQuery = buildQuery(aid, true, lastVisible);
+      }
+
+      // Merge strategy:
+      // 1. Create a map of existing history to preserve loaded items.
+      const historyMap = new Map<string, ISession>();
+
+      // Optimization: Avoid creating intermediate arrays for Map constructor
+      if (history.length > 0) {
+        for (const session of history) {
+          historyMap.set(session.id, session);
+        }
+      }
+
+      // 2. Track sessions that are new or updated
+      const sessionsNeedingPersonFetch = new Set<string>();
+
+      snapshotSessions.forEach((session) => {
+        const existing = historyMap.get(session.id);
+        const isNew = !existing;
+        const isUpdated = existing && existing.updatedAt !== session.updatedAt;
+
+        historyMap.set(session.id, session);
+
+        // Fetch person if session is new or updated
+        if ((isNew || isUpdated) && session.personId) {
+          sessionsNeedingPersonFetch.add(session.personId);
+        }
+      });
+
+      // 3. Convert back to array.
+      const mergedHistory = Array.from(historyMap.values());
+
+      // 4. Sort by updatedAt desc to ensure correct order after updates.
+      // Optimization: Sort using string comparison (ISO dates sort lexicographically)
+      mergedHistory.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : -1));
+
+      // 5. Only fetch people for new/updated sessions (and deduplicate)
+      const personIdsToFetch = Array.from(sessionsNeedingPersonFetch);
+
+      if (personIdsToFetch.length > 0) {
+        get().getPersonsInfo(personIdsToFetch, aid);
+      }
 
       set({
-        history: sessions,
-        nextQuery: next,
+        history: mergedHistory,
+        nextQuery: newNextQuery,
       });
     });
 
@@ -79,15 +125,39 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
     set({ unsubscribe: newUnsubscribe });
   },
 
-  getPersonsInfo: async (ids: string[]) => {
+  getPersonsInfo: async (ids: string[], aid?: string) => {
     const wid = getwid();
 
-    const people = await peopleService.getPersons(wid, ids);
+    // 1. Deduplicate IDs
+    const uniqueIds = [...new Set(ids)];
 
-    const map = people.reduce((acc, person) => {
+    if (uniqueIds.length === 0) return;
+
+    // 2. Chunk IDs into batches of 30 (Firestore 'in' query limit)
+    const CHUNK_SIZE = 30;
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+      chunks.push(uniqueIds.slice(i, i + CHUNK_SIZE));
+    }
+
+    // 3. Fetch all chunks in parallel and merge results
+    const allPeoplePromises = chunks.map((chunk) =>
+      peopleService.getPersons(wid, chunk)
+    );
+    const allPeopleArrays = await Promise.all(allPeoplePromises);
+    const allPeople = allPeopleArrays.flat();
+
+    // 4. Process and filter pastSessionIds for all fetched people
+    const map = allPeople.reduce((acc, person) => {
       person.pastSessionIds = person.pastSessionIds?.reverse() ?? [];
-      acc[person.id] = person;
 
+      if (aid) {
+        person.pastSessionIds = person.pastSessionIds.filter(
+          (s) => s.aid === aid
+        );
+      }
+
+      acc[person.id] = person;
       return acc;
     }, {} as Record<string, IPerson>);
 
@@ -103,11 +173,14 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
   },
 
   fetchNextSessions: async (aid: string) => {
-    const { nextQuery } = get();
+    const { nextQuery, history } = get();
 
     try {
       const first = buildQuery(aid);
-      const snaps = await getDocs(nextQuery ?? first);
+      // Fallback to first query if nextQuery is missing for some reason
+      const queryToUse = nextQuery ?? first;
+
+      const snaps = await getDocs(queryToUse);
 
       if (snaps.empty) {
         set({ hasMore: false });
@@ -117,12 +190,32 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       const data = snaps.docs.map((doc) => doc.data()) as ISession[];
       const lastVisible = snaps.docs[snaps.docs.length - 1];
       const next = buildQuery(aid, true, lastVisible);
-      const updatedHistory = [...get().history, ...data];
 
+      // Use map merge here too to prevent duplicates if real-time
+      // updates shifted the list boundaries.
+      const historyMap = new Map<string, ISession>();
+
+      if (history.length > 0) {
+        for (const session of history) {
+          historyMap.set(session.id, session);
+        }
+      }
+
+      data.forEach((s) => historyMap.set(s.id, s));
+
+      const updatedHistory = Array.from(historyMap.values()).sort((a, b) =>
+        b.updatedAt > a.updatedAt ? 1 : -1
+      );
+
+      // Only fetch people for new sessions that aren't already loaded
+      const { persons } = get();
       const personIds = data
         .map((s) => s.personId)
-        .filter((id) => id !== undefined);
-      get().getPersonsInfo(personIds);
+        .filter((id): id is string => id !== undefined && !persons[id]);
+
+      if (personIds.length > 0) {
+        get().getPersonsInfo(personIds, aid);
+      }
 
       set({ history: updatedHistory, nextQuery: next });
 
@@ -155,15 +248,14 @@ export const useHistoryStore = create<IHistoryStore>((set, get) => ({
       const session = await chatService.getSession(sessionId, aid);
       if (session) {
         // Add to history and sort by updatedAt (newest first)
-        const updatedHistory = [...history, session].sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        const updatedHistory = [...history, session].sort((a, b) =>
+          b.updatedAt > a.updatedAt ? 1 : -1
         );
         set({ history: updatedHistory });
 
         // Fetch person info if session has a personId
         if (session.personId) {
-          get().getPersonsInfo([session.personId]);
+          get().getPersonsInfo([session.personId], aid);
         }
       }
     } catch (error) {
@@ -190,7 +282,7 @@ export interface IHistoryStore {
   sethasMore: (hasMore: boolean) => void;
   getChatsCount: (query: Query) => Promise<void>;
 
-  getPersonsInfo: (ids: string[]) => Promise<void>;
+  getPersonsInfo: (ids: string[], aid?: string) => Promise<void>;
   fetchNextSessions: (aid: string) => Promise<void>;
   fetchAndAddSessionToHistory: (
     sessionId: string,

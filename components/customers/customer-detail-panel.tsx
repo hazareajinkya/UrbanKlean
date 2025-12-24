@@ -307,15 +307,23 @@ export default function CustomerDetailPanel({
               Conversations ({person.pastSessionIds.length})
             </SectionLabel>
             <div className="space-y-1">
-              {person.pastSessionIds.map((sessionId, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground font-mono"
-                >
-                  <MessageSquare className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate flex-1">{sessionId}</span>
-                </div>
-              ))}
+              {person.pastSessionIds.map((sessionItem, i) => {
+                const sessionId = sessionItem.sid;
+                const aid = sessionItem.aid;
+
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground font-mono"
+                  >
+                    <MessageSquare className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate flex-1">
+                      {aid ? `[${aid.substring(0, 4)}] ` : ""}
+                      {sessionId}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -59,7 +59,7 @@ const retrieveContext = async (wid: string, query: string, agent?: IAgent) => {
     const searchResults = await qdClient.search(wid, {
       vector: embedding,
       limit: 5,
-      score_threshold: 0.5,
+      score_threshold: 0.3,
       ...(filter ? { filter } : {}),
     });
 

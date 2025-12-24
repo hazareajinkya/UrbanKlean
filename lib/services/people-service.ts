@@ -331,10 +331,20 @@ class PeopleService {
     }
   }
 
-  async updatePastSessionIds(wid: string, personId: string, sessionId: string) {
+  async updatePastSessionIds({
+    wid,
+    personId,
+    sessionId,
+    aid,
+  }: {
+    wid: string;
+    personId: string;
+    sessionId: string;
+    aid: string;
+  }) {
     const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
     await updateDoc(personRef, {
-      pastSessionIds: arrayUnion(sessionId),
+      pastSessionIds: arrayUnion({ aid, sid: sessionId }),
       updatedAt: new Date().toISOString(),
     });
   }
@@ -346,6 +356,7 @@ class PeopleService {
     phone,
     externalIds,
     sessionId,
+    aid,
   }: {
     wid: string;
     name?: string;
@@ -353,6 +364,7 @@ class PeopleService {
     phone?: string;
     externalIds?: IExternalIds;
     sessionId?: string;
+    aid?: string;
   }) {
     const person = generateDefaultPerson({
       name,
@@ -360,6 +372,7 @@ class PeopleService {
       phone,
       externalIds,
       sessionId,
+      aid,
     });
     const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
 
@@ -389,6 +402,7 @@ class PeopleService {
     phones,
     externalIds,
     sessionId,
+    aid,
   }: {
     wid: string;
     name?: string;
@@ -396,6 +410,7 @@ class PeopleService {
     phones: string[];
     externalIds?: IExternalIds;
     sessionId?: string;
+    aid?: string;
   }) {
     const person = generateDefaultPerson({
       name,
@@ -403,6 +418,7 @@ class PeopleService {
       phone: phones[0],
       externalIds,
       sessionId,
+      aid,
     });
     const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
     await setDoc(personRef, person);

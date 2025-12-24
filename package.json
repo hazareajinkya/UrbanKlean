@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack ",
-    "dev:bun": "bun run --bun next dev",
+    "dev:bun": "bun run --bun next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -124,6 +124,7 @@ export const collectInformation = (
             phones: params.phones,
             externalIds: externalIds,
             name: params.name,
+            aid,
           });
 
           //attach person id to session
@@ -151,16 +152,12 @@ export const collectInformation = (
           personId: personData!.id,
         });
 
-        const pastSessionIds = Array.from(
-          new Set([...(personData?.pastSessionIds ?? []), sessionId])
-        );
         //update pastSessionIds in  person data
-        await peopleService.update({
-          wid: wid,
+        await peopleService.updatePastSessionIds({
+          wid,
           personId: personData!.id,
-          updates: {
-            pastSessionIds: pastSessionIds,
-          },
+          sessionId,
+          aid,
         });
       }
 

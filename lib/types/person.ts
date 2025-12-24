@@ -34,7 +34,7 @@ export interface IPerson {
   notes: string[];
 
   //prev references to sessions
-  pastSessionIds: string[];
+  pastSessionIds: { aid: string; sid: string }[];
 
   createdAt: string;
   updatedAt: string;
@@ -47,12 +47,14 @@ export const generateDefaultPerson = ({
   phone,
   externalIds,
   sessionId,
+  aid,
 }: {
   name?: string;
   email?: string;
   phone?: string;
   externalIds?: IExternalIds;
   sessionId?: string;
+  aid?: string;
 }): IPerson => {
   const emailN = normEmail(email);
   const phoneN = normPhone(phone);
@@ -71,7 +73,7 @@ export const generateDefaultPerson = ({
     memories: [],
     summary: "",
     notes: [],
-    pastSessionIds: sessionId ? [sessionId] : [],
+    pastSessionIds: sessionId && aid ? [{ aid, sid: sessionId }] : [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

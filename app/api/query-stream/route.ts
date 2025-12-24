@@ -66,6 +66,7 @@ export async function POST(req: Request) {
     if (!agent) throw new Error("Agent not found");
 
     const creditInfo = await creditService.getCredit(agent.ownerId);
+
     if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
       console.log("Insufficient credits: ", creditInfo);
       return new Response("Insufficient credits", {
@@ -139,6 +140,9 @@ export async function POST(req: Request) {
           ...responseMessage,
           id: v4(),
           metadata: {
+            creditCost: creditCosts.query || 0,
+            tokenUsage: totalTokens || 0,
+            model: model.modelId,
             createdAt: new Date().toISOString(),
           },
         } as IChatMessage;

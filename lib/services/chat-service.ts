@@ -57,7 +57,12 @@ class ChatService {
           updates: { location },
         });
       }
-      peopleService.updatePastSessionIds(wid, personId, session.id);
+      peopleService.updatePastSessionIds({
+        wid,
+        personId,
+        sessionId: session.id,
+        aid,
+      });
     }
 
     await setDoc(doc(db, `agents/${aid}/sessions/${session.id}`), session);
@@ -80,11 +85,12 @@ class ChatService {
       session?.wid &&
       session?.personId !== updates.personId
     ) {
-      await peopleService.updatePastSessionIds(
-        session.wid,
-        updates.personId,
-        sid
-      );
+      await peopleService.updatePastSessionIds({
+        wid: session.wid,
+        personId: updates.personId,
+        sessionId: sid,
+        aid,
+      });
     }
   }
 

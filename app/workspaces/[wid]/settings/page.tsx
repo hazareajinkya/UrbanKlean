@@ -132,7 +132,7 @@ export default function SettingsPage() {
 
             {activeSection === "members" && <MembersTab />}
 
-            {activeSection === "billing" && <BillingTab />}
+            {activeSection === "billing" && <BillingTab wid={wid} />}
           </AnimatePresence>
         </div>
       </main>
