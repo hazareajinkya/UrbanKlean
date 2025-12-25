@@ -24,7 +24,7 @@ export const AboutMission = () => {
   ];
 
   return (
-    <section className="section-container section-content-padding border-x border-b py-20 md:py-28">
+    <section className="border-t section-container section-content-padding border-x border-b py-20 md:py-28">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start ">
         <motion.div
           initial={{ opacity: 0, y: 10 }}

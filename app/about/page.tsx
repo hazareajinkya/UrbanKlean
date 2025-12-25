@@ -38,6 +38,31 @@ export default function AboutPage() {
       <AboutAudience />
       <AboutStory />
 
+      <section className="border-t section-container section-content-padding border-x border-b py-20 md:py-28">
+        <div className="max-w-3xl mx-auto text-center">
+          <span className="text-primary text-sm mb-4 block uppercase tracking-wider">
+            Where We&apos;re Going
+          </span>
+          <h2 className="text-3xl md:text-4xl leading-normal mb-8 text-foreground">
+            Our Goal
+          </h2>
+          <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+            <p>
+              To make customer experience feel{" "}
+              <span className="text-foreground font-medium">
+                respectful, clear, and human again
+              </span>{" "}
+              — even at scale.
+            </p>
+            <p>
+              We want to set the standard for how businesses communicate,
+              resolve issues, and build trust in a world increasingly run by{" "}
+              <i>machines.</i>
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div className="bg-background dark ">
         <CtaSection />
         <Footer />
