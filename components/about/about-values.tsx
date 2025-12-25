@@ -29,9 +29,9 @@ export const AboutValues = () => {
         {[
           {
             title: "People trust your brand.",
-            desc: "When it does, everything changes.",
+            desc: "When they do, everything improves. Including revenues.",
           },
-          { title: "They buy.", desc: "They return." },
+          { title: "They buy.", desc: "They come back and buy again." },
           {
             title: "Real growth.",
             desc: "Not because they were pushed, but because they were treated well.",

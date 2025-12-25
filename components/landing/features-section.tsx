@@ -379,7 +379,7 @@ export const FeaturesSection = () => {
         />
 
         {/* Row 2 */}
-        <div className="md:col-span-2 group relative bg-card flex flex-col">
+        {/* <div className="md:col-span-2 group relative bg-card flex flex-col">
           <div className="w-full h-[350px] bg-neutral-50/30 border-b border-border/50 overflow-hidden relative">
             <OmnichannelVisual />
           </div>
@@ -390,29 +390,44 @@ export const FeaturesSection = () => {
               Instagram, and Messenger in one organized stream.
             </p>
           </div>
-        </div>
+        </div> */}
 
         <FeatureCard
-          title="Auto-Sync Knowledge"
-          description="Reads your website and FAQs daily to keep answers accurate and up-to-date."
-          Visual={SyncVisual}
+          title="Omnichannel Inbox"
+          description="One Intelligent CX brain which unifies Web, Email, Whatsapp,
+              Instagram, and Messenger in one organized stream."
+          Visual={OmnichannelVisual}
+        />
+        <FeatureCard
+          title="Guided Workflows & Scenarios"
+          // description="Set simple rules to automate repetitive tasks like late order tracking."
+          // description=" Onboarding, returns, and more become guided, intuitive flows that reduce effort,  and help customers complete what they came to do"
+          description="Automate complex processes like onboarding, returns, and plan changes into guided flows."
+          Visual={WorkflowVisual}
         />
 
         {/* Row 3 */}
         <FeatureCard
           title="Customer Profiles"
-          description="A 360° view of orders, history, and behavior for personalized support."
+          description="Provides you 360° view of each customer so every conversation stays personalized, precise, and humanly aware."
           Visual={ProfileVisual}
         />
+
         <FeatureCard
-          title="Workflows & Scenarios"
-          description="Set simple rules to automate repetitive tasks like late order tracking."
-          Visual={WorkflowVisual}
+          title="Business Insights"
+          description="Clear, actionable insights into customer relationships, journeys, friction points, and contact patterns."
+          Visual={SyncVisual}
+        />
+
+        <FeatureCard
+          title="Seamless Human Handoff"
+          description="Transfers seamlessly to humans when needed within the same conversation with full context."
+          Visual={HandoffVisual}
         />
         <FeatureCard
-          title="Human Handoff"
-          description="Instantly transfers complex issues to your team with full context."
-          Visual={HandoffVisual}
+          title="Self-learning Engine"
+          description="Improves with every conversation, so experiences grow more intelligent and consistent."
+          Visual={LearningVisual}
         />
       </div>
     </section>
