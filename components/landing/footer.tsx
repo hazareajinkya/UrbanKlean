@@ -96,7 +96,8 @@ export const Footer = () => {
             </div>
 
             <p className="text-sm sm:text-sm text-muted-foreground max-w-sm">
-              Every brand, everywhere, can deliver magical customer experience
+              {/* Every brand, everywhere, can deliver magical customer experience */}
+              Greater sales, through better customer experience
             </p>
           </div>
 
@@ -127,7 +128,7 @@ export const Footer = () => {
         className={`section-content-padding py-4 sm:py-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 relative z-10`}
       >
         <p className="text-sm sm:text-sm text-muted-foreground text-center sm:text-left">
-          © {new Date().getFullYear()} Magical CX. All rights reserved.
+          © {new Date().getFullYear()} MagicalCX. All rights reserved.
         </p>
         <div className="flex items-center gap-3 sm:gap-4">
           {socialLinks.map((social) => (

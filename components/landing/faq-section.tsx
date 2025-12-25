@@ -17,13 +17,58 @@ const faqData = [
     label: "General",
     items: [
       {
-        question: "Is this just another chatbot?",
+        question: "What is EFRO™?",
         answer: (
           <div className="space-y-4">
             <p>
-              No. Chatbots follow scripts. MagicalCX understands meaning, tone,
-              frustration, emotions, and context — and solves the problem like a
-              real teammate.
+              EFRO™ (Empathy-First Revenue Orchestrator) is MagicalCX’s built-in
+              revenue engine.
+            </p>
+
+            <p>
+              It understands customer intent in real time and knows when to step
+              in, suggesting the right next step, upgrade, or offer only when it
+              genuinely helps the customer move forward.
+            </p>
+
+            <p>
+              That means your support doesn’t just resolve issues. It quietly
+              supports growth.
+            </p>
+
+            <p>
+              More yeses. Fewer pushy moments. Revenue that feels natural, not
+              forced.
+            </p>
+          </div>
+        ),
+      },
+
+      {
+        question: "What is HumanlyClear™?",
+        answer: (
+          <div className="space-y-4">
+            <p>
+              HumanlyClear™ is MagicalCX’s quality standard for “human-grade”
+              conversations, clear, warm, and action-oriented.
+            </p>
+            <p>
+              It makes answers easy to understand, asks only what’s needed, and
+              guides customers to the next step fast, so they feel helped (not
+              handled) and your support and sales conversations convert better.
+            </p>
+          </div>
+        ),
+      },
+      {
+        question: "Is this just another chatbot?",
+        answer: (
+          <div className="space-y-4">
+            <p>No. Chatbots follow scripts.</p>
+            <p>
+              MagicalCX understands meaning, tone, frustration, emotions, and
+              context and solves the problem like a real teammate using EFRO™
+              and HumanlyClear™.
             </p>
           </div>
         ),
@@ -34,8 +79,8 @@ const faqData = [
           <div className="space-y-4">
             <p>It fixes real issues.</p>
             <p>
-              Order changes, size swaps, address updates, package tracking,
-              subscription edits — all done inside the conversation.
+              Order updates, size swaps, address changes, subscription upgrades,
+              booking calls, etc. — all done within the conversation.
             </p>
           </div>
         ),
@@ -46,23 +91,13 @@ const faqData = [
           <div className="space-y-4">
             <p>No.</p>
             <p>
-              It sounds like your brand at its best — warm, clear, and helpful.
+              It sounds exactly like you want your brand to—friendly or
+              professional, authoritative or kind, direct or thoughtful.
             </p>
           </div>
         ),
       },
-      {
-        question: "Do customers need to repeat their story on every channel?",
-        answer: (
-          <div className="space-y-4">
-            <p>No.</p>
-            <p>
-              If they talked yesterday on Instagram and today on email, it
-              remembers and continues smoothly.
-            </p>
-          </div>
-        ),
-      },
+
       {
         question: "Does this work for voice calls too?",
         answer: (
@@ -79,10 +114,13 @@ const faqData = [
         question: "Will it replace my team?",
         answer: (
           <div className="space-y-4">
-            <p>No.</p>
+            <p>Yes, only to the extent you want it to.</p>
             <p>
-              It removes the repetitive stuff so your team can focus on the
-              moments that need real care.
+              MagicalCX can be engineered to fully replace human agents with
+              brand‑aligned, agentic bots that handle your customer interactions
+              end‑to‑end with HumanlyClear™ and EFRO™. Whether you use that
+              power to support your team or to replace it is a business
+              decision, not a technical limitation.
             </p>
           </div>
         ),
@@ -91,7 +129,7 @@ const faqData = [
         question: "Is this right for my business?",
         answer: (
           <div className="space-y-4">
-            <p>If you get daily customer messages, yes.</p>
+            <p>If you want to improve sales, yes.</p>
             <p>If you sell online, definitely.</p>
             <p>
               If you want happier customers and fewer headaches, it's a great
@@ -110,9 +148,8 @@ const faqData = [
         question: "Is it complicated to set up?",
         answer: (
           <div className="space-y-4">
-            <p>No.</p>
-            <p>We set everything up for you.</p>
-            <p>You only paste one line of code.</p>
+            <p>No. Not at all.</p>
+            <p>You can do it yourself or we set everything up for you.</p>
           </div>
         ),
       },
@@ -121,7 +158,7 @@ const faqData = [
         answer: (
           <div className="space-y-4">
             <p>Not at all.</p>
-            <p>If you can log in to Shopify, you can run MagicalCX.</p>
+            <p>If you can use a phone, you can use MagicalCX.</p>
           </div>
         ),
       },
@@ -129,11 +166,15 @@ const faqData = [
         question: "How do I control what it can or can't say?",
         answer: (
           <div className="space-y-4">
+            <p>You set the rules.</p>
+
             <p>
-              You set clear rules — tone, limits, sensitive topics, escalation
-              triggers.
+              We guide you through simple multiple-choice questions to choose
+              the tone, define boundaries, flag sensitive topics, and set
+              escalation triggers.
             </p>
-            <p>It stays within your boundaries.</p>
+
+            <p>It stays within your boundaries, every time.</p>
           </div>
         ),
       },
@@ -175,7 +216,7 @@ const faqData = [
         answer: (
           <div className="space-y-4">
             <p>Yes.</p>
-            <p>Your data stays yours — private, protected, and never shared.</p>
+            <p>Your data stays yours, private, protected, and never shared.</p>
           </div>
         ),
       },
@@ -210,7 +251,7 @@ const faqData = [
         answer: (
           <div className="space-y-4">
             <p>Yes.</p>
-            <p>Change plans anytime.</p>
+            <p>You can upgrade, downgrade or cancel your plan at anytime.</p>
           </div>
         ),
       },
@@ -218,8 +259,7 @@ const faqData = [
         question: "Is there a free trial?",
         answer: (
           <div className="space-y-4">
-            <p>Yes.</p>
-            <p>No credit card. No pressure.</p>
+            <p>Yes. We offer a 14-day free trial.</p>
             <p>Try it and see how it feels for your brand.</p>
           </div>
         ),
@@ -229,9 +269,13 @@ const faqData = [
         answer: (
           <div className="space-y-4">
             <p>
-              By answering faster, solving quicker, and making it easier for
-              customers to buy, upgrade, or reorder — without extra effort from
-              you.
+              Our unique Empathy-First Revenue Orchestrator (EFRO™) technology
+              intelligently identifies the perfect, non-pushy moments to present
+              relevant offers or upsells.
+            </p>
+            <p>
+              This builds trust, leading directly to more conversions, higher
+              order values, and increased customer loyalty.
             </p>
           </div>
         ),
@@ -240,8 +284,12 @@ const faqData = [
         question: "Does MagicalCX reduce support costs?",
         answer: (
           <div className="space-y-4">
-            <p>Yes.</p>
-            <p>Most teams see a 60–80% drop in repetitive questions.</p>
+            <p>Yes. Of course!</p>
+            <p>
+              MagicalCX automates common questions with instant, empathetic,
+              accurate replies, reduces ticket volume, and cuts agent time by
+              handling repetitive support 24/7
+            </p>
           </div>
         ),
       },
@@ -249,7 +297,10 @@ const faqData = [
         question: "Is this cheaper than hiring someone?",
         answer: (
           <div className="space-y-4">
-            <p>Much cheaper — and it works 24/7 without dropping the ball.</p>
+            <p>
+              Much cheaper. And, it works 24/7 without expecting breaks or
+              vacations.
+            </p>
           </div>
         ),
       },
@@ -271,7 +322,8 @@ export const FaqSection = () => {
                 Frequently Asked Questions
               </h2>
               <p className="text-lg text-muted-foreground">
-                Everything you need to know about your new best employee.
+                Everything you need to know about your intelligent, always
+                working, lowest paid employee.
               </p>
             </div>
           </div>

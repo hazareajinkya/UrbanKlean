@@ -38,41 +38,56 @@ export default function RefundPage() {
           {/* Section 1 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              1. No Refunds – Why We Work This Way
+              1. Refund Eligibility
             </h2>
             <p className="mb-4">
-              When you subscribe to MagicalCX, we immediately:
+              MagicalCX offers a limited refund window under the conditions below.
+            </p>
+            <p className="mb-4">
+              You may request a full refund within 7 calendar days of your first paid subscription, provided that:
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li>Allocate infrastructure and resources for your account</li>
-              <li>Onboard you and your team</li>
               <li>
-                Make the full set of features available for the entire period
-                you've paid for
+                The request is submitted within 7 days of the initial charge, and
+              </li>
+              <li>
+                Your account usage remains within reasonable limits (no excessive or abusive usage).
               </li>
             </ul>
             <p className="mb-4">
-              Because these costs are committed upfront,{" "}
-              <strong>
-                we do not offer refunds, partial refunds, or credits
-              </strong>{" "}
-              for:
+              This refund policy applies only to first-time subscriptions.
             </p>
+            <p className="mb-4">After this 7-day period:</p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li>Unused days in a billing period</li>
-              <li>Downgrades or cancellations made during a billing period</li>
-              <li>One-time fees, add-ons, or implementation services</li>
+              <li>All charges become non-refundable</li>
+              <li>
+                No partial refunds or credits are issued for unused time, downgrades, or cancellations
+              </li>
             </ul>
-            <p>
-              This helps us keep our pricing as competitive and predictable as
-              possible for all customers.
-            </p>
           </section>
 
           {/* Section 2 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              2. You Can Cancel Any Time
+              2. No Refunds After the Refund Window
+            </h2>
+            <p className="mb-4">
+              After the initial refund window has passed, we do not provide refunds or credits for:
+            </p>
+            <ul className="list-disc pl-6 mb-4 space-y-2">
+              <li>Unused days in a billing cycle</li>
+              <li>Subscription cancellations or downgrades</li>
+              <li>One-time fees, add-ons, or implementation charges</li>
+            </ul>
+            <p>
+              This allows us to allocate infrastructure, AI resources, and platform capacity reliably and fairly for all customers.
+            </p>
+          </section>
+
+          {/* Section 3 */}
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold mb-4">
+              3. You Can Cancel Any Time
             </h2>
             <p className="mb-4">
               You are never locked in beyond the period you've already paid for.
@@ -107,14 +122,14 @@ export default function RefundPage() {
             </ul>
           </section>
 
-          {/* Section 3 */}
+          {/* Section 4 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              3. How Billing Cycles & Cancellations Work
+              4. How Billing Cycles & Cancellations Work
             </h2>
 
             <h3 className="text-xl font-medium mt-6 mb-3">
-              3.1 Monthly subscriptions
+              4.1 Monthly subscriptions
             </h3>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>
@@ -165,7 +180,7 @@ export default function RefundPage() {
             </div>
 
             <h3 className="text-xl font-medium mt-6 mb-3">
-              3.2 Longer-term subscriptions (quarterly, annual, etc.)
+              4.2 Longer-term subscriptions (quarterly, annual, etc.)
             </h3>
             <p className="mb-4">
               If you choose a longer billing cycle (e.g.,{" "}
@@ -227,13 +242,13 @@ export default function RefundPage() {
             </div>
           </section>
 
-          {/* Section 4 */}
+          {/* Section 5 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              4. Plan Changes (Upgrades & Downgrades)
+              5. Plan Changes (Upgrades & Downgrades)
             </h2>
 
-            <h3 className="text-xl font-medium mt-6 mb-3">4.1 Upgrades</h3>
+            <h3 className="text-xl font-medium mt-6 mb-3">5.1 Upgrades</h3>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>
                 If you upgrade your plan (e.g., more seats, higher tier, or
@@ -252,7 +267,7 @@ export default function RefundPage() {
               </li>
             </ul>
 
-            <h3 className="text-xl font-medium mt-6 mb-3">4.2 Downgrades</h3>
+            <h3 className="text-xl font-medium mt-6 mb-3">5.2 Downgrades</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 If you downgrade your plan, the downgrade will take effect from
@@ -269,10 +284,10 @@ export default function RefundPage() {
             </ul>
           </section>
 
-          {/* Section 5 */}
+          {/* Section 6 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              5. Trial Periods & Promotions (If Offered)
+              6. Trial Periods & Promotions (If Offered)
             </h2>
             <p className="mb-4">From time to time, MagicalCX may offer:</p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
@@ -298,17 +313,17 @@ export default function RefundPage() {
                 end of any free or discounted period,
               </li>
               <li>
-                Our standard <strong>no-refund</strong> and{" "}
+                Our standard <strong>refund policy</strong> (7-day window for first-time subscriptions) and{" "}
                 <strong>cancel-anytime</strong> rules will apply once the paid
                 subscription begins.
               </li>
             </ul>
           </section>
 
-          {/* Section 6 */}
+          {/* Section 7 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              6. Transparency & Support
+              7. Transparency & Support
             </h2>
             <p className="mb-4">
               Our goal is to give you the confidence to choose the subscription
@@ -343,10 +358,10 @@ export default function RefundPage() {
             </ul>
           </section>
 
-          {/* Section 7 */}
+          {/* Section 8 */}
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">
-              7. How to Cancel or Get Help
+              8. How to Cancel or Get Help
             </h2>
             <p className="mb-4">
               To cancel your subscription or ask any questions about billing:

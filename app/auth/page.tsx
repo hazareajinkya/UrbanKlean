@@ -76,20 +76,6 @@ export default function AuthPageV2() {
     <div className="min-h-screen grid lg:grid-cols-[40%_60%]">
       {/* Left Column - Auth Form */}
       <div className="flex flex-col justify-between p-8 lg:p-16 bg-white text-black relative">
-        {/* Logo */}
-        {/* <div className="flex items-center justify-between gap-3">
-          <div className="h-10 w-10  rounded-md flex items-center justify-center">
-            <img
-              src="/logos/magicalcx-appicon-dark.png"
-              alt=""
-              className="rounded-md"
-            />
-          </div>
-          <span className="font-medium text-xl tracking-tight text-black">
-            MagicalCX
-          </span>
-        </div> */}
-
         <div className="w-full max-w-[440px] mx-auto flex flex-col justify-center flex-1 py-12">
           {status === "loading" ? (
             <div className="min-h-[400px] flex items-center justify-center">
@@ -545,28 +531,17 @@ const SignInForm = () => {
           className="rounded-md size-12"
         />
         <h1 className="text-4xl md:text-3xl leading-tight mt-6 mb-4">
-          Welcome to the <br />
-          HumanlyClear era.
-          {/* Sign in to MagicalCX */}
+          {/* Welcome to the <br />
+          HumanlyClear era. */}
+          Sign in to MagicalCX
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed max-w-sm">
-          Empathy-first support that actually cares. Sign up to start
-          orchestration.
+          {/* Empathy-first support that actually cares. Sign up to start
+          orchestration. */}
+          Start delivering empathy-first customer experience at scale.
         </p>
       </div>
 
-      {/* <div className="flex flex-col items-center ">
-        <div className="w-20 h-20 bg-black p-0 rounded-md flex items-center justify-center mb-2">
-          <span className="text-4xl font-medium">👋</span>
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-3xl tracking-tight text-black">MagicalCX</h2>
-          <p className="text-muted-foreground text-base">
-            Empathy-first support that actually cares
-          </p>
-        </div>
-      </div> */}
       <div className="space-y-4 pt-4">
         <Button
           variant="default"

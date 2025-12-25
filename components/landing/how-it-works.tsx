@@ -595,10 +595,10 @@ const steps = [
   {
     id: 0,
     step: "Step 1",
-    title: "Drop in your website",
+    title: "Enter your website",
     subtitle: "(and whatever you already have)",
     description:
-      "You don’t need a big project plan, complex integrations, or months of setup. Just share your URL and let us do the heavy lifting.",
+      "No long plans or complex setup. Share your URL, and we’ll do the rest.",
     icon: Globe,
     Visual: Step1Visual,
   },
@@ -608,7 +608,7 @@ const steps = [
     title: "MagicalCX understands",
     subtitle: "HumanlyClear™ Intelligence",
     description:
-      "MagicalCX reads your site like a smart, empathetic team member, building a unified conversation brain that reflects your brand.",
+      "MagicalCX reads your site to power a unified, brand-aligned conversation engine that responds with empathy.",
     icon: Bot,
     Visual: Step2Visual,
   },
@@ -618,17 +618,17 @@ const steps = [
     title: "Customer experience levels up",
     subtitle: "Quietly and immediately",
     description:
-      "From the moment MagicalCX takes over, customers notice faster clarity and real resolutions inside the chat.",
+      "Once MagicalCX is active, your customers notice clarity and solutions within the conversations.",
     icon: Zap,
     Visual: Step3Visual,
   },
   {
     id: 3,
     step: "Step 4",
-    title: "EFRO optimizes revenue",
+    title: "EFRO™ increases revenue",
     subtitle: "Empathy-First Revenue Orchestrator™",
     description:
-      "As conversations flow, EFRO learns when to help, when to suggest, and how to protect your margins.",
+      "It learns when to help, when to suggest, and how to protect your margins as conversations flow.",
     icon: LineChart,
     Visual: Step4Visual,
   },
@@ -638,7 +638,7 @@ const steps = [
     title: "Steer with a dashboard",
     subtitle: "No complicated systems",
     description:
-      "Log into one clear view to see plain-language summaries, resolution stats, and opportunities for improvement.",
+      "One clear view to see plain-language summaries, resolution stats, and opportunities for improvement.",
     icon: LayoutDashboard,
     Visual: Step5Visual,
   },
@@ -674,11 +674,20 @@ export const HowItWorks = () => {
       id="how-it-works"
     >
       <div className="section-container-padding">
-        <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
-          <h1 className="section-heading">What happens when you start</h1>
+        <div className="max-w-4xl mx-auto text-center mb-16 md:mb-24">
+          <h2 className="section-heading ">
+            {/* Features built to{" "}
+          <span className="text-muted-foreground">scale your support</span> */}
+            <span className="text-muted-foreground">
+              What happens when you start
+            </span>{" "}
+            with MagicalCX?
+            {/* Why your team works better with{" "}
+          <span className="font-serif italic">MagicalCX</span> */}
+          </h2>
           <p className="section-subheadline">
-            No complex integrations. No months of setup. Just instant,
-            intelligent customer experience.
+            Instant, Empathetic & Thoughtful Customer Experience delivered by
+            your brand
           </p>
         </div>
 

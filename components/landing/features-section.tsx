@@ -343,36 +343,39 @@ export const FeaturesSection = () => {
       id="features"
     >
       <div className="max-w-5xl mx-auto text-center mb-16 section-container-padding">
-        <h2 className="section-heading ">
+        <h2 className="section-heading max-w-3xl mx-auto">
           {/* Features built to{" "}
           <span className="text-muted-foreground">scale your support</span> */}
-          <span className="text-muted-foreground">Everything you need to</span>{" "}
-          deliver a magical experience
+          <span className="text-muted-foreground">
+            Everything your brand needs to
+          </span>{" "}
+          deliver a magical customer experience
           {/* Why your team works better with{" "}
           <span className="font-serif italic">MagicalCX</span> */}
         </h2>
         <p className="section-subheadline">
-          MagicalCX is designed to help every customer feel understood,
-          supported, and genuinely cared for.
+          MagicalCX is designed to help all your customers feel understood,
+          supported, and genuinely cared for. Anytime. Everytime.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border border-y rounded-none max-w-7xl mx-auto overflow-hidden">
         {/* Row 1 */}
+
+        <FeatureCard
+          title="HumanlyClear™ Conversations"
+          description="Interactions that feel like your best human agents. Clear, empathetic, and context‑aware."
+          Visual={LearningVisual}
+        />
+        <FeatureCard
+          title="EFRO™ Engine "
+          description="Decides if, when, and how to introduce upgrades, offers, or saves, only when it’s fair, timely, and genuinely helpful."
+          Visual={ActionsVisual}
+        />
         <FeatureCard
           title="Conversational Memory"
           description="MagicalCX remembers past chats, orders, and details so customers don't repeat themselves"
           Visual={MemoryVisual}
-        />
-        <FeatureCard
-          title="Takes Actions"
-          description="Refunds, exchanges, and tracking—handled instantly without human help."
-          Visual={ActionsVisual}
-        />
-        <FeatureCard
-          title="Self-Learning Engine"
-          description="Improves automatically with every conversation. No manual training needed."
-          Visual={LearningVisual}
         />
 
         {/* Row 2 */}
@@ -383,8 +386,8 @@ export const FeaturesSection = () => {
           <div className="p-6 md:p-8 bg-card z-10">
             <h3 className="text-lg mb-2">Omnichannel Inbox</h3>
             <p className="text-base font-normal text-muted-foreground leading-relaxed max-w-xl">
-              Unify WhatsApp, Instagram, Email, and Webchat in one organized
-              stream. Reply faster and never miss a customer message again.
+              One Intelligent CX brain which unifies Webchat, Email, WhatsApp,
+              Instagram, and Messenger in one organized stream.
             </p>
           </div>
         </div>
@@ -439,3 +442,5 @@ const FeatureCard = ({
     </div>
   );
 };
+
+//TODO: Add a separate full features page from here list and more https://poe.com/s/NgncfZnaFmEoMxib4FRU

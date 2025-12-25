@@ -24,11 +24,11 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "MagicalCX | Empathy-First AI for magical customer experience",
   description:
-    "MagicalCX is an empathy-first AI platform that transforms customer support into a growth engine—reducing costs, increasing revenue, and creating human-like customer experiences at scale.",
+    "MagicalCX is an empathy-first AI platform that transforms customer experience into a growth engine",
   openGraph: {
     title: "MagicalCX | Empathy-First AI for magical customer experience",
     description:
-      "MagicalCX is an empathy-first AI platform that transforms customer support into a growth engine—reducing costs, increasing revenue, and creating human-like customer experiences at scale.",
+      "MagicalCX is an empathy-first AI platform that transforms customer experience into a growth engine",
     url: coreConf.baseUrl,
     type: "website",
   },
