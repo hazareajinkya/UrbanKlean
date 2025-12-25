@@ -7,10 +7,11 @@ import { useDemoModal } from "./demo-modal";
 
 const checklistItems = [
   "No credit card required",
-  "Guided setup",
-  "Remembers your customers",
-  "Fixes issues inside the chat",
-  "Weekly insights included",
+  "14 days free trial",
+  "DIY or Guided setup",
+  // "Remembers your customers",
+  // "Fixes issues inside the chat",
+  // "Weekly insights included",
 ];
 
 export const CtaSection = () => {
@@ -24,11 +25,12 @@ export const CtaSection = () => {
             <div className="space-y-8 pt-6 pb-6 pl-6 pr-6 md:pt-8 md:pb-8 md:pl-8 md:pr-8 lg:pt-16 lg:pb-16 lg:pl-16 lg:pr-16">
               <div className="space-y-6">
                 <h2 className="text-3xl leading-normal text-foreground md:text-4xl">
-                  See your AI teammate in action today
+                  See your AI teammate in action now
                 </h2>
                 <p className="text-base leading-relaxed text-muted-foreground max-w-xl">
-                  Are you ready to make your support faster, kinder, and easier
-                  for everyone?
+                  Ready to make support faster, kinder, easier and help
+                  customers feel good about choosing you? <br /> <br /> PS:
+                  Sales improves too...
                 </p>
               </div>
 

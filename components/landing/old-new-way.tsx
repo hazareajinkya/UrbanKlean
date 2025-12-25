@@ -81,11 +81,11 @@ const comparisons = [
       icon: LinkIcon,
       text: "Sends links when people need solutions",
     },
-    new: { icon: Zap, text: "Takes action right inside the chat" },
+    new: { icon: Zap, text: "Takes agentic action within the chat" },
   },
   {
     old: { icon: Split, text: "Designed to deflect tickets" },
-    new: { icon: TrendingUp, text: "Designed to turn support into sales" },
+    new: { icon: TrendingUp, text: "Generate sales from support using EFRO™" },
   },
   // {
   //   old: {
@@ -126,7 +126,7 @@ const comparisons = [
     // new: { icon: Megaphone, text: "Matches your brand voice in every message" },
     new: {
       icon: Megaphone,
-      text: "Makes your brand sound warm and human",
+      text: "Makes your brand sound HumanlyClear™",
       // text: "Makes your brand sound like… your brand",
     },
   },
@@ -135,7 +135,7 @@ const comparisons = [
       icon: Mail,
       text: "Tells customers to email for complex issues",
     },
-    new: { icon: User, text: "Seamlessly brings in an agent when needed" },
+    new: { icon: User, text: "Escalates to a human when needed" },
   },
   {
     old: {
@@ -164,7 +164,7 @@ export const OldNewWay = () => {
           {/* From Outdated to Upgraded */}
           {/* Old Method vs New Standard. */}
           {/* From "I'm just a bot." to "I've got this." */}
-          The Old Way vs The New Way
+          The Old Way vs The Magical Way
           {/* Slow, Repetitive, Frustrating vs Fast, Human, Effortless. */}
           {/* Yesterday's Support vs Tomorrow's Experience.  */}
           {/* Old Problems. New Solutions. */}
@@ -175,7 +175,8 @@ export const OldNewWay = () => {
             and far more effective. */}
           {/* A quick look at how support changes when it finally works the way it
             should. */}
-          Two very different ways to handle support — only one makes sense.
+          Two very different ways to handle support. In 2026, only one makes
+          sense.
         </p>
       </div>
 

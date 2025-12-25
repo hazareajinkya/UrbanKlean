@@ -24,28 +24,29 @@ import { Button } from "@/components/ui/button";
 import { PDFIcon } from "@/lib/logos";
 
 const reasons = [
+  // {
+  //   feature: {
+  //     title: "Effortless Connection",
+  //     subtitle: "We integrate without pain.",
+  //     description:
+  //       "Forget months-long IT projects. We designed onboarding to feel less like a migration and more like flipping a switch.",
+  //     icon: Cable,
+  //   },
+  //   outcome: {
+  //     text: "Customers feel connected to one united brand.",
+  //   },
+  // },
   {
     feature: {
-      title: "Effortless Connection",
-      subtitle: "We integrate without pain.",
+      title: "DIY or Done-for-you",
+      subtitle: "You choose the level of involvement.",
       description:
-        "Forget months-long IT projects. We designed onboarding to feel less like a migration and more like flipping a switch.",
-      icon: Cable,
-    },
-    outcome: {
-      text: "Customers feel connected to one united brand.",
-    },
-  },
-  {
-    feature: {
-      title: "Done-for-you Service",
-      subtitle: "True white‑glove service.",
-      description:
-        "We’ll set everything up for you – from channels to guardrails. We join calls, share screens, and guide you click‑by‑click so you never have to guess.",
+        // "We’ll set everything up for you – from channels to guardrails. We join calls, share screens, and guide you click‑by‑click so you never have to guess.",
+        "Simple enough to set up on your own. But if you'd prefer, we offer a full done-for-you, white-glove setup at no extra cost.",
       icon: HeartHandshake,
     },
     outcome: {
-      text: "Zero hassle integration—we do the heavy lifting so you don't have to.",
+      text: "Zero hassle integration. We do the heavy lifting so you don't have to.",
     },
   },
   {
@@ -57,14 +58,14 @@ const reasons = [
       icon: FolderOpen,
     },
     outcome: {
-      text: "This brand treats me like a relationship, not a ticket.",
+      text: "Your brand treats customers like a relationship, not a ticket.",
     },
   },
   {
     feature: {
-      title: "EFRO + HumanlyClear™",
+      title: "EFRO™ + HumanlyClear™",
 
-      subtitle: "Beyond generic “ChatGPT‑style” AI.",
+      subtitle: "Empathetic Agentic Intelligence ",
       description:
         "Trained for emotional clarity and business precision, balancing customer empathy with your revenue goals.",
       icon: MessageCircleMore,
@@ -82,7 +83,7 @@ const reasons = [
       icon: FileText,
     },
     outcome: {
-      text: "You stop guessing and start steering with clear, actionable data.",
+      text: "You start steering with clear, actionable data.",
     },
   },
 ];
@@ -202,8 +203,8 @@ export const WhyChooseUs = () => {
         <p className="section-subheadline">
           {/* We built the only AI engine that combines the memory of a CRM, the
           hands of an agent, and the brain of a salesperson. */}
-          We built the only AI engine that remembers like a CRM, acts like an
-          agent, and thinks like a salesperson.
+          It's the world's only AI engine that remembers like a CRM, acts like
+          an agent, and thinks like an empathetic salesperson.
         </p>
       </div>
 
