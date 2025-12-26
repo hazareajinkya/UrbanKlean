@@ -143,28 +143,9 @@ export const InfoSidebar = ({
       <div className="border-b h-14 flex items-center jutify-center px-5 bg-muted">
         <p className="text-sm text-foreground">{person?.name || "Unknown"}</p>
       </div>
-      {/* <div className="px-5 py-6 border-b border-border/50">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-base flex-shrink-0">
-            {person?.name?.charAt(0)?.toUpperCase() || "?"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-foreground truncate">
-              {person?.name || "Unknown"}
-            </h3>
-            {hasWorkInfo && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                {person.title}
-                {person.title && person.company && " · "}
-                {person.company}
-              </p>
-            )}
-          </div>
-        </div>
-      </div> */}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
         {/* Contact Info */}
 
         {hasSessionInfo && (

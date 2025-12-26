@@ -7,6 +7,7 @@ export const WidgetScript = () => {
   const pathname = usePathname();
   const shouldLoad =
     !pathname?.startsWith("/workspaces") &&
+    !pathname?.startsWith("/widget-test") &&
     !pathname?.startsWith("/api") &&
     !pathname?.startsWith("/chat");
 
