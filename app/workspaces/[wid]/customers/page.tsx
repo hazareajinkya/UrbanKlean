@@ -29,7 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getInitials, cn, fromSlug } from "@/lib/utils";
+import { getInitials, cn, fromSlug, formatDate } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -126,17 +126,7 @@ export default function CustomersPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-auto relative">
             {isLoading && people.length === 0 ? (
-              <div className="p-6 space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-[250px]" />
-                      <Skeleton className="h-4 w-[200px]" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CustomersTableSkeleton />
             ) : filteredPeople.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-8 text-center">
                 <div className="h-16 w-16 rounded-full bg-secondary/50 flex items-center justify-center mb-4 ring-8 ring-secondary/20">
@@ -166,7 +156,7 @@ export default function CustomersPage() {
                     <TableHead className="w-[200px]">Company</TableHead>
                     <TableHead className="w-[200px]">Tags</TableHead>
                     <TableHead className="w-[150px] text-right pr-6">
-                      Last Active
+                      Engagement
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -275,19 +265,11 @@ export default function CustomersPage() {
                       <TableCell className="text-right pr-6">
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-xs font-medium text-foreground/80">
-                            {person.updatedAt
-                              ? formatDistanceToNow(
-                                  new Date(person.updatedAt),
-                                  { addSuffix: true }
-                                )
-                              : "Recently"}
+                            {getEngagementStatus(person)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            Added{" "}
-                            {person.createdAt
-                              ? new Date(person.createdAt).toLocaleDateString()
-                              : "-"}
+                            {formatDate(person.createdAt) || "-"}
                           </span>
                         </div>
                       </TableCell>
@@ -340,3 +322,79 @@ export default function CustomersPage() {
     </div>
   );
 }
+
+const getEngagementStatus = (person: IPerson): string => {
+  const conversationCount = person.pastSessionIds?.length || 0;
+
+  // Check if created recently (within last 7 days) and has only 1 conversation
+  if (conversationCount === 1 && person.createdAt) {
+    const daysSinceCreated = Math.floor(
+      (Date.now() - new Date(person.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+    if (daysSinceCreated <= 7) {
+      return "New";
+    }
+  }
+
+  return conversationCount === 1
+    ? "1 conversation"
+    : `${conversationCount} conversations`;
+};
+
+const CustomersTableSkeleton = () => {
+  return (
+    <table className="w-full caption-bottom text-sm">
+      <TableHeader className="bg-secondary sticky top-0 z-10 border-b">
+        <TableRow className="hover:bg-transparent border-b w-full">
+          <TableHead className="w-[300px] pl-6">Name</TableHead>
+          <TableHead className="w-[200px]">Contact</TableHead>
+          <TableHead className="w-[200px]">Company</TableHead>
+          <TableHead className="w-[200px]">Tags</TableHead>
+          <TableHead className="w-[150px] text-right pr-6">
+            Engagement
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {[...Array(5)].map((_, i) => (
+          <TableRow key={i}>
+            <TableCell className="pl-6 py-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-[140px]" />
+                  <Skeleton className="h-3 w-[100px]" />
+                </div>
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-[160px]" />
+                <Skeleton className="h-3 w-[120px]" />
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-[120px]" />
+                <Skeleton className="h-3 w-[100px]" />
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex flex-wrap gap-1.5">
+                <Skeleton className="h-5 w-12 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+            </TableCell>
+            <TableCell className="text-right pr-6">
+              <div className="flex flex-col items-end gap-1.5">
+                <Skeleton className="h-3 w-[80px]" />
+                <Skeleton className="h-3 w-[100px]" />
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </table>
+  );
+};
