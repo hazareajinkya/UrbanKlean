@@ -1,7 +1,7 @@
 "use client";
 
 import { ISession } from "@/lib/types/session";
-import { formatDate } from "@/lib/utils";
+import { formatDate, fromSlug } from "@/lib/utils";
 import {
   Loader,
   Mail,
@@ -14,6 +14,13 @@ import {
   MessageSquare,
   Copy,
   Link2,
+  CreditCard,
+  DollarSign,
+  Coins,
+  HandCoins,
+  BadgeDollarSignIcon,
+  CircleDollarSign,
+  Code,
 } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history-store";
 import { toast } from "sonner";
@@ -82,7 +89,7 @@ export const InfoSidebar = ({
   const persons = useHistoryStore((state) => state.persons);
   const loadingSessionIds = useHistoryStore((state) => state.loadingSessionIds);
 
-  if (!currentSession?.personId) {
+  if (!currentSession?.personId && !currentSession?.geo) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground px-6">
         <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
@@ -94,9 +101,11 @@ export const InfoSidebar = ({
     );
   }
 
-  const person = persons[currentSession.personId];
+  const person = currentSession.personId
+    ? persons[currentSession.personId]
+    : undefined;
 
-  if (!person) {
+  if (!person && !currentSession.geo) {
     return (
       <div className="h-full flex items-center justify-center">
         <Loader className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -104,30 +113,44 @@ export const InfoSidebar = ({
     );
   }
 
+  const hasSessionInfo =
+    currentSession &&
+    (currentSession.geo?.city ||
+      currentSession.usage?.credits ||
+      currentSession.fromPage);
   const hasContactInfo =
-    person.emails?.length > 0 || person.phones?.length > 0 || person.location;
-  const hasWorkInfo = person.company || person.title;
-  const hasTags = person.tags?.length > 0;
-  const hasInterests = person.interests?.length > 0;
-  const hasMemories = person.memories?.length > 0;
-  const hasNotes = person.notes?.length > 0;
-  const hasSummary = person.summary?.length > 0;
+    person &&
+    (person.emails?.length > 0 ||
+      person.phones?.length > 0 ||
+      person.location ||
+      person.title ||
+      person.company ||
+      person.name);
+  const hasWorkInfo = person && (person.company || person.title);
+  const hasTags = person && person.tags?.length > 0;
+  const hasInterests = person && person.interests?.length > 0;
+  const hasMemories = person && person.memories?.length > 0;
+  const hasNotes = person && person.notes?.length > 0;
+  const hasSummary = person && person.summary?.length > 0;
   // Filtered in store
-  const filteredPastSessions = person.pastSessionIds || [];
+  const filteredPastSessions = (person && person.pastSessionIds) || [];
 
   const hasPastSessions = filteredPastSessions.length > 0;
 
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Header */}
-      <div className="px-5 py-6 border-b border-border/50">
+      <div className="border-b h-14 flex items-center jutify-center px-5 bg-muted">
+        <p className="text-sm text-foreground">{person?.name || "Unknown"}</p>
+      </div>
+      {/* <div className="px-5 py-6 border-b border-border/50">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-base flex-shrink-0">
-            {person.name?.charAt(0)?.toUpperCase() || "?"}
+            {person?.name?.charAt(0)?.toUpperCase() || "?"}
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-foreground truncate">
-              {person.name || "Unknown"}
+              {person?.name || "Unknown"}
             </h3>
             {hasWorkInfo && (
               <p className="text-xs text-muted-foreground truncate mt-0.5">
@@ -138,77 +161,51 @@ export const InfoSidebar = ({
             )}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Contact Info */}
-        {(hasContactInfo || currentSession.fromPage) && (
+
+        {hasSessionInfo && (
           <div className="px-5 py-4 border-b border-border/30">
-            <SectionLabel>Contact</SectionLabel>
+            <SectionLabel>SESSION INFO</SectionLabel>
             <div className="space-y-1">
-              {person.emails?.map((email, i) => (
-                <CopyableItem key={i} icon={Mail} value={email} />
-              ))}
-              {person.phones?.map((phone, i) => (
-                <CopyableItem key={i} icon={Phone} value={phone} mono />
-              ))}
-              {person.location && (
-                <CopyableItem icon={MapPin} value={person.location} />
+              {currentSession.geo?.city && (
+                <CopyableItem
+                  icon={MapPin}
+                  value={`${currentSession.geo.city},  ${currentSession.geo.country}`}
+                />
+              )}
+              {currentSession.usage?.credits && (
+                <CopyableItem
+                  icon={DollarSign}
+                  value={`${currentSession.usage?.credits} messages used`}
+                />
               )}
               {currentSession.fromPage && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={currentSession.fromPage}
-                      target="_blank"
-                      className="flex items-center gap-2.5 min-w-0 hover:bg-secondary/50 -mx-2 px-2 py-1 rounded-md transition-colors"
-                    >
-                      <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs text-foreground truncate flex-1">
-                        {(() => {
-                          try {
-                            return (
-                              new URL(currentSession.fromPage).pathname || "/"
-                            );
-                          } catch {
-                            return currentSession.fromPage;
-                          }
-                        })()}
-                      </span>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <p className="text-xs break-all">
-                      {currentSession.fromPage}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+                <FromPageLink fromPage={currentSession.fromPage} />
               )}
             </div>
           </div>
         )}
 
-        {/* Work Info */}
-        {hasWorkInfo && (
+        {person && (hasContactInfo || currentSession.fromPage) && (
           <div className="px-5 py-4 border-b border-border/30">
-            <SectionLabel>Work</SectionLabel>
-            <div className="space-y-2.5">
-              {person.title && (
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Briefcase className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-foreground">
-                    {person.title}
-                  </span>
-                </div>
+            <SectionLabel>Contact</SectionLabel>
+            <div className="space-y-1">
+              {person?.name && <CopyableItem icon={User} value={person.name} />}
+              {person?.emails?.map((email, i) => (
+                <CopyableItem key={i} icon={Mail} value={email} />
+              ))}
+              {person?.phones?.map((phone, i) => (
+                <CopyableItem key={i} icon={Phone} value={phone} mono />
+              ))}
+              {person?.title && (
+                <CopyableItem icon={Briefcase} value={person.title} />
               )}
-              {person.company && (
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Building2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs text-foreground">
-                    {person.company}
-                  </span>
-                </div>
+              {person?.company && (
+                <CopyableItem icon={Building2} value={person.company} />
               )}
             </div>
           </div>
@@ -224,7 +221,7 @@ export const InfoSidebar = ({
                   key={i}
                   className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium"
                 >
-                  {tag}
+                  {fromSlug(tag)}
                 </span>
               ))}
             </div>
@@ -365,7 +362,7 @@ export const InfoSidebar = ({
       </div>
 
       {/* Footer */}
-      {person.createdAt && (
+      {person && person.createdAt && (
         <div className="px-5 py-3 border-t border-border/30 flex items-center gap-1.5 text-muted-foreground">
           <Clock className="w-3 h-3" />
           <span className="text-[10px]">
@@ -374,5 +371,40 @@ export const InfoSidebar = ({
         </div>
       )}
     </div>
+  );
+};
+
+const FromPageLink = ({ fromPage }: { fromPage: string }) => {
+  const displayText = (() => {
+    try {
+      const url = new URL(fromPage);
+      const pathname = url.pathname || "/";
+      if (pathname === "/") {
+        return url.hostname;
+      }
+      return pathname;
+    } catch {
+      return fromPage;
+    }
+  })();
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Link
+          href={fromPage}
+          target="_blank"
+          className="flex items-center gap-2.5 min-w-0 hover:bg-secondary/50 -mx-2 px-2 py-1 rounded-md transition-colors"
+        >
+          <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+          <span className="text-xs text-foreground truncate flex-1">
+            {displayText}
+          </span>
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <p className="text-xs break-all">{fromPage}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };

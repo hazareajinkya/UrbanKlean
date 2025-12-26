@@ -11,6 +11,7 @@ import {
 } from "react";
 import Modal from "@/components/ui/modal";
 import { Loader } from "lucide-react";
+import { BOOK_DEMO_IFRAME } from "@/lib/constants";
 
 interface DemoModalContextType {
   openDemoModal: () => void;
@@ -52,14 +53,14 @@ export const DemoModalProvider = ({ children }: { children: ReactNode }) => {
         closeModal={closeDemoModal}
         className="min-h-[80vh] max-w-6xl bg-white dark:bg-black rounded-2xl p-0 relative overflow-hidden"
       >
-        <div className="relative w-full h-[80vh]">
+        <div className="relative w-full h-[90vh] md:h-[80vh]">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
               <Loader className="h-8 w-8 animate-spin text-primary" />
             </div>
           )}
           <iframe
-            src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ22jofNUdgRK1BRtkCWZurBH-qrF8uYwlShxv8x94Gf6FsYjyDTwA86vwdTSWc6-fyEbZM2MiUX?gv=true"
+            src={BOOK_DEMO_IFRAME}
             width="100%"
             className="h-full w-full"
             onLoad={() => setIsLoading(false)}

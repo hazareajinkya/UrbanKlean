@@ -127,7 +127,9 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
         {/* User Info Sidebar */}
         <aside
           className={`p-0 border-l w-[280px] flex-shrink-0 ${
-            currentSession?.personId && !isCollapsed ? "" : "hidden"
+            (currentSession?.personId || currentSession?.geo) && !isCollapsed
+              ? ""
+              : "hidden"
           }`}
         >
           <InfoSidebar
@@ -364,7 +366,7 @@ const HistoryMessageList = ({
                 {formatDate(currentSession.updatedAt)}
               </p>
             </div>
-            {currentSession.personId && (
+            {(currentSession.personId || currentSession.geo) && (
               <Button
                 variant={"ghost"}
                 size={"icon"}

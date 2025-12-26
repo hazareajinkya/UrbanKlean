@@ -104,7 +104,7 @@ export default function SettingsPage() {
                 key={section.id}
                 onClick={() => handleSectionChange(section.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200",
+                  "flex  cursor-pointer items-center gap-2 px-3.5 py-2 text-sm rounded-md transition-all duration-200",
                   isActive
                     ? "bg-secondary text-primary font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"

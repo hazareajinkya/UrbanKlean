@@ -3,7 +3,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { CtaSection } from "@/components/landing/cta-section";
 import { coreConf } from "@/lib/utils/conf";
-import { AboutV2Content } from "./v2/about-v2-content";
+import { AboutContent } from "./about-content";
 
 export const metadata: Metadata = {
   title: "About Us | MagicalCX",
@@ -13,18 +13,18 @@ export const metadata: Metadata = {
     title: "About Us | MagicalCX",
     description:
       "Numbers you can show in a board meeting. Experiences you can be proud to put your brand on.",
-    url: `${coreConf.baseUrl}/about/v2`,
+    url: `${coreConf.baseUrl}/about`,
   },
   alternates: {
-    canonical: `${coreConf.baseUrl}/about/v2`,
+    canonical: `${coreConf.baseUrl}/about`,
   },
 };
 
-export default function AboutV2Page() {
+export default function AboutPage() {
   return (
     <div className="bg-background min-h-screen">
       <Navbar />
-      <AboutV2Content />
+      <AboutContent />
       <div className="bg-background dark">
         <CtaSection />
         <Footer />

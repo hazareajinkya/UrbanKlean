@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
-export const AboutV2Content = () => {
+export const AboutContent = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="section-container section-content-padding border-x pt-20 sm:pt-16 md:pt-24 pb-10 md:pb-20 flex flex-col items-center">
-        <div className="max-w-prose mt-16">
+      <section className="section-container section-content-padding border-x border-b pt-20 sm:pt-16 md:pt-24 pb-20 md:pb-28">
+        <div className="max-w-prose mx-auto mt-16">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -29,20 +30,27 @@ export const AboutV2Content = () => {
           >
             <p>
               I&apos;m{" "}
-              <span className="text-foreground font-medium">Manish</span>,
+              <Link
+                href="https://www.linkedin.com/in/manish-keswani-9a5a7814b/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground underline underline-offset-4"
+              >
+                Manish
+              </Link>{" "}
               Co-founder & CEO of MagicalCX
             </p>
             <p>Other than my family, I care about two things:</p>
             <ol className="list-decimal list-inside space-y-2 ml-4">
               <li>
                 Building{" "}
-                <span className="text-foreground font-medium italic">
+                <span className="text-foreground">
                   profitable, durable businesses
                 </span>
               </li>
               <li>
                 Giving people{" "}
-                <span className="text-foreground font-medium italic">
+                <span className="text-foreground">
                   genuinely good experiences
                 </span>{" "}
                 when they deal with those businesses
@@ -68,25 +76,26 @@ export const AboutV2Content = () => {
               That tension is why we built MagicalCX.
             </p>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Co-founder Section */}
-      <section className="border-t section-container section-content-padding border-x border-b py-20 md:py-28">
-        <div className="max-w-prose mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-6 space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed"
           >
             <p>And I didn&apos;t build it alone.</p>
             <p>
               My co‑founder & CTO,{" "}
-              <span className="text-foreground font-medium">Hrushikesh</span>,
-              is obsessed with his playlists, guitars and{" "}
-              <span className="text-foreground font-medium italic">
+              <Link
+                href="https://www.linkedin.com/in/hrushikesh-kuklare/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground underline underline-offset-4"
+              >
+                Hrushikesh
+              </Link>
+              , is obsessed with his playlists, guitars and{" "}
+              <span className="text-foreground">
                 how things feel to the person using them.
               </span>{" "}
             </p>
@@ -94,7 +103,7 @@ export const AboutV2Content = () => {
               Bad UX physically bothers him. Confusing flows, fake empathy, bots
               that don&apos;t really listen. He can&apos;t unsee them.
             </p>
-            <div className="space-y-4 pt-6 border-t border-border/50">
+            <div className="space-y-4 pt-6">
               <div className="bg-muted/30 p-6 rounded-lg border border-border/50">
                 <p className="text-foreground font-medium mb-2">
                   I look at a conversation and think:
@@ -133,29 +142,29 @@ export const AboutV2Content = () => {
             </h2>
             <ul className="space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed">
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
                   Need{" "}
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     more revenue and lower costs
                   </span>
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
                   Refuse to get there by{" "}
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     tricking, rushing, or disrespecting
                   </span>{" "}
                   customers
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
                   Want AI that feels{" "}
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     kind, clear, and human
                   </span>
                   , not cold and pushy
@@ -180,18 +189,18 @@ export const AboutV2Content = () => {
             </h2>
             <ul className="space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed">
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     Good business and good experience should help each other,
                     not fight each other
                   </span>
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     Trust is money for a brand
                   </span>{" "}
                   if customers trust you, they stay, come back, buy more, and
@@ -199,18 +208,18 @@ export const AboutV2Content = () => {
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     Your brand voice matters
                   </span>
                   ; your bot shouldn&apos;t sound like a stranger
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     Your people are an asset
                   </span>
                   , not a cost to replace; AI should make them better, not
@@ -218,9 +227,9 @@ export const AboutV2Content = () => {
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-primary mt-1">•</span>
+                <span className="text-primary">•</span>
                 <span>
-                  <span className="text-foreground font-medium italic">
+                  <span className="text-foreground">
                     Customer conversations are gold
                   </span>
                   . They should guide what you build and how you grow
@@ -233,7 +242,7 @@ export const AboutV2Content = () => {
 
       {/* Closing */}
       <section className="border-t section-container section-content-padding border-x border-b py-20 md:py-28 bg-muted/10">
-        <div className="max-w-prose mx-auto text-center">
+        <div className="max-w-prose mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -241,22 +250,21 @@ export const AboutV2Content = () => {
             transition={{ duration: 0.5 }}
             className="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed"
           >
-            <p className="text-2xl md:text-3xl text-foreground font-medium mb-8">
+            <h2 className="section-heading">
               MagicalCX is our way of giving you both:
-            </p>
+            </h2>
             <div className="space-y-4">
-              <p className="text-foreground font-medium">
+              <p className="text-foreground">
                 Numbers you can show in a board meeting
               </p>
               <p className="text-muted-foreground">and</p>
-              <p className="text-foreground font-medium">
+              <p className="text-foreground">
                 Experiences you can be proud to put your brand on
               </p>
             </div>
-            <p className="mt-12 pt-8 border-t border-border/50 text-foreground font-medium">
-              If you&apos;re trying to grow your business{" "}
-              <span className="italic">and</span> take care of your customers
-              the right way, we built MagicalCX for you.
+            <p className="mt-12 pt-8 text-foreground">
+              If you&apos;re trying to grow your business <span>and</span> take
+              care of your customers the right way, we built MagicalCX for you.
             </p>
           </motion.div>
         </div>
