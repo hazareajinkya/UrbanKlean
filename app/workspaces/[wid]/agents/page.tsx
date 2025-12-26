@@ -22,10 +22,14 @@ import {
   Settings,
   Code,
   Waves,
+  MessagesSquare,
+  PlayIcon,
+  Settings2,
 } from "lucide-react";
 import { IAgent } from "@/lib/types/agent";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Play } from "next/font/google";
 
 export default function AgentsPage() {
   const { wid } = useParams() as { wid: string };
@@ -143,8 +147,22 @@ export default function AgentsPage() {
                             className="text-muted-foreground rounded-full "
                             title="Chat"
                           >
-                            <MessageCircle className="w-4 h-4" />
-                            Chat
+                            <PlayIcon className="w-4 h-4" />
+                            Playground
+                          </Button>
+                        </Link>
+                        <Link
+                          href={`/workspaces/${wid}/agents/${agent.id}?tab=appearance`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="text-muted-foreground rounded-full"
+                            title="History"
+                          >
+                            <MessagesSquare className="w-4 h-4" />
+                            History
                           </Button>
                         </Link>
 
@@ -173,23 +191,8 @@ export default function AgentsPage() {
                             className="text-muted-foreground rounded-full"
                             title="Settings"
                           >
-                            <Settings className="w-4 h-4" />
+                            <Settings2 className="w-4 h-4" />
                             Settings
-                          </Button>
-                        </Link>
-
-                        <Link
-                          href={`/workspaces/${wid}/agents/${agent.id}?tab=widget`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="text-muted-foreground rounded-full "
-                            title="Widget"
-                          >
-                            <Code className="w-4 h-4" />
-                            Widget
                           </Button>
                         </Link>
 
