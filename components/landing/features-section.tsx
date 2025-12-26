@@ -394,8 +394,7 @@ export const FeaturesSection = () => {
 
         <FeatureCard
           title="Omnichannel Inbox"
-          description="One Intelligent CX brain which unifies Web, Email, Whatsapp,
-              Instagram, and Messenger in one organized stream."
+          description="One Intelligent CX brain which unifies Web, Email, Whatsapp, Instagram, and Messenger in one organized stream."
           Visual={OmnichannelVisual}
         />
         <FeatureCard

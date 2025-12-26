@@ -3,7 +3,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { CtaSection } from "@/components/landing/cta-section";
 import { coreConf } from "@/lib/utils/conf";
-import { AboutV2Content } from "./v2/about-v2-content";
+import { AboutContent } from "./about-content";
 
 export const metadata: Metadata = {
   title: "About Us | MagicalCX",
@@ -24,7 +24,7 @@ export default function AboutV2Page() {
   return (
     <div className="bg-background min-h-screen">
       <Navbar />
-      <AboutV2Content />
+      <AboutContent />
       <div className="bg-background dark">
         <CtaSection />
         <Footer />

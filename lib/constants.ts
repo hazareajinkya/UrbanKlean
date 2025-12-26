@@ -18,3 +18,6 @@ export const SESSION_PASSWORD =
 export const creditCosts = {
   query: 2,
 } as const;
+
+export const BOOK_DEMO_IFRAME =
+  "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1_55d95GVOjLV4i2tcGuUvvYi5C6WW59vDCaCOHRAynad1I2Cu-vVJqugAJ30mcQKyhJ-JLPaZ?gv=true";
