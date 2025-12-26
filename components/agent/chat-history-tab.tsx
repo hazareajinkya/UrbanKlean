@@ -127,7 +127,9 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
         {/* User Info Sidebar */}
         <aside
           className={`p-0 border-l w-[280px] flex-shrink-0 ${
-            currentSession?.personId && !isCollapsed ? "" : "hidden"
+            (currentSession?.personId || currentSession?.geo) && !isCollapsed
+              ? ""
+              : "hidden"
           }`}
         >
           <InfoSidebar
@@ -364,7 +366,7 @@ const HistoryMessageList = ({
                 {formatDate(currentSession.updatedAt)}
               </p>
             </div>
-            {currentSession.personId && (
+            {(currentSession.personId || currentSession.geo) && (
               <Button
                 variant={"ghost"}
                 size={"icon"}
@@ -452,12 +454,6 @@ const HistoryMessageList = ({
                               className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
                               key={partIndex}
                             >
-                              <span className="text-xs text-muted-foreground">
-                                {/* {message.metadata?.model?.toLocaleString() ||
-                                  "0"} */}
-                                {message.metadata?.tokenUsage?.toLocaleString() ||
-                                  "0"}
-                              </span>
                               <Streamdown
                                 components={{
                                   a: ({ href, children }) => (

@@ -24,6 +24,10 @@ export interface ISession {
   channel: IChannelProvider;
   status: "open" | "closed";
   messages: IChatMessage[];
+  usage?: {
+    tokens: number;
+    credits: number;
+  };
 
   fromPage?: string;
   createdAt: string;
