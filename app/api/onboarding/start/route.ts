@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { email, url, onboardingData } = onboardingCompleteSchema.parse(body);
-    const response = await backendClient.post("/onboard/start-onboarding", {
+    const response = await backendClient.post("/onboard/start-training", {
       email,
       url,
       ...onboardingData,

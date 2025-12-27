@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         }
       }
       if (workspaceType === "onboarding") {
-        await backendClient.post("/onboard/complete", { wid });
+        await backendClient.post("/onboard/webhook-training-complete", { wid });
       }
       return NextResponse.json({ status: "ok" });
     }
