@@ -95,8 +95,8 @@ const EmailSetupModal = ({ isOpen, closeModal }: EmailSetupModalProps) => {
       replyToEmail: data.replyToEmail,
       returnPathDomain: data.returnPathDomain,
       forwardingEmail: fwdEmail,
+      type: "default",
     };
-    console.log(metadata);
     const creds = { signatureId: data.signatureId };
     const emailChannel = generateDefaultChannel(
       data.emailAddress,

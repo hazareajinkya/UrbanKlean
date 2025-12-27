@@ -101,30 +101,66 @@ export async function GET(req: NextRequest) {
 
     const user_id = tokenData.user_id;
 
-    // Step 4: Get user profile data
-    const data = await messengerService.getProfile(access_token);
+    // Step 4: Get pages list (System User has access to pages)
+    const pages = await messengerService.getPages(access_token);
 
-    console.log("Facebook profile data:", data);
+    console.log("Facebook pages:", pages);
 
+    if (!pages || pages.length === 0) {
+      throw new Error(
+        "No Facebook pages found. Please ensure the System User has access to at least one page."
+      );
+    }
+
+    // Use the first page (you can modify this to let user select a page)
+    const selectedPage = pages[0];
+    const pageId = selectedPage.id;
+    const pageAccessToken = selectedPage.access_token;
+
+    if (!pageId || !pageAccessToken) {
+      throw new Error("Failed to get page ID or access token");
+    }
+
+    // Extract picture URL from page data (already included in /me/accounts response)
+    const profile_pic = selectedPage.picture?.data?.url || null;
+
+    console.log("Selected Facebook page:", {
+      id: pageId,
+      name: selectedPage.name,
+      hasPicture: !!profile_pic,
+    });
+
+    // Store System User token and Page Access Token
     const credentials = {
-      access_token,
+      access_token: access_token, // System User token (for getting pages)
+      page_access_token: pageAccessToken, // Page Access Token (for Messenger API)
       token_type,
       expires_in,
     };
 
-    const metadata = { ...data };
+    // Store page info in metadata, including the Page ID
+    // Use data from /me/accounts response (no need for additional API call)
+    const metadata = {
+      id: pageId,
+      name: selectedPage.name,
+      profile_pic,
+      system_user_id: user_id,
+    };
 
-    // Step 5: Subscribe to webhook (if needed)
+    // Step 6: Subscribe to webhook using Page ID and Page Access Token
     try {
-      await messengerService.subscribeToWebhook(access_token);
+      await messengerService.subscribeToWebhook({
+        pageId,
+        accessToken: pageAccessToken,
+      });
     } catch (error) {
       console.warn("Warning: Could not subscribe to webhook:", error);
       // Continue even if webhook subscription fails
     }
 
-    // Step 6: Create and save channel
+    // Step 7: Create and save channel
     const channel = generateDefaultChannel(
-      user_id,
+      pageId, // Use pageId as providerAccountId instead of user_id
       "messenger",
       credentials,
       metadata
@@ -159,16 +195,28 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Channel not found" }, { status: 404 });
     }
 
-    const accessToken = channel.credentials.access_token;
-    if (!accessToken) {
+    const pageAccessToken =
+      (channel.credentials.page_access_token as string) ||
+      (channel.credentials.access_token as string);
+    const pageId = channel.metadata.id as string;
+
+    if (!pageAccessToken || !pageId) {
       return NextResponse.json(
-        { error: "No access token found for channel" },
+        { error: "No page access token or page ID found for channel" },
         { status: 400 }
       );
     }
 
     // Unsubscribe from webhook
-    // await messengerService.unsubscribeFromWebhook(accessToken);
+    try {
+      await messengerService.unsubscribeFromWebhook({
+        pageId,
+        accessToken: pageAccessToken,
+      });
+    } catch (error) {
+      console.warn("Warning: Could not unsubscribe from webhook:", error);
+      // Continue even if webhook unsubscription fails
+    }
 
     // Remove channel from database
     await channelService.deleteChannel(wid, channelId);

@@ -5,15 +5,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/ui/modal";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useWorkspaces } from "@/lib/hooks/workspace/use-workspace";
 import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
+import { useOnboardingActions } from "@/lib/hooks/onboarding/use-onboarding-actions";
 import { IUserWorkspace } from "@/lib/types/user";
 import { IWorkspace } from "@/lib/types/workspace";
-import { formatDate } from "@/lib/utils";
-import { Edit2, Loader, Plus, Trash2, X } from "lucide-react";
+import { OnboardingData } from "@/lib/types/onboarding";
+import {
+  formatDate,
+  normalizeDomain,
+  validateDomain,
+  isBlockedCompanyDomain,
+  cn,
+} from "@/lib/utils";
+import { Edit2, Loader, Plus, Trash2, X, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
 
 export default function WorkspacesPage() {
   const router = useRouter();
@@ -211,21 +233,25 @@ export default function WorkspacesPage() {
         </div>
       )}
 
-      <WorkspaceModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        workspaceName={workspaceName}
-        setWorkspaceName={setWorkspaceName}
-        workspaceDescription={workspaceDescription}
-        setWorkspaceDescription={setWorkspaceDescription}
-        onSubmit={handleSubmit}
-        isLoading={
-          editingWorkspace
-            ? updateWorkspace.isPending
-            : createWorkspace.isPending
-        }
-        editingWorkspace={editingWorkspace}
-      />
+      {editingWorkspace ? (
+        <WorkspaceEditModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          workspaceName={workspaceName}
+          setWorkspaceName={setWorkspaceName}
+          workspaceDescription={workspaceDescription}
+          setWorkspaceDescription={setWorkspaceDescription}
+          onSubmit={handleSubmit}
+          isLoading={updateWorkspace.isPending}
+          editingWorkspace={editingWorkspace}
+        />
+      ) : (
+        <CreateWorkspaceModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          userEmail={user?.email || ""}
+        />
+      )}
 
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}
@@ -243,7 +269,9 @@ export default function WorkspacesPage() {
   );
 }
 
-interface WorkspaceModalProps {
+type CreateWorkspacePhase = "url-input" | "onboarding";
+
+interface WorkspaceEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   workspaceName: string;
@@ -252,10 +280,10 @@ interface WorkspaceModalProps {
   setWorkspaceDescription: (description: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
-  editingWorkspace: IWorkspace | undefined;
+  editingWorkspace: IWorkspace;
 }
 
-const WorkspaceModal = ({
+const WorkspaceEditModal = ({
   isOpen,
   onClose,
   workspaceName,
@@ -265,15 +293,12 @@ const WorkspaceModal = ({
   onSubmit,
   isLoading,
   editingWorkspace,
-}: WorkspaceModalProps) => {
-  const isEditing = !!editingWorkspace;
+}: WorkspaceEditModalProps) => {
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-0">
-          <h3 className="text-lg font-medium">
-            {isEditing ? "Edit Workspace" : "Create New Workspace"}
-          </h3>
+          <h3 className="text-lg font-medium">Edit Workspace</h3>
           <Button
             variant="ghost"
             size="sm"
@@ -284,9 +309,7 @@ const WorkspaceModal = ({
           </Button>
         </div>
         <p className="text-sm text-muted-foreground max-w-[80%]">
-          {isEditing
-            ? "Update your workspace name and settings."
-            : "Organize your agents and collaborate with your team."}
+          Update your workspace name and settings.
         </p>
 
         <form
@@ -327,10 +350,293 @@ const WorkspaceModal = ({
             </Button>
             <Button type="submit" disabled={!workspaceName.trim() || isLoading}>
               {isLoading && <Loader className="w-4 h-4 animate-spin " />}
-              {isEditing ? "Update Workspace" : "Create Workspace"}
+              Update Workspace
             </Button>
           </div>
         </form>
+      </div>
+    </Modal>
+  );
+};
+
+interface CreateWorkspaceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userEmail: string;
+}
+
+const CreateWorkspaceModal = ({
+  isOpen,
+  onClose,
+  userEmail,
+}: CreateWorkspaceModalProps) => {
+  const [phase, setPhase] = useState<CreateWorkspacePhase>("url-input");
+  const [domain, setDomain] = useState("");
+  const [domainError, setDomainError] = useState("");
+  const [url, setUrl] = useState<string | undefined>(undefined);
+  const [initialData, setInitialData] = useState<
+    Partial<OnboardingData> | undefined
+  >(undefined);
+
+  const { createWorkspace } = useWorkspaceActions();
+  const { generateOnboardingInfo, uploadLogo } = useOnboardingActions();
+
+  const validateDomainInput = (value: string): boolean => {
+    if (!value) {
+      setDomainError("");
+      return true; // Not required
+    }
+    const normalized = normalizeDomain(value);
+    if (!validateDomain(normalized)) {
+      setDomainError("Please enter a valid domain");
+      return false;
+    }
+    if (isBlockedCompanyDomain(normalized)) {
+      setDomainError("Please enter your own company domain");
+      return false;
+    }
+    setDomainError("");
+    return true;
+  };
+
+  const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDomain(value);
+    if (domainError) validateDomainInput(value);
+  };
+
+  const handleDomainPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    const normalized = normalizeDomain(pastedText);
+    setDomain(normalized);
+    if (domainError) validateDomainInput(normalized);
+  };
+
+  const handleUrlSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!domain.trim()) {
+      // Skip to manual entry
+      setInitialData({
+        companyName: "",
+        tagline: "",
+        oneLineDescription: "",
+        industry: "",
+        businessType: "",
+        description: "",
+        toneGuidelines: "",
+        primaryColor: "#000000",
+        logo: "",
+        targetAudience: "",
+        offerings: "",
+        estimatedTime: "",
+        differentiators: "",
+      });
+      setUrl(undefined);
+      setPhase("onboarding");
+      return;
+    }
+
+    const isDomainValid = validateDomainInput(domain);
+    if (!isDomainValid) return;
+
+    const normalizedDomain = normalizeDomain(domain);
+    const urlString = `https://${normalizedDomain}`;
+
+    setUrl(urlString);
+    setInitialData(undefined);
+    setPhase("onboarding");
+  };
+
+  const handleOnboardingFinish = (data: OnboardingData) => {
+    createWorkspace.mutate(
+      {
+        name: data.companyName,
+        description: data.oneLineDescription,
+        ownerId: userEmail,
+        info: {
+          email: userEmail,
+          tagline: data.tagline,
+          industry: data.industry,
+          businessType: data.businessType,
+          description: data.description,
+          toneGuidelines: data.toneGuidelines,
+          targetAudience: data.targetAudience,
+          primaryColor: data.primaryColor,
+          logo: data.logo,
+        },
+      },
+      {
+        onSuccess: () => {
+          handleClose();
+        },
+      }
+    );
+  };
+
+  const validateCompanyName = (name: string): string | null => {
+    if (!name.trim()) {
+      return "Workspace name is required";
+    }
+    return null;
+  };
+
+  const handleClose = () => {
+    onClose();
+    // Reset state
+    setPhase("url-input");
+    setDomain("");
+    setDomainError("");
+    setUrl(undefined);
+    setInitialData(undefined);
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      closeModal={handleClose}
+      className="max-w-2xl bg-white dark:bg-black rounded-2xl p-8 max-h-[90vh] flex flex-col"
+    >
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {phase === "url-input" && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  Create New Workspace
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Let's set up your workspace. You can provide your website URL
+                  to auto-fill information, or skip to enter details manually.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleUrlSubmit} className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                  <Label
+                    htmlFor="domain"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Website URL
+                  </Label>
+                </div>
+                <InputGroup className="h-11">
+                  <InputGroupAddon align="inline-start">
+                    <span className="text-muted-foreground text-sm">
+                      https://
+                    </span>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="domain"
+                    value={domain}
+                    onChange={handleDomainChange}
+                    onPaste={handleDomainPaste}
+                    onBlur={() => validateDomainInput(domain)}
+                    placeholder="yourcompany.com"
+                    className={cn(
+                      "text-base",
+                      domainError && "border-destructive"
+                    )}
+                  />
+                </InputGroup>
+                {domainError && (
+                  <p className="text-destructive text-xs flex items-center gap-1">
+                    {domainError}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  We'll automatically gather your company information from your
+                  website
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2 justify-between">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setInitialData({
+                      companyName: "",
+                      tagline: "",
+                      oneLineDescription: "",
+                      industry: "",
+                      businessType: "",
+                      description: "",
+                      toneGuidelines: "",
+                      primaryColor: "#000000",
+                      logo: "",
+                      targetAudience: "",
+                      offerings: "",
+                      estimatedTime: "",
+                      differentiators: "",
+                    });
+                    setUrl(undefined);
+                    setPhase("onboarding");
+                  }}
+                  className=""
+                >
+                  We don't have a website
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={generateOnboardingInfo.isPending || !!domainError}
+                  className="max-w-max"
+                >
+                  {generateOnboardingInfo.isPending ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {phase === "onboarding" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Customize Workspace
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <OnboardingMultiStepForm
+              url={url}
+              initialData={initialData}
+              onFinish={handleOnboardingFinish}
+              generateOnboardingInfo={generateOnboardingInfo}
+              uploadLogo={uploadLogo}
+              mode="workspace"
+              companyNameLabel="Workspace Name"
+              title="Customize Workspace"
+              isSubmitting={createWorkspace.isPending}
+              submitButtonText="Create Workspace"
+              onCompanyNameValidate={validateCompanyName}
+            />
+          </div>
+        )}
       </div>
     </Modal>
   );

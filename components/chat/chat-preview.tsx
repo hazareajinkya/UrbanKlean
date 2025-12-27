@@ -120,7 +120,7 @@ export const ChatPreview = ({
   };
 
   return (
-    <div className="mx-auto h-full max-w-[420px] max-h-[600px] flex flex-col overflow-hidden bg-white relative border rounded-lg">
+    <div className="mx-auto max-w-[420px] max-h-[670px] flex flex-col overflow-hidden bg-white relative border rounded-lg">
       <ChatHeader agent={previewAgent} isWidget={false} />
 
       <div className="flex-1 overflow-y-auto">
@@ -130,7 +130,13 @@ export const ChatPreview = ({
           status="ready"
         />
       </div>
-
+      <div className="relative">
+        <StarterMessages
+          agent={previewAgent}
+          onSelectMessage={() => {}}
+          disabled={true}
+        />
+      </div>
       {/* Scroll to bottom button - disabled in preview */}
       <AnimatePresence>
         <motion.div
@@ -153,11 +159,6 @@ export const ChatPreview = ({
       <div className="absolute inset-0 bg-transparent pointer-events-none" />
 
       {/* Show starter messages in preview if enabled */}
-      <StarterMessages
-        agent={previewAgent}
-        onSelectMessage={() => {}}
-        disabled={true}
-      />
 
       <div className="relative">
         <ChatInput

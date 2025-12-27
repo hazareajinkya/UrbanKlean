@@ -84,6 +84,18 @@ class ChannelService {
     return channels[0];
   }
 
+  async getChannelByPageId(pageId: string, provider: IChannelProvider) {
+    const q = query(
+      collectionGroup(db, "channels"),
+      where("metadata.id", "==", pageId),
+      where("provider", "==", provider)
+    );
+    const snaps = await getDocs(q);
+    const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
+    if (channels.length === 0) return null;
+    return channels[0];
+  }
+
   async unassignAgentFromChannel(
     wid: string,
     channelId: string,

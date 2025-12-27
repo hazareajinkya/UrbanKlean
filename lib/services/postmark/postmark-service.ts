@@ -65,6 +65,7 @@ class PostmarkService {
     inReplyTo?: string;
     references?: string;
     tag?: string;
+    cc?: string;
   }): Promise<IEmailResponse> {
     try {
       const payload = {
@@ -74,6 +75,7 @@ class PostmarkService {
         TextBody: params.textBody,
         // HtmlBody: params.htmlBody,
         Tag: params.tag,
+        Cc: params.cc,
         Headers: [
           ...(params.inReplyTo
             ? [{ Name: "In-Reply-To", Value: params.inReplyTo }]

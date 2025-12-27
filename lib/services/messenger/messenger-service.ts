@@ -1,18 +1,33 @@
-import axiosClient, {
-  instaClient,
-  messengerClient,
-} from "@/lib/clients/axios-client";
 import { fbconf } from "@/lib/utils/conf";
 import axios from "axios";
 
 class MessengerService {
-  async sendTextMessage(to: string, text: string) {
+  async sendTextMessage({
+    to,
+    text,
+    pageId,
+    accessToken,
+  }: {
+    to: string;
+    text: string;
+    pageId: string;
+    accessToken: string;
+  }) {
     try {
-      const response = await messengerClient.post(`/messages`, {
-        messaging_type: "RESPONSE",
-        recipient: { id: to },
-        message: { text: text },
-      });
+      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
+      const response = await axios.post(
+        `${baseURL}/messages`,
+        {
+          messaging_type: "RESPONSE",
+          recipient: { id: to },
+          message: { text: text },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       console.log(`Message sent with ID: ${response.data.message_id}`);
       return response.data.message_id;
@@ -24,12 +39,26 @@ class MessengerService {
     }
   }
 
-  async subscribeToWebhook(token: string) {
+  async subscribeToWebhook({
+    pageId,
+    accessToken,
+  }: {
+    pageId: string;
+    accessToken: string;
+  }) {
     try {
-      const response = await messengerClient.post(`/subscribed_apps`, {
-        accessToken: token,
-        subscribed_fields: "messages",
-      });
+      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
+      const response = await axios.post(
+        `${baseURL}/subscribed_apps`,
+        {
+          subscribed_fields: "messages",
+        },
+        {
+          params: {
+            access_token: accessToken,
+          },
+        }
+      );
       console.log("response.data: ", response.data);
       return response.data;
     } catch (error: any) {
@@ -43,11 +72,18 @@ class MessengerService {
     }
   }
 
-  async unsubscribeFromWebhook(token: string) {
+  async unsubscribeFromWebhook({
+    pageId,
+    accessToken,
+  }: {
+    pageId: string;
+    accessToken: string;
+  }) {
     try {
-      const response = await messengerClient.delete(`/subscribed_apps`, {
+      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
+      const response = await axios.delete(`${baseURL}/subscribed_apps`, {
         params: {
-          access_token: token,
+          access_token: accessToken,
           subscribed_fields: "messages",
         },
       });
@@ -67,19 +103,63 @@ class MessengerService {
         params: {
           fields:
             "id,name,picture.width(400).height(400){url,width,height,is_silhouette}",
-          accessToken: token,
-        },
-        headers: {
-          Authorization: `Bearer ${fbconf.accessToken}`,
+          access_token: token,
         },
       });
 
-      const profile_pic = data.picture.data.url;
-      delete data.picture;
+      const profile_pic = data.picture?.data?.url;
+      if (data.picture) {
+        delete data.picture;
+      }
 
       return { ...data, profile_pic };
     } catch (error: any) {
       console.log("error: ", error.response?.data);
+      throw error;
+    }
+  }
+
+  async getPages(token: string) {
+    try {
+      const baseURL = `${fbconf.baseURL}/${fbconf.version}/me/accounts`;
+      const { data } = await axios.get(baseURL, {
+        params: {
+          fields: "id,name,access_token,picture",
+          access_token: token,
+        },
+      });
+
+      return data.data || [];
+    } catch (error: any) {
+      console.log("error getting pages: ", error.response?.data);
+      throw error;
+    }
+  }
+
+  async getPageInfo({
+    pageId,
+    pageAccessToken,
+  }: {
+    pageId: string;
+    pageAccessToken: string;
+  }) {
+    try {
+      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
+      const { data } = await axios.get(baseURL, {
+        params: {
+          fields: "id,name,picture.width(400).height(400){url,width,height}",
+          access_token: pageAccessToken,
+        },
+      });
+
+      const profile_pic = data.picture?.data?.url;
+      if (data.picture) {
+        delete data.picture;
+      }
+
+      return { ...data, profile_pic };
+    } catch (error: any) {
+      console.log("error getting page info: ", error.response?.data);
       throw error;
     }
   }
