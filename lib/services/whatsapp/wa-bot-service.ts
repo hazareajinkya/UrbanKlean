@@ -21,27 +21,30 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
 
-  async generateResponse(
-    waMsg: IWAMessage,
-    userId: string,
-    waPhoneId: string,
-    name: string,
-    channel: IChannelProvider
-  ) {
+  async generateResponse({
+    waMsg,
+    userId,
+    waPhoneId,
+    name,
+    channel,
+    agentId,
+  }: {
+    waMsg: IWAMessage;
+    userId: string;
+    waPhoneId: string;
+    name: string;
+    channel: IChannelProvider;
+    agentId: string;
+  }) {
     try {
-      //supercx ai agent id
-      // const aid = await channelService.resolveAgent(userId, channel);
-      const aid = "c0e54882-04fc-489e-975b-e2b7edbf2adf";
-      console.log("resolved agent: ", aid);
-
-      if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
-
-      const agent = await agentService.fetchAgent(aid);
+      const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
       const creditInfo = await creditService.getCredit(agent.ownerId);
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -73,12 +76,19 @@ class WABotService {
       const model = getModel(agent);
       const systemPrompt = await getSystemPrompt(agent, query, channel);
 
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
+
       const result = await generateText({
         model,
         system: systemPrompt,
         messages,
         stopWhen: stepCountIs(5),
         tools: {
+          ...customTools,
           collectInformation: collectInformation(
             agent.wid,
             agent.id,

@@ -96,6 +96,18 @@ class ChannelService {
     return channels[0];
   }
 
+  async getChannelByPhoneNumberId(phoneNumberId: string) {
+    const q = query(
+      collectionGroup(db, "channels"),
+      where("metadata.phone_number_id", "==", phoneNumberId),
+      where("provider", "==", "whatsapp")
+    );
+    const snaps = await getDocs(q);
+    const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
+    if (channels.length === 0) return null;
+    return channels[0];
+  }
+
   async unassignAgentFromChannel(
     wid: string,
     channelId: string,

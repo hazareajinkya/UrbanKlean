@@ -28,7 +28,7 @@ export default function Modal({
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-[100]"
+          className="relative z-50"
           onClose={clickOutsideToClose ? closeModal : () => {}}
         >
           <TransitionChild

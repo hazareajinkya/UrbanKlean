@@ -41,6 +41,8 @@ import {
   FileText,
   EyeIcon,
   MessageSquareIcon,
+  ToolCase,
+  Cog,
 } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { Button } from "../ui/button";
@@ -470,6 +472,19 @@ const HistoryMessageList = ({
                               >
                                 {part.text}
                               </Streamdown>
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (part.type.startsWith("tool-")) {
+                        return (
+                          <div
+                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                            key={partIndex}
+                          >
+                            <div className="flex items-center gap-2 text-sm md:text-sm">
+                              <Cog className="w-4 h-4" />
+                              {part.type.split("-").slice(1).join("-")}
                             </div>
                           </div>
                         );

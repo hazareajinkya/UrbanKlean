@@ -416,7 +416,6 @@ const CreateWorkspaceModal = ({
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!domain.trim()) {
-      // Skip to manual entry
       setInitialData({
         companyName: "",
         tagline: "",
@@ -464,6 +463,8 @@ const CreateWorkspaceModal = ({
           targetAudience: data.targetAudience,
           primaryColor: data.primaryColor,
           logo: data.logo,
+          differentiators: data.differentiators,
+          offerings: data.offerings,
         },
       },
       {
@@ -611,7 +612,7 @@ const CreateWorkspaceModal = ({
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-gray-900">
-                Customize Workspace
+                {/* Customize Workspace */}
               </h3>
               <Button
                 variant="ghost"

@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Modal from "@/components/ui/modal";
 import { Loader, Trash, Palette, Sparkles } from "lucide-react";
 
@@ -38,6 +45,8 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
   const [toneGuidelines, setToneGuidelines] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [primaryColor, setPrimaryColor] = useState("");
+  const [offerings, setOfferings] = useState("");
+  const [differentiators, setDifferentiators] = useState("");
 
   // AI generation loading state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,6 +74,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
   };
 
   const { updateWorkspace, generateWorkspaceInfo } = useWorkspaceActions();
+  const isInitializing = useRef(true);
 
   useEffect(() => {
     if (!workspace) return;
@@ -72,39 +82,34 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
     setWorkspaceDescription(workspace.oneLiner || "");
 
     // Initialize business info fields
-    if (workspace.info) {
-      setTagline(workspace.info.tagline || "");
-      setIndustry(workspace.info.industry || "");
-      setBusinessType(workspace.info.businessType || "");
-      setDescription(workspace.info.description || "");
-      setToneGuidelines(workspace.info.toneGuidelines || "");
-      setTargetAudience(workspace.info.targetAudience || "");
-      setPrimaryColor(workspace.info.primaryColor || "");
-    }
+    console.log("Workspace info: ", workspace.info.businessType);
+    setTagline(workspace.info.tagline || "");
+    setIndustry(workspace.info.industry || "");
+    // Normalize businessType to lowercase to match SelectItem values
+    const normalizedBusinessType = (workspace.info.businessType || "")
+      .toLowerCase()
+      .trim();
+    setBusinessType(normalizedBusinessType);
+    setDescription(workspace.info.description || "");
+    setToneGuidelines(workspace.info.toneGuidelines || "");
+    setTargetAudience(workspace.info.targetAudience || "");
+    setPrimaryColor(workspace.info.primaryColor || "");
+    setOfferings(workspace.info.offerings || "");
+    setDifferentiators(workspace.info.differentiators || "");
+
+    setTimeout(() => {
+      isInitializing.current = false;
+    }, 100);
   }, [workspace]);
 
-  const handleGeneralSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
+    console.log("Business type: ", businessType);
     await updateWorkspace.mutateAsync({
       wid,
       updates: {
         name: workspaceName.trim(),
         oneLiner: workspaceDescription.trim(),
-      },
-    });
-  };
-
-  const handleBusinessInfoSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
-    await updateWorkspace.mutateAsync({
-      wid,
-      updates: {
         info: {
           ...workspace.info,
           tagline: tagline.trim(),
@@ -114,6 +119,8 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
           toneGuidelines: toneGuidelines.trim(),
           targetAudience: targetAudience.trim(),
           primaryColor: primaryColor.trim(),
+          offerings: offerings.trim(),
+          differentiators: differentiators.trim(),
         },
       },
     });
@@ -143,18 +150,46 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
     setUrlError("");
     setIsGenerating(true);
 
-    console.log("Generating workspace info for", wid, fullUrl);
     generateWorkspaceInfo.mutateAsync(
       {
         wid,
         url: fullUrl,
       },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
           setIsGenerating(false);
+          const generatedData = response?.data;
+
+          if (generatedData) {
+            if (generatedData.companyName)
+              setWorkspaceName(generatedData.companyName);
+            if (generatedData.oneLineDescription)
+              setWorkspaceDescription(generatedData.oneLineDescription);
+            if (generatedData.tagline) setTagline(generatedData.tagline);
+            if (generatedData.industry) setIndustry(generatedData.industry);
+            if (generatedData.businessType) {
+              const normalizedBusinessType = generatedData.businessType
+                .toLowerCase()
+                .trim();
+              setBusinessType(normalizedBusinessType);
+            }
+            if (generatedData.description)
+              setDescription(generatedData.description);
+            if (generatedData.toneGuidelines)
+              setToneGuidelines(generatedData.toneGuidelines);
+            if (generatedData.targetAudience)
+              setTargetAudience(generatedData.targetAudience);
+            if (generatedData.primaryColor)
+              setPrimaryColor(generatedData.primaryColor);
+            if (generatedData.offerings) setOfferings(generatedData.offerings);
+            if (generatedData.differentiators)
+              setDifferentiators(generatedData.differentiators);
+          }
+
           setIsWebsiteDialogOpen(false);
         },
         onError: () => {
+          setIsGenerating(false);
           setIsWebsiteDialogOpen(false);
         },
       }
@@ -179,7 +214,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
           </p>
         </div>
 
-        <form onSubmit={handleGeneralSubmit}>
+        <form onSubmit={handleSubmit}>
           <Card>
             <CardContent className="space-y-5 ">
               <div className="flex justify-end">
@@ -244,12 +279,29 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Business Type</Label>
-                  <Input
-                    placeholder="e.g., SaaS, E-commerce, Consulting"
+                  <Select
                     value={businessType}
-                    onChange={(e) => setBusinessType(e.target.value)}
+                    onValueChange={(value) => {
+                      // Prevent resetting to empty during initialization
+                      if (isInitializing.current && !value && businessType) {
+                        return;
+                      }
+                      setBusinessType(value);
+                    }}
                     disabled={updateWorkspace.isPending}
-                  />
+                  >
+                    <SelectTrigger className="h-11 w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="saas">SaaS</SelectItem>
+                      <SelectItem value="services">Services</SelectItem>
+                      <SelectItem value="ecommerce">E-commerce</SelectItem>
+                      <SelectItem value="retail">Retail</SelectItem>
+                      <SelectItem value="edtech">EdTech</SelectItem>
+                      <SelectItem value="individual">Individual</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -323,6 +375,30 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
                 <p className="text-xs text-muted-foreground">
                   Your brand&apos;s primary color for UI customization
                 </p>
+              </div>
+
+              {/* Row 7: Offerings */}
+              <div className="space-y-2">
+                <Label className="text-gray-700">Offerings</Label>
+                <Textarea
+                  value={offerings}
+                  onChange={(e) => setOfferings(e.target.value)}
+                  disabled={updateWorkspace.isPending}
+                  className="min-h-[120px] resize-none"
+                  placeholder="e.g. AI-powered customer support, automated workflows, real-time analytics..."
+                />
+              </div>
+
+              {/* Row 8: Differentiators */}
+              <div className="space-y-2">
+                <Label className="text-gray-700">Differentiators</Label>
+                <Textarea
+                  value={differentiators}
+                  onChange={(e) => setDifferentiators(e.target.value)}
+                  disabled={updateWorkspace.isPending}
+                  className="min-h-[120px] resize-none"
+                  placeholder="e.g. Industry-leading response time, 24/7 availability, multilingual support..."
+                />
               </div>
 
               <div className="flex justify-end pt-2">

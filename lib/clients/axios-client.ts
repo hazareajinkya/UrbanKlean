@@ -31,8 +31,8 @@ export const backendClient = axios.create({
     Authorization: `Bearer ${backendconf.accessToken}`,
   },
 });
-export const waclient = axios.create({
-  baseURL: `${waconf.baseURL}/${waconf.version}/${waconf.phoneID}`,
+export const waClient = axios.create({
+  baseURL: `${waconf.baseURL}/${waconf.version}`,
   headers: {
     Authorization: `Bearer ${waconf.accessToken}`,
   },

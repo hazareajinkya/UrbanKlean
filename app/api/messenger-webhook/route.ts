@@ -146,7 +146,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error processing Instagram webhook:", error);
+    console.error("Error processing facebook webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 200 }

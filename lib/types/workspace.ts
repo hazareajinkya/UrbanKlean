@@ -12,6 +12,8 @@ export interface IWorkspaceInfo {
   targetAudience: string;
   primaryColor: string;
   logo: string;
+  offerings: string;
+  differentiators: string;
 }
 export interface IWorkspace {
   id: string;
@@ -49,6 +51,8 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       targetAudience: "",
       primaryColor: "",
       logo: "",
+      offerings: "",
+      differentiators: "",
     },
     type: "default",
     thumbnail: getRandomThumbnail(),

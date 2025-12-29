@@ -80,5 +80,43 @@ export const useChannelActions = () => {
     },
   });
 
-  return { disconnectChannel, assignChannelToAgent, unassignChannelFromAgent };
+  const createWhatsappChannel = useMutation({
+    mutationFn: async ({
+      wid,
+      phone_number_id,
+      waba_id,
+      business_id,
+      authorizationCode,
+    }: {
+      wid: string;
+      phone_number_id: string;
+      waba_id: string;
+      business_id: string;
+      authorizationCode: string;
+    }) => {
+      await axiosClient.post("/api/oauth/whatsapp", {
+        wid,
+        phone_number_id,
+        waba_id,
+        business_id,
+        authorizationCode,
+      });
+    },
+    onSuccess: (_, variables) => {
+      const { wid } = variables;
+      toast.success("WhatsApp channel created successfully");
+      qc.invalidateQueries({ queryKey: channelsKey(wid) });
+    },
+    onError: (error: Error) => {
+      console.log("error: ", error);
+      toast.error(error.message);
+    },
+  });
+
+  return {
+    disconnectChannel,
+    assignChannelToAgent,
+    unassignChannelFromAgent,
+    createWhatsappChannel,
+  };
 };

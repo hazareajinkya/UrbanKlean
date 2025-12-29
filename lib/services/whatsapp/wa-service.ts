@@ -1,5 +1,6 @@
 import { storage } from "@/lib/clients/firebase";
-import { waclient, waMediaClient } from "@/lib/clients/axios-client";
+import { waClient } from "@/lib/clients/axios-client";
+import axiosClient from "@/lib/clients/axios-client";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import storageService from "../storage-service";
 import axios from "axios";
@@ -11,26 +12,75 @@ class WaService {
     recipient_type: "individual",
   };
 
-  async sendWATextMessage(to: string, text: string) {
+  async sendWATextMessage({
+    to,
+    text,
+    phoneId,
+    accessToken,
+  }: {
+    to: string;
+    text: string;
+    phoneId: string;
+    accessToken: string;
+  }) {
     try {
-      const response = await waclient.post(`/messages`, {
+      const payload = {
         ...this.body,
         to: to,
         type: "text",
         text: { body: text },
+      };
+      console.log(
+        `Sending WhatsApp message with phoneId: ${phoneId}, to: ${to}`
+      );
+      const response = await waClient.post(`/${phoneId}/messages`, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       console.log(`Message sent with ID: ${response.data.messages[0].id}`);
       return response.data.messages[0].id;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      if (error.response) {
+        const errorData = error.response.data;
+        console.error(
+          "Error response data:",
+          JSON.stringify(errorData, null, 2)
+        );
+        console.error("Error response status:", error.response.status);
+
+        // Handle specific WhatsApp API errors
+        if (errorData?.error?.code === 131030) {
+          const errorMessage =
+            errorData.error.message ||
+            "Recipient phone number not in allowed list";
+          console.warn(
+            `WhatsApp API restriction: ${errorMessage}. ` +
+              `In development/test mode, you can only send messages to phone numbers added to the allowed recipient list in Meta Business Manager.`
+          );
+          // Don't throw for this specific error - it's a configuration issue, not a code bug
+          throw new Error(
+            `WhatsApp API: ${errorMessage}. Please add the recipient phone number to the allowed list in Meta Business Manager.`
+          );
+        }
+      }
       throw error;
     }
   }
 
-  async sendWATemplateMessage(to: string, templateName: string) {
+  async sendWATemplateMessage({
+    to,
+    templateName,
+    phoneId,
+  }: {
+    to: string;
+    templateName: string;
+    phoneId: string;
+  }) {
     try {
-      const response = await waclient.post(`/messages`, {
+      const response = await waClient.post(`/${phoneId}/messages`, {
         ...this.body,
         to: to,
         type: "template",
@@ -48,9 +98,19 @@ class WaService {
     }
   }
 
-  async sendWAMediaMessage(to: string, url: string, caption?: string) {
+  async sendWAMediaMessage({
+    to,
+    url,
+    caption,
+    phoneId,
+  }: {
+    to: string;
+    url: string;
+    caption?: string;
+    phoneId: string;
+  }) {
     try {
-      const response = await waclient.post(`/messages`, {
+      const response = await waClient.post(`/${phoneId}/messages`, {
         ...this.body,
         to: to,
         type: "image",
@@ -67,9 +127,17 @@ class WaService {
     }
   }
 
-  async retrieveWAMedia(phone: string, mediaId: string) {
+  async retrieveWAMedia({
+    phone,
+    mediaId,
+    phoneId,
+  }: {
+    phone: string;
+    mediaId: string;
+    phoneId: string;
+  }) {
     try {
-      const mediaResponse = await waMediaClient.get(`/${mediaId}`);
+      const mediaResponse = await waClient.get(`/${phoneId}/${mediaId}`);
 
       console.log("mediaResponse: ", mediaResponse.data.url);
 
@@ -140,7 +208,15 @@ class WaService {
     }
   }
 
-  async sendTypingIndicator(messageId: string): Promise<{ success: boolean }> {
+  async sendTypingIndicator({
+    messageId,
+    phoneId,
+    accessToken,
+  }: {
+    messageId: string;
+    phoneId: string;
+    accessToken: string;
+  }): Promise<{ success: boolean }> {
     const payload = {
       messaging_product: "whatsapp",
       status: "read",
@@ -151,11 +227,15 @@ class WaService {
     };
 
     try {
-      const response = await waclient.post("/messages", payload);
+      const response = await waClient.post(`/${phoneId}/messages`, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       console.log("Typing indicator sent successfully:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error sending typing indicator:", error);
+      console.error("Error sending typing indicator:  ", error);
       throw new Error("Failed to send typing indicator");
     }
   }
