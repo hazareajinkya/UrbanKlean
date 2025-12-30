@@ -4,6 +4,7 @@ import {
   doc,
   getDocs,
   limit,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -29,6 +30,7 @@ class UsageService {
       if (error.code === "not-found") {
         await setDoc(usageRef, {
           events: [usage],
+          createdAt: new Date().toISOString(),
         });
       } else {
         console.error("Error adding usage: ", error);
@@ -43,10 +45,10 @@ class UsageService {
       if (!workspace || !workspace.ownerId) {
         throw new Error("Workspace not found or has no owner");
       }
-
       const ownerId = workspace.ownerId;
       const usageCollection = query(
         collection(db, `users/${ownerId}/usage`),
+        orderBy("createdAt", "desc"),
         limit(2)
       );
       const snapshot = await getDocs(usageCollection);
