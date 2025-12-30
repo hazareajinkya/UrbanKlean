@@ -75,11 +75,17 @@ export async function POST(req: Request) {
         (email) => email !== parsedMessage.from
       );
 
+      const from =
+        channelType === "white-labeled"
+          ? parsedMessage.to
+          : `${channel?.metadata.name} <noreply@magicalcx-mail.com>`;
+
       await postmarkService.sendReply({
         to: parsedMessage.from,
-        from: parsedMessage.to,
+        from,
         subject: subject,
         textBody: ans,
+        replyTo: parsedMessage.to,
         inReplyTo: parsedMessage.inReplyTo,
         references: references,
         tag: "ai-response",
