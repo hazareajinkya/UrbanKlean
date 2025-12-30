@@ -239,6 +239,123 @@ class WaService {
       throw new Error("Failed to send typing indicator");
     }
   }
+  async getAccessToken({ authorizationCode }: { authorizationCode: string }) {
+    try {
+      const tokenPayload: {
+        client_id: string;
+        client_secret: string;
+        code: string;
+        grant_type: string;
+        redirect_uri?: string;
+      } = {
+        client_id: waconf.appId,
+        client_secret: waconf.appSecret,
+        code: authorizationCode,
+        grant_type: "authorization_code",
+      };
+
+      if (waconf.redirectUri) {
+        tokenPayload.redirect_uri = waconf.redirectUri;
+      }
+
+      const tokenResponse = await waClient.post(
+        `/oauth/access_token`,
+        tokenPayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return tokenResponse.data as {
+        access_token: string;
+        token_type: string;
+        expires_in: number;
+      };
+    } catch (error) {
+      console.error("Error getting access token:", error);
+      throw error;
+    }
+  }
+  async getNumberInfo({
+    phoneId,
+    accessToken,
+  }: {
+    phoneId: string;
+    accessToken: string;
+  }) {
+    try {
+      const fields = "display_phone_number,verified_name,status";
+
+      const response = await waClient.get(`/${phoneId}?fields=${fields}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const phoneData = response.data;
+      if (!phoneData) {
+        throw new Error("No phone number data found");
+      }
+
+      const phoneInfo = {
+        status: phoneData.status,
+        display_phone_number: phoneData.display_phone_number,
+        name: phoneData.verified_name,
+      };
+      return phoneInfo;
+    } catch (error) {
+      console.error("Error getting number info:", error);
+    }
+  }
+  async subscribeToWebhook({
+    wabaId,
+    accessToken,
+  }: {
+    wabaId: string;
+    accessToken: string;
+  }) {
+    try {
+      await waClient.post(
+        `/${wabaId}/subscribed_apps`,
+        {
+          subscribed_fields: "messages",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log("Successfully subscribed to WhatsApp webhook");
+    } catch (error: any) {
+      console.warn("Warning: Could not subscribe to WhatsApp webhook:", error);
+      throw error;
+    }
+  }
+  async unsubscribeFromWebhook({
+    wabaId,
+    accessToken,
+  }: {
+    wabaId: string;
+    accessToken: string;
+  }) {
+    try {
+      await waClient.delete(`/${wabaId}/subscribed_apps`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log("Successfully unsubscribed from WhatsApp webhook");
+    } catch (error) {
+      console.warn(
+        "Warning: Could not unsubscribe from WhatsApp webhook:",
+        error
+      );
+      throw error;
+    }
+  }
 }
 
 const waService = new WaService();

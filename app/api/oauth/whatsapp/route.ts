@@ -6,6 +6,7 @@ import { waconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import { errorResponse, successResponse } from "@/lib/types/api-response";
+import waService from "@/lib/services/whatsapp/wa-service";
 
 const whatsappAuthSchema = z.object({
   wid: z.string().min(1, "Workspace ID is required"),
@@ -27,34 +28,11 @@ export async function POST(req: NextRequest) {
     if (!validatedParams.phone_number_id) {
       return errorResponse("phoneId is required", 400);
     }
-    const tokenPayload: {
-      client_id: string;
-      client_secret: string;
-      code: string;
-      grant_type: string;
-      redirect_uri?: string;
-    } = {
-      client_id: waconf.appId,
-      client_secret: waconf.appSecret,
-      code: validatedParams.authorizationCode,
-      grant_type: "authorization_code",
-    };
 
-    if (waconf.redirectUri) {
-      tokenPayload.redirect_uri = waconf.redirectUri;
-    }
-
-    const tokenResponse = await axios.post(
-      `${waconf.baseURL}/${waconf.version}/oauth/access_token`,
-      tokenPayload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const { access_token, token_type, expires_in } = tokenResponse.data;
+    const { access_token, token_type, expires_in } =
+      await waService.getAccessToken({
+        authorizationCode: validatedParams.authorizationCode,
+      });
 
     if (!access_token) {
       return errorResponse("Failed to retrieve access token", 400);
@@ -79,41 +57,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const fields = "display_phone_number,verified_name,status";
-
-    const response = await waClientWithToken.get(
-      `/${validatedParams.phone_number_id}?fields=${fields}`
-    );
-
-    const phoneData = response.data;
-    if (!phoneData) {
-      return errorResponse("No phone number data found", 404);
+    const phoneInfo = await waService.getNumberInfo({
+      phoneId: validatedParams.phone_number_id,
+      accessToken: access_token,
+    });
+    if (!phoneInfo) {
+      return errorResponse("Failed to retrieve phone number info", 400);
     }
 
-    const phoneInfo = {
-      status: phoneData.status,
-      display_phone_number: phoneData.display_phone_number,
-      name: phoneData.verified_name,
-    };
-
-    // Subscribe to webhook using WABA ID and access token
-    try {
-      await waClientWithToken.post(
-        `/${validatedParams.waba_id}/subscribed_apps`,
-        {
-          subscribed_fields: "messages",
-        }
-      );
-      console.log("Successfully subscribed to WhatsApp webhook");
-    } catch (error: any) {
-      console.warn("Warning: Could not subscribe to WhatsApp webhook:", error);
-      if (error?.response?.data) {
-        console.warn(
-          "Webhook subscription error details:",
-          JSON.stringify(error.response.data, null, 2)
-        );
-      }
-    }
+    await waService.subscribeToWebhook({
+      wabaId: validatedParams.waba_id,
+      accessToken: access_token,
+    });
 
     const metadata = {
       phone_number_id: validatedParams.phone_number_id,
@@ -182,25 +137,12 @@ export async function DELETE(req: NextRequest) {
       return errorResponse("No access token or WABA ID found for channel", 400);
     }
 
-    try {
-      const waClientWithToken = axios.create({
-        baseURL: `${waconf.baseURL}/${waconf.version}`,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      await waClientWithToken.delete(`/${wabaId}/subscribed_apps`);
-      console.log("Successfully unsubscribed from WhatsApp webhook");
-    } catch (error) {
-      console.warn(
-        "Warning: Could not unsubscribe from WhatsApp webhook:",
-        error
-      );
-    }
+    await waService.unsubscribeFromWebhook({
+      wabaId,
+      accessToken,
+    });
 
     await channelService.deleteChannel(wid, channelId);
-
     return successResponse(null, "Successfully disconnected WhatsApp channel");
   } catch (error: any) {
     console.error("Error during WhatsApp channel disconnect:", error);
