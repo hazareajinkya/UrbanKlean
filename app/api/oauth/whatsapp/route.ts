@@ -50,13 +50,6 @@ export async function POST(req: NextRequest) {
       credentials.expires_in = String(expires_in);
     }
 
-    const waClientWithToken = axios.create({
-      baseURL: `${waconf.baseURL}/${waconf.version}`,
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-
     const phoneInfo = await waService.getNumberInfo({
       phoneId: validatedParams.phone_number_id,
       accessToken: access_token,
