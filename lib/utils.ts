@@ -12,6 +12,8 @@ import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
+import axiosClient from "./clients/axios-client";
+import axios from "axios";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -357,8 +359,43 @@ export const getEmotionIcon = (
   }
 };
 
-// Get client IP from various headers (in order of preference)
-export const getClientIp = (req: Request): string => {
+export const normIp = (ip: string): string => {
+  if (ip.startsWith("::ffff:")) {
+    return ip.replace("::ffff:", "");
+  }
+  // Remove IPv6 loopback mapping (::1)
+  if (ip === "::1") {
+    return "127.0.0.1";
+  }
+  return ip;
+};
+
+export const getClientIpFromApi = async (): Promise<string | undefined> => {
+  try {
+    const response = await axios.get("/api/client-ip", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status !== 200) {
+      return undefined;
+    }
+
+    const data = response.data;
+
+    if (data.success && data.data?.ip) {
+      return data.data.ip;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Failed to fetch client IP:", error);
+    return undefined;
+  }
+};
+export const getClientIp = (req: Request | { headers: Headers }): string => {
   // Check x-forwarded-for (most common, contains comma-separated list)
   const forwardedFor = req.headers.get("x-forwarded-for");
   if (forwardedFor) {
@@ -383,15 +420,4 @@ export const getClientIp = (req: Request): string => {
   }
 
   return "unknown";
-};
-
-export const normIp = (ip: string): string => {
-  if (ip.startsWith("::ffff:")) {
-    return ip.replace("::ffff:", "");
-  }
-  // Remove IPv6 loopback mapping (::1)
-  if (ip === "::1") {
-    return "127.0.0.1";
-  }
-  return ip;
 };

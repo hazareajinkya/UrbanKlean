@@ -42,5 +42,7 @@ const onboardingCompleteSchema = z.object({
     primaryColor: z.string(),
     logo: z.string(),
     targetAudience: z.string(),
+    offerings: z.string().optional(),
+    differentiators: z.string().optional(),
   }),
 });

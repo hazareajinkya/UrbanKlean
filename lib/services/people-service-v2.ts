@@ -66,6 +66,15 @@ class PeopleServiceV2 {
           const snaps = await getDocs(q);
           if (snaps.docs.length > 0) {
             personSnap = snaps.docs[0];
+            if (ips && ips.length > 0) {
+              peopleServiceV2.updatePerson({
+                wid,
+                personId: personSnap.id,
+                data: {
+                  ips: ipNs,
+                },
+              });
+            }
             console.log("Person found by web deviceId:", personSnap.data());
           }
           break;

@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/clients/axios-client";
 import { storage } from "@/lib/clients/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuid } from "uuid";
+import { OnboardingData } from "@/lib/types/onboarding";
 
 class OnboardingService {
   async generateCompanyInfo({ url }: { url: string }) {
@@ -25,18 +26,7 @@ class OnboardingService {
   async startOnboarding(data: {
     email: string;
     url: string;
-    onboardingData: {
-      companyName: string;
-      tagline: string;
-      oneLineDescription: string;
-      industry: string;
-      businessType: string;
-      description: string;
-      toneGuidelines: string;
-      primaryColor: string;
-      logo: string;
-      targetAudience: string;
-    };
+    onboardingData: OnboardingData;
   }) {
     const response = await apiClient.post("/api/onboarding/start", data);
     return response.data;

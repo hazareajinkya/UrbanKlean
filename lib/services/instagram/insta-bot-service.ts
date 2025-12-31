@@ -95,13 +95,14 @@ class InstaBotService {
         stopWhen: stepCountIs(5),
         tools: {
           ...customTools,
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "instagram",
-            session.providerId
-          ),
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "instagram",
+            providerId: session.providerId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });

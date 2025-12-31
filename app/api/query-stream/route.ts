@@ -2,7 +2,7 @@ import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
 import creditService from "@/lib/services/credit-service";
 
-import { Geo, geolocation } from "@vercel/functions";
+import { Geo, geolocation, ipAddress } from "@vercel/functions";
 import { creditCosts } from "@/lib/constants";
 import { stepCountIs, streamText, tool, ToolSet } from "ai";
 import { z } from "zod";
@@ -19,7 +19,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { getClientIp, getCustomTools } from "@/lib/utils";
+import { normIp, getCustomTools, getClientIp } from "@/lib/utils";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
