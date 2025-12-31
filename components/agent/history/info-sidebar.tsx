@@ -226,16 +226,6 @@ export const InfoSidebar = ({
           </div>
         )}
 
-        {/* Summary */}
-        {hasSummary && (
-          <div className="px-5 py-4 border-b border-border">
-            <SectionLabel>Summary</SectionLabel>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              {person.summary}
-            </p>
-          </div>
-        )}
-
         {/* Memories (AI insights) */}
         {hasMemories && (
           <div className="px-5 py-4 border-b border-border/30">
@@ -255,6 +245,16 @@ export const InfoSidebar = ({
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Summary */}
+        {hasSummary && (
+          <div className="px-5 py-4 border-b border-border">
+            <SectionLabel>Summary</SectionLabel>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              {person.summary}
+            </p>
           </div>
         )}
 

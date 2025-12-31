@@ -152,7 +152,7 @@ export default function AgentsPage() {
                           </Button>
                         </Link>
                         <Link
-                          href={`/workspaces/${wid}/agents/${agent.id}?tab=appearance`}
+                          href={`/workspaces/${wid}/agents/${agent.id}?tab=chat-history`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
