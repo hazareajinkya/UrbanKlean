@@ -356,3 +356,42 @@ export const getEmotionIcon = (
       return "🙂";
   }
 };
+
+// Get client IP from various headers (in order of preference)
+export const getClientIp = (req: Request): string => {
+  // Check x-forwarded-for (most common, contains comma-separated list)
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    // Take the first IP from the comma-separated list (original client IP)
+    const firstIp = forwardedFor.split(",")[0]?.trim();
+    if (firstIp) return normIp(firstIp);
+  }
+
+  // Check x-real-ip (direct client IP)
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return normIp(realIp);
+
+  // Check cf-connecting-ip (Cloudflare)
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return normIp(cfIp);
+
+  // Check x-vercel-forwarded-for (Vercel-specific)
+  const vercelIp = req.headers.get("x-vercel-forwarded-for");
+  if (vercelIp) {
+    const firstVercelIp = vercelIp.split(",")[0]?.trim();
+    if (firstVercelIp) return normIp(firstVercelIp);
+  }
+
+  return "unknown";
+};
+
+export const normIp = (ip: string): string => {
+  if (ip.startsWith("::ffff:")) {
+    return ip.replace("::ffff:", "");
+  }
+  // Remove IPv6 loopback mapping (::1)
+  if (ip === "::1") {
+    return "127.0.0.1";
+  }
+  return ip;
+};

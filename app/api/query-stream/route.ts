@@ -19,7 +19,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { getCustomTools } from "@/lib/utils";
+import { getClientIp, getCustomTools } from "@/lib/utils";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -49,10 +49,7 @@ export async function POST(req: Request) {
     console.log("personId: ", personId);
     console.log("fromPage: ", fromPage);
 
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0] ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+    const ip = getClientIp(req);
 
     const { success } = await ratelimit.limit(ip);
 
@@ -116,13 +113,14 @@ export async function POST(req: Request) {
       stopWhen: stepCountIs(5),
       tools: {
         ...customTools,
-        collectInformation: collectInformation(
-          agent.wid,
-          agent.id,
-          sessionId,
-          "web",
-          deviceId
-        ),
+        collectInformation: collectInformation({
+          wid: agent.wid,
+          aid: agent.id,
+          sessionId: sessionId,
+          provider: "web",
+          providerId: deviceId,
+          ips: [ip],
+        }),
         searchKnowledge: searchKnowledge(agent.wid, agent),
       },
 

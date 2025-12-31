@@ -7,8 +7,9 @@ export interface IPerson {
 
   //identity info
   name: string;
-  emails: string[];
-  phones: string[];
+  emails: { value: string; verified: boolean }[];
+  phones: { value: string; verified: boolean }[];
+  ips: string[];
 
   //external ids like whatsapp, instagram, shopify customer id
   externalIds: IExternalIds;
@@ -36,6 +37,9 @@ export interface IPerson {
   //prev references to sessions
   pastSessionIds: { aid: string; sid: string }[];
 
+  //ids of people that are identical to this person
+  identicalPersonIds: string[];
+
   createdAt: string;
   updatedAt: string;
 }
@@ -48,6 +52,7 @@ export const generateDefaultPerson = ({
   externalIds,
   sessionId,
   aid,
+  ip,
 }: {
   name?: string;
   email?: string;
@@ -55,6 +60,7 @@ export const generateDefaultPerson = ({
   externalIds?: IExternalIds;
   sessionId?: string;
   aid?: string;
+  ip?: string;
 }): IPerson => {
   const emailN = normEmail(email);
   const phoneN = normPhone(phone);
@@ -62,8 +68,9 @@ export const generateDefaultPerson = ({
   return {
     id: v4(),
     name: name ?? "",
-    emails: emailN ? [emailN] : [],
-    phones: phoneN ? [phoneN] : [],
+    emails: emailN ? [{ value: emailN, verified: false }] : [],
+    phones: phoneN ? [{ value: phoneN, verified: false }] : [],
+    ips: ip ? [ip] : [],
     externalIds: externalIds ?? [],
     company: "",
     title: "",
@@ -73,6 +80,7 @@ export const generateDefaultPerson = ({
     memories: [],
     summary: "",
     notes: [],
+    identicalPersonIds: [],
     pastSessionIds: sessionId && aid ? [{ aid, sid: sessionId }] : [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

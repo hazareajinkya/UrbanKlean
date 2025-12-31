@@ -128,12 +128,12 @@ class PeopleService {
       }
     }
     if (data.emails?.length) {
-      const emails = data.emails.map(normEmail).filter(Boolean);
+      const emails = data.emails.map((e) => normEmail(e.value)).filter(Boolean);
       if (emails.length) update.emails = arrayUnion(...emails);
     }
 
     if (data.phones?.length) {
-      const phones = data.phones.map(normPhone).filter(Boolean);
+      const phones = data.phones.map((p) => normPhone(p.value)).filter(Boolean);
       if (phones.length) update.phones = arrayUnion(...phones);
     }
 

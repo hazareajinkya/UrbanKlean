@@ -1,6 +1,7 @@
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
+import peopleServiceV2 from "@/lib/services/people-service-v2";
 import { IAgent } from "@/lib/types/agent";
 import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
@@ -24,9 +25,9 @@ export const initChat = async (agent: IAgent) => {
       })
     : Promise.resolve([]);
 
-  const personPromise = peopleService.identify({
+  const personPromise = peopleServiceV2.identifyPersonOnWeb({
     wid: agent.wid,
-    externalIds: [{ id: deviceId, provider: "web" }],
+    deviceIds: [deviceId],
   });
 
   const [sessions, { person }] = await Promise.all([
