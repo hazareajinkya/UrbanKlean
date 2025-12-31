@@ -25,9 +25,10 @@ export const initChat = async (agent: IAgent) => {
       })
     : Promise.resolve([]);
 
-  const personPromise = peopleServiceV2.identifyPersonOnWeb({
+  const personPromise = peopleServiceV2.identifyPerson({
+    provider: "web",
     wid: agent.wid,
-    deviceIds: [deviceId],
+    externalIds: [{ provider: "web", id: deviceId }],
   });
 
   const [sessions, { person }] = await Promise.all([
