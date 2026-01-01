@@ -46,17 +46,20 @@ class WorkspaceService {
     description,
     ownerId,
     info,
+    domains,
   }: {
     name: string;
     description: string;
     ownerId: string;
     info?: IWorkspaceInfo;
+    domains: string[];
   }) {
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
     workspace.oneLiner = description;
     workspace.ownerId = ownerId;
+    workspace.domains = domains;
     if (info) {
       workspace.info = info;
     }

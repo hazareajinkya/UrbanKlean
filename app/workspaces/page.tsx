@@ -388,11 +388,13 @@ const CreateWorkspaceModal = ({
   };
 
   const handleOnboardingFinish = (data: OnboardingData) => {
+    const domains = [domain];
     createWorkspace.mutate(
       {
         name: data.companyName,
         description: data.oneLineDescription,
         ownerId: userEmail,
+        domains,
         info: {
           email: userEmail,
           tagline: data.tagline,
