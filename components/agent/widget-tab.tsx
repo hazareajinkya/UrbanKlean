@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { IAgent } from "@/lib/types/agent";
-import { Globe, Copy, Check, ExternalLink, TestTube } from "lucide-react";
+import { Globe, Copy, Check, ExternalLink, TestTube, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { ScrollArea } from "../ui/scroll-area";
@@ -51,9 +51,9 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
       <div className="space-y-6 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-medium">Test Your Widget</h2>
+            <h2 className="text-lg font-medium">Deploy Your Agent</h2>
             <p className="text-sm text-muted-foreground ">
-              Test your widget in a simulated environment before embedding it on
+              Test and deploy your widget in a simulated environment before adding it on
               your website.
             </p>
           </div>
@@ -66,8 +66,8 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
               </Button>
             </Link>
             <Link href={`/chat/${aid}`} target="_blank">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
+              <Button variant="outline" className="flex items-center gap-2 bg-card">
+                <MessageSquare className="w-4 h-4" />
                 View Chat Page
               </Button>
             </Link>
@@ -76,16 +76,15 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
 
         <div className="grid lg:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
+            <CardHeader className="px-6 pt-2 pb-0">
+              <CardTitle className="flex items-center justify-between">
                 Embed Your Chat Widget
+                <Globe className="w-5 h-5" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="px-6 pt-0 pb-6 space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Embed Code</h4>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                   Copy and paste this code before the closing &lt;/body&gt; tag
                   of your website:
                 </p>
@@ -112,8 +111,8 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
               </div>
 
               <div>
-                <h4 className="font-medium mb-2">Quick Setup</h4>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                <h4 className="mb-2">Quick Setup</h4>
+                <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground leading-relaxed">
                   <li>Copy the embed code above</li>
                   <li>
                     Paste it before the closing &lt;/body&gt; tag of your
@@ -130,14 +129,14 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
 
           {/* Direct Iframe Embed */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ExternalLink className="w-5 h-5" />
+            <CardHeader className="px-6 pt-2 pb-0">
+              <CardTitle className="flex items-center justify-between">
                 Direct Iframe Embed
+                <ExternalLink className="w-5 h-5" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+            <CardContent className="px-6 pt-0 pb-6 space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 For custom integrations, you can embed the chat directly using
                 an iframe. Include the{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">
@@ -170,7 +169,7 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
                 </Button>
               </div>
               <div className="border-l-4 border-amber-200 pl-4 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-r">
-                <p className="text-amber-800 dark:text-amber-200 text-sm">
+                <p className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
                   <strong>Important:</strong> Replace{" "}
                   <code className="bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded text-xs">
                     YOUR_PAGE_URL
@@ -178,7 +177,7 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
                   with the actual URL of the page where the iframe is embedded
                   (e.g.,{" "}
                   <code className="bg-amber-100 dark:bg-amber-900/50 px-1 py-0.5 rounded text-xs">
-                    https://yoursite.com/pricing
+                    https://yourpage.com/support
                   </code>
                   ). This allows you to track where conversations originate
                   from.
