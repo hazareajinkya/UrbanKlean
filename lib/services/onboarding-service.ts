@@ -1,14 +1,20 @@
-import { apiClient } from "@/lib/clients/axios-client";
+import { apiClient, backendClient } from "@/lib/clients/axios-client";
 import { storage } from "@/lib/clients/firebase";
+import { tracingChannel } from "diagnostics_channel";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuid } from "uuid";
+import { backendconf } from "../utils/conf";
 
 class OnboardingService {
   async generateCompanyInfo({ url }: { url: string }) {
-    const response = await apiClient.post("/api/onboarding/generate-info", {
-      url,
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post("/api/onboarding/generate-info", {
+        url,
+      });
+      return response.data;
+    } catch (error) {
+      console.log("error: ", error);
+    }
   }
 
   async uploadLogo(file: File): Promise<string> {

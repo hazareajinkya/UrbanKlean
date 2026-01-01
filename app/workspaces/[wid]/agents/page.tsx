@@ -232,7 +232,11 @@ export default function AgentsPage() {
           <div className="text-muted-foreground mb-6 max-w-md">
             To start automating conversations and tasks.
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} size="lg">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            size="lg"
+            className="rounded-full"
+          >
             <Plus className="w-4 h-4 " />
             Create Your First Agent
           </Button>

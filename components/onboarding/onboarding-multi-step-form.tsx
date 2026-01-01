@@ -26,6 +26,8 @@ import {
   FileText,
   Cpu,
   Timer,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
 
@@ -151,6 +153,7 @@ export const OnboardingMultiStepForm = ({
     return { ...defaultData, ...initialData };
   });
   const [companyNameError, setCompanyNameError] = useState("");
+  const [businessTypeError, setBusinessTypeError] = useState("");
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Start processing when URL is provided
@@ -176,7 +179,7 @@ export const OnboardingMultiStepForm = ({
   useEffect(() => {
     if (phase !== "processing" || !url || processingStep === 0) return;
 
-    const stepDuration = 3000;
+    const stepDuration = 1500;
     const interval = setInterval(() => {
       setProcessingStep((prev) => {
         const next = prev + 1;
@@ -221,6 +224,16 @@ export const OnboardingMultiStepForm = ({
     return true;
   };
 
+  const validateBusinessType = (): boolean => {
+    const businessType = onboardingData?.businessType?.trim() || "";
+    if (!businessType) {
+      setBusinessTypeError("Business type is required");
+      return false;
+    }
+    setBusinessTypeError("");
+    return true;
+  };
+
   const handleNextConfirmationStep = () => {
     // Validate company name on step 1 before proceeding
     if (confirmationStep === 1) {
@@ -229,14 +242,24 @@ export const OnboardingMultiStepForm = ({
       }
     }
 
+    // Validate business type on step 2 before proceeding
+    if (confirmationStep === 2) {
+      if (!validateBusinessType()) {
+        return;
+      }
+    }
+
     if (confirmationStep < CONFIRMATION_STEPS.length) {
       setConfirmationStep(confirmationStep + 1);
     } else {
-      // Final submit - validate company name again
+      // Final submit - validate company name and business type again
       if (onboardingData) {
         if (!validateCompanyName()) {
-          // Go back to step 1 if validation fails
           setConfirmationStep(1);
+          return;
+        }
+        if (!validateBusinessType()) {
+          setConfirmationStep(2);
           return;
         }
         onFinish(onboardingData);
@@ -254,7 +277,7 @@ export const OnboardingMultiStepForm = ({
     return (
       <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+          <h2 className="text-xl font-medium tracking-tight text-foreground">
             Analyzing {url ? normalizeDomain(url) : ""}
           </h2>
         </div>
@@ -308,16 +331,22 @@ export const OnboardingMultiStepForm = ({
   }
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-semibold text-gray-900 shrink-0">
-            {title}
-          </h1>
-          <div className="flex-1 flex items-center gap-3">
-            <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div className="flex items-center justify-between w-full gap-4">
+          <div className="space-y-.5">
+            <h1 className="text-xl font-medium text-foreground">{title}</h1>
+            <p className="text-sm text-muted-foreground">
+              {CONFIRMATION_STEPS[confirmationStep - 1].title}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-3">
+            <span className="text-sm text-gray-500 shrink-0 tabular-nums">
+              {confirmationStep}/{CONFIRMATION_STEPS.length}
+            </span>
+            <div className="w-24 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gray-900 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                 style={{
                   width: `${
                     (confirmationStep / CONFIRMATION_STEPS.length) * 100
@@ -325,15 +354,12 @@ export const OnboardingMultiStepForm = ({
                 }}
               />
             </div>
-            <span className="text-sm text-gray-500 shrink-0 tabular-nums">
-              {confirmationStep}/{CONFIRMATION_STEPS.length}
-            </span>
           </div>
         </div>
 
-        <p className="text-gray-600 text-sm">
+        {/* <p className="text-gray-600 text-sm">
           {CONFIRMATION_STEPS[confirmationStep - 1].title}
-        </p>
+        </p> */}
       </div>
 
       {showEstimatedTime && onboardingData.estimatedTime && (
@@ -364,7 +390,7 @@ export const OnboardingMultiStepForm = ({
             {/* Logo and Color in same row */}
             <div className="flex gap-4">
               <div
-                className="group relative overflow-hidden rounded-xl border bg-card p-4 transition-all hover:bg-muted/50 cursor-pointer flex-1"
+                className="group relative bg-muted overflow-hidden rounded-xl border bg-card p-4 transition-all hover:bg-muted/50 cursor-pointer flex-1"
                 onClick={() => logoInputRef.current?.click()}
               >
                 <div className="flex items-center gap-4">
@@ -386,7 +412,7 @@ export const OnboardingMultiStepForm = ({
                     </div>
                   </div>
                   <div className="space-y-0.5">
-                    <h3 className="font-medium text-gray-900 text-sm">Logo</h3>
+                    <h3 className="font-medium text-sm">Logo</h3>
                     <p className="text-xs text-gray-500">Click to upload</p>
                   </div>
                 </div>
@@ -409,7 +435,7 @@ export const OnboardingMultiStepForm = ({
                 />
               </div>
 
-              <div className="rounded-xl border bg-card p-4 flex-1">
+              <div className="bg-muted rounded-xl border bg-card p-4 flex-1">
                 <div className="flex items-center gap-4">
                   <div
                     className="size-16 shrink-0 rounded-lg border flex items-center justify-center cursor-pointer"
@@ -431,9 +457,7 @@ export const OnboardingMultiStepForm = ({
                     />
                   </div>
                   <div className="space-y-0.5 flex-1">
-                    <h3 className="font-medium text-gray-900 text-sm">
-                      Brand Color
-                    </h3>
+                    <h3 className="font-medium text-sm">Brand Color</h3>
                     <Input
                       value={onboardingData.primaryColor}
                       onChange={(e) =>
@@ -452,7 +476,7 @@ export const OnboardingMultiStepForm = ({
                 <Label className="text-gray-700">
                   {companyNameLabel}
                   {mode === "workspace" && (
-                    <span className="text-destructive ml-1">*</span>
+                    <span className="text-destructive">*</span>
                   )}
                 </Label>
                 <Input
@@ -469,7 +493,7 @@ export const OnboardingMultiStepForm = ({
                     }
                   }}
                   className={cn(
-                    "h-11",
+                    "h-11 bg-muted",
                     companyNameError && "border-destructive"
                   )}
                   placeholder={
@@ -481,17 +505,17 @@ export const OnboardingMultiStepForm = ({
                 {companyNameError && (
                   <p className="text-destructive text-xs">{companyNameError}</p>
                 )}
-                {mode === "workspace" && (
+                {/* {mode === "workspace" && (
                   <p className="text-xs text-muted-foreground">
                     This is required to create your workspace
                   </p>
-                )}
+                )} */}
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">
                   Tagline
                   {mode === "workspace" && (
-                    <span className="text-muted-foreground text-xs font-normal ml-1">
+                    <span className="text-muted-foreground text-xs font-normal">
                       (Optional)
                     </span>
                   )}
@@ -501,7 +525,7 @@ export const OnboardingMultiStepForm = ({
                   onChange={(e) =>
                     updateOnboardingData("tagline", e.target.value)
                   }
-                  className="h-11"
+                  className="h-11 bg-muted"
                   placeholder="A short tagline"
                 />
               </div>
@@ -511,58 +535,28 @@ export const OnboardingMultiStepForm = ({
 
         {/* Step 2: Description */}
         {confirmationStep === 2 && (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-gray-700">
-                One-line Pitch
-                {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
-                    (Optional)
-                  </span>
-                )}
-              </Label>
-              <Input
-                value={onboardingData.oneLineDescription}
-                onChange={(e) =>
-                  updateOnboardingData("oneLineDescription", e.target.value)
-                }
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-gray-700">
-                Detailed Description
-                {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
-                    (Optional)
-                  </span>
-                )}
-              </Label>
-              <Textarea
-                value={onboardingData.description}
-                onChange={(e) =>
-                  updateOnboardingData("description", e.target.value)
-                }
-                className="min-h-[150px] resize-none text-base leading-relaxed"
-              />
-            </div>
+          <div className="space-y-6 ">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-gray-700">
                   Business Type
-                  {mode === "workspace" && (
-                    <span className="text-muted-foreground text-xs font-normal ml-1">
-                      (Optional)
-                    </span>
-                  )}
+                  <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={onboardingData.businessType}
-                  onValueChange={(value) =>
-                    updateOnboardingData("businessType", value)
-                  }
+                  onValueChange={(value) => {
+                    updateOnboardingData("businessType", value);
+                    if (businessTypeError) {
+                      setBusinessTypeError("");
+                    }
+                  }}
                 >
-                  <SelectTrigger className="h-11 w-full">
+                  <SelectTrigger
+                    className={cn(
+                      "py-5 w-full",
+                      businessTypeError && "border-destructive"
+                    )}
+                  >
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -574,12 +568,17 @@ export const OnboardingMultiStepForm = ({
                     <SelectItem value="individual">Individual</SelectItem>
                   </SelectContent>
                 </Select>
+                {businessTypeError && (
+                  <p className="text-destructive text-xs">
+                    {businessTypeError}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-gray-700">
                   Industry
                   {mode === "workspace" && (
-                    <span className="text-muted-foreground text-xs font-normal ml-1">
+                    <span className="text-muted-foreground text-xs font-normal">
                       (Optional)
                     </span>
                   )}
@@ -589,9 +588,43 @@ export const OnboardingMultiStepForm = ({
                   onChange={(e) =>
                     updateOnboardingData("industry", e.target.value)
                   }
-                  className="h-11"
+                  className="h-11 "
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-700">
+                One-line Pitch
+                {mode === "workspace" && (
+                  <span className="text-muted-foreground text-xs font-normal">
+                    (Optional)
+                  </span>
+                )}
+              </Label>
+              <Textarea
+                value={onboardingData.oneLineDescription}
+                onChange={(e) =>
+                  updateOnboardingData("oneLineDescription", e.target.value)
+                }
+                className="bg-muted resize-none leading-relaxed max-h-max"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gry-700">
+                Detailed Description
+                {mode === "workspace" && (
+                  <span className="text-muted-foreground text-xs font-normal">
+                    (Optional)
+                  </span>
+                )}
+              </Label>
+              <Textarea
+                value={onboardingData.description}
+                onChange={(e) =>
+                  updateOnboardingData("description", e.target.value)
+                }
+                className="min-h-[150px] resize-none text-base leading-relaxed bg-muted"
+              />
             </div>
           </div>
         )}
@@ -603,7 +636,7 @@ export const OnboardingMultiStepForm = ({
               <Label className="text-gray-700">
                 Target Audience
                 {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
+                  <span className="text-muted-foreground text-xs font-normal">
                     (Optional)
                   </span>
                 )}
@@ -613,7 +646,7 @@ export const OnboardingMultiStepForm = ({
                 onChange={(e) =>
                   updateOnboardingData("targetAudience", e.target.value)
                 }
-                className="min-h-[120px] resize-none"
+                className="resize-none bg-muted leading-relaxed max-h-max"
                 placeholder="e.g. Small business owners looking for automation..."
               />
             </div>
@@ -621,7 +654,7 @@ export const OnboardingMultiStepForm = ({
               <Label className="text-gray-700">
                 Tone of Voice
                 {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
+                  <span className="text-muted-foreground text-xs font-normal">
                     (Optional)
                   </span>
                 )}
@@ -631,7 +664,7 @@ export const OnboardingMultiStepForm = ({
                 onChange={(e) =>
                   updateOnboardingData("toneGuidelines", e.target.value)
                 }
-                className="min-h-[120px] resize-none"
+                className="resize-none bg-muted leading-relaxed max-h-max"
                 placeholder="e.g. Professional yet friendly, extremely concise..."
               />
             </div>
@@ -645,7 +678,7 @@ export const OnboardingMultiStepForm = ({
               <Label className="text-gray-700">
                 Offerings
                 {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
+                  <span className="text-muted-foreground text-xs font-normal">
                     (Optional)
                   </span>
                 )}
@@ -655,7 +688,7 @@ export const OnboardingMultiStepForm = ({
                 onChange={(e) =>
                   updateOnboardingData("offerings", e.target.value)
                 }
-                className="min-h-[120px] resize-none"
+                className="resize-none bg-muted leading-relaxed max-h-max"
                 placeholder="e.g. AI-powered customer support, automated workflows, real-time analytics..."
               />
             </div>
@@ -663,7 +696,7 @@ export const OnboardingMultiStepForm = ({
               <Label className="text-gray-700">
                 Differentiators
                 {mode === "workspace" && (
-                  <span className="text-muted-foreground text-xs font-normal ml-1">
+                  <span className="text-muted-foreground text-xs font-normal">
                     (Optional)
                   </span>
                 )}
@@ -673,7 +706,7 @@ export const OnboardingMultiStepForm = ({
                 onChange={(e) =>
                   updateOnboardingData("differentiators", e.target.value)
                 }
-                className="min-h-[120px] resize-none"
+                className="resize-none bg-muted leading-relaxed max-h-max"
                 placeholder="e.g. Industry-leading response time, 24/7 availability, multilingual support..."
               />
             </div>
@@ -681,22 +714,22 @@ export const OnboardingMultiStepForm = ({
         )}
       </div>
 
-      <div className="flex gap-4 pt-6">
+      <div className="flex gap-4 pt-2">
         {confirmationStep > 1 && (
           <Button
             variant="outline"
             size="lg"
             onClick={handlePrevConfirmationStep}
-            className="w-auto max-w-max"
+            className="w-auto max-w-max rounded-full"
           >
-            <ArrowLeft className="size-4" />
+            <ChevronLeft className="size-4" />
             Back
           </Button>
         )}
         <Button
           size="lg"
           onClick={handleNextConfirmationStep}
-          className="flex-1"
+          className="flex-1 rounded-full"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
@@ -708,7 +741,7 @@ export const OnboardingMultiStepForm = ({
             submitButtonText
           ) : (
             <>
-              Next Step <ArrowRight className="size-4" />
+              Next Step <ChevronRight className="size-4" />
             </>
           )}
         </Button>

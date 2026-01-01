@@ -28,7 +28,8 @@ const axiosClient: AxiosInstance = axios.create({
 export const backendClient = axios.create({
   baseURL: `${backendconf.baseURL}/api`,
   headers: {
-    Authorization: `Bearer ${backendconf.accessToken}`,
+    // Authorization: `Bearer ${backendconf.accessToken}`,
+    Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjY4MzIyMzR9.9wUkA1AKhRB--3gfw654eQBxhmmyIwErLIaUJ2O7l8I`,
   },
 });
 export const waClient = axios.create({

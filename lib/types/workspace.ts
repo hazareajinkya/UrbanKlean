@@ -20,7 +20,6 @@ export interface IWorkspace {
   name: string;
   oneLiner: string;
   domains: string[];
-  thumbnail: string;
   ownerId: string;
   folders: { id: string; name: string }[];
   availableTags: string[];
@@ -55,14 +54,8 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       differentiators: "",
     },
     type: "default",
-    thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     lastActivity: new Date().toISOString(),
   };
-};
-
-const getRandomThumbnail = () => {
-  const randomNumber = Math.floor(Math.random() * 21);
-  return `https://firebasestorage.googleapis.com/v0/b/algotify-972f2.firebasestorage.app/o/3d-abstract%2F3d-abs-${randomNumber}-min.png?alt=media&token=d73ec356-39ee-4c0f-88a3-403608a18398`;
 };
