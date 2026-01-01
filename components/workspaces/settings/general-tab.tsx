@@ -264,7 +264,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
             variant="outline"
             onClick={handleAIGenerate}
             disabled={isGenerating}
-            className="rounded-full"
+            className="rounded-full bg-card"
           >
             <Wand2 className="h-4 w-4" />
             {isGenerating ? "Generating..." : "Auto Generate with AI"}
@@ -283,8 +283,9 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
               <Button
                 type="button"
                 onClick={handleSave}
+                size={"sm"}
                 disabled={updateWorkspace.isPending}
-                className="rounded-full"
+                className="rounded-full "
               >
                 {updateWorkspace.isPending && (
                   <Loader className="h-4 w-4 animate-spin" />
@@ -431,6 +432,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
               type="button"
               onClick={handleSave}
               disabled={updateWorkspace.isPending}
+              size={"sm"}
               className="rounded-full"
             >
               {updateWorkspace.isPending && (
@@ -507,6 +509,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
               type="button"
               onClick={handleSave}
               disabled={updateWorkspace.isPending}
+              size={"sm"}
               className="rounded-full"
             >
               {updateWorkspace.isPending && (
@@ -557,6 +560,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
               type="button"
               onClick={handleSave}
               disabled={updateWorkspace.isPending}
+              size={"sm"}
               className="rounded-full"
             >
               {updateWorkspace.isPending && (

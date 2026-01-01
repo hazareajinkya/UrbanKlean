@@ -225,9 +225,9 @@ export default function FolderSidebar({
           setNewFolderName("");
         }}
       >
-        <div className="">
-          <div className="flex items-center justify-between border-b pb-2 mb-6">
-            <h3 className="text-lg font-medium">Create Folder</h3>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-1 border-b">
+            <h3 className="text-lg">Create Folder</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -240,37 +240,43 @@ export default function FolderSidebar({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="folder-name">Folder Name</Label>
-            <Input
-              id="folder-name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="e.g., Policies, Products, etc."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleCreateFolder();
-                }
-              }}
-              autoFocus
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Folder Name</Label>
+              <Input
+                id="folder-name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="e.g., Policies, Products, etc."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleCreateFolder();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => {
                 setIsCreateModalOpen(false);
                 setNewFolderName("");
               }}
+              className="rounded-full"
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim() || createFolder.isPending}
+              className="rounded-full"
             >
-              {createFolder.isPending && (
+              {createFolder.isPending ? (
                 <Loader className="w-4 h-4 animate-spin " />
+              ) : (
+                <Plus className="w-4 h-4" />
               )}
               Create Folder
             </Button>
@@ -287,9 +293,9 @@ export default function FolderSidebar({
           setEditFolderName("");
         }}
       >
-        <div className="">
-          <div className="flex items-center justify-between border-b pb-2 mb-6">
-            <h3 className="text-lg font-medium">Edit Folder</h3>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-1 border-b">
+            <h3 className="text-lg">Edit Folder</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -303,22 +309,24 @@ export default function FolderSidebar({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-folder-name">Folder Name</Label>
-            <Input
-              id="edit-folder-name"
-              value={editFolderName}
-              onChange={(e) => setEditFolderName(e.target.value)}
-              placeholder="Folder Name"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditFolder();
-                }
-              }}
-              autoFocus
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">Folder Name</Label>
+              <Input
+                id="edit-folder-name"
+                value={editFolderName}
+                onChange={(e) => setEditFolderName(e.target.value)}
+                placeholder="Folder Name"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleEditFolder();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => {
@@ -326,12 +334,14 @@ export default function FolderSidebar({
                 setFolderToEdit(null);
                 setEditFolderName("");
               }}
+              className="rounded-full"
             >
               Cancel
             </Button>
             <Button
               onClick={handleEditFolder}
               disabled={!editFolderName.trim() || updateFolder.isPending}
+              className="rounded-full"
             >
               {updateFolder.isPending && (
                 <Loader className="w-4 h-4 animate-spin " />
