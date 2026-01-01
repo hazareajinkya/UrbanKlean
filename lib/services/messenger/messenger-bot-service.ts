@@ -22,6 +22,7 @@ import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
+import peopleServiceV2 from "../people-service-v2";
 
 class MessengerBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -149,9 +150,10 @@ class MessengerBotService {
       { provider: channel, id: messengerUserId },
     ];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
       emails: [],
+      provider: channel,
       externalIds,
     });
 

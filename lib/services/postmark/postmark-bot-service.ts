@@ -23,6 +23,7 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
+import peopleServiceV2 from "../people-service-v2";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -149,11 +150,12 @@ class PostmarkBotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: email }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      emails: [email],
+      emails: [{ value: email, verified: true }],
       externalIds,
       name,
+      provider: channel,
     });
 
     let personData = person;

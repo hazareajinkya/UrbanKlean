@@ -23,6 +23,7 @@ import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import actionService from "../action-service";
 import { getCustomTools } from "@/lib/utils";
+import peopleServiceV2 from "../people-service-v2";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -142,9 +143,10 @@ class WABotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: waPhoneId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      phones: [waPhoneId],
+      phones: [{ value: waPhoneId, verified: true }],
+      provider: channel,
       externalIds,
     });
 
