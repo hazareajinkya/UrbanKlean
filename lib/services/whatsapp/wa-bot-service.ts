@@ -123,7 +123,7 @@ class WABotService {
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
     } catch (error) {
-      console.log("error: ", error);
+      console.log("error in generateResponse: ", error);
       return { success: false, message: this.ERROR_MESSAGE };
     }
   }

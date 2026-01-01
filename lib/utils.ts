@@ -419,5 +419,7 @@ export const getClientIp = (req: Request | { headers: Headers }): string => {
     if (firstVercelIp) return normIp(firstVercelIp);
   }
 
+  // If there is no ip use vercel ip function
+
   return "unknown";
 };

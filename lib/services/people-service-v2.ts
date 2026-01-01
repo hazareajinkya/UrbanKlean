@@ -15,6 +15,7 @@ import { generateDefaultPerson, IExternalIds, IPerson } from "../types/person";
 import { db } from "../clients/firebase";
 import { normEmail, normIp, normNote, normPhone, normWord } from "../utils";
 import { IChannelProvider } from "../types/channel";
+import { apiClient } from "../clients/axios-client";
 
 class PeopleServiceV2 {
   // identify person by email, phone, externalIds, ips, provider
@@ -36,7 +37,6 @@ class PeopleServiceV2 {
     provider: IChannelProvider;
   }) {
     try {
-      console.log("Ips: ", ips);
       const peopleCol = collection(db, `workspaces/${wid}/people`);
       const emailNs = emails
         ?.map((e) => {
@@ -350,6 +350,40 @@ class PeopleServiceV2 {
     } catch (error) {
       console.error("Error getting identical persons: ", error);
       return [];
+    }
+  }
+
+  async directMergePerson({
+    wid,
+    personAId,
+    personBId,
+  }: {
+    wid: string;
+    personAId: string;
+    personBId: string;
+  }) {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        message: string;
+        data: IPerson;
+      }>("/api/merge", {
+        wid,
+        personIds: [personAId, personBId],
+      });
+
+      if (!response.data.success || !response.data.data) {
+        throw new Error(response.data.message || "Failed to merge persons");
+      }
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error("Error merging persons:", error);
+      throw new Error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to merge persons"
+      );
     }
   }
 }

@@ -108,15 +108,70 @@ export const collectInformation = ({
       if (currentPersonId) {
         try {
           // ✅ ALREADY IDENTIFIED - Just update their info
-          personData = await peopleServiceV2.updatePerson({
-            wid,
-            personId: currentPersonId,
-            data: data,
-          });
+          if (params.emails.length > 0 || params.phones.length > 0) {
+            const { existing, person, softmerge } =
+              await peopleServiceV2.identifyPerson({
+                wid: wid,
+                ...data,
+                provider: provider,
+              });
+
+            // same person is found
+            if (existing && person?.id && currentPersonId === person.id) {
+              // same person just update the person
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            } else if (
+              existing &&
+              person?.id &&
+              currentPersonId !== person.id &&
+              softmerge
+            ) {
+              // different person found, soft merge
+              await peopleServiceV2.softMergePerson({
+                wid: wid,
+                personAId: currentPersonId,
+                personBId: person.id,
+              });
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            } else if (
+              existing &&
+              person?.id &&
+              currentPersonId !== person.id &&
+              !softmerge
+            ) {
+              // different person found, direct merge
+              personData = await peopleServiceV2.directMergePerson({
+                wid: wid,
+                personAId: currentPersonId,
+                personBId: person.id,
+              });
+            } else {
+              // no person found  just update current person
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            }
+          } else {
+            // no emails or phones  update current person
+            personData = await peopleServiceV2.updatePerson({
+              wid,
+              personId: currentPersonId,
+              data: data,
+            });
+          }
         } catch (error) {
-          // Person doesn't exist - fallback to identify flow
-          console.warn("Person not found, re-identifying");
-          currentPersonId = undefined; // Force identify flow below
+          console.warn("Person not found, re-identifying", error);
+          currentPersonId = undefined;
         }
       }
 
