@@ -112,7 +112,16 @@ export const collectInformation = ({
             const { existing, person, softmerge } =
               await peopleServiceV2.identifyPerson({
                 wid: wid,
-                ...data,
+                emails: params.emails.map((e) => ({
+                  value: e,
+                  verified: false,
+                })),
+                phones: params.phones.map((p) => ({
+                  value: p,
+                  verified: false,
+                })),
+
+                ips: ips ?? [],
                 provider: provider,
               });
 
