@@ -36,6 +36,7 @@ import { Edit2, Loader, Plus, Trash2, X, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
+import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 
 export default function WorkspacesPage() {
   const router = useRouter();
@@ -139,133 +140,141 @@ export default function WorkspacesPage() {
 
   if (userLoading) {
     return (
-      <div className="mt-12 px-4 md:px-24">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-8"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
-            ))}
+      <>
+        <WorkspacesNavbar />
+        <div className="mt-24 px-4 md:px-24">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="mt-12 px-4 md:px-24">
-      <div className="flex gap-4 justify-between mb-8">
-        <h2 className="text-xl font-medium">Workspaces</h2>
-        <Button onClick={openCreateModal}>
-          <Plus className="w-4 h-4" />
-          Workspace
-        </Button>
-      </div>
-
-      {workspacesLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-            </div>
-          ))}
-        </div>
-      ) : workspaces && workspaces.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {workspaces.map((workspace) => (
-            <div
-              key={workspace.id}
-              className="bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden"
-              onClick={() => router.push(`/workspaces/${workspace.id}`)}
-            >
-              <div className="relative">
-                <img
-                  src={workspace.thumbnail}
-                  alt={workspace.name}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditWorkspace(workspace);
-                    }}
-                    className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteWorkspace(workspace);
-                    }}
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 bg-white/90 hover:bg-white"
-                    disabled={deleteWorkspace.isPending}
-                  >
-                    {deleteWorkspace.isPending ? (
-                      <Loader className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <h3 className="font-medium text-lg">{workspace.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(workspace.createdAt)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 h-[60vh] flex flex-col items-center justify-center">
-          <div className="text-muted-foreground mb-4">No workspaces found</div>
+    <>
+      <WorkspacesNavbar />
+      <div className="mt-24 px-4 md:px-24">
+        <div className="flex gap-4 justify-between mb-8">
+          <h2 className="text-xl font-medium">Workspaces</h2>
           <Button onClick={openCreateModal}>
-            <Plus className="w-4 h-4 " />
-            Create Workspace
+            <Plus className="w-4 h-4" />
+            Workspace
           </Button>
         </div>
-      )}
 
-      {editingWorkspace ? (
-        <WorkspaceEditModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          workspaceName={workspaceName}
-          setWorkspaceName={setWorkspaceName}
-          workspaceDescription={workspaceDescription}
-          setWorkspaceDescription={setWorkspaceDescription}
-          onSubmit={handleSubmit}
-          isLoading={updateWorkspace.isPending}
-          editingWorkspace={editingWorkspace}
-        />
-      ) : (
-        <CreateWorkspaceModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          userEmail={user?.email || ""}
-        />
-      )}
+        {workspacesLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-64 bg-gray-200 rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        ) : workspaces && workspaces.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {workspaces.map((workspace) => (
+              <div
+                key={workspace.id}
+                className="bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden"
+                onClick={() => router.push(`/workspaces/${workspace.id}`)}
+              >
+                <div className="relative">
+                  <img
+                    src={workspace.thumbnail}
+                    alt={workspace.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditWorkspace(workspace);
+                      }}
+                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteWorkspace(workspace);
+                      }}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 bg-white/90 hover:bg-white"
+                      disabled={deleteWorkspace.isPending}
+                    >
+                      {deleteWorkspace.isPending ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-4 flex items-center justify-between">
+                  <h3 className="font-medium text-lg">{workspace.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(workspace.createdAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 h-[60vh] flex flex-col items-center justify-center">
+            <div className="text-muted-foreground mb-4">
+              No workspaces found
+            </div>
+            <Button onClick={openCreateModal}>
+              <Plus className="w-4 h-4 " />
+              Create Workspace
+            </Button>
+          </div>
+        )}
 
-      <ConfirmationDialog
-        isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        onConfirm={confirmDeleteWorkspace}
-        title="Delete Workspace"
-        description={`Are you sure you want to delete "${deletingWorkspace?.name}"?`}
-        warningMessage="This action cannot be undone. All data associated with this workspace will be permanently removed."
-        confirmText="Delete Workspace"
-        cancelText="Cancel"
-        isLoading={deleteWorkspace.isPending}
-        variant="destructive"
-      />
-    </div>
+        {editingWorkspace ? (
+          <WorkspaceEditModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            workspaceName={workspaceName}
+            setWorkspaceName={setWorkspaceName}
+            workspaceDescription={workspaceDescription}
+            setWorkspaceDescription={setWorkspaceDescription}
+            onSubmit={handleSubmit}
+            isLoading={updateWorkspace.isPending}
+            editingWorkspace={editingWorkspace}
+          />
+        ) : (
+          <CreateWorkspaceModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            userEmail={user?.email || ""}
+          />
+        )}
+
+        <ConfirmationDialog
+          isOpen={isDeleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          onConfirm={confirmDeleteWorkspace}
+          title="Delete Workspace"
+          description={`Are you sure you want to delete "${deletingWorkspace?.name}"?`}
+          warningMessage="This action cannot be undone. All data associated with this workspace will be permanently removed."
+          confirmText="Delete Workspace"
+          cancelText="Cancel"
+          isLoading={deleteWorkspace.isPending}
+          variant="destructive"
+        />
+      </div>
+    </>
   );
 }
 

@@ -13,10 +13,10 @@ import { Settings2, Globe, User, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { GeneralTab } from "@/components/worksapce/settings/general-tab";
-import { DomainsTab } from "@/components/worksapce/settings/domains-tab";
-import MembersTab from "@/components/worksapce/settings/members-tab";
-import BillingTab from "@/components/worksapce/settings/billing-tab";
+import { GeneralTab } from "@/components/workspaces/settings/general-tab";
+import { DomainsTab } from "@/components/workspaces/settings/domains-tab";
+import MembersTab from "@/components/workspaces/settings/members-tab";
+import BillingTab from "@/components/workspaces/settings/billing-tab";
 
 const sections = [
   {
