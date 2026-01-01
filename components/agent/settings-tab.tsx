@@ -78,7 +78,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
               </CardTitle>
               <Button
                 onClick={handleSave}
-                size={"sm"}
+                size="sm"
                 className="rounded-full px-4"
                 disabled={updateAgent.isPending}
               >
@@ -143,6 +143,81 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                       deterministic.
                     </p>
                   </div>
+
+                  <div className="pt-6 border-t">
+                    <div className="flex items-start justify-between mb-0">
+                      <div>
+                        <Label>Knowledge Base Access</Label>
+                      </div>
+                      {knowledgeFolders.length > 0 && (
+                        <p className="text-xs text-muted-foreground self-center">
+                          {knowledgeFolders.length} selected
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground mt-1 mb-4">
+                      Select folders this agent can access.
+                    </p>
+                    {folders && folders.length > 0 ? (
+                      <div className="space-y-2">
+                        {folders.map((folder) => {
+                          const isSelected = knowledgeFolders.includes(
+                            folder.id
+                          );
+                          return (
+                            <div
+                              key={folder.id}
+                              onClick={() => handleFolderToggle(folder.id)}
+                              className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "hover:bg-accent/50 hover:border-accent-foreground/20 bg-accent/50"
+                                  : "border-border hover:bg-accent/50 hover:border-accent-foreground/20"
+                              }`}
+                            >
+                              <Checkbox
+                                id={`folder-${folder.id}`}
+                                checked={isSelected}
+                                onCheckedChange={() =>
+                                  handleFolderToggle(folder.id)
+                                }
+                                className="pointer-events-none"
+                              />
+                              <label
+                                htmlFor={`folder-${folder.id}`}
+                                className="flex-1 cursor-pointer flex items-center gap-2 text-sm font-medium"
+                              >
+                                <Folder
+                                  className={`w-4 h-4 ${
+                                    isSelected
+                                      ? "text-primary"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                                <span
+                                  className={
+                                    isSelected
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  {folder.name}
+                                </span>
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-6 border border-dashed rounded-lg text-center bg-muted/30">
+                        <Folder className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                        <p className="text-xs text-muted-foreground">
+                          No folders available. Create folders in Knowledge Base
+                          first.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </div>
@@ -169,73 +244,6 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
               </CardContent>
             </div>
           </div>
-        </Card>
-      </div>
-
-      {/* Knowledge Base Access */}
-      <div className="mt-4">
-        <Card className="gap-0 pb-0">
-          <CardHeader className="border-b pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Folder className="w-4 h-4" />
-                Knowledge Base Access
-              </CardTitle>
-              <Button
-                onClick={handleSave}
-                size={"sm"}
-                className="rounded-full px-4"
-                disabled={updateAgent.isPending}
-              >
-                {updateAgent.isPending && (
-                  <Loader className="w-4 h-4 animate-spin" />
-                )}
-                Save
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="py-6">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Select which folders this agent can access. If no folders are
-                  selected, the agent will have no access to the knowledge base.
-                </p>
-                {folders && folders.length > 0 ? (
-                  <div className="space-y-3">
-                    {folders.map((folder) => (
-                      <div
-                        key={folder.id}
-                        className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent/50"
-                      >
-                        <Checkbox
-                          id={`folder-${folder.id}`}
-                          checked={knowledgeFolders.includes(folder.id)}
-                          onCheckedChange={() => handleFolderToggle(folder.id)}
-                        />
-                        <label
-                          htmlFor={`folder-${folder.id}`}
-                          className="flex-1 cursor-pointer"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Folder className="w-4 h-4" />
-                              <span className="font-medium">{folder.name}</span>
-                            </div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No folders available. Create folders in the Knowledge Base
-                    first.
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </div>
