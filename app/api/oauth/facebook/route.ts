@@ -19,7 +19,6 @@ const facebookAuthSchema = z.object({
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const queryParams = Object.fromEntries(searchParams.entries());
-  console.log("Facebook OAuth queryParams: ", queryParams);
 
   const wid = searchParams.get("state");
 
@@ -69,8 +68,6 @@ export async function GET(req: NextRequest) {
 
     const { access_token, token_type, expires_in } = tokenResponse.data;
 
-    console.log("Facebook token data:", tokenResponse.data);
-
     if (!access_token) {
       throw new Error("Failed to retrieve access token.");
     }
@@ -86,8 +83,6 @@ export async function GET(req: NextRequest) {
         },
       }
     );
-
-    console.log("Token debug data:", debugResponse.data);
 
     const { data: tokenData } = debugResponse.data;
 

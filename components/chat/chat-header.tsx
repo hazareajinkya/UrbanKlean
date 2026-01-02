@@ -22,7 +22,6 @@ export const ChatHeader = ({
       // Notify parent window to close the widget
       window.parent.postMessage({ type: "MAGICALCX_WIDGET_CLOSE" }, "*");
     } else {
-      // TODO: Implement close functionality for regular chat
       console.log("Close clicked");
     }
   };

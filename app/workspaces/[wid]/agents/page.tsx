@@ -29,7 +29,6 @@ import {
 import { IAgent } from "@/lib/types/agent";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Play } from "next/font/google";
 
 export default function AgentsPage() {
   const { wid } = useParams() as { wid: string };
