@@ -11,6 +11,7 @@ export interface IUsage {
   metadata: IUsageMetadata;
   createdAt: string;
 }
+
 export interface IUsageMetadata {
   model: string;
   tokenUsage: number;
