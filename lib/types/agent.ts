@@ -1,5 +1,4 @@
 import { v4 } from "uuid";
-import { getRandomAvatar } from "../utils";
 import { generateDefaultSystemPrompt } from "@/prompts/system-prompt";
 import { IWorkspace } from "./workspace";
 
@@ -47,8 +46,9 @@ export const generateDefaultAgent = (
       name: name,
       greetingMessage: "Hey 👋! \n\n How can I help you today?",
       botIcon:
+        workspace.info.logo ||
         "https://firebasestorage.googleapis.com/v0/b/supercx-ai.firebasestorage.app/o/magicalcx-star-logo-transparent.png?alt=media&token=9359724b-68de-4b6c-b5ea-a66235a79ab1",
-      primaryColor: `#000000`,
+      primaryColor: workspace.info.primaryColor || "#000000",
       starterMessagesEnabled: false,
       starterMessages: [],
     },
@@ -57,7 +57,19 @@ export const generateDefaultAgent = (
       model: "gemini-3-flash-preview",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
-        workspace.oneLiner
+
+        ` 
+        ${workspace.oneLiner}
+        Description: ${workspace.info.description}
+        Tagline: ${workspace.info.tagline}
+        Business Type: ${workspace.info.businessType}
+        Industry: ${workspace.info.industry}
+        Target Audience: ${workspace.info.targetAudience}
+        Tone Guidelines: ${workspace.info.toneGuidelines}
+        Offerings: ${workspace.info.offerings}
+        Differentiators: ${workspace.info.differentiators}
+
+        `
       ),
     },
 
