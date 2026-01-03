@@ -103,12 +103,12 @@ export const PricingFaq = () => {
   return (
     <section className="section-container border-x py-16 md:py-20 bg-muted/30">
       <div className="section-content-padding px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="section-heading">
               Pricing FAQs
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="section-subheadline">
               Common questions about our pricing and plans
             </p>
           </div>
@@ -124,7 +124,7 @@ export const PricingFaq = () => {
                 value={`item-${i}`}
                 className="border border-border bg-background rounded-lg px-6 overflow-hidden data-[state=open]:shadow-sm transition-all"
               >
-                <AccordionTrigger className="text-left text-base md:text-lg font-medium text-foreground hover:no-underline py-5 transition-colors cursor-pointer">
+                <AccordionTrigger className="text-left text-base md:text-lg text-foreground hover:no-underline py-5 transition-colors cursor-pointer">
                   {item.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground text-sm md:text-base leading-relaxed pb-5">
