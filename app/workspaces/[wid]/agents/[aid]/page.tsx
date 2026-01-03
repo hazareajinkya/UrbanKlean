@@ -122,7 +122,7 @@ export default function AgentPage() {
               <img
                 src={agent.customization.botIcon}
                 alt="Bot icon"
-                className="w-4 h-4"
+                className="h-full w-full object-cover"
               />
             ) : (
               <MessageCircle className="w-3 h-3" />

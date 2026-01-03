@@ -117,7 +117,7 @@ export default function AgentsPage() {
                       <img
                         src={agent.customization.botIcon}
                         alt="Bot icon"
-                        className="w-11 h-11"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <Bot className="w-8 h-8" />

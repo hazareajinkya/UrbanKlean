@@ -38,7 +38,7 @@ export const ChatHeader = ({
       }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {agent.customization.botIcon && (
             <div
               className="w-8 h-8 overflow-hidden rounded-full"
