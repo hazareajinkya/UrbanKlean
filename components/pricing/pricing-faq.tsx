@@ -56,8 +56,8 @@ const pricingFaqData = [
           relevant offers or upsells.
         </p>
         <p>
-          This builds trust, leading directly to more conversions, higher
-          order values, and increased customer loyalty.
+          This builds trust, leading directly to more conversions, higher order
+          values, and increased customer loyalty.
         </p>
       </div>
     ),
@@ -101,27 +101,21 @@ const pricingFaqData = [
 
 export const PricingFaq = () => {
   return (
-    <section className="section-container border-x py-16 md:py-20 bg-muted/30">
-      <div className="section-content-padding px-6">
+    <section className="section-container border-t max-w-4xl w-full mx-auto border-x py-16 md:py-20 bg-muted/30">
+      <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12 space-y-4">
-          <h2 className="section-heading">
-            Pricing FAQs
-          </h2>
+          <h2 className="section-heading">Pricing FAQs</h2>
           <p className="section-subheadline">
             Common questions about our pricing and plans
           </p>
         </div>
 
-        <Accordion
-          type="single"
-          collapsible
-          className="w-full space-y-2 max-w-5xl mx-auto"
-        >
+        <Accordion type="single" collapsible className="w-full">
           {pricingFaqData.map((item, i) => (
             <AccordionItem
               key={i}
               value={`item-${i}`}
-              className="border border-border bg-background rounded-lg px-6 overflow-hidden data-[state=open]:shadow-sm transition-all"
+              className="border border-border bg-background rounded-lg px-6 overflow-hidden transition-all mb-2 last:mb-0 last:border-b"
             >
               <AccordionTrigger className="text-left text-base md:text-lg text-foreground hover:no-underline py-5 transition-colors cursor-pointer">
                 {item.question}

@@ -200,7 +200,8 @@ export const PricingContent = () => {
             Choose the plan that fits your volume.
           </h1>
           <p className="section-subheadline">
-            Simple pricing that scales with your AI interactions. No hidden fees.
+            Simple pricing that scales with your AI interactions. No hidden
+            fees.
           </p>
         </div>
 
@@ -337,6 +338,7 @@ export const PricingContent = () => {
       </div>
 
       {/* FAQ Section */}
+
       <PricingFaq />
     </>
   );
