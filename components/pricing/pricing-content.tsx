@@ -9,6 +9,7 @@ import { useDemoModal } from "../landing/demo-modal";
 import { MESSAGE_TIERS, PLANS } from "@/lib/plans";
 import { usePaddleCheckout } from "@/lib/hooks/use-paddle-checkout";
 import { initializePaddle } from "@/lib/clients/paddle";
+import { PricingFaq } from "./pricing-faq";
 
 export const PricingContent = () => {
   const [usage, setUsage] = useState([10]); // 10k default
@@ -191,147 +192,154 @@ export const PricingContent = () => {
   const currentUsageInK = currentUsage / 1000;
 
   return (
-    <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6">
-      {/* Header */}
-      <div className="text-center mb-16 space-y-4">
-        <h1 className="section-heading">
-          Choose the plan that fits your volume.
-        </h1>
-        <p className="section-subheadline">
-          Simple pricing that scales with your AI interactions. No hidden fees.
-        </p>
-      </div>
-
-      {/* Usage Estimator */}
-      <div className="max-w-3xl mx-auto mb-20">
-        <div className="flex flex-col items-center text-center mb-10">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-            Estimate your usage
-          </h3>
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl md:text-3xl font-medium text-primary tracking-tight">
-              {currentUsageInK}k
-            </span>
-            <span className="text-lg md:text-xl font-medium text-muted-foreground">
-              messages/mo
-            </span>
-          </div>
-          <p className="text-muted-foreground">
-            Slide to adjust your monthly volume
+    <>
+      <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6">
+        {/* Header */}
+        <div className="text-center mb-16 space-y-4">
+          <h1 className="section-heading">
+            Choose the plan that fits your volume.
+          </h1>
+          <p className="section-subheadline">
+            Simple pricing that scales with your AI interactions. No hidden
+            fees.
           </p>
         </div>
 
-        <div className="px-4">
-          <div className="relative">
-            <Slider
-              defaultValue={[10]}
-              max={maxTier}
-              min={minTier}
-              step={5}
-              value={usage}
-              onValueChange={handleSliderChange}
-              className="mb-8 py-4"
-            />
-            <div className="absolute top-12 left-0 right-0 h-6 pointer-events-none">
-              {tierValues.map((value) => {
-                const percentage =
-                  ((value - minTier) / (maxTier - minTier)) * 100;
-                return (
-                  <span
-                    key={value}
-                    className="absolute text-sm font-medium text-muted-foreground/50 uppercase tracking-widest -translate-x-1/2"
-                    style={{ left: `${percentage}%` }}
-                  >
-                    {value}k{value === maxTier ? "+" : ""}
-                  </span>
-                );
-              })}
+        {/* Usage Estimator */}
+        <div className="max-w-3xl mx-auto mb-20">
+          <div className="flex flex-col items-center text-center mb-10">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
+              Estimate your usage
+            </h3>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-2xl md:text-3xl font-medium text-primary tracking-tight">
+                {currentUsageInK}k
+              </span>
+              <span className="text-lg md:text-xl font-medium text-muted-foreground">
+                messages/mo
+              </span>
+            </div>
+            <p className="text-muted-foreground">
+              Slide to adjust your monthly volume
+            </p>
+          </div>
+
+          <div className="px-4">
+            <div className="relative">
+              <Slider
+                defaultValue={[10]}
+                max={maxTier}
+                min={minTier}
+                step={5}
+                value={usage}
+                onValueChange={handleSliderChange}
+                className="mb-8 py-4"
+              />
+              <div className="absolute top-12 left-0 right-0 h-6 pointer-events-none">
+                {tierValues.map((value) => {
+                  const percentage =
+                    ((value - minTier) / (maxTier - minTier)) * 100;
+                  return (
+                    <span
+                      key={value}
+                      className="absolute text-sm font-medium text-muted-foreground/50 uppercase tracking-widest -translate-x-1/2"
+                      style={{ left: `${percentage}%` }}
+                    >
+                      {value}k{value === maxTier ? "+" : ""}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
-        {pricingTiers.map((tier) => (
-          <div
-            key={tier.name}
-            className={cn(
-              "relative flex flex-col p-8 rounded-xl border transition-all duration-200",
-              tier.isRecommended
-                ? "border-primary shadow-lg scale-105 z-10 bg-card"
-                : "border-border bg-card/50",
-              !tier.isActive && "opacity-60 cursor-not-allowed"
-            )}
-          >
-            {tier.isRecommended && tier.badgeText && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                {tier.badgeText}
-              </div>
-            )}
-
-            <div className="mb-8">
-              <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-              <p className="text-sm text-muted-foreground min-h-[40px]">
-                {tier.description}
-              </p>
-            </div>
-
-            <div className="mb-8">
-              {tier.price !== null ? (
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold">${tier.price}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-              ) : (
-                <div className="text-3xl font-bold">Talk to us</div>
-              )}
-              <div className="text-sm font-medium text-primary mt-2">
-                {tier.price !== null
-                  ? `${tier.messagePrefix} ${tier.messages} messages / month`
-                  : `${tier.messages} messages`}
-              </div>
-            </div>
-
-            <Button
-              disabled={!tier.isActive}
-              onClick={() => handleCheckout(tier)}
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
+          {pricingTiers.map((tier) => (
+            <div
+              key={tier.name}
               className={cn(
-                "w-full mb-8 rounded-full",
+                "relative flex flex-col p-8 rounded-xl border transition-all duration-200",
                 tier.isRecommended
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : !tier.isActive
-                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  : "bg-foreground text-background"
+                  ? "border-primary shadow-lg scale-105 z-10 bg-card"
+                  : "border-border bg-card/50",
+                !tier.isActive && "opacity-60 cursor-not-allowed"
               )}
             >
-              {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
-              {tier.buttonText}
-            </Button>
+              {tier.isRecommended && tier.badgeText && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                  {tier.badgeText}
+                </div>
+              )}
 
-            <ul className="space-y-4 flex-1">
-              {tier.features.map((feature) => (
-                <li key={feature} className="flex items-start gap-3 text-sm">
-                  <Check className="w-5 h-5 text-primary shrink-0" />
-                  <span className="text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
+                <p className="text-sm text-muted-foreground min-h-[40px]">
+                  {tier.description}
+                </p>
+              </div>
+
+              <div className="mb-8">
+                {tier.price !== null ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold">${tier.price}</span>
+                    <span className="text-muted-foreground">/month</span>
+                  </div>
+                ) : (
+                  <div className="text-3xl font-bold">Talk to us</div>
+                )}
+                <div className="text-sm font-medium text-primary mt-2">
+                  {tier.price !== null
+                    ? `${tier.messagePrefix} ${tier.messages} messages / month`
+                    : `${tier.messages} messages`}
+                </div>
+              </div>
+
+              <Button
+                disabled={!tier.isActive}
+                onClick={() => handleCheckout(tier)}
+                className={cn(
+                  "w-full mb-8 rounded-full",
+                  tier.isRecommended
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : !tier.isActive
+                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    : "bg-foreground text-background"
+                )}
+              >
+                {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
+                {tier.buttonText}
+              </Button>
+
+              <ul className="space-y-4 flex-1">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <Check className="w-5 h-5 text-primary shrink-0" />
+                    <span className="text-muted-foreground">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="text-center mt-16 text-muted-foreground text-sm">
+          Need more than 30k messages?{" "}
+          <button
+            onClick={openDemoModal}
+            className="text-primary underline underline-offset-4 hover:text-primary/80 cursor-pointer"
+          >
+            Book a meeting
+          </button>{" "}
+          with our engineering team.
+        </div>
       </div>
 
-      {/* Footer CTA */}
-      <div className="text-center mt-16 text-muted-foreground text-sm">
-        Need more than 30k messages?{" "}
-        <button
-          onClick={openDemoModal}
-          className="text-primary underline underline-offset-4 hover:text-primary/80 cursor-pointer"
-        >
-          Book a meeting
-        </button>{" "}
-        with our engineering team.
-      </div>
-    </div>
+      {/* FAQ Section */}
+
+      <PricingFaq />
+    </>
   );
 };
