@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { getTagsForIndustry } from "../utils/industry-tags";
+import { IWorkspaceAnalyticsSummary } from "./analytics";
 
 export type IWorkspaceType = "onboarding" | "default";
 export interface IWorkspaceInfo {
@@ -26,6 +27,7 @@ export interface IWorkspace {
   availableTags: string[];
   type: IWorkspaceType;
   info: IWorkspaceInfo;
+  analytics?: IWorkspaceAnalyticsSummary;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
