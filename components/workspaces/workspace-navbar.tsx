@@ -42,7 +42,7 @@ export const WorkspacesNavbar = () => {
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} aria-label={link.label} tabIndex={0} className={cn("transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary", isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
+              <Link key={link.href} href={link.href} aria-label={link.label} tabIndex={0} className={cn("transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary", isActive ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
                 {link.label}
               </Link>
             );
