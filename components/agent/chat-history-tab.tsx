@@ -251,9 +251,9 @@ const SessionList = ({
                     {person
                       ? person.name
                         ? person.name
-                        : person.emails
-                        ? person.emails[0]
-                        : renderVisitorID(session)
+                        : // : person.emails
+                          // ? person.emails[0].value
+                          renderVisitorID(session)
                       : renderVisitorID(session)}
 
                     {session.chatSummary?.sentiment && (
@@ -388,7 +388,7 @@ const HistoryMessageList = ({
           <div className="p-4 pb-8 space-y-4 prose-p:my-0 flex-1 overflow-y-auto">
             {currentSession.messages.map((message, index) => (
               <div
-                key={index}
+                key={message.id + index}
                 className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
                 }`}

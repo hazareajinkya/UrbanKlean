@@ -117,6 +117,7 @@ export async function POST(req: Request) {
           wid: agent.wid,
           aid: agent.id,
           sessionId: sessionId,
+          currentPersonId: personId,
           provider: "web",
           providerId: deviceId,
           ips: [ip],

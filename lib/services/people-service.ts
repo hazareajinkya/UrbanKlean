@@ -390,7 +390,16 @@ class PeopleService {
     updates: Partial<IPerson>;
   }) {
     const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
-    await updateDoc(personRef, updates);
+
+    // Filter out undefined values as Firebase doesn't allow them
+    const cleanUpdates: Record<string, any> = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined) {
+        cleanUpdates[key] = value;
+      }
+    });
+
+    await updateDoc(personRef, cleanUpdates);
 
     return this.getPerson(wid, personId);
   }

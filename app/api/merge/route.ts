@@ -30,10 +30,12 @@ export const POST = async (req: Request) => {
     const { primaryId, otherIds } =
       mergeService.resolvePrimaryAndOthers(persons);
 
+    const allMergedIds = [primaryId, ...otherIds];
+
     // Merging using ai
     const merged = await generateObject({
       model: google("gemini-2.5-flash"),
-      schema: zodSchema(MergeLlmPersonSchema),
+      schema: MergeLlmPersonSchema,
       prompt: generateMergePrompt(persons),
     });
     const mergedExternalIds: IExternalIds = persons
@@ -42,6 +44,13 @@ export const POST = async (req: Request) => {
     const mergedPastSessionIds: { aid: string; sid: string }[] = persons
       .map((p) => p.pastSessionIds)
       .flat();
+
+    // Combine identicalPersonIds from all persons and remove the merged person IDs
+    const combinedIdenticalIds = persons
+      .map((p) => p.identicalPersonIds || [])
+      .flat()
+      .filter((id) => !allMergedIds.includes(id)); // Remove IDs of persons being merged
+
     const mergedPerson: IPerson = {
       id: primaryId,
       pastSessionIds: mergedPastSessionIds,
@@ -56,7 +65,7 @@ export const POST = async (req: Request) => {
         .filter((phone): phone is string => !!phone)
         .map((phone) => ({ value: phone, verified: false })),
       ips: persons.map((p) => p.ips).flat(),
-      identicalPersonIds: persons.map((p) => p.identicalPersonIds).flat(),
+      identicalPersonIds: combinedIdenticalIds,
       updatedAt: new Date().toISOString(),
     };
 

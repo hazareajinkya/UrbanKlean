@@ -10,24 +10,21 @@ const PersonInfo = z.object({
   // Core identity (any subset is fine)
   name: z.string().optional(),
   emails: z
-    .array(
-      z
-        .string()
-        .email()
-        .describe(
-          "Email address, must be valid and will be stored in lowercase"
-        )
+    .string()
+    .email()
+    .describe(
+      "Email address, must be valid and will be stored in lowercase and the latest emails only."
     )
-    .default([]),
+
+    .default(""),
   phones: z
-    .array(
-      z
-        .string()
-        .describe(
-          "Phone number. Only digits and leading '+' allowed. If starting with '00', it will be treated as '+'."
-        )
+
+    .string()
+    .describe(
+      "Phone number. Only digits and leading '+' allowed. If starting with '00', it will be treated as '+'. and the latest phone numbers only."
     )
-    .default([]),
+
+    .default(""),
 
   // Company info
   company: z.string().optional(),
@@ -92,8 +89,8 @@ export const collectInformation = ({
 
       const data: Partial<IPerson> = {
         name: params.name,
-        emails: params.emails.map((e) => ({ value: e, verified: false })),
-        phones: params.phones.map((p) => ({ value: p, verified: false })),
+        emails: [{ value: params.emails, verified: false }],
+        phones: [{ value: params.phones, verified: false }],
         externalIds: externalIds,
         ips: ips ?? [],
         company: params.company,
@@ -105,28 +102,29 @@ export const collectInformation = ({
 
       let personData;
 
+      console.log("current person id: ", currentPersonId);
+
       if (currentPersonId) {
+        console.log("current user id: ", currentPersonId);
         try {
           // ✅ ALREADY IDENTIFIED - Just update their info
           if (params.emails.length > 0 || params.phones.length > 0) {
+            console.log("Identifying person with emails: ", params.emails);
+            console.log("Identifying person with phones: ", params.phones);
+            const emails = [{ value: params.emails, verified: false }];
+            const phones = [{ value: params.phones, verified: false }];
             const { existing, person, softmerge } =
               await peopleServiceV2.identifyPerson({
                 wid: wid,
-                emails: params.emails.map((e) => ({
-                  value: e,
-                  verified: false,
-                })),
-                phones: params.phones.map((p) => ({
-                  value: p,
-                  verified: false,
-                })),
-
+                emails: emails,
+                phones: phones,
                 ips: ips ?? [],
                 provider: provider,
               });
 
             // same person is found
             if (existing && person?.id && currentPersonId === person.id) {
+              console.log("Same person found, updating person: ", person.id);
               // same person just update the person
               personData = await peopleServiceV2.updatePerson({
                 wid,
@@ -140,6 +138,7 @@ export const collectInformation = ({
               softmerge
             ) {
               // different person found, soft merge
+              console.log("Different person found, soft merging: ", person.id);
               await peopleServiceV2.softMergePerson({
                 wid: wid,
                 personAId: currentPersonId,
@@ -157,6 +156,10 @@ export const collectInformation = ({
               !softmerge
             ) {
               // different person found, direct merge
+              console.log(
+                "Different person found, direct merging: ",
+                person.id
+              );
               personData = await peopleServiceV2.directMergePerson({
                 wid: wid,
                 personAId: currentPersonId,
@@ -164,6 +167,10 @@ export const collectInformation = ({
               });
             } else {
               // no person found  just update current person
+              console.log(
+                "No person found, updating current person: ",
+                currentPersonId
+              );
               personData = await peopleServiceV2.updatePerson({
                 wid,
                 personId: currentPersonId,
@@ -172,6 +179,10 @@ export const collectInformation = ({
             }
           } else {
             // no emails or phones  update current person
+            console.log(
+              "No emails or phones, updating current person: ",
+              currentPersonId
+            );
             personData = await peopleServiceV2.updatePerson({
               wid,
               personId: currentPersonId,
@@ -204,8 +215,8 @@ export const collectInformation = ({
           personData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: params.emails,
-            phones: params.phones,
+            emails: [params.emails],
+            phones: [params.phones],
             externalIds: externalIds,
             name: params.name,
             aid,
@@ -222,8 +233,8 @@ export const collectInformation = ({
           const newPersonData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: params.emails,
-            phones: params.phones,
+            emails: [params.emails],
+            phones: [params.phones],
             externalIds: externalIds,
             name: params.name,
             aid,
@@ -239,6 +250,7 @@ export const collectInformation = ({
             personId: personData.id,
           });
         }
+
         //if person exists, update the person
         else {
           console.log("updating the person: ", { ...params });

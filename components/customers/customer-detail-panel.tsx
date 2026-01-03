@@ -165,10 +165,10 @@ export default function CustomerDetailPanel({
             <SectionLabel>Contact</SectionLabel>
             <div className="space-y-1">
               {person.emails?.map((email, i) => (
-                <CopyableItem key={i} icon={Mail} value={email} />
+                <CopyableItem key={i} icon={Mail} value={email.value} />
               ))}
               {person.phones?.map((phone, i) => (
-                <CopyableItem key={i} icon={Phone} value={phone} mono />
+                <CopyableItem key={i} icon={Phone} value={phone.value} mono />
               ))}
               {person.location && (
                 <CopyableItem icon={MapPin} value={person.location} />

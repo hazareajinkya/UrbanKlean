@@ -42,18 +42,19 @@ class PeopleServiceV2 {
         ?.map((e) => {
           return { value: normEmail(e.value), verified: e.verified };
         })
-        .filter(Boolean);
+        .filter((e) => e.value);
       const phoneNs = phones
         ?.map((p) => {
           return { value: normPhone(p.value), verified: p.verified };
         })
-        .filter(Boolean);
+        .filter((p) => p.value);
       const ipNs = ips?.map(normIp).filter(Boolean);
 
       let personSnap: DocumentSnapshot | undefined = undefined;
 
       //   Identify by deviceIds (ExternalIds)
       if (externalIds && externalIds.length > 0) {
+        console.log("Identifying person by externalIds: ", externalIds);
         for (const externalId of externalIds) {
           const q = query(
             peopleCol,
@@ -82,40 +83,49 @@ class PeopleServiceV2 {
       }
 
       if (!personSnap && provider === "web" && ipNs && ipNs.length > 0) {
-        //   Identify by emails and ips
-        if (emailNs && emailNs.length > 0) {
-          const q = query(
-            peopleCol,
-            where("emails", "array-contains-any", emailNs),
-            limit(10)
-          );
-          const snaps = await getDocs(q);
-          // Filter in memory for matching IPs
+        // Query persons by IPs first
+        const q = query(
+          peopleCol,
+          where("ips", "array-contains-any", ipNs),
+          limit(10)
+        );
+        const snaps = await getDocs(q);
+        // Identify by phones - check each phone in order if it exists in the docs
+        if (phoneNs && phoneNs.length > 0) {
           const matchingDoc = snaps.docs.find((doc) => {
             const person = doc.data() as IPerson;
-            return person.ips?.some((ip) => ipNs.includes(ip));
+            const personPhones =
+              person.phones
+                ?.map((p) => p.value)
+                .filter((v): v is string => Boolean(v)) || [];
+            // Check each phone in order to see if it exists in the document
+            return phoneNs.some((phoneInput) => {
+              const phoneValue = phoneInput.value;
+              return phoneValue && personPhones.includes(phoneValue);
+            });
           });
           if (matchingDoc) {
             personSnap = matchingDoc;
-            console.log("Person found by email and ip:", personSnap.data());
+            console.log("Person found by ip and phone:", personSnap.data());
           }
         }
-        //   Identify by phones and ips
-        if (!personSnap && phoneNs && phoneNs.length > 0) {
-          const q = query(
-            peopleCol,
-            where("phones", "array-contains-any", phoneNs),
-            limit(10)
-          );
-          const snaps = await getDocs(q);
-          // Filter in memory for matching IPs
+        // Identify by emails - check each email in order if it exists in the docs
+        if (!personSnap && emailNs && emailNs.length > 0) {
           const matchingDoc = snaps.docs.find((doc) => {
             const person = doc.data() as IPerson;
-            return person.ips?.some((ip) => ipNs.includes(ip));
+            const personEmails =
+              person.emails
+                ?.map((e) => e.value)
+                .filter((v): v is string => Boolean(v)) || [];
+            // Check each email in order to see if it exists in the document
+            return emailNs.some((emailInput) => {
+              const emailValue = emailInput.value;
+              return emailValue && personEmails.includes(emailValue);
+            });
           });
           if (matchingDoc) {
             personSnap = matchingDoc;
-            console.log("Person found by phone and ip:", personSnap.data());
+            console.log("Person found by ip and email:", personSnap.data());
           }
         }
       }
@@ -142,7 +152,7 @@ class PeopleServiceV2 {
       }
 
       // Identify by phone
-      if (!personSnap && phoneNs && phoneNs.length > 0) {
+      if (!personSnap && phones && phoneNs && phoneNs.length > 0) {
         console.log("Attempting to identify by phone:", phoneNs);
         const q = query(
           peopleCol,
@@ -208,17 +218,19 @@ class PeopleServiceV2 {
     if (data.summary !== undefined) update.summary = data.summary;
 
     // externalIds (shallow merge)
-    if (data.externalIds) {
-      for (const [k, v] of Object.entries(data.externalIds)) {
-        update[`externalIds.${k}`] = v;
-      }
+    if (data.externalIds?.length) {
+      const externalIds = data.externalIds.map((e) => ({
+        provider: e.provider,
+        id: e.id,
+      }));
+      if (externalIds.length) update.externalIds = arrayUnion(...externalIds);
     }
     if (data.emails?.length) {
       const emails = data.emails
         .map((e) => {
           return { value: normEmail(e.value), verified: e.verified };
         })
-        .filter(Boolean);
+        .filter((e) => e.value);
       if (emails.length) update.emails = arrayUnion(...emails);
     }
 
@@ -227,7 +239,7 @@ class PeopleServiceV2 {
         .map((p) => {
           return { value: normPhone(p.value), verified: p.verified };
         })
-        .filter(Boolean);
+        .filter((p) => p.value);
       if (phones.length) update.phones = arrayUnion(...phones);
     }
     if (data.ips?.length) {
@@ -384,6 +396,27 @@ class PeopleServiceV2 {
           error?.message ||
           "Failed to merge persons"
       );
+    }
+  }
+
+  async getAllIdenticalPersons(wid: string) {
+    try {
+      const peopleCol = collection(db, `workspaces/${wid}/people`);
+      const snaps = await getDocs(peopleCol);
+
+      if (snaps.empty) return [];
+
+      const persons: IPerson[] = [];
+      for (const doc of snaps.docs) {
+        const person = doc.data() as IPerson;
+        if (person.identicalPersonIds?.length > 0) {
+          persons.push(person);
+        }
+      }
+      return persons;
+    } catch (error) {
+      console.error("Error getting all identical persons: ", error);
+      return [];
     }
   }
 }
