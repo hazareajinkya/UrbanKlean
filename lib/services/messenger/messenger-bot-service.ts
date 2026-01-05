@@ -27,20 +27,21 @@ class MessengerBotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
 
-  async generateResponse(
-    messengerMsg: IMessengerMessage,
-    userId: string,
-    messengerUserId: string,
-    channel: IChannelProvider
-  ) {
+  async generateResponse({
+    msg,
+    messengerUserId,
+    channel,
+    agentId,
+  }: {
+    msg: IMessengerMessage;
+    messengerUserId: string;
+    channel: IChannelProvider;
+    agentId: string;
+  }) {
     try {
-      const aid = await channelService.resolveAgent(userId, channel);
+      if (!agentId) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
-      console.log("resolved agent: ", aid);
-
-      if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
-
-      const agent = await agentService.fetchAgent(aid);
+      const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
 
       const creditInfo = await creditService.getCredit(agent.ownerId);
@@ -55,8 +56,8 @@ class MessengerBotService {
         channel,
       });
 
-      const query = messengerMsg.text ?? "";
-      const userMsg = defaultUserMessage(query, messengerMsg.id);
+      const query = msg.text ?? "";
+      const userMsg = defaultUserMessage(query, msg.id);
 
       // const person = await peopleService.getPerson(agent.wid, session.personId);
       // console.log("person: ", person);
