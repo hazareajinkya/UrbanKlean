@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
 import { useDemoModal } from "./demo-modal";
 import { coreConf } from "@/lib/utils/conf";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
+import { cn } from "@/lib/utils";
 
 export const Navbar = ({
   whyRefProgress,
@@ -28,6 +30,7 @@ export const Navbar = ({
   const [isInside, setIsInside] = useState(false);
 
   const { user } = useCurrentUser();
+  const pathname = usePathname();
 
   const { openDemoModal } = useDemoModal();
   useEffect(() => {
@@ -144,17 +147,23 @@ export const Navbar = ({
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-label={link.label}
-                tabIndex={0}
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href === "/#features" && pathname === "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-label={link.label}
+                  tabIndex={0}
+                  className={cn(
+                    "transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary",
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             <div className="flex items-center gap-6 ml-0">
               {coreConf.isProd ? (
                 <></>
@@ -233,17 +242,23 @@ export const Navbar = ({
             className="fixed inset-0 top-0 z-40 bg-background/98 backdrop-blur-3xl md:hidden flex flex-col pt-24"
           >
             <div className="flex flex-col px-8 gap-6 w-full max-w-lg mx-auto h-full overflow-y-auto pb-10">
-              {navLinks.map((link, i) => (
-                <motion.div key={link.href} custom={i} variants={itemVariants}>
-                  <Link
-                    href={link.href}
-                    onClick={handleCloseMenu}
-                    className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
+              {navLinks.map((link, i) => {
+                const isActive = pathname === link.href || (link.href === "/#features" && pathname === "/");
+                return (
+                  <motion.div key={link.href} custom={i} variants={itemVariants}>
+                    <Link
+                      href={link.href}
+                      onClick={handleCloseMenu}
+                      className={cn(
+                        "block py-2 text-3xl font-medium tracking-tight transition-colors",
+                        isActive ? "text-primary" : "text-foreground hover:text-black/70"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                );
+              })}
 
               {!coreConf.isProd && (
                 <motion.div custom={navLinks.length} variants={itemVariants}>

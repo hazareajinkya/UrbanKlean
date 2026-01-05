@@ -29,7 +29,6 @@ import {
 import { IAgent } from "@/lib/types/agent";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Play } from "next/font/google";
 
 export default function AgentsPage() {
   const { wid } = useParams() as { wid: string };
@@ -118,7 +117,7 @@ export default function AgentsPage() {
                       <img
                         src={agent.customization.botIcon}
                         alt="Bot icon"
-                        className="w-11 h-11"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <Bot className="w-8 h-8" />
@@ -152,7 +151,7 @@ export default function AgentsPage() {
                           </Button>
                         </Link>
                         <Link
-                          href={`/workspaces/${wid}/agents/${agent.id}?tab=appearance`}
+                          href={`/workspaces/${wid}/agents/${agent.id}?tab=chat-history`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
@@ -232,7 +231,11 @@ export default function AgentsPage() {
           <div className="text-muted-foreground mb-6 max-w-md">
             To start automating conversations and tasks.
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} size="lg">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            size="lg"
+            className="rounded-full"
+          >
             <Plus className="w-4 h-4 " />
             Create Your First Agent
           </Button>

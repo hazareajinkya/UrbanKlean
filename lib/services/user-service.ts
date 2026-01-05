@@ -10,8 +10,6 @@ class UserService {
     const docRef = doc(db, `users/${email}`);
     const snap = await getDoc(docRef);
 
-    console.log("getting user info: ");
-
     return snap.data() as IUser | undefined;
   }
 

@@ -22,7 +22,6 @@ export const ChatHeader = ({
       // Notify parent window to close the widget
       window.parent.postMessage({ type: "MAGICALCX_WIDGET_CLOSE" }, "*");
     } else {
-      // TODO: Implement close functionality for regular chat
       console.log("Close clicked");
     }
   };
@@ -39,7 +38,7 @@ export const ChatHeader = ({
       }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {agent.customization.botIcon && (
             <div
               className="w-8 h-8 overflow-hidden rounded-full"

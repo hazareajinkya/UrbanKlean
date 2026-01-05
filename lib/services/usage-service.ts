@@ -2,6 +2,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -36,6 +37,63 @@ class UsageService {
         console.error("Error adding usage: ", error);
         throw error;
       }
+    }
+  }
+
+  async getGlobalUsage(email: string, dateRange?: { from?: Date; to?: Date }) {
+    if (!email) return [];
+    try {
+      if (dateRange?.from) {
+        const dates: Date[] = [];
+        const current = new Date(dateRange.from);
+        const end = dateRange.to
+          ? new Date(dateRange.to)
+          : new Date(dateRange.from);
+
+        // Reset time part to compare dates correctly
+        current.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        while (current <= end) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+
+        const promises = dates.map((date) => {
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const year = date.getFullYear();
+          const dateKey = `${day}-${month}-${year}`;
+          return getDoc(doc(db, `users/${email}/usage/${dateKey}`));
+        });
+
+        const snapshots = await Promise.all(promises);
+        const usageEvents: IUsage[] = [];
+        snapshots.forEach((docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data() as { events: IUsage[] };
+            usageEvents.push(...(data.events || []));
+          }
+        });
+        return usageEvents.reverse();
+      }
+
+      const usageCollection = query(
+        collection(db, `users/${email}/usage`),
+        limit(5)
+      );
+      const snapshot = await getDocs(usageCollection);
+      const data = snapshot.docs.map(
+        (doc) => doc.data() as { createdAt: string; events: IUsage[] }
+      );
+      const usageEvents: IUsage[] = [];
+      data.forEach((event) => {
+        usageEvents.push(...event.events);
+      });
+      return usageEvents;
+    } catch (error) {
+      console.error("Error getting global usage: ", error);
+      throw error;
     }
   }
 

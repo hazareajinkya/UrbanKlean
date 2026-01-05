@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -140,23 +141,20 @@ export default function Page() {
       <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white">
         <div className="max-w-md w-full mx-auto">
           {phase === "form" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div>
-                <h1 className="text-3xl font-semibold text-gray-900 mb-3 tracking-tight">
+                <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
                   Get Started
                 </h1>
-                <p className="text-gray-600 text-base">
+                <p className="text-muted-foreground text-base">
                   Enter your work email and business domain to begin setting up
-                  your AI customer support agent.
+                  your Empathy-First AI customer experience agent.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <Label htmlFor="email" className="text-sm font-medium">
                     Work Email
                   </Label>
                   <Input
@@ -178,10 +176,7 @@ export default function Page() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="domain"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <Label htmlFor="domain" className="text-sm font-medium">
                     Business Domain
                   </Label>
                   <InputGroup className="h-11">
@@ -225,8 +220,22 @@ export default function Page() {
                 </Button>
               </form>
 
-              <p className="text-center text-xs text-gray-400">
-                By continuing, you agree to our Terms and Privacy Policy.
+              <p className="text-center text-xs text-muted-foreground">
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/legal/terms"
+                  className="text-foreground hover:underline underline-offset-4 transition-colors"
+                >
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/legal/privacy"
+                  className="text-foreground hover:underline underline-offset-4 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                .
               </p>
             </div>
           )}

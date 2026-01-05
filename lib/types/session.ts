@@ -32,30 +32,32 @@ export interface ISession {
   fromPage?: string;
   createdAt: string;
   updatedAt: string;
-  chatSummary?: {
-    questionUseAsked: string[];
-    summary: string;
-    tags: string[];
-    insights: string[];
-    interests: string[];
-    resolutionStatus: "resolved" | "unresolved";
-    customerIntent: string;
-    sentiment: "positive" | "neutral" | "negative";
-    actionsTaken: string[];
-    followUpRequired: boolean;
-    isSuspicious: boolean;
-    suspiciousType:
-      | "none"
-      | "phishing"
-      | "social_engineering"
-      | "impersonation"
-      | "data_harvesting"
-      | "other";
-    riskLevel: "none" | "low" | "medium" | "high" | "critical";
-    agentNotes: string | undefined;
-  };
+  chatSummary?: IChatSummary;
 }
 
+export interface IChatSummary {
+  title: string;
+  questionUseAsked: string[];
+  summary: string;
+  tags: string[];
+  insights: string[];
+  interests: string[];
+  resolutionStatus: "resolved" | "unresolved";
+  customerIntent: string;
+  sentiment: "positive" | "neutral" | "negative";
+  actionsTaken: string[];
+  followUp: string;
+  isSuspicious: boolean;
+  suspiciousType:
+    | "none"
+    | "phishing"
+    | "social_engineering"
+    | "impersonation"
+    | "data_harvesting"
+    | "other";
+  riskLevel: "none" | "low" | "medium" | "high" | "critical";
+  agentNotes: string | undefined;
+}
 export interface ITraingSession {
   id: string;
   wid: string;

@@ -43,8 +43,6 @@ export const executeAPIAction = async (
       : {}),
   };
 
-  console.log("requestConfig: ", requestConfig);
-
   try {
     const response = await axios.request(requestConfig);
     return response.data;

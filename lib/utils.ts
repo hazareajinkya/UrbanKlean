@@ -85,11 +85,6 @@ export const formatHistoryDateTime = (date?: string) => {
   return format(givenDate, "dd MMM yy hh:mm a");
 };
 
-export const getRandomAvatar = (num?: number) => {
-  const randomNumber = num ?? Math.floor(Math.random() * 16) + 1;
-  return `https://firebasestorage.googleapis.com/v0/b/algotify-972f2.firebasestorage.app/o/face-avatar-2%2Favatar-${randomNumber}.png?alt=media&token=607149f6-5e3d-439d-aa3d-da34219143e9`;
-};
-
 export const getwid = () => {
   return window.location.pathname.split("/")[2] as string;
 };
