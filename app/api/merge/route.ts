@@ -7,6 +7,7 @@ import {
 } from "@/lib/types/api-response";
 import { IExternalIds, IPerson } from "@/lib/types/person";
 import { generateMergePrompt } from "@/prompts/merge-prompt";
+import { normEmail, normPhone } from "@/lib/utils";
 
 import { google } from "@ai-sdk/google";
 import { generateObject, zodSchema } from "ai";
@@ -29,10 +30,12 @@ export const POST = async (req: Request) => {
     const { primaryId, otherIds } =
       mergeService.resolvePrimaryAndOthers(persons);
 
+    const allMergedIds = [primaryId, ...otherIds];
+
     // Merging using ai
     const merged = await generateObject({
       model: google("gemini-2.5-flash"),
-      schema: zodSchema(MergeLlmPersonSchema),
+      schema: MergeLlmPersonSchema,
       prompt: generateMergePrompt(persons),
     });
     const mergedExternalIds: IExternalIds = persons
@@ -41,11 +44,28 @@ export const POST = async (req: Request) => {
     const mergedPastSessionIds: { aid: string; sid: string }[] = persons
       .map((p) => p.pastSessionIds)
       .flat();
+
+    // Combine identicalPersonIds from all persons and remove the merged person IDs
+    const combinedIdenticalIds = persons
+      .map((p) => p.identicalPersonIds || [])
+      .flat()
+      .filter((id) => !allMergedIds.includes(id)); // Remove IDs of persons being merged
+
     const mergedPerson: IPerson = {
       id: primaryId,
       pastSessionIds: mergedPastSessionIds,
       externalIds: mergedExternalIds,
       ...merged.object,
+      emails: merged.object.emails
+        .map((email) => normEmail(email))
+        .filter((email): email is string => !!email)
+        .map((email) => ({ value: email, verified: false })),
+      phones: merged.object.phones
+        .map((phone) => normPhone(phone))
+        .filter((phone): phone is string => !!phone)
+        .map((phone) => ({ value: phone, verified: false })),
+      ips: persons.map((p) => p.ips).flat(),
+      identicalPersonIds: combinedIdenticalIds,
       updatedAt: new Date().toISOString(),
     };
 
@@ -73,6 +93,8 @@ const MergeLlmPersonSchema = z.object({
   memories: z.array(z.string()).default([]),
   summary: z.string().optional().default(""),
   notes: z.array(z.string()).default([]),
+  ips: z.array(z.string()).default([]),
+  identicalPersonIds: z.array(z.string()).default([]),
   createdAt: z.string(),
   updatedAt: z.string(),
 } satisfies Record<string, z.ZodTypeAny>);

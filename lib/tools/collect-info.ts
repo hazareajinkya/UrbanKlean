@@ -4,29 +4,27 @@ import peopleService from "../services/people-service";
 import { IExternalIds, IPerson } from "../types/person";
 import chatService from "../services/chat-service";
 import { IChannelProvider } from "../types/channel";
+import peopleServiceV2 from "../services/people-service-v2";
 
 const PersonInfo = z.object({
   // Core identity (any subset is fine)
   name: z.string().optional(),
   emails: z
-    .array(
-      z
-        .string()
-        .email()
-        .describe(
-          "Email address, must be valid and will be stored in lowercase"
-        )
+    .string()
+    .email()
+    .describe(
+      "Email address, must be valid and will be stored in lowercase and the latest emails only."
     )
-    .default([]),
+
+    .default(""),
   phones: z
-    .array(
-      z
-        .string()
-        .describe(
-          "Phone number. Only digits and leading '+' allowed. If starting with '00', it will be treated as '+'."
-        )
+
+    .string()
+    .describe(
+      "Phone number. Only digits and leading '+' allowed. If starting with '00', it will be treated as '+'. and the latest phone numbers only."
     )
-    .default([]),
+
+    .default(""),
 
   // Company info
   company: z.string().optional(),
@@ -53,14 +51,23 @@ const PersonInfo = z.object({
     ),
 });
 
-export const collectInformation = (
-  wid: string,
-  aid: string,
-  sessionId: string,
-  provider: IChannelProvider,
-  providerId: string,
-  currentPersonId?: string
-) =>
+export const collectInformation = ({
+  wid,
+  aid,
+  sessionId,
+  provider,
+  providerId,
+  currentPersonId,
+  ips,
+}: {
+  wid: string;
+  aid: string;
+  sessionId: string;
+  provider: IChannelProvider;
+  providerId: string;
+  currentPersonId?: string;
+  ips?: string[];
+}) =>
   tool({
     name: "Collect Information",
     description:
@@ -82,52 +89,163 @@ export const collectInformation = (
 
       const data: Partial<IPerson> = {
         name: params.name,
-        emails: params.emails,
-        phones: params.phones,
+        emails: [{ value: params.emails, verified: false }],
+        phones: [{ value: params.phones, verified: false }],
         externalIds: externalIds,
+        ips: ips ?? [],
+        company: params.company,
+        title: params.title,
+        location: params.location,
+        memories: params.memories ?? [],
+        interests: params.interests ?? [],
       };
 
       let personData;
 
+      console.log("current person id: ", currentPersonId);
+
       if (currentPersonId) {
+        console.log("current user id: ", currentPersonId);
         try {
           // ✅ ALREADY IDENTIFIED - Just update their info
-          personData = await peopleService.updatePerson(wid, currentPersonId, {
-            ...params,
-            externalIds,
-          });
+          if (params.emails.length > 0 || params.phones.length > 0) {
+            console.log("Identifying person with emails: ", params.emails);
+            console.log("Identifying person with phones: ", params.phones);
+            const emails = [{ value: params.emails, verified: false }];
+            const phones = [{ value: params.phones, verified: false }];
+            const { existing, person, softmerge } =
+              await peopleServiceV2.identifyPerson({
+                wid: wid,
+                emails: emails,
+                phones: phones,
+                ips: ips ?? [],
+                provider: provider,
+              });
+
+            // same person is found
+            if (existing && person?.id && currentPersonId === person.id) {
+              console.log("Same person found, updating person: ", person.id);
+              // same person just update the person
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            } else if (
+              existing &&
+              person?.id &&
+              currentPersonId !== person.id &&
+              softmerge
+            ) {
+              // different person found, soft merge
+              console.log("Different person found, soft merging: ", person.id);
+              await peopleServiceV2.softMergePerson({
+                wid: wid,
+                personAId: currentPersonId,
+                personBId: person.id,
+              });
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            } else if (
+              existing &&
+              person?.id &&
+              currentPersonId !== person.id &&
+              !softmerge
+            ) {
+              // different person found, direct merge
+              console.log(
+                "Different person found, direct merging: ",
+                person.id
+              );
+              personData = await peopleServiceV2.directMergePerson({
+                wid: wid,
+                personAId: currentPersonId,
+                personBId: person.id,
+              });
+            } else {
+              // no person found  just update current person
+              console.log(
+                "No person found, updating current person: ",
+                currentPersonId
+              );
+              personData = await peopleServiceV2.updatePerson({
+                wid,
+                personId: currentPersonId,
+                data: data,
+              });
+            }
+          } else {
+            // no emails or phones  update current person
+            console.log(
+              "No emails or phones, updating current person: ",
+              currentPersonId
+            );
+            personData = await peopleServiceV2.updatePerson({
+              wid,
+              personId: currentPersonId,
+              data: data,
+            });
+          }
         } catch (error) {
-          // Person doesn't exist - fallback to identify flow
-          console.warn("Person not found, re-identifying");
-          currentPersonId = undefined; // Force identify flow below
+          console.warn("Person not found, re-identifying", error);
+          currentPersonId = undefined;
         }
       }
 
       // ❓ NOT IDENTIFIED - Need to identify or create
       if (!currentPersonId) {
         //check if person already exists
-        const { existing, person } = await peopleService.identify({
-          wid: wid,
-          ...data,
-        });
+        const { existing, person, softmerge } =
+          await peopleServiceV2.identifyPerson({
+            wid: wid,
+            ...data,
+            provider: provider,
+          });
         personData = person;
 
         console.log("existing: ", existing);
 
         //if person does not exist, create a new one
+
         if (!existing) {
           console.log("creating a new person: ", { ...params });
-          personData = await peopleService.create2({
+          personData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: params.emails,
-            phones: params.phones,
+            emails: [params.emails],
+            phones: [params.phones],
             externalIds: externalIds,
             name: params.name,
             aid,
+            ip: ips?.[0],
           });
 
           //attach person id to session
+          await chatService.updateSession(aid, sessionId, {
+            personId: personData.id,
+          });
+        }
+        //if person exists and is a soft merge, soft merge the person
+        else if (softmerge && existing) {
+          const newPersonData = await peopleServiceV2.createPerson({
+            wid: wid,
+            sessionId: sessionId,
+            emails: [params.emails],
+            phones: [params.phones],
+            externalIds: externalIds,
+            name: params.name,
+            aid,
+            ip: ips?.[0],
+          });
+          await peopleServiceV2.softMergePerson({
+            wid: wid,
+            personAId: newPersonData.id,
+            personBId: personData!.id,
+          });
+          personData = newPersonData;
           await chatService.updateSession(aid, sessionId, {
             personId: personData.id,
           });
@@ -136,14 +254,10 @@ export const collectInformation = (
         //if person exists, update the person
         else {
           console.log("updating the person: ", { ...params });
-
-          await peopleService.update({
-            wid: wid,
+          await peopleServiceV2.updatePerson({
+            wid,
             personId: personData!.id,
-            updates: {
-              ...params,
-              externalIds,
-            },
+            data: data,
           });
         }
 
@@ -151,7 +265,6 @@ export const collectInformation = (
         await chatService.updateSession(aid, sessionId, {
           personId: personData!.id,
         });
-
         //update pastSessionIds in  person data
         await peopleService.updatePastSessionIds({
           wid,

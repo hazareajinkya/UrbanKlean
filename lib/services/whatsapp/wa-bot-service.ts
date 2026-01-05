@@ -23,6 +23,7 @@ import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import actionService from "../action-service";
 import { getCustomTools } from "@/lib/utils";
+import peopleServiceV2 from "../people-service-v2";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -89,14 +90,14 @@ class WABotService {
         stopWhen: stepCountIs(5),
         tools: {
           ...customTools,
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "whatsapp",
-            waPhoneId,
-            session.personId
-          ),
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "whatsapp",
+            providerId: waPhoneId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid!, agent),
         },
       });
@@ -122,7 +123,7 @@ class WABotService {
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
     } catch (error) {
-      console.log("error: ", error);
+      console.log("error in generateResponse: ", error);
       return { success: false, message: this.ERROR_MESSAGE };
     }
   }
@@ -142,9 +143,10 @@ class WABotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: waPhoneId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      phones: [waPhoneId],
+      phones: [{ value: waPhoneId, verified: true }],
+      provider: channel,
       externalIds,
     });
 

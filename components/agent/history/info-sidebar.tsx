@@ -30,6 +30,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { useIdenticalPersons } from "@/lib/hooks/people/use-people";
+import { getwid } from "@/lib/utils";
+import { Users } from "lucide-react";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -89,6 +92,10 @@ export const InfoSidebar = ({
   const persons = useHistoryStore((state) => state.persons);
   const loadingSessionIds = useHistoryStore((state) => state.loadingSessionIds);
 
+  const wid = typeof window !== "undefined" ? getwid() : "";
+  const { data: identicalPersons = [], isLoading: isLoadingIdenticalPersons } =
+    useIdenticalPersons(wid, currentSession?.personId || "");
+
   if (!currentSession?.personId && !currentSession?.geo) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground px-6">
@@ -136,6 +143,7 @@ export const InfoSidebar = ({
   const filteredPastSessions = (person && person.pastSessionIds) || [];
 
   const hasPastSessions = filteredPastSessions.length > 0;
+  const hasIdenticalPersons = identicalPersons && identicalPersons.length > 0;
 
   return (
     <div className="h-full flex flex-col bg-card">
@@ -177,16 +185,69 @@ export const InfoSidebar = ({
             <div className="space-y-1">
               {person?.name && <CopyableItem icon={User} value={person.name} />}
               {person?.emails?.map((email, i) => (
-                <CopyableItem key={i} icon={Mail} value={email} />
+                <CopyableItem key={i} icon={Mail} value={email.value} />
               ))}
               {person?.phones?.map((phone, i) => (
-                <CopyableItem key={i} icon={Phone} value={phone} mono />
+                <CopyableItem key={i} icon={Phone} value={phone.value} mono />
               ))}
               {person?.title && (
                 <CopyableItem icon={Briefcase} value={person.title} />
               )}
               {person?.company && (
                 <CopyableItem icon={Building2} value={person.company} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Identical Persons */}
+        {hasIdenticalPersons && (
+          <div className="px-5 py-4 border-b border-border/30">
+            <SectionLabel>
+              Identical Contacts ({identicalPersons.length})
+            </SectionLabel>
+            <div className="space-y-1">
+              {identicalPersons.slice(0, 5).map((identicalPerson) => {
+                const identicalPersonName =
+                  identicalPerson.name ||
+                  identicalPerson.emails?.[0]?.value ||
+                  `Person-${identicalPerson.id.slice(0, 8)}`;
+                const identicalPersonSessions = sessions.filter(
+                  (s) => s.personId === identicalPerson.id
+                );
+                const hasIdenticalSessions = identicalPersonSessions.length > 0;
+
+                return (
+                  <button
+                    key={identicalPerson.id}
+                    onClick={() => {
+                      if (hasIdenticalSessions) {
+                        setcurrentSession(identicalPersonSessions[0]);
+                      }
+                    }}
+                    disabled={!hasIdenticalSessions}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors ${
+                      hasIdenticalSessions
+                        ? "hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                        : "text-muted-foreground/50 cursor-default"
+                    }`}
+                  >
+                    <Users className="w-3 h-3 flex-shrink-0" />
+                    <span className="text-xs truncate flex-1">
+                      {identicalPersonName}
+                    </span>
+                    {identicalPersonSessions.length > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                        {identicalPersonSessions.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              {identicalPersons.length > 5 && (
+                <p className="text-[10px] text-muted-foreground px-2 pt-1">
+                  +{identicalPersons.length - 5} more
+                </p>
               )}
             </div>
           </div>

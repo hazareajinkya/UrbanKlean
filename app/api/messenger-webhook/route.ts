@@ -21,14 +21,7 @@ export async function POST(req: Request) {
     console.log("POST request received");
     const body = await req.json();
 
-    // const value = body.entry[0].changes[0].value;
-    console.log("body: ", body);
-
-    console.log("value: ", body.entry[0].messaging[0]);
-
     const msg = messengerParser.parseTextMessage(body);
-
-    console.log("msg: ", msg);
 
     // Get channel by Page ID to get access token
     const channel = await channelService.getChannelByPageId(
@@ -40,7 +33,7 @@ export async function POST(req: Request) {
       console.log(
         `Unable to find channel for Page ID ${msg.to} with provider messenger`
       );
-      return successResponse(200, "Processed message ");
+      return successResponse(200, "Processed message but no channel found");
     }
 
     // Filter out echo messages (messages sent by the page itself)
@@ -60,17 +53,16 @@ export async function POST(req: Request) {
       console.log(
         `Unable to resolve agent for ${msg.to} with provider messenger`
       );
-
       return successResponse(200, "Processed message ");
     }
 
     const { success, message: ans } =
-      await messengerBotService.generateResponse(
+      await messengerBotService.generateResponse({
         msg,
-        msg.to,
-        msg.from,
-        "messenger"
-      );
+        messengerUserId: msg.from,
+        channel: "messenger",
+        agentId,
+      });
     if (success) {
       const pageId = channel.metadata.id as string;
       // Use page_access_token if available, fallback to access_token

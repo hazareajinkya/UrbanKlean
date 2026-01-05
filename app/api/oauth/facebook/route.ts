@@ -7,6 +7,7 @@ import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import messengerService from "@/lib/services/messenger/messenger-service";
 import { getProtocol } from "@/lib/utils";
+import storageService from "@/lib/services/storage-service";
 
 const facebookAuthSchema = z.object({
   code: z.string().optional(),
@@ -117,13 +118,33 @@ export async function GET(req: NextRequest) {
     }
 
     // Extract picture URL from page data (already included in /me/accounts response)
-    const profile_pic = selectedPage.picture?.data?.url || null;
+    let profile_pic = selectedPage.picture?.data?.url || null;
 
     console.log("Selected Facebook page:", {
       id: pageId,
       name: selectedPage.name,
       hasPicture: !!profile_pic,
     });
+
+    if (profile_pic) {
+      try {
+        const response = await axios.get(profile_pic, {
+          responseType: "arraybuffer",
+        });
+        const buffer = response.data;
+        const contentType = response.headers["content-type"] || "image/jpeg";
+        const fileName = `channels/${wid}/facebook/${user_id}.jpg`;
+
+        const uploadResult = await storageService.uploadBuffer(
+          buffer,
+          fileName,
+          contentType
+        );
+        profile_pic = uploadResult.downloadURL;
+      } catch (e) {
+        console.error("Failed to upload profile image to storage", e);
+      }
+    }
 
     // Store System User token and Page Access Token
     const credentials = {

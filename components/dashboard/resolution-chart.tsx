@@ -1,0 +1,237 @@
+"use client";
+
+import { useMemo } from "react";
+import { Cell, Pie, PieChart, Label } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, AlertCircle, XCircle, ArrowUpCircle } from "lucide-react";
+
+interface ResolutionChartProps {
+  resolution: {
+    resolved: number;
+    "partially-resolved": number;
+    unresolved: number;
+    escalated: number;
+  };
+}
+
+export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
+  const total = useMemo(() => {
+    return (
+      resolution.resolved +
+      resolution["partially-resolved"] +
+      resolution.unresolved +
+      resolution.escalated
+    );
+  }, [resolution]);
+
+  const chartData = useMemo(() => {
+    if (total === 0) return [];
+
+    return [
+      {
+        name: "Resolved",
+        value: resolution.resolved,
+        percentage: ((resolution.resolved / total) * 100).toFixed(1),
+        colorKey: "resolved",
+      },
+      {
+        name: "Partially Resolved",
+        value: resolution["partially-resolved"],
+        percentage: ((resolution["partially-resolved"] / total) * 100).toFixed(1),
+        colorKey: "partially-resolved",
+      },
+      {
+        name: "Unresolved",
+        value: resolution.unresolved,
+        percentage: ((resolution.unresolved / total) * 100).toFixed(1),
+        colorKey: "unresolved",
+      },
+      {
+        name: "Escalated",
+        value: resolution.escalated,
+        percentage: ((resolution.escalated / total) * 100).toFixed(1),
+        colorKey: "escalated",
+      },
+    ].filter((item) => item.value > 0);
+  }, [resolution, total]);
+
+  const chartConfig = {
+    resolved: {
+      label: "Resolved",
+      color: "hsl(152, 69%, 41%)",
+    },
+    "partially-resolved": {
+      label: "Partially Resolved",
+      color: "hsl(38, 92%, 50%)",
+    },
+    unresolved: {
+      label: "Unresolved",
+      color: "hsl(4, 90%, 58%)",
+    },
+    escalated: {
+      label: "Escalated",
+      color: "hsl(258, 90%, 66%)",
+    },
+  };
+
+  const resolutionRate = useMemo(() => {
+    if (total === 0) return 0;
+    return Math.round((resolution.resolved / total) * 100);
+  }, [resolution.resolved, total]);
+
+  const stats = [
+    {
+      label: "Resolved",
+      value: resolution.resolved,
+      percentage: total > 0 ? (resolution.resolved / total) * 100 : 0,
+      color: "hsl(152, 69%, 41%)",
+      bgColor: "bg-emerald-500/10",
+      icon: CheckCircle2,
+    },
+    {
+      label: "Partial",
+      value: resolution["partially-resolved"],
+      percentage: total > 0 ? (resolution["partially-resolved"] / total) * 100 : 0,
+      color: "hsl(38, 92%, 50%)",
+      bgColor: "bg-amber-500/10",
+      icon: AlertCircle,
+    },
+    {
+      label: "Unresolved",
+      value: resolution.unresolved,
+      percentage: total > 0 ? (resolution.unresolved / total) * 100 : 0,
+      color: "hsl(4, 90%, 58%)",
+      bgColor: "bg-red-500/10",
+      icon: XCircle,
+    },
+    {
+      label: "Escalated",
+      value: resolution.escalated,
+      percentage: total > 0 ? (resolution.escalated / total) * 100 : 0,
+      color: "hsl(258, 90%, 66%)",
+      bgColor: "bg-violet-500/10",
+      icon: ArrowUpCircle,
+    },
+  ];
+
+  if (chartData.length === 0 || total === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Resolution Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
+            No data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Resolution Status</CardTitle>
+      </CardHeader>
+      <CardContent className="pb-4">
+        <div className="flex items-center gap-4">
+          {/* Donut Chart with Center Label */}
+          <div className="relative shrink-0">
+            <ChartContainer config={chartConfig} className="h-[140px] w-[140px]">
+              <PieChart>
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name, props) => {
+                        const percentage = props.payload?.percentage || "0";
+                        return [`${value} (${percentage}%)`, props.payload?.name || name];
+                      }}
+                    />
+                  }
+                />
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={42}
+                  outerRadius={62}
+                  paddingAngle={3}
+                  strokeWidth={0}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`var(--color-${entry.colorKey})`}
+                      className="transition-opacity duration-200 hover:opacity-80"
+                    />
+                  ))}
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) - 6}
+                              className="fill-foreground text-2xl font-bold"
+                            >
+                              {resolutionRate}%
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 12}
+                              className="fill-muted-foreground text-[10px]"
+                            >
+                              resolved
+                            </tspan>
+                          </text>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ChartContainer>
+          </div>
+
+          {/* Stats with Progress Bars */}
+          <div className="flex-1 space-y-2.5">
+            {stats.map((stat) => (
+              <div key={stat.label} className="group">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <stat.icon
+                      className="h-3 w-3 shrink-0 transition-transform group-hover:scale-110"
+                      style={{ color: stat.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{stat.label}</span>
+                  </div>
+                  <span className="text-xs font-medium tabular-nums">{stat.value}</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${stat.percentage}%`,
+                      backgroundColor: stat.color,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
