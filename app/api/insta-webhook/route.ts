@@ -8,6 +8,7 @@ import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
 import { INSTA_ID } from "@/lib/utils/conf";
 import instaBotService from "@/lib/services/instagram/insta-bot-service";
+import channelService from "@/lib/services/channel-service";
 
 // Function to send a text message
 export const maxDuration = 60;
@@ -15,13 +16,8 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     console.log("POST request received");
+
     const body = await req.json();
-
-    // const value = body.entry[0].changes[0].value;
-    console.log("body: ", body);
-
-    console.log("value: ", body.entry[0].messaging[0]);
-
     const msg = instaParser.parseTextMessage(body);
 
     if (msg.from === INSTA_ID) {
@@ -31,14 +27,32 @@ export async function POST(req: Request) {
       );
     }
 
-    const { success, message: ans } = await instaBotService.generateResponse(
-      msg,
+    const channel = await channelService.getChannelByPageId(
       msg.to,
-      msg.from,
       "instagram"
     );
+    if (!channel) {
+      console.error("No channel found on instagram webhook");
+      return NextResponse.json(
+        { message: "No channel found" },
+        { status: 200 }
+      );
+    }
+
+    const { success, message: ans } = await instaBotService.generateResponse({
+      instaMsg: msg,
+      instaUserId: msg.from,
+      channel: "instagram",
+      agentId: channel.assignedAgentId,
+    });
+
     if (success) {
-      await instaService.sendTextMessage(msg.from, ans ?? "placeholder");
+      await instaService.sendTextMessage({
+        to: msg.from,
+        text: ans ?? "placeholder",
+        instaUserId: channel.metadata.id,
+        accessToken: channel.credentials.access_token,
+      });
     }
 
     //Is WA Message

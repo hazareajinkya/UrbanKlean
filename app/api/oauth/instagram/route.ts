@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 import { INSTAGRAM_OAUTH_API_BASE, instaconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
@@ -61,13 +61,27 @@ export async function GET(req: NextRequest) {
     tokenFormData.append("grant_type", "authorization_code");
     tokenFormData.append("redirect_uri", instaconf.redirectUri);
     tokenFormData.append("code", validatedParams.code);
+    const body = new URLSearchParams({
+      client_id: instaconf.appId,
+      client_secret: instaconf.appSecret,
+      grant_type: "authorization_code",
+      redirect_uri: instaconf.redirectUri,
+      code: validatedParams.code,
+    });
 
     const tokenResponse = await axios.post(
       `${INSTAGRAM_OAUTH_API_BASE}/oauth/access_token`,
-      tokenFormData
+      body.toString(),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
     );
 
     const { access_token, user_id } = tokenResponse.data;
+    console.log("access_token: ", access_token);
+    console.log("user_id: ", user_id);
 
     console.log("Short-lived token data:", tokenResponse.data);
     // TODO: The user_id should be saved to identify the Instagram account.
@@ -102,7 +116,9 @@ export async function GET(req: NextRequest) {
       expires_in: longLivedTokenResponse.data.expires_in,
     };
 
-    const data = await instaService.getProfile(credentials.access_token);
+    const data = await instaService.getProfile({
+      accessToken: credentials.access_token,
+    });
 
     if (data.profile_picture_url) {
       try {
@@ -126,7 +142,10 @@ export async function GET(req: NextRequest) {
 
     const metadata = { ...data };
 
-    await instaService.subscribeToWebhook(credentials.access_token);
+    await instaService.subscribeToWebhook({
+      accessToken: credentials.access_token,
+      instaUserId: metadata.id,
+    });
 
     const channel = generateDefaultChannel(
       user_id,
@@ -174,7 +193,10 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Unsubscribe from webhook
-    await instaService.unsubscribeFromWebhook(accessToken);
+    await instaService.unsubscribeFromWebhook({
+      accessToken: accessToken,
+      instaUserId: channel.metadata.id,
+    });
 
     // Remove channel from database
     await channelService.deleteChannel(wid, channelId);

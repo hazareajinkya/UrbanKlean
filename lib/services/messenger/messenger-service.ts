@@ -1,3 +1,4 @@
+import { messengerClient } from "@/lib/clients/axios-client";
 import { fbconf } from "@/lib/utils/conf";
 import axios from "axios";
 
@@ -14,9 +15,8 @@ class MessengerService {
     accessToken: string;
   }) {
     try {
-      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
-      const response = await axios.post(
-        `${baseURL}/messages`,
+      const response = await messengerClient.post(
+        `/${pageId}/messages`,
         {
           messaging_type: "RESPONSE",
           recipient: { id: to },
@@ -47,9 +47,8 @@ class MessengerService {
     accessToken: string;
   }) {
     try {
-      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
-      const response = await axios.post(
-        `${baseURL}/subscribed_apps`,
+      const response = await messengerClient.post(
+        `/${pageId}/subscribed_apps`,
         {
           subscribed_fields: "messages",
         },
@@ -80,13 +79,15 @@ class MessengerService {
     accessToken: string;
   }) {
     try {
-      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
-      const response = await axios.delete(`${baseURL}/subscribed_apps`, {
-        params: {
-          access_token: accessToken,
-          subscribed_fields: "messages",
-        },
-      });
+      const response = await messengerClient.delete(
+        `/${pageId}/subscribed_apps`,
+        {
+          params: {
+            access_token: accessToken,
+            subscribed_fields: "messages",
+          },
+        }
+      );
       console.log("response.data: ", response.data);
       return response.data;
     } catch (error: any) {
@@ -98,8 +99,7 @@ class MessengerService {
 
   async getProfile(token: string) {
     try {
-      const baseURl = `${fbconf.baseURL}/${fbconf.version}/me`;
-      const { data } = await axios.get(`${baseURl}`, {
+      const { data } = await messengerClient.get(`/me`, {
         params: {
           fields:
             "id,name,picture.width(400).height(400){url,width,height,is_silhouette}",
@@ -121,8 +121,7 @@ class MessengerService {
 
   async getPages(token: string) {
     try {
-      const baseURL = `${fbconf.baseURL}/${fbconf.version}/me/accounts`;
-      const { data } = await axios.get(baseURL, {
+      const { data } = await messengerClient.get(`/me/accounts`, {
         params: {
           fields: "id,name,access_token,picture",
           access_token: token,
@@ -144,8 +143,7 @@ class MessengerService {
     pageAccessToken: string;
   }) {
     try {
-      const baseURL = `${fbconf.baseURL}/${fbconf.version}/${pageId}`;
-      const { data } = await axios.get(baseURL, {
+      const { data } = await messengerClient.get(`/${pageId}`, {
         params: {
           fields: "id,name,picture.width(400).height(400){url,width,height}",
           access_token: pageAccessToken,
