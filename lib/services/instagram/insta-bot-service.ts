@@ -56,7 +56,6 @@ class InstaBotService {
       let session = await this.getOrCreateSession({
         instaUserId,
         agent,
-        name: instaMsg.from,
         channel,
         accessToken,
       });
@@ -132,13 +131,11 @@ class InstaBotService {
   async getOrCreateSession({
     instaUserId,
     agent,
-    name,
     channel,
     accessToken,
   }: {
     instaUserId: string;
     agent: IAgent;
-    name: string;
     channel: IChannelProvider;
     accessToken: string;
   }) {
@@ -164,6 +161,12 @@ class InstaBotService {
         accessToken: accessToken,
       });
       personData = await peopleServiceV2.createPerson({
+        metadata: {
+          instaUserId: {
+            name: [profile.name],
+            profilePic: [profile.username],
+          },
+        },
         name: profile.name,
         wid: agent.wid,
         emails: [],

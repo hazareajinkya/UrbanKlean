@@ -281,6 +281,7 @@ class PeopleServiceV2 {
     sessionId,
     aid,
     ip,
+    metadata,
   }: {
     wid: string;
     name?: string;
@@ -290,6 +291,13 @@ class PeopleServiceV2 {
     sessionId?: string;
     aid?: string;
     ip?: string;
+    metadata?: {
+      [key: string]: {
+        username?: string[];
+        name?: string[];
+        profilePic?: string[];
+      };
+    };
   }) {
     const person = generateDefaultPerson({
       name,
@@ -299,6 +307,7 @@ class PeopleServiceV2 {
       sessionId,
       aid,
       ip,
+      metadata,
     });
     const personRef = doc(db, `workspaces/${wid}/people/${person.id}`);
     await setDoc(personRef, person);

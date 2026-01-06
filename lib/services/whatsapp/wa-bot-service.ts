@@ -159,6 +159,11 @@ class WABotService {
         phones: [{ value: waPhoneId, verified: true }],
         externalIds,
         name,
+        metadata: {
+          waPhoneId: {
+            name: [name],
+          },
+        },
       });
     }
     session = await chatService.createWASession(

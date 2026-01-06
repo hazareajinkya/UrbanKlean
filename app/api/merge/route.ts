@@ -45,6 +45,34 @@ export const POST = async (req: Request) => {
       .map((p) => p.pastSessionIds)
       .flat();
 
+    const mergedMetadata: {
+      [key: string]: {
+        username?: string[];
+        name?: string[];
+        profilePic?: string[];
+      };
+    } = {};
+    persons.forEach((p) => {
+      Object.entries(p.metadata ?? {}).forEach(([key, value]) => {
+        mergedMetadata[key] ??= {};
+
+        mergedMetadata[key].username = [
+          ...(mergedMetadata[key].username ?? []),
+          ...(value.username ?? []),
+        ];
+
+        mergedMetadata[key].name = [
+          ...(mergedMetadata[key].name ?? []),
+          ...(value.name ?? []),
+        ];
+
+        mergedMetadata[key].profilePic = [
+          ...(mergedMetadata[key].profilePic ?? []),
+          ...(value.profilePic ?? []),
+        ];
+      });
+    });
+
     // Combine identicalPersonIds from all persons and remove the merged person IDs
     const combinedIdenticalIds = persons
       .map((p) => p.identicalPersonIds || [])
@@ -67,8 +95,10 @@ export const POST = async (req: Request) => {
       ips: persons.map((p) => p.ips).flat(),
       identicalPersonIds: combinedIdenticalIds,
       updatedAt: new Date().toISOString(),
+      metadata: mergedMetadata,
     };
 
+    console.log("mergedPerson", mergedPerson);
     await mergeService.updateMergePerson(
       primaryId,
       otherIds,

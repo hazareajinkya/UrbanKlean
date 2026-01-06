@@ -40,6 +40,14 @@ export interface IPerson {
   //ids of people that are identical to this person
   identicalPersonIds: string[];
 
+  metadata?: {
+    [key: string]: {
+      username?: string[];
+      name?: string[];
+      profilePic?: string[];
+    };
+  };
+
   createdAt: string;
   updatedAt: string;
 }
@@ -52,6 +60,7 @@ export const generateDefaultPerson = ({
   externalIds,
   sessionId,
   aid,
+  metadata,
   ip,
 }: {
   name?: string;
@@ -61,6 +70,13 @@ export const generateDefaultPerson = ({
   sessionId?: string;
   aid?: string;
   ip?: string;
+  metadata?: {
+    [key: string]: {
+      username?: string[];
+      name?: string[];
+      profilePic?: string[];
+    };
+  };
 }): IPerson => {
   const emailN = email ? normEmail(email.value) : undefined;
   const phoneN = phone ? normPhone(phone.value) : undefined;
@@ -82,6 +98,7 @@ export const generateDefaultPerson = ({
     memories: [],
     summary: "",
     notes: [],
+    metadata: metadata ?? {},
     identicalPersonIds: [],
     pastSessionIds: sessionId && aid ? [{ aid, sid: sessionId }] : [],
     createdAt: new Date().toISOString(),
