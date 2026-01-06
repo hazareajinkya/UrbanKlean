@@ -10,6 +10,7 @@ import {
 } from "@/prompts/system-prompt";
 import { IChannelProvider } from "../types/channel";
 import { Geo } from "@vercel/functions";
+import { channelPrompts } from "@/prompts/channel-prompts";
 
 export const getModel = (agent: IAgent) => {
   let model = openai("gpt-4.1-mini");
@@ -35,7 +36,6 @@ export const getSystemPrompt = async (
   const workflowstext = await retrieveWorkflow(agent.id, query);
   const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
   // ${coreSystemPrompt}
-  console.log("geoInfo: ", geoInfo);
 
   return `
   ${geminiHumanPrompt}
@@ -50,23 +50,11 @@ export const getSystemPrompt = async (
 
   ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
 
-  ${
-    channel === "email" &&
-    `
-    When replying as an email, ensure that your output is well-formatted for email clients:
-    - Use polite greetings and formal closings (e.g., "Hello," and "Best regards,").
-    - Clearly organize content with paragraphs and plain text line breaks.
-    - If referencing the user's inquiry, include context from their message as appropriate.
-    - Stay concise, clear, and professional.
-    - Respond directly to the points or questions raised in the email.
-    - Avoid using HTML or markdown formatting unless otherwise instructed; plain text is preferred for compatibility.
-    `
-  }
+  ${channel === "whatsapp" && channelPrompts.whatsapp}
+  ${channel === "email" && channelPrompts.email}
+  ${channel === "messenger" && channelPrompts.messenger}
+  ${channel === "instagram" && channelPrompts.instagram}
 
-  ${
-    (channel === "instagram" || channel === "messenger") &&
-    ` VERY IMPORTANT IF CHANNEL IS INSTAGRAM OR MESSENGER THEN OUTPUT TEXT LENGTH SHOULD BE LESS THAN 900 CHARACTERS `
-  }
 
   These are workflow that u should keep in mind 
   There's trigger when u feel like that trigger statisfy then follow the instructions

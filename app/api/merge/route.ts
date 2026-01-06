@@ -34,7 +34,8 @@ export const POST = async (req: Request) => {
 
     // Merging using ai
     const merged = await generateObject({
-      model: google("gemini-2.5-flash"),
+      // model: google("gemini-2.5-flash"),
+      model: "openai/gpt-oss-120b",
       schema: MergeLlmPersonSchema,
       prompt: generateMergePrompt(persons),
     });
@@ -79,6 +80,15 @@ export const POST = async (req: Request) => {
       .flat()
       .filter((id) => !allMergedIds.includes(id)); // Remove IDs of persons being merged
 
+    const ips: string[] = [
+      ...new Set(
+        persons
+          .map((p) => p.ips)
+          .flat()
+          .filter((ip): ip is string => !!ip)
+      ),
+    ];
+
     const mergedPerson: IPerson = {
       id: primaryId,
       pastSessionIds: mergedPastSessionIds,
@@ -92,11 +102,14 @@ export const POST = async (req: Request) => {
         .map((phone) => normPhone(phone))
         .filter((phone): phone is string => !!phone)
         .map((phone) => ({ value: phone, verified: false })),
-      ips: persons.map((p) => p.ips).flat(),
+
+      ips: ips,
       identicalPersonIds: combinedIdenticalIds,
       updatedAt: new Date().toISOString(),
       metadata: mergedMetadata,
     };
+
+    console.log("merged: ", mergedPerson);
 
     console.log("mergedPerson", mergedPerson);
     await mergeService.updateMergePerson(

@@ -8,12 +8,18 @@ import peopleServiceV2 from "../services/people-service-v2";
 
 const PersonInfo = z.object({
   // Core identity (any subset is fine)
-  name: z.string().optional(),
+  name: z
+    .string()
+    .describe(
+      "User's name as provided. Accept any format (first name, nickname, or full name). Capitalize the first letter of each word. Example: 'john' → 'John', 'mary jane' → 'Mary Jane'."
+    )
+    .optional(),
   emails: z
     .string()
     .email()
     .describe(
-      "Email address, must be valid and will be stored in lowercase and the latest emails only."
+      // "Email address, must be valid and will be stored in lowercase and the latest emails only."
+      "Email address of the user. Must be a valid email format (e.g., user@example.com). Will be normalized to lowercase. Only collect the most recent/primary email address. Do not collect temporary, disposable, or obviously fake emails."
     )
 
     .optional(),
