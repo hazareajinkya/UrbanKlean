@@ -145,9 +145,6 @@ export const Navbar = ({
             <span className="font-medium text-base text-primary tracking-tight">
               Magical CX
             </span>
-            <span className="absolute top-0 -right-8 text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">
-              BETA
-            </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => {

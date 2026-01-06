@@ -21,7 +21,13 @@ export const WorkspacesNavbar = () => {
   const pathname = usePathname();
 
   const getInitials = (name?: string, email?: string) => {
-    if (name) return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    if (name)
+      return name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
     if (email) return email.slice(0, 2).toUpperCase();
     return "U";
   };
@@ -34,15 +40,32 @@ export const WorkspacesNavbar = () => {
   return (
     <nav className="w-full bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50">
       <div className="max-w-7xl mx-auto py-2 px-4 pr-2 md:px-3 lg:px-3 flex items-center justify-between">
-        <Link href="/" aria-label="Magical CX Home" tabIndex={0} className="relative inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary">
-          <span className="font-medium text-base text-primary tracking-tight">Magical CX</span>
-          <span className="absolute top-0 -right-8 text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">BETA</span>
+        <Link
+          href="/"
+          aria-label="Magical CX Home"
+          tabIndex={0}
+          className="relative inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <span className="font-medium text-base text-primary tracking-tight">
+            Magical CX
+          </span>
         </Link>
         <div className="flex items-center gap-6">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} aria-label={link.label} tabIndex={0} className={cn("transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary", isActive ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-label={link.label}
+                tabIndex={0}
+                className={cn(
+                  "transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
                 {link.label}
               </Link>
             );
@@ -50,20 +73,37 @@ export const WorkspacesNavbar = () => {
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-full" aria-label="User menu" tabIndex={0}>
+                <button
+                  className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
+                  aria-label="User menu"
+                  tabIndex={0}
+                >
                   <Avatar className="h-8 w-8 cursor-pointer">
-                    <AvatarImage src={user.photoUrl} alt={user.name || user.email} />
-                    <AvatarFallback className="text-xs">{getInitials(user.name, user.email)}</AvatarFallback>
+                    <AvatarImage
+                      src={user.photoUrl}
+                      alt={user.name || user.email}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(user.name, user.email)}
+                    </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <div className="text-sm font-medium">{user.name || "User"}</div>
-                  <div className="text-xs text-muted-foreground">{user.email}</div>
+                  <div className="text-sm font-medium">
+                    {user.name || "User"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {user.email}
+                  </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOutUser.mutate()} disabled={signOutUser.isPending} className="cursor-pointer text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  onClick={() => signOutUser.mutate()}
+                  disabled={signOutUser.isPending}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   {signOutUser.isPending ? "Signing out..." : "Sign out"}
                 </DropdownMenuItem>
@@ -75,4 +115,3 @@ export const WorkspacesNavbar = () => {
     </nav>
   );
 };
-
