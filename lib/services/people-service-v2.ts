@@ -284,8 +284,8 @@ class PeopleServiceV2 {
   }: {
     wid: string;
     name?: string;
-    emails: string[];
-    phones: string[];
+    emails: { value: string; verified: boolean }[];
+    phones: { value: string; verified: boolean }[];
     externalIds?: IExternalIds;
     sessionId?: string;
     aid?: string;

@@ -50,7 +50,8 @@ class MessengerService {
       const response = await messengerClient.post(
         `/${pageId}/subscribed_apps`,
         {
-          subscribed_fields: "messages",
+          subscribed_fields:
+            "messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads",
         },
         {
           params: {
@@ -158,6 +159,29 @@ class MessengerService {
       return { ...data, profile_pic };
     } catch (error: any) {
       console.log("error getting page info: ", error.response?.data);
+      throw error;
+    }
+  }
+  async getUserProfile({
+    userId,
+    accessToken,
+  }: {
+    userId: string;
+    accessToken: string;
+  }) {
+    try {
+      const { data } = await messengerClient.get(`/${userId}`, {
+        params: {
+          fields: "first_name,last_name,profile_pic",
+          access_token: accessToken,
+        },
+      });
+      return data;
+    } catch (error: any) {
+      console.log(
+        "error getting user profile: ",
+        JSON.stringify(error.response?.data, null, 2)
+      );
       throw error;
     }
   }

@@ -20,6 +20,7 @@ export async function POST(req: Request) {
   try {
     console.log("POST request received");
     const body = await req.json();
+    console.log("Messenger webhook body: ", JSON.stringify(body, null, 2));
 
     const msg = messengerParser.parseTextMessage(body);
 
@@ -36,7 +37,6 @@ export async function POST(req: Request) {
       return successResponse(200, "Processed message but no channel found");
     }
 
-    // Filter out echo messages (messages sent by the page itself)
     const pageId = channel.metadata.id as string;
     if (msg.from === pageId) {
       return NextResponse.json(
@@ -65,10 +65,8 @@ export async function POST(req: Request) {
       });
     if (success) {
       const pageId = channel.metadata.id as string;
-      // Use page_access_token if available, fallback to access_token
-      const pageAccessToken =
-        (channel.credentials.page_access_token as string) ||
-        (channel.credentials.access_token as string);
+
+      const pageAccessToken = channel.credentials.page_access_token;
 
       if (!pageId || !pageAccessToken) {
         console.error("Missing pageId or pageAccessToken in channel", {

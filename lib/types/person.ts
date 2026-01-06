@@ -55,21 +55,23 @@ export const generateDefaultPerson = ({
   ip,
 }: {
   name?: string;
-  email?: string;
-  phone?: string;
+  email?: { value: string; verified: boolean };
+  phone?: { value: string; verified: boolean };
   externalIds?: IExternalIds;
   sessionId?: string;
   aid?: string;
   ip?: string;
 }): IPerson => {
-  const emailN = normEmail(email);
-  const phoneN = normPhone(phone);
+  const emailN = email ? normEmail(email.value) : undefined;
+  const phoneN = phone ? normPhone(phone.value) : undefined;
 
   return {
     id: v4(),
     name: name ?? "",
-    emails: emailN ? [{ value: emailN, verified: false }] : [],
-    phones: phoneN ? [{ value: phoneN, verified: false }] : [],
+    emails:
+      email && emailN ? [{ value: emailN, verified: email.verified }] : [],
+    phones:
+      phone && phoneN ? [{ value: phoneN, verified: phone.verified }] : [],
     ips: ip ? [ip] : [],
     externalIds: externalIds ?? [],
     company: "",

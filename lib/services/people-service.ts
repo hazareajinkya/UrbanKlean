@@ -368,8 +368,8 @@ class PeopleService {
   }) {
     const person = generateDefaultPerson({
       name,
-      email,
-      phone,
+      email: email ? { value: email, verified: false } : undefined,
+      phone: phone ? { value: phone, verified: false } : undefined,
       externalIds,
       sessionId,
       aid,
@@ -423,8 +423,8 @@ class PeopleService {
   }) {
     const person = generateDefaultPerson({
       name,
-      email: emails[0],
-      phone: phones[0],
+      email: { value: emails[0], verified: false },
+      phone: { value: phones[0], verified: false },
       externalIds,
       sessionId,
       aid,

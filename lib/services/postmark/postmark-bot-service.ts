@@ -161,9 +161,9 @@ class PostmarkBotService {
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
+      personData = await peopleServiceV2.createPerson({
         wid: agent.wid,
-        emails: [email],
+        emails: [{ value: email, verified: true }],
         phones: [],
         externalIds,
         name,

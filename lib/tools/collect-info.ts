@@ -215,8 +215,8 @@ export const collectInformation = ({
           personData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: [params.emails],
-            phones: [params.phones],
+            emails: [{ value: params.emails, verified: false }],
+            phones: [{ value: params.phones, verified: false }],
             externalIds: externalIds,
             name: params.name,
             aid,
@@ -233,8 +233,8 @@ export const collectInformation = ({
           const newPersonData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: [params.emails],
-            phones: [params.phones],
+            emails: [{ value: params.emails, verified: false }],
+            phones: [{ value: params.phones, verified: false }],
             externalIds: externalIds,
             name: params.name,
             aid,

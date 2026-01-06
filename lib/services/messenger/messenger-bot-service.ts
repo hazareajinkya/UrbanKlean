@@ -153,7 +153,6 @@ class MessengerBotService {
 
     let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      emails: [],
       provider: channel,
       externalIds,
     });
@@ -161,7 +160,7 @@ class MessengerBotService {
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
+      personData = await peopleServiceV2.createPerson({
         wid: agent.wid,
         emails: [],
         phones: [],
@@ -177,7 +176,7 @@ class MessengerBotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds({
+    await peopleServiceV2.updatePastSessionIds({
       wid: agent.wid,
       personId: personData!.id,
       sessionId: session.id,

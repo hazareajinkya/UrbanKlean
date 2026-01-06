@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       instaUserId: msg.from,
       channel: "instagram",
       agentId: channel.assignedAgentId,
+      accessToken: channel.credentials.access_token,
     });
 
     if (success) {

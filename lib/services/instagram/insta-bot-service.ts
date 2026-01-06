@@ -21,6 +21,8 @@ import usageService from "../usage-service";
 import actionService from "../action-service";
 import { getCustomTools } from "@/lib/utils";
 import { IExternalIds } from "@/lib/types/person";
+import peopleServiceV2 from "../people-service-v2";
+import instaService from "./insta-service";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -31,11 +33,13 @@ class InstaBotService {
     instaUserId,
     channel,
     agentId,
+    accessToken,
   }: {
     instaMsg: IInstaMessage;
     instaUserId: string;
     channel: IChannelProvider;
     agentId: string;
+    accessToken: string;
   }) {
     try {
       if (!agentId) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
@@ -54,6 +58,7 @@ class InstaBotService {
         agent,
         name: instaMsg.from,
         channel,
+        accessToken,
       });
 
       const query = instaMsg.text ?? "";
@@ -129,11 +134,13 @@ class InstaBotService {
     agent,
     name,
     channel,
+    accessToken,
   }: {
     instaUserId: string;
     agent: IAgent;
     name: string;
     channel: IChannelProvider;
+    accessToken: string;
   }) {
     let session = await chatService.getSessionByProviderId(
       instaUserId,
@@ -143,17 +150,21 @@ class InstaBotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: instaUserId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      phones: [],
+      provider: channel,
       externalIds,
     });
 
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
-        name: name,
+      const profile = await instaService.getUserProfile({
+        userId: instaUserId,
+        accessToken: accessToken,
+      });
+      personData = await peopleServiceV2.createPerson({
+        name: profile.name,
         wid: agent.wid,
         emails: [],
         phones: [],
@@ -168,7 +179,7 @@ class InstaBotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds({
+    await peopleServiceV2.updatePastSessionIds({
       wid: agent.wid,
       personId: personData!.id,
       sessionId: session.id,

@@ -125,6 +125,30 @@ class InstaService {
       throw error;
     }
   }
+  async getUserProfile({
+    userId,
+    accessToken,
+  }: {
+    userId: string;
+    accessToken: string;
+  }) {
+    try {
+      const { data } = await instaClient.get(`/${userId}`, {
+        params: {
+          fields: "username,name",
+          access_token: accessToken,
+        },
+      });
+      return data;
+    } catch (error: any) {
+      console.log("error: ", error.response?.data);
+      console.log(
+        "Error getting user profile:",
+        JSON.stringify(error, null, 2)
+      );
+      throw error;
+    }
+  }
 }
 
 const instaService = new InstaService();

@@ -153,10 +153,10 @@ class WABotService {
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
+      personData = await peopleServiceV2.createPerson({
         wid: agent.wid,
         emails: [],
-        phones: [waPhoneId],
+        phones: [{ value: waPhoneId, verified: true }],
         externalIds,
         name,
       });
@@ -169,7 +169,7 @@ class WABotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds({
+    await peopleServiceV2.updatePastSessionIds({
       wid: agent.wid,
       personId: personData!.id,
       sessionId: session.id,

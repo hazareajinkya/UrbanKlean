@@ -108,7 +108,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Use the first page (you can modify this to let user select a page)
     const selectedPage = pages[0];
     const pageId = selectedPage.id;
     const pageAccessToken = selectedPage.access_token;
@@ -117,7 +116,6 @@ export async function GET(req: NextRequest) {
       throw new Error("Failed to get page ID or access token");
     }
 
-    // Extract picture URL from page data (already included in /me/accounts response)
     let profile_pic = selectedPage.picture?.data?.url || null;
 
     console.log("Selected Facebook page:", {
