@@ -25,7 +25,10 @@ class WAWebhookParser {
     };
   }
 
-  async parseImageMessage(body: any): Promise<{
+  async parseImageMessage(
+    body: any,
+    phoneId: string
+  ): Promise<{
     contact: IWAContact;
     msg: IWAMessage;
   }> {
@@ -42,7 +45,11 @@ class WAWebhookParser {
 
     console.log("mediaId: ", mediaId);
 
-    const media = await waService.retrieveWAMedia(contact.waId, mediaId);
+    const media = await waService.retrieveWAMedia({
+      phone: contact.waId,
+      mediaId,
+      phoneId,
+    });
 
     msg.image.url = media.downloadUrl;
     msg.image.storageRef = media.storageRef;

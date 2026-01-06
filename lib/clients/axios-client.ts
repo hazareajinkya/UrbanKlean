@@ -31,8 +31,8 @@ export const backendClient = axios.create({
     Authorization: `Bearer ${backendconf.accessToken}`,
   },
 });
-export const waclient = axios.create({
-  baseURL: `${waconf.baseURL}/${waconf.version}/${waconf.phoneID}`,
+export const waClient = axios.create({
+  baseURL: `${waconf.baseURL}/${waconf.version}`,
   headers: {
     Authorization: `Bearer ${waconf.accessToken}`,
   },
@@ -46,17 +46,11 @@ export const waMediaClient = axios.create({
 });
 
 export const instaClient = axios.create({
-  baseURL: `${instaconf.baseURL}/${instaconf.version}/${instaconf.id}`,
-  headers: {
-    Authorization: `Bearer ${instaconf.accessToken}`,
-  },
+  baseURL: `${instaconf.baseURL}/${instaconf.version}`,
 });
 
 export const messengerClient = axios.create({
-  baseURL: `${fbconf.baseURL}/${fbconf.version}/${fbconf.id}`,
-  headers: {
-    Authorization: `Bearer ${fbconf.accessToken}`,
-  },
+  baseURL: `${fbconf.baseURL}/${fbconf.version}`,
 });
 
 export const slackClient = axios.create({

@@ -67,8 +67,8 @@ export default function CustomerEditForm({
     if (person && isOpen) {
       form.reset({
         name: person.name || "",
-        emails: person.emails || [],
-        phones: person.phones || [],
+        emails: person.emails?.map((email) => email.value) || [],
+        phones: person.phones?.map((phone) => phone.value) || [],
         company: person.company || "",
         title: person.title || "",
         location: person.location || "",
@@ -89,8 +89,14 @@ export default function CustomerEditForm({
         personId: person.id,
         updates: {
           name: data.name,
-          emails: data.emails,
-          phones: data.phones,
+          emails: data.emails?.map((email) => ({
+            value: email,
+            verified: false,
+          })),
+          phones: data.phones?.map((phone) => ({
+            value: phone,
+            verified: false,
+          })),
           company: data.company,
           title: data.title,
           location: data.location,

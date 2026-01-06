@@ -6,7 +6,7 @@ import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
-import { FB_ID, INSTA_ID } from "@/lib/utils/conf";
+import { INSTA_ID } from "@/lib/utils/conf";
 import messengerParser from "@/lib/services/messenger/messenger-webhook-parser";
 import messengerService from "@/lib/services/messenger/messenger-service";
 import channelService from "@/lib/services/channel-service";
@@ -20,42 +20,68 @@ export async function POST(req: Request) {
   try {
     console.log("POST request received");
     const body = await req.json();
-
-    // const value = body.entry[0].changes[0].value;
-    console.log("body: ", body);
-
-    console.log("value: ", body.entry[0].messaging[0]);
+    console.log("Messenger webhook body: ", JSON.stringify(body, null, 2));
 
     const msg = messengerParser.parseTextMessage(body);
 
-    if (msg.from === FB_ID) {
+    // Get channel by Page ID to get access token
+    const channel = await channelService.getChannelByPageId(
+      msg.to,
+      "messenger"
+    );
+
+    if (!channel) {
+      console.log(
+        `Unable to find channel for Page ID ${msg.to} with provider messenger`
+      );
+      return successResponse(200, "Processed message but no channel found");
+    }
+
+    const pageId = channel.metadata.id as string;
+    if (msg.from === pageId) {
       return NextResponse.json(
-        { message: "Webhook received and processed successfully" },
+        {
+          message: "Webhook received and processed successfully (echo message)",
+        },
         { status: 200 }
       );
     }
 
-    console.log("msg: ", msg);
-
-    const agentId = await channelService.resolveAgent(msg.to, "messenger");
+    const agentId = channel.assignedAgentId;
 
     if (!agentId) {
       console.log(
-        `Unable to resovle agent for ${msg.to} with provider messenger`
+        `Unable to resolve agent for ${msg.to} with provider messenger`
       );
-
       return successResponse(200, "Processed message ");
     }
 
     const { success, message: ans } =
-      await messengerBotService.generateResponse(
+      await messengerBotService.generateResponse({
         msg,
-        msg.to,
-        msg.from,
-        "messenger"
-      );
+        messengerUserId: msg.from,
+        channel: "messenger",
+        agentId,
+      });
     if (success) {
-      await messengerService.sendTextMessage(msg.from, ans ?? "placeholder");
+      const pageId = channel.metadata.id as string;
+
+      const pageAccessToken = channel.credentials.page_access_token;
+
+      if (!pageId || !pageAccessToken) {
+        console.error("Missing pageId or pageAccessToken in channel", {
+          pageId,
+          hasPageAccessToken: !!pageAccessToken,
+        });
+        return successResponse(200, "Processed message ");
+      }
+
+      await messengerService.sendTextMessage({
+        to: msg.from,
+        text: ans ?? "placeholder",
+        pageId,
+        accessToken: pageAccessToken,
+      });
     }
 
     //Is WA Message
@@ -110,7 +136,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error processing Instagram webhook:", error);
+    console.error("Error processing facebook webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 200 }

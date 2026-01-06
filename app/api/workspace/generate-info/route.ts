@@ -4,14 +4,16 @@ import { successResponse, errorResponse } from "@/lib/types/api-response";
 
 export async function POST(request: NextRequest) {
   try {
-    const { wid, url } = await request.json();
+    const { url } = await request.json();
 
-    const { data } = await backendClient.post("/workspace/generate-info", {
-      wid,
-      url,
-    });
+    const { data } = await backendClient.post(
+      "/onboard/generate-onboarding-info",
+      {
+        url,
+      }
+    );
 
-    return successResponse(data);
+    return successResponse(data.data);
   } catch (error: any) {
     console.error("[generate-info] Error:", error?.response?.data || error);
     return errorResponse(

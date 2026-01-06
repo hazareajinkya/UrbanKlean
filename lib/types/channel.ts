@@ -20,6 +20,8 @@ export type IChannelProvider =
   | "email"
   | "web";
 
+export type IChannelEmailType = "default" | "white-labeled";
+
 export const generateDefaultChannel = (
   providerAccountId: string,
   provider: IChannelProvider,

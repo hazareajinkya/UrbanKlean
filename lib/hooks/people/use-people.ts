@@ -3,9 +3,19 @@ import { DocumentSnapshot } from "firebase/firestore";
 import peopleService, {
   PEOPLE_PAGE_LIMIT,
 } from "../../services/people-service";
+import peopleServiceV2 from "../../services/people-service-v2";
 
 export const peopleKey = (wid: string) => ["people", wid];
 export const peopleCountKey = (wid: string) => ["peopleCount", wid];
+export const allIdenticalPersonsKey = (wid: string) => [
+  "allIdenticalPersons",
+  wid,
+];
+export const identicalPersonsKey = (wid: string, personId: string) => [
+  "identicalPersons",
+  wid,
+  personId,
+];
 export const usePeople = (wid: string) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
@@ -47,4 +57,20 @@ export const usePeople = (wid: string) => {
     isLoading,
     isFetchingNext: isFetchingNextPage,
   };
+};
+
+export const useIdenticalPersons = (wid: string, personId: string) => {
+  return useQuery({
+    queryKey: identicalPersonsKey(wid, personId),
+    queryFn: () => peopleServiceV2.getIdenticalPersons(wid, personId),
+    enabled: !!wid && !!personId,
+  });
+};
+
+export const useAllIdenticalPersons = (wid: string) => {
+  return useQuery({
+    queryKey: allIdenticalPersonsKey(wid),
+    queryFn: () => peopleServiceV2.getAllIdenticalPersons(wid),
+    enabled: !!wid,
+  });
 };

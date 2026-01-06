@@ -9,7 +9,15 @@ import ContentDetailPanel, {
 } from "@/components/knowledge/content-detail-panel";
 import { useFolders } from "@/lib/hooks/folders/use-folders";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
-import { Globe, Loader, Plus, X, Search, UploadCloud } from "lucide-react";
+import {
+  Globe,
+  Loader,
+  Plus,
+  X,
+  Search,
+  UploadCloud,
+  Upload,
+} from "lucide-react";
 import Modal from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 
 interface ScrapedCategory {
@@ -28,7 +37,7 @@ interface ScrapedCategory {
 
 export default function KnowledgeTab() {
   const { wid } = useParams() as { wid: string };
-  const { data: folders } = useFolders(wid);
+  const { data: folders, isLoading } = useFolders(wid);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(
     null
@@ -257,6 +266,10 @@ export default function KnowledgeTab() {
     }
   };
 
+  if (isLoading) {
+    return <KnowledgeTabSkeleton />;
+  }
+
   return (
     <div className="h-full w-full relative">
       <div className="bg-card border rounded-xl h-full overflow-hidden flex relative">
@@ -323,9 +336,9 @@ export default function KnowledgeTab() {
           setSelectedFile(null);
         }}
       >
-        <div>
-          <div className="flex items-center justify-between border-b pb-2 mb-6">
-            <h3 className="text-lg font-medium">Add Document</h3>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-1 border-b">
+            <h3 className="text-lg">Add Document</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -339,7 +352,7 @@ export default function KnowledgeTab() {
             </Button>
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="space-y-4">
             <div
               onClick={() => document.getElementById("pdf-upload")?.click()}
               className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/5 transition-all rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer group"
@@ -374,27 +387,31 @@ export default function KnowledgeTab() {
                 className="hidden"
               />
             </div>
+          </div>
 
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddDocumentModalOpen(false);
-                  setSelectedFile(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUploadPdf}
-                disabled={!selectedFile || embedAndSavePdf.isPending}
-              >
-                {embedAndSavePdf.isPending && (
-                  <Loader className="w-4 h-4 animate-spin " />
-                )}
-                Upload
-              </Button>
-            </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddDocumentModalOpen(false);
+                setSelectedFile(null);
+              }}
+              className="rounded-full"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUploadPdf}
+              disabled={!selectedFile || embedAndSavePdf.isPending}
+              className="rounded-full"
+            >
+              {embedAndSavePdf.isPending ? (
+                <Loader className="w-4 h-4 animate-spin " />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              Upload Document
+            </Button>
           </div>
         </div>
       </Modal>
@@ -404,11 +421,11 @@ export default function KnowledgeTab() {
         isOpen={isAddWebsiteModalOpen}
         closeModal={handleCloseWebsiteModal}
       >
-        <div>
+        <div className="space-y-6">
           {websiteView === "input" && (
-            <div>
-              <div className="flex items-center justify-between border-b pb-2 mb-6">
-                <h3 className="text-lg font-medium">
+            <>
+              <div className="flex items-center justify-between pb-1 border-b">
+                <h3 className="text-lg">
                   {websiteModalMode === "add"
                     ? "Add Single URL"
                     : "Scrape Website"}
@@ -431,156 +448,175 @@ export default function KnowledgeTab() {
                     handleScrapeWebsite();
                   }
                 }}
+                className="space-y-4"
               >
-                <Label>Website URL</Label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com"
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                  disabled={
-                    embedAndSaveWebsite.isPending ||
-                    scrapeWebsite.isPending ||
-                    crawlWebsites.isPending
-                  }
-                  className="w-full mt-2"
-                  required
-                />
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    onClick={handleCloseWebsiteModal}
-                    variant="ghost"
+                <div className="space-y-2">
+                  <Label>Website URL</Label>
+                  <Input
+                    type="url"
+                    placeholder="https://example.com"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
                     disabled={
                       embedAndSaveWebsite.isPending ||
                       scrapeWebsite.isPending ||
                       crawlWebsites.isPending
                     }
-                  >
-                    Cancel
-                  </Button>
-                  {websiteModalMode === "add" ? (
-                    <Button
-                      type="submit"
-                      disabled={
-                        !websiteUrl.trim() ||
-                        embedAndSaveWebsite.isPending ||
-                        scrapeWebsite.isPending
-                      }
-                    >
-                      {embedAndSaveWebsite.isPending ? (
-                        <Loader className="w-4 h-4 animate-spin " />
-                      ) : (
-                        <Plus className="w-4 h-4 " />
-                      )}
-                      Add URL
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      disabled={
-                        !websiteUrl.trim() ||
-                        embedAndSaveWebsite.isPending ||
-                        scrapeWebsite.isPending
-                      }
-                    >
-                      {scrapeWebsite.isPending ? (
-                        <Loader className="w-4 h-4 animate-spin " />
-                      ) : (
-                        <Globe className="w-4 h-4 " />
-                      )}
-                      Scrape Website
-                    </Button>
-                  )}
+                    required
+                  />
                 </div>
               </form>
-            </div>
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  onClick={handleCloseWebsiteModal}
+                  variant="outline"
+                  disabled={
+                    embedAndSaveWebsite.isPending ||
+                    scrapeWebsite.isPending ||
+                    crawlWebsites.isPending
+                  }
+                  className="rounded-full"
+                >
+                  Cancel
+                </Button>
+                {websiteModalMode === "add" ? (
+                  <Button
+                    onClick={handleAddWebsite}
+                    disabled={
+                      !websiteUrl.trim() ||
+                      embedAndSaveWebsite.isPending ||
+                      scrapeWebsite.isPending
+                    }
+                    className="rounded-full"
+                  >
+                    {embedAndSaveWebsite.isPending ? (
+                      <Loader className="w-4 h-4 animate-spin " />
+                    ) : (
+                      <Plus className="w-4 h-4 " />
+                    )}
+                    Add URL
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleScrapeWebsite}
+                    disabled={
+                      !websiteUrl.trim() ||
+                      embedAndSaveWebsite.isPending ||
+                      scrapeWebsite.isPending
+                    }
+                    className="rounded-full"
+                  >
+                    {scrapeWebsite.isPending ? (
+                      <Loader className="w-4 h-4 animate-spin " />
+                    ) : (
+                      <Globe className="w-4 h-4 " />
+                    )}
+                    Scrape Website
+                  </Button>
+                )}
+              </div>
+            </>
           )}
 
           {websiteView === "list" && (
-            <div>
-              <div className="mb-4">
-                <h4 className="text-lg font-medium">Scraped URLs</h4>
-                <p className="text-sm text-muted-foreground">
-                  Showing results for:{" "}
-                  <span className="font-semibold text-primary">
-                    {websiteUrl}
-                  </span>
-                </p>
-              </div>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground">
-                  {selectedUrls.length} selected.
-                </p>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="select-all-modal"
-                    checked={
-                      scrapedUrls.length > 0 &&
-                      selectedUrls.length ===
-                        scrapedUrls.reduce(
-                          (acc, cat) => acc + cat.urls.length,
-                          0
-                        )
-                    }
-                    onCheckedChange={handleSelectAllUrls}
-                  />
-                  <label
-                    htmlFor="select-all-modal"
-                    className="text-sm font-medium"
-                  >
-                    Select All
-                  </label>
+            <>
+              <div className="flex items-center justify-between pb-1 border-b">
+                <div>
+                  <h3 className="text-lg">Scraped URLs</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Showing results for:{" "}
+                    <span className="font-semibold text-primary">
+                      {websiteUrl}
+                    </span>
+                  </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCloseWebsiteModal}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <ScrollArea className="h-64">
-                <div className="space-y-4 pr-4">
-                  {scrapedUrls.map((category) => (
-                    <div key={category.folderId} className="space-y-2">
-                      <h5 className="font-medium text-sm text-muted-foreground sticky top-0 bg-background py-1 z-10 border-b">
-                        {category.folderName}
-                      </h5>
-                      <div className="space-y-1 pl-2">
-                        {category.urls.map((url, urlIndex) => {
-                          const isSelected = selectedUrls.some(
-                            (u) =>
-                              u.url === url && u.folderId === category.folderId
-                          );
-                          return (
-                            <div
-                              key={`${category.folderId}-${urlIndex}`}
-                              className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                              onClick={() =>
-                                handleUrlSelection(url, category.folderId)
-                              }
-                            >
-                              <Checkbox
-                                id={`modal-${category.folderId}-${url}`}
-                                checked={isSelected}
-                                onCheckedChange={() =>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedUrls.length} selected.
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="select-all-modal"
+                      checked={
+                        scrapedUrls.length > 0 &&
+                        selectedUrls.length ===
+                          scrapedUrls.reduce(
+                            (acc, cat) => acc + cat.urls.length,
+                            0
+                          )
+                      }
+                      onCheckedChange={handleSelectAllUrls}
+                    />
+                    <label
+                      htmlFor="select-all-modal"
+                      className="text-sm font-medium"
+                    >
+                      Select All
+                    </label>
+                  </div>
+                </div>
+                <ScrollArea className="h-64">
+                  <div className="space-y-4 pr-4">
+                    {scrapedUrls.map((category) => (
+                      <div key={category.folderId} className="space-y-2">
+                        <h5 className="font-medium text-sm text-muted-foreground sticky top-0 bg-background py-1 z-10 border-b">
+                          {category.folderName}
+                        </h5>
+                        <div className="space-y-1 pl-2">
+                          {category.urls.map((url, urlIndex) => {
+                            const isSelected = selectedUrls.some(
+                              (u) =>
+                                u.url === url &&
+                                u.folderId === category.folderId
+                            );
+                            return (
+                              <div
+                                key={`${category.folderId}-${urlIndex}`}
+                                className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
+                                onClick={() =>
                                   handleUrlSelection(url, category.folderId)
                                 }
-                              />
-                              <label
-                                htmlFor={`modal-${category.folderId}-${url}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 truncate cursor-pointer"
-                                title={url}
                               >
-                                {url}
-                              </label>
-                            </div>
-                          );
-                        })}
+                                <Checkbox
+                                  id={`modal-${category.folderId}-${url}`}
+                                  checked={isSelected}
+                                  onCheckedChange={() =>
+                                    handleUrlSelection(url, category.folderId)
+                                  }
+                                />
+                                <label
+                                  htmlFor={`modal-${category.folderId}-${url}`}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 truncate cursor-pointer"
+                                  title={url}
+                                >
+                                  {url}
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-              <div className="flex justify-end gap-2 mt-4">
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+              <div className="flex justify-end gap-3">
                 <Button
                   onClick={() => setWebsiteView("input")}
-                  variant="ghost"
+                  variant="outline"
                   disabled={crawlWebsites.isPending}
+                  className="rounded-full"
                 >
                   Back
                 </Button>
@@ -589,6 +625,7 @@ export default function KnowledgeTab() {
                   disabled={
                     crawlWebsites.isPending || selectedUrls.length === 0
                   }
+                  className="rounded-full"
                 >
                   {crawlWebsites.isPending ? (
                     <Loader className="w-4 h-4 animate-spin " />
@@ -598,7 +635,7 @@ export default function KnowledgeTab() {
                   Add Selected URLs
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </div>
       </Modal>
@@ -613,9 +650,9 @@ export default function KnowledgeTab() {
         }}
         className="max-h-[75vh] overflow-y-auto bg-white dark:bg-black rounded-2xl p-6 max-w-lg"
       >
-        <div>
-          <div className="flex items-center justify-between border-b pb-2 mb-6">
-            <h3 className="text-lg font-medium">Add Text</h3>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-1 border-b">
+            <h3 className="text-lg">Add Text</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -630,17 +667,16 @@ export default function KnowledgeTab() {
             </Button>
           </div>
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="text-title">Title</Label>
               <Input
                 id="text-title"
                 value={textTitle}
                 onChange={(e) => setTextTitle(e.target.value)}
                 placeholder="Enter title..."
-                className="mt-2"
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="text-content">Text Content</Label>
               <Textarea
                 id="text-content"
@@ -648,11 +684,11 @@ export default function KnowledgeTab() {
                 onChange={(e) => setTextContent(e.target.value)}
                 placeholder="Enter text content..."
                 rows={12}
-                className="mt-2 min-h-[200px] max-h-[400px]"
+                className="min-h-[200px] max-h-[400px]"
               />
             </div>
           </div>
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => {
@@ -660,6 +696,7 @@ export default function KnowledgeTab() {
                 setTextContent("");
                 setTextTitle("");
               }}
+              className="rounded-full"
             >
               Cancel
             </Button>
@@ -670,9 +707,12 @@ export default function KnowledgeTab() {
                 !textTitle.trim() ||
                 embedAndSaveText.isPending
               }
+              className="rounded-full"
             >
-              {embedAndSaveText.isPending && (
+              {embedAndSaveText.isPending ? (
                 <Loader className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
               )}
               Add Text
             </Button>
@@ -700,6 +740,45 @@ export default function KnowledgeTab() {
         }
         variant="destructive"
       />
+    </div>
+  );
+}
+
+function KnowledgeTabSkeleton() {
+  return (
+    <div className="h-full w-full relative">
+      <div className="bg-card border rounded-xl h-full overflow-hidden flex relative">
+        {/* Sidebar Skeleton */}
+        <div className="bg-secondary z-10 hidden md:flex w-[260px] lg:w-[280px] flex-col border-r">
+          <div className="h-14 border-b bg-muted/10 px-4 flex items-center justify-between">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+          <div className="flex-1 p-2 space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-background">
+          {/* Content Header */}
+          <div className="h-14 border-b bg-muted/10 px-4 flex items-center justify-between shrink-0">
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24 hidden md:block" />
+              <Skeleton className="h-9 w-24 hidden md:block" />
+              <Skeleton className="h-9 w-24 hidden md:block" />
+              <Skeleton className="h-9 w-9 md:hidden" />
+            </div>
+          </div>
+          {/* Empty content area while folders are loading */}
+        </div>
+      </div>
     </div>
   );
 }

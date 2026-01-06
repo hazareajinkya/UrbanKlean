@@ -11,6 +11,7 @@ export const useCurrentUser = () => {
   const query = useQuery({
     queryKey: userKey(email),
     queryFn: () => userService.getUser(email),
+    enabled: !!email,
   });
 
   return {

@@ -12,7 +12,11 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../clients/firebase";
-import { generateDefaultWorkspace, IWorkspace } from "../types/workspace";
+import {
+  generateDefaultWorkspace,
+  IWorkspace,
+  IWorkspaceInfo,
+} from "../types/workspace";
 import userService from "./user-service";
 import agentService from "./agent-service";
 import axiosClient from "../clients/axios-client";
@@ -41,16 +45,24 @@ class WorkspaceService {
     name,
     description,
     ownerId,
+    info,
+    domains,
   }: {
     name: string;
     description: string;
     ownerId: string;
+    info?: IWorkspaceInfo;
+    domains: string[];
   }) {
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
     workspace.oneLiner = description;
     workspace.ownerId = ownerId;
+    workspace.domains = domains;
+    if (info) {
+      workspace.info = info;
+    }
     //create workspace
     await setDoc(doc(db, `workspaces/${wid}`), workspace);
     //add user as owner

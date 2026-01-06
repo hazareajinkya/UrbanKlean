@@ -10,14 +10,15 @@ import z from "zod";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, url } = onboardingStartSchema.parse(body);
-    const response = await backendClient.post("/onboard/start", {
-      email,
-      url,
-    });
-    console.log(response.data.data.estimatedTime);
+    const { url } = onboardingStartSchema.parse(body);
+    const response = await backendClient.post(
+      "/onboard/generate-onboarding-info",
+      {
+        url,
+      }
+    );
     return successResponse(
-      { estimatedTime: response.data.data?.estimatedTime ?? 0 },
+      { data: response.data.data },
       "Onboarding started successfully"
     );
   } catch (error: any) {
@@ -27,6 +28,5 @@ export async function POST(req: NextRequest) {
   }
 }
 const onboardingStartSchema = z.object({
-  email: z.string().email("Invalid email address"),
   url: z.string().url("URL must start with http:// or https://"),
 });

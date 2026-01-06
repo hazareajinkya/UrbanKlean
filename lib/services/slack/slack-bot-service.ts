@@ -29,6 +29,7 @@ import actionService from "../action-service";
 import { IAction } from "@/lib/types/actions";
 import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getCustomTools } from "@/lib/utils";
+import peopleServiceV2 from "../people-service-v2";
 
 class SlackBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -102,13 +103,14 @@ class SlackBotService {
         stopWhen: stepCountIs(5),
         tools: {
           ...customTools,
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "slack",
-            teamId
-          ),
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "slack",
+            providerId: teamId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
@@ -178,8 +180,9 @@ class SlackBotService {
     const name = userInfo.real_name || userInfo.name || "Slack User";
     const externalIds: IExternalIds = [{ provider: channel, id: userId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
+      provider: channel,
       emails: email ? [email] : [],
       externalIds,
       name,

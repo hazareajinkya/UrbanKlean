@@ -128,12 +128,12 @@ class PeopleService {
       }
     }
     if (data.emails?.length) {
-      const emails = data.emails.map(normEmail).filter(Boolean);
+      const emails = data.emails.map((e) => normEmail(e.value)).filter(Boolean);
       if (emails.length) update.emails = arrayUnion(...emails);
     }
 
     if (data.phones?.length) {
-      const phones = data.phones.map(normPhone).filter(Boolean);
+      const phones = data.phones.map((p) => normPhone(p.value)).filter(Boolean);
       if (phones.length) update.phones = arrayUnion(...phones);
     }
 
@@ -368,8 +368,8 @@ class PeopleService {
   }) {
     const person = generateDefaultPerson({
       name,
-      email,
-      phone,
+      email: email ? { value: email, verified: false } : undefined,
+      phone: phone ? { value: phone, verified: false } : undefined,
       externalIds,
       sessionId,
       aid,
@@ -390,7 +390,16 @@ class PeopleService {
     updates: Partial<IPerson>;
   }) {
     const personRef = doc(db, `workspaces/${wid}/people/${personId}`);
-    await updateDoc(personRef, updates);
+
+    // Filter out undefined values as Firebase doesn't allow them
+    const cleanUpdates: Record<string, any> = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined) {
+        cleanUpdates[key] = value;
+      }
+    });
+
+    await updateDoc(personRef, cleanUpdates);
 
     return this.getPerson(wid, personId);
   }
@@ -414,8 +423,8 @@ class PeopleService {
   }) {
     const person = generateDefaultPerson({
       name,
-      email: emails[0],
-      phone: phones[0],
+      email: { value: emails[0], verified: false },
+      phone: { value: phones[0], verified: false },
       externalIds,
       sessionId,
       aid,

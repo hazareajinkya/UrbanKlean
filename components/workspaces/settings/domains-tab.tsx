@@ -95,8 +95,9 @@ export function DomainsTab({ workspace, wid }: DomainsTabProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
+      className=""
     >
-      <div className="mb-6">
+      <div className="mb-6 ">
         <h2 className="text-xl ">Domain Settings</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Allow only approved company domains to access workspace agents.

@@ -2,7 +2,7 @@ import agentService from "@/lib/services/agent-service";
 import chatService from "@/lib/services/chat-service";
 import creditService from "@/lib/services/credit-service";
 
-import { Geo, geolocation } from "@vercel/functions";
+import { Geo, geolocation, ipAddress } from "@vercel/functions";
 import { creditCosts } from "@/lib/constants";
 import { stepCountIs, streamText, tool, ToolSet } from "ai";
 import { z } from "zod";
@@ -19,7 +19,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { getCustomTools } from "@/lib/utils";
+import { normIp, getCustomTools, getClientIp } from "@/lib/utils";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -49,10 +49,7 @@ export async function POST(req: Request) {
     console.log("personId: ", personId);
     console.log("fromPage: ", fromPage);
 
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0] ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+    const ip = getClientIp(req);
 
     const { success } = await ratelimit.limit(ip);
 
@@ -89,7 +86,7 @@ export async function POST(req: Request) {
 
     // Save the user message after session is ensured
     const userMessage = messages[messages.length - 1];
-    await chatService.saveMessage(aid, sessionId, userMessage);
+    chatService.saveMessage(aid, sessionId, userMessage);
 
     let model = getModel(agent);
 
@@ -116,13 +113,15 @@ export async function POST(req: Request) {
       stopWhen: stepCountIs(5),
       tools: {
         ...customTools,
-        collectInformation: collectInformation(
-          agent.wid,
-          agent.id,
-          sessionId,
-          "web",
-          deviceId
-        ),
+        collectInformation: collectInformation({
+          wid: agent.wid,
+          aid: agent.id,
+          sessionId: sessionId,
+          currentPersonId: personId,
+          provider: "web",
+          providerId: deviceId,
+          ips: [ip],
+        }),
         searchKnowledge: searchKnowledge(agent.wid, agent),
       },
 

@@ -9,6 +9,7 @@ export const RESEND_API_BASE = "https://api.resend.com";
 // WhatsApp Configuration
 export const WA_WINDOW_EXPIRATION_HOURS = 24;
 export const WA_PHONE_ID = "859793977226436";
+export const WA_REDIRECT_URI = process.env.NEXT_PUBLIC_WA_REDIRECT_URI ?? "";
 
 // Facebook Configuration
 export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
@@ -44,6 +45,9 @@ export const waconf = {
   accessToken: process.env.WA_ACCESS_TOKEN,
   expirationWindow: WA_WINDOW_EXPIRATION_HOURS,
   baseURL: FACEBOOK_GRAPH_API_BASE,
+  appId: FB_APP_ID,
+  appSecret: FB_APP_SECRET,
+  redirectUri: WA_REDIRECT_URI,
 };
 
 export const coreConf = {
@@ -62,7 +66,7 @@ export const instaconf = {
 };
 
 export const fbconf = {
-  version: "v23.0",
+  version: "v24.0",
   id: FB_ID,
   accessToken: process.env.FB_MESSENGER_ACCESS_TOKEN,
   baseURL: FACEBOOK_GRAPH_API_BASE,

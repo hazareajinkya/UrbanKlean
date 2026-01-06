@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { getTagsForIndustry } from "../utils/industry-tags";
+import { IWorkspaceAnalyticsSummary } from "./analytics";
 
 export type IWorkspaceType = "onboarding" | "default";
 export interface IWorkspaceInfo {
@@ -12,18 +13,20 @@ export interface IWorkspaceInfo {
   targetAudience: string;
   primaryColor: string;
   logo: string;
+  offerings: string;
+  differentiators: string;
 }
 export interface IWorkspace {
   id: string;
   name: string;
   oneLiner: string;
   domains: string[];
-  thumbnail: string;
   ownerId: string;
   folders: { id: string; name: string }[];
   availableTags: string[];
   type: IWorkspaceType;
   info: IWorkspaceInfo;
+  analytics?: IWorkspaceAnalyticsSummary;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
@@ -49,16 +52,12 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       targetAudience: "",
       primaryColor: "",
       logo: "",
+      offerings: "",
+      differentiators: "",
     },
     type: "default",
-    thumbnail: getRandomThumbnail(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     lastActivity: new Date().toISOString(),
   };
-};
-
-const getRandomThumbnail = () => {
-  const randomNumber = Math.floor(Math.random() * 21);
-  return `https://firebasestorage.googleapis.com/v0/b/algotify-972f2.firebasestorage.app/o/3d-abstract%2F3d-abs-${randomNumber}-min.png?alt=media&token=d73ec356-39ee-4c0f-88a3-403608a18398`;
 };

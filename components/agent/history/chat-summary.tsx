@@ -31,7 +31,7 @@ export const ChatSummary = ({
           <AccordionTrigger className=" bg-card px-6 cursor-pointer py-4 hover:no-underline [&[data-state=open]>svg]:rotate-0 [&>svg]:rotate-180">
             <div className="flex flex-col gap-3 items-cnter w-full">
               <h4 className="text-base font-normal">
-                {summary.customerIntent.slice(0, 40)}
+                {summary.title || "Chat Summary"}
               </h4>
               <div className="flex gap-2 items-center flex-wrap">
                 {summary.resolutionStatus && (
@@ -83,7 +83,7 @@ export const ChatSummary = ({
                   </div>
                 )}
 
-                {summary.followUpRequired && (
+                {summary.followUp && summary.followUp.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 text-blue-700 dark:text-blue-400 bg-blue-400/20 dark:bg-blue-500/20">
                       <Flag className="w-3 h-3" />
@@ -135,6 +135,14 @@ export const ChatSummary = ({
             className="border-t m0-0 bg-card px-6 pb-8"
           >
             <div className="mt-4 space-y-4 pb-4">
+              {summary.followUp && summary.followUp.length > 0 && (
+                <>
+                  <SectionLabel>Follow Up</SectionLabel>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {summary.followUp}
+                  </p>
+                </>
+              )}
               {summary.summary && (
                 <>
                   <SectionLabel>Summary</SectionLabel>

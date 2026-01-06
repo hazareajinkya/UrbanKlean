@@ -256,19 +256,19 @@ export default function KnowledgeContentList({
 
         {/* Desktop: Inline buttons */}
         <div className="hidden md:flex gap-2 shrink-0">
-          <Button variant={"outline"} onClick={onAddDocument}>
+          <Button variant={"outline"} onClick={onAddDocument} className="rounded-full">
             <PDFIcon className="w-4 h-4" />
             Document
           </Button>
-          <Button variant={"outline"} onClick={onAddWebsite}>
+          <Button variant={"outline"} onClick={onAddWebsite} className="rounded-full">
             <Globe className="w-4 h-4" />
             Website
           </Button>
-          <Button variant={"outline"} onClick={onAddUrl}>
+          <Button variant={"outline"} onClick={onAddUrl} className="rounded-full">
             <Globe className="w-4 h-4" />
             URL
           </Button>
-          <Button variant={"outline"} onClick={onAddText}>
+          <Button variant={"outline"} onClick={onAddText} className="rounded-full">
             <Type className="w-4 h-4" />
             Text
           </Button>

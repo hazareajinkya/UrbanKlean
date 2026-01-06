@@ -7,8 +7,9 @@ export interface IPerson {
 
   //identity info
   name: string;
-  emails: string[];
-  phones: string[];
+  emails: { value: string; verified: boolean }[];
+  phones: { value: string; verified: boolean }[];
+  ips: string[];
 
   //external ids like whatsapp, instagram, shopify customer id
   externalIds: IExternalIds;
@@ -36,6 +37,17 @@ export interface IPerson {
   //prev references to sessions
   pastSessionIds: { aid: string; sid: string }[];
 
+  //ids of people that are identical to this person
+  identicalPersonIds: string[];
+
+  metadata?: {
+    [key: string]: {
+      username?: string[];
+      name?: string[];
+      profilePic?: string[];
+    };
+  };
+
   createdAt: string;
   updatedAt: string;
 }
@@ -48,22 +60,35 @@ export const generateDefaultPerson = ({
   externalIds,
   sessionId,
   aid,
+  metadata,
+  ip,
 }: {
   name?: string;
-  email?: string;
-  phone?: string;
+  email?: { value: string; verified: boolean };
+  phone?: { value: string; verified: boolean };
   externalIds?: IExternalIds;
   sessionId?: string;
   aid?: string;
+  ip?: string;
+  metadata?: {
+    [key: string]: {
+      username?: string[];
+      name?: string[];
+      profilePic?: string[];
+    };
+  };
 }): IPerson => {
-  const emailN = normEmail(email);
-  const phoneN = normPhone(phone);
+  const emailN = email ? normEmail(email.value) : undefined;
+  const phoneN = phone ? normPhone(phone.value) : undefined;
 
   return {
     id: v4(),
     name: name ?? "",
-    emails: emailN ? [emailN] : [],
-    phones: phoneN ? [phoneN] : [],
+    emails:
+      email && emailN ? [{ value: emailN, verified: email.verified }] : [],
+    phones:
+      phone && phoneN ? [{ value: phoneN, verified: phone.verified }] : [],
+    ips: ip ? [ip] : [],
     externalIds: externalIds ?? [],
     company: "",
     title: "",
@@ -73,6 +98,8 @@ export const generateDefaultPerson = ({
     memories: [],
     summary: "",
     notes: [],
+    metadata: metadata ?? {},
+    identicalPersonIds: [],
     pastSessionIds: sessionId && aid ? [{ aid, sid: sessionId }] : [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

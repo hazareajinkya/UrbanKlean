@@ -21,27 +21,31 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
+import actionService from "../action-service";
+import { getCustomTools } from "@/lib/utils";
+import peopleServiceV2 from "../people-service-v2";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
 
-  async generateResponse(
-    waMsg: IWAMessage,
-    userId: string,
-    waPhoneId: string,
-    name: string,
-    channel: IChannelProvider
-  ) {
+  async generateResponse({
+    waMsg,
+    userId,
+    waPhoneId,
+    name,
+    channel,
+    agentId,
+  }: {
+    waMsg: IWAMessage;
+    userId: string;
+    waPhoneId: string;
+    name: string;
+    channel: IChannelProvider;
+    agentId: string;
+  }) {
     try {
-      //supercx ai agent id
-      // const aid = await channelService.resolveAgent(userId, channel);
-      const aid = "c0e54882-04fc-489e-975b-e2b7edbf2adf";
-      console.log("resolved agent: ", aid);
-
-      if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
-
-      const agent = await agentService.fetchAgent(aid);
+      const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
       const creditInfo = await creditService.getCredit(agent.ownerId);
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -73,20 +77,27 @@ class WABotService {
       const model = getModel(agent);
       const systemPrompt = await getSystemPrompt(agent, query, channel);
 
+      const actions = await actionService.getActionsInWorkflow(
+        agent.wid,
+        agent.id
+      );
+      const customTools = getCustomTools(actions);
+
       const result = await generateText({
         model,
         system: systemPrompt,
         messages,
         stopWhen: stepCountIs(5),
         tools: {
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "whatsapp",
-            waPhoneId,
-            session.personId
-          ),
+          ...customTools,
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "whatsapp",
+            providerId: waPhoneId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid!, agent),
         },
       });
@@ -112,7 +123,7 @@ class WABotService {
       console.log("ai response: ", result.text);
       return { success: true, message: result.text };
     } catch (error) {
-      console.log("error: ", error);
+      console.log("error in generateResponse: ", error);
       return { success: false, message: this.ERROR_MESSAGE };
     }
   }
@@ -132,21 +143,27 @@ class WABotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: waPhoneId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      phones: [waPhoneId],
+      phones: [{ value: waPhoneId, verified: true }],
+      provider: channel,
       externalIds,
     });
 
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
+      personData = await peopleServiceV2.createPerson({
         wid: agent.wid,
         emails: [],
-        phones: [waPhoneId],
+        phones: [{ value: waPhoneId, verified: true }],
         externalIds,
         name,
+        metadata: {
+          waPhoneId: {
+            name: [name],
+          },
+        },
       });
     }
     session = await chatService.createWASession(
@@ -157,7 +174,7 @@ class WABotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds({
+    await peopleServiceV2.updatePastSessionIds({
       wid: agent.wid,
       personId: personData!.id,
       sessionId: session.id,

@@ -23,6 +23,7 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
+import peopleServiceV2 from "../people-service-v2";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -95,13 +96,14 @@ class PostmarkBotService {
         stopWhen: stepCountIs(5),
         tools: {
           ...customTools,
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "email",
-            session.providerId
-          ),
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "email",
+            providerId: session.providerId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
@@ -148,19 +150,20 @@ class PostmarkBotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: email }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      emails: [email],
+      emails: [{ value: email, verified: true }],
       externalIds,
       name,
+      provider: channel,
     });
 
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
+      personData = await peopleServiceV2.createPerson({
         wid: agent.wid,
-        emails: [email],
+        emails: [{ value: email, verified: true }],
         phones: [],
         externalIds,
         name,

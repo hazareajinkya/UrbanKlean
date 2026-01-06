@@ -1,6 +1,7 @@
 import { useAgent } from "@/lib/hooks/agent/use-agent";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
+import peopleServiceV2 from "@/lib/services/people-service-v2";
 import { IAgent } from "@/lib/types/agent";
 import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
@@ -8,6 +9,7 @@ import lsMap from "@/lib/utils/ls-map";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ModelMessage } from "ai";
 import { v4 } from "uuid";
+import { getClientIpFromApi } from "@/lib/utils";
 
 export const chatInitKey = (aid: string) => ["chat-init", aid];
 
@@ -23,10 +25,13 @@ export const initChat = async (agent: IAgent) => {
         nLimit: 1,
       })
     : Promise.resolve([]);
+  const ip = await getClientIpFromApi();
 
-  const personPromise = peopleService.identify({
+  const personPromise = peopleServiceV2.identifyPerson({
+    provider: "web",
     wid: agent.wid,
-    externalIds: [{ id: deviceId, provider: "web" }],
+    externalIds: [{ provider: "web", id: deviceId }],
+    ips: ip ? [ip] : undefined,
   });
 
   const [sessions, { person }] = await Promise.all([

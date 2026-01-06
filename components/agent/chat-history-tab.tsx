@@ -41,6 +41,8 @@ import {
   FileText,
   EyeIcon,
   MessageSquareIcon,
+  ToolCase,
+  Cog,
 } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { Button } from "../ui/button";
@@ -249,9 +251,9 @@ const SessionList = ({
                     {person
                       ? person.name
                         ? person.name
-                        : person.emails
-                        ? person.emails[0]
-                        : renderVisitorID(session)
+                        : // : person.emails
+                          // ? person.emails[0].value
+                          renderVisitorID(session)
                       : renderVisitorID(session)}
 
                     {session.chatSummary?.sentiment && (
@@ -384,9 +386,9 @@ const HistoryMessageList = ({
 
           {/* Chat Messages */}
           <div className="p-4 pb-8 space-y-4 prose-p:my-0 flex-1 overflow-y-auto">
-            {currentSession.messages.map((message) => (
+            {currentSession.messages.map((message, index) => (
               <div
-                key={message.id}
+                key={message.id + index}
                 className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
                 }`}
@@ -470,6 +472,19 @@ const HistoryMessageList = ({
                               >
                                 {part.text}
                               </Streamdown>
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (part.type.startsWith("tool-")) {
+                        return (
+                          <div
+                            className="inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 px-3 py-1.5 border transition-all duration-300 ease-in-out"
+                            key={partIndex}
+                          >
+                            <div className="flex items-center gap-2 text-sm md:text-sm">
+                              <Cog className="w-4 h-4" />
+                              {part.type.split("-").slice(1).join("-")}
                             </div>
                           </div>
                         );

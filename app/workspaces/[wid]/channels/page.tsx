@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
+import WaEmbeddedButton from "@/components/channels/wa-embedded-button";
 
 const ChannelsPage = () => {
   const { wid } = useParams() as { wid: string };
@@ -134,6 +135,10 @@ const ChannelsPage = () => {
           <EmailIcon className="w-5 h-5" />
           <span>Connect Email</span>
         </Button>
+        <WaEmbeddedButton
+          appId="1174540844808688"
+          configId="1774053273258391"
+        />
       </div>
 
       {isLoading ? (
@@ -254,6 +259,9 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
     if (channel.provider === "messenger") {
       return "Facebook Page";
     }
+    if (channel.provider === "whatsapp") {
+      return info.phone_number || "WhatsApp Business Account";
+    }
     if (channel.provider === "email") {
       return info.email;
     }
@@ -264,9 +272,11 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
 
   // Get available agents (not assigned to any channel)
   const availableAgents =
-    agents?.filter(
-      (agent: IAgent) => !agent.channels || agent.channels.length === 0
-    ) || [];
+    agents?.filter((agent: IAgent) => agent.id != channel.assignedAgentId) ||
+    [];
+  // agents?.filter(
+  //   (agent: IAgent) => !agent.channels || agent.channels.length === 0
+  // ) || [];
 
   // Get currently assigned agent
   const assignedAgent = agents?.find(

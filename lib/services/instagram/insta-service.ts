@@ -1,14 +1,30 @@
 import { instaClient } from "@/lib/clients/axios-client";
-import { instaconf } from "@/lib/utils/conf";
-import axios from "axios";
 
 class InstaService {
-  async sendTextMessage(to: string, text: string) {
+  async sendTextMessage({
+    to,
+    text,
+    instaUserId,
+    accessToken,
+  }: {
+    to: string;
+    text: string;
+    instaUserId: string;
+    accessToken: string;
+  }) {
     try {
-      const response = await instaClient.post(`/messages`, {
-        recipient: { id: to },
-        message: { text: text },
-      });
+      const response = await instaClient.post(
+        `/${instaUserId}/messages`,
+        {
+          recipient: { id: to },
+          message: { text: text },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       console.log(`Message sent with ID: ${response.data.message_id}`);
       return response.data.message_id;
@@ -19,12 +35,26 @@ class InstaService {
     }
   }
 
-  async subscribeToWebhook(token: string) {
+  async subscribeToWebhook({
+    accessToken,
+    instaUserId,
+  }: {
+    accessToken: string;
+    instaUserId: string;
+  }) {
+    console.log("subscribing to webhook: ", accessToken, instaUserId);
     try {
-      const response = await instaClient.post(`/subscribed_apps`, {
-        accessToken: token,
-        subscribed_fields: "messages",
-      });
+      const response = await instaClient.post(
+        `/${instaUserId}/subscribed_apps`,
+        {
+          subscribed_fields: "messages",
+        },
+        {
+          params: {
+            access_token: accessToken,
+          },
+        }
+      );
       console.log("response.data: ", response.data);
       return response.data;
     } catch (error: any) {
@@ -37,13 +67,23 @@ class InstaService {
     }
   }
 
-  async unsubscribeFromWebhook(token: string) {
+  async unsubscribeFromWebhook({
+    accessToken,
+    instaUserId,
+  }: {
+    accessToken: string;
+    instaUserId: string;
+  }) {
+    console.log("unsubscribing from webhook: ", accessToken, instaUserId);
     try {
-      const response = await instaClient.delete(`/subscribed_apps`, {
-        params: {
-          accessToken: token,
-        },
-      });
+      const response = await instaClient.delete(
+        `/${instaUserId}/subscribed_apps`,
+        {
+          params: {
+            access_token: accessToken,
+          },
+        }
+      );
       console.log("response.data: ", response.data);
       return response.data;
     } catch (error: any) {
@@ -56,17 +96,16 @@ class InstaService {
     }
   }
 
-  async getProfile(token: string) {
+  async getProfile({ accessToken }: { accessToken: string }) {
     try {
-      const baseURl = `${instaconf.baseURL}/${instaconf.version}/me`;
-      const { data } = await axios.get(`${baseURl}`, {
+      const { data } = await instaClient.get(`/me`, {
         params: {
           fields:
             "id,user_id,username,name,profile_picture_url,followers_count,media_count",
-          accessToken: token,
+          accessToken: accessToken,
         },
         headers: {
-          Authorization: `Bearer ${instaconf.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       console.log("data: ", data);
@@ -83,6 +122,30 @@ class InstaService {
     } catch (error: any) {
       console.log("error: ", error.response?.data);
       console.log("Error getting profile:", JSON.stringify(error, null, 2));
+      throw error;
+    }
+  }
+  async getUserProfile({
+    userId,
+    accessToken,
+  }: {
+    userId: string;
+    accessToken: string;
+  }) {
+    try {
+      const { data } = await instaClient.get(`/${userId}`, {
+        params: {
+          fields: "username,name",
+          access_token: accessToken,
+        },
+      });
+      return data;
+    } catch (error: any) {
+      console.log("error: ", error.response?.data);
+      console.log(
+        "Error getting user profile:",
+        JSON.stringify(error, null, 2)
+      );
       throw error;
     }
   }

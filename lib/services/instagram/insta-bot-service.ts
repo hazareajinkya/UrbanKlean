@@ -12,8 +12,6 @@ import {
 import { IAgent } from "@/lib/types/agent";
 import peopleService from "../people-service";
 
-import { v4 } from "uuid";
-import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
 import creditService from "../credit-service";
@@ -23,25 +21,30 @@ import usageService from "../usage-service";
 import actionService from "../action-service";
 import { getCustomTools } from "@/lib/utils";
 import { IExternalIds } from "@/lib/types/person";
+import peopleServiceV2 from "../people-service-v2";
+import instaService from "./insta-service";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
 
-  async generateResponse(
-    instaMsg: IInstaMessage,
-    userId: string,
-    instaUserId: string,
-    channel: IChannelProvider
-  ) {
+  async generateResponse({
+    instaMsg,
+    instaUserId,
+    channel,
+    agentId,
+    accessToken,
+  }: {
+    instaMsg: IInstaMessage;
+    instaUserId: string;
+    channel: IChannelProvider;
+    agentId: string;
+    accessToken: string;
+  }) {
     try {
-      //supercx ai agent id
-      const aid = await channelService.resolveAgent(userId, channel);
-      console.log("resolved agent: ", aid);
+      if (!agentId) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
-      if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
-
-      const agent = await agentService.fetchAgent(aid);
+      const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
 
       const creditInfo = await creditService.getCredit(agent.ownerId);
@@ -53,8 +56,8 @@ class InstaBotService {
       let session = await this.getOrCreateSession({
         instaUserId,
         agent,
-        name: instaMsg.from,
         channel,
+        accessToken,
       });
 
       const query = instaMsg.text ?? "";
@@ -73,16 +76,7 @@ class InstaBotService {
       const customTools = getCustomTools(actions);
 
       //prepare messages for ai
-      const chatHistory: IChatMessage[] = [
-        ...session.messages,
-        userMsg,
-        {
-          id: v4(),
-          role: "system",
-          metadata: { createdAt: new Date().toISOString() },
-          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
-        },
-      ];
+      const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
 
       const model = getModel(agent);
@@ -95,13 +89,14 @@ class InstaBotService {
         stopWhen: stepCountIs(5),
         tools: {
           ...customTools,
-          collectInformation: collectInformation(
-            agent.wid,
-            agent.id,
-            session.id,
-            "instagram",
-            session.providerId
-          ),
+          collectInformation: collectInformation({
+            wid: agent.wid,
+            aid: agent.id,
+            sessionId: session.id,
+            provider: "instagram",
+            providerId: session.providerId,
+            currentPersonId: session.personId,
+          }),
           searchKnowledge: searchKnowledge(agent.wid, agent),
         },
       });
@@ -136,13 +131,13 @@ class InstaBotService {
   async getOrCreateSession({
     instaUserId,
     agent,
-    name,
     channel,
+    accessToken,
   }: {
     instaUserId: string;
     agent: IAgent;
-    name: string;
     channel: IChannelProvider;
+    accessToken: string;
   }) {
     let session = await chatService.getSessionByProviderId(
       instaUserId,
@@ -152,17 +147,27 @@ class InstaBotService {
 
     const externalIds: IExternalIds = [{ provider: channel, id: instaUserId }];
 
-    let { existing, person } = await peopleService.identify({
+    let { existing, person } = await peopleServiceV2.identifyPerson({
       wid: agent.wid,
-      phones: [],
+      provider: channel,
       externalIds,
     });
 
     let personData = person;
 
     if (!existing || !personData) {
-      personData = await peopleService.create2({
-        name: name,
+      const profile = await instaService.getUserProfile({
+        userId: instaUserId,
+        accessToken: accessToken,
+      });
+      personData = await peopleServiceV2.createPerson({
+        metadata: {
+          instaUserId: {
+            name: [profile.name],
+            profilePic: [profile.username],
+          },
+        },
+        name: profile.name,
         wid: agent.wid,
         emails: [],
         phones: [],
@@ -177,7 +182,7 @@ class InstaBotService {
       channel
     );
 
-    await peopleService.updatePastSessionIds({
+    await peopleServiceV2.updatePastSessionIds({
       wid: agent.wid,
       personId: personData!.id,
       sessionId: session.id,

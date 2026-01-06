@@ -3,6 +3,7 @@ import postmarkParser from "@/lib/services/postmark/postmark-webhook-parser";
 import { IPostmarkInboundWebhook } from "@/lib/types/postmark-api";
 import postmarkBotService from "@/lib/services/postmark/postmark-bot-service";
 import postmarkService from "@/lib/services/postmark/postmark-service";
+import channelService from "@/lib/services/channel-service";
 import { AxiosError } from "axios";
 
 export const maxDuration = 60;
@@ -33,21 +34,15 @@ export async function POST(req: Request) {
     // Parse the inbound email
     const parsedMessage = postmarkParser.parseInboundEmail(body);
 
-    // console.log("Parsed message:", {
-    //   id: parsedMessage.id,
-    //   from: parsedMessage.from,
-    //   subject: parsedMessage.subject,
-    //   to: parsedMessage.to,
-    //   textBody: parsedMessage.textBody,
-    //   type: parsedMessage.type,
-    //   references: parsedMessage.references,
-    //   inReplyTo: parsedMessage.inReplyTo,
-    //   replyTo: parsedMessage.replyTo,
-    //   hasAttachments: postmarkParser.hasAttachments(body),
-    //   attachmentCount: postmarkParser.getAttachmentCount(body),
-    // });
+    // Get the email channel to check type
+    const channel = await channelService.getChannelByPageId(
+      parsedMessage.to,
+      "email"
+    );
 
-    // Check if the email needs to be replied or not by checking
+    // Determine channel type (default to "default" if not set)
+    const channelType =
+      (channel?.metadata?.type as "white-labeled" | "default") || "default";
 
     // Step 2: Generate AI response using your bot service
     const { success, message: ans } = await postmarkBotService.generateResponse(
@@ -57,7 +52,7 @@ export async function POST(req: Request) {
       "email"
     );
 
-    // // Step 3: Send reply via Postmark
+    // Step 3: Send reply via Postmark
     if (success && ans) {
       // Ensure subject has "Re:" prefix but avoid duplicates
       const subject = parsedMessage.subject.startsWith("Re:")
@@ -69,16 +64,32 @@ export async function POST(req: Request) {
         ? `${parsedMessage.references} ${parsedMessage.id}`
         : parsedMessage.id;
 
+      const ccAddresses: string[] = [];
+      if (parsedMessage.to) {
+        ccAddresses.push(parsedMessage.to);
+      }
+      if (parsedMessage.cc && parsedMessage.cc.length > 0) {
+        ccAddresses.push(...parsedMessage.cc);
+      }
+      const uniqueCc = [...new Set(ccAddresses)].filter(
+        (email) => email !== parsedMessage.from
+      );
+
+      const from =
+        channelType === "white-labeled"
+          ? parsedMessage.to
+          : `${channel?.metadata.name} <noreply@magicalcx-mail.com>`;
+
       await postmarkService.sendReply({
         to: parsedMessage.from,
-        // Change this get approval
-        from: parsedMessage.to,
-        // from: parsedMessage.from,
+        from,
         subject: subject,
         textBody: ans,
+        replyTo: parsedMessage.to,
         inReplyTo: parsedMessage.inReplyTo,
         references: references,
         tag: "ai-response",
+        cc: uniqueCc.length > 0 ? uniqueCc.join(", ") : undefined,
       });
     }
 

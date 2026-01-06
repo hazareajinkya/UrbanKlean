@@ -12,6 +12,8 @@ import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
+import axiosClient from "./clients/axios-client";
+import axios from "axios";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -81,11 +83,6 @@ export const formatHistoryDateTime = (date?: string) => {
 
   // Otherwise, normal formatting
   return format(givenDate, "dd MMM yy hh:mm a");
-};
-
-export const getRandomAvatar = (num?: number) => {
-  const randomNumber = num ?? Math.floor(Math.random() * 16) + 1;
-  return `https://firebasestorage.googleapis.com/v0/b/algotify-972f2.firebasestorage.app/o/face-avatar-2%2Favatar-${randomNumber}.png?alt=media&token=607149f6-5e3d-439d-aa3d-da34219143e9`;
 };
 
 export const getwid = () => {
@@ -355,4 +352,69 @@ export const getEmotionIcon = (
     case "neutral":
       return "🙂";
   }
+};
+
+export const normIp = (ip: string): string => {
+  if (ip.startsWith("::ffff:")) {
+    return ip.replace("::ffff:", "");
+  }
+  // Remove IPv6 loopback mapping (::1)
+  if (ip === "::1") {
+    return "127.0.0.1";
+  }
+  return ip;
+};
+
+export const getClientIpFromApi = async (): Promise<string | undefined> => {
+  try {
+    const response = await axios.get("/api/client-ip", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status !== 200) {
+      return undefined;
+    }
+
+    const data = response.data;
+
+    if (data.success && data.data?.ip) {
+      return data.data.ip;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Failed to fetch client IP:", error);
+    return undefined;
+  }
+};
+export const getClientIp = (req: Request | { headers: Headers }): string => {
+  // Check x-forwarded-for (most common, contains comma-separated list)
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    // Take the first IP from the comma-separated list (original client IP)
+    const firstIp = forwardedFor.split(",")[0]?.trim();
+    if (firstIp) return normIp(firstIp);
+  }
+
+  // Check x-real-ip (direct client IP)
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return normIp(realIp);
+
+  // Check cf-connecting-ip (Cloudflare)
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return normIp(cfIp);
+
+  // Check x-vercel-forwarded-for (Vercel-specific)
+  const vercelIp = req.headers.get("x-vercel-forwarded-for");
+  if (vercelIp) {
+    const firstVercelIp = vercelIp.split(",")[0]?.trim();
+    if (firstVercelIp) return normIp(firstVercelIp);
+  }
+
+  // If there is no ip use vercel ip function
+
+  return "unknown";
 };
