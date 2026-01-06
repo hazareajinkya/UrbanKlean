@@ -184,6 +184,20 @@ export const InfoSidebar = ({
             <SectionLabel>Contact</SectionLabel>
             <div className="space-y-1">
               {person?.name && <CopyableItem icon={User} value={person.name} />}
+              {person.externalIds.map((extId, i) => {
+                if (person && person.metadata && person.metadata[extId.id]) {
+                  return (
+                    <CopyableItem
+                      key={i}
+                      icon={Link2}
+                      value={`${extId.provider}: ${
+                        person.metadata[extId.id].username?.[0]
+                      }`}
+                      mono
+                    />
+                  );
+                }
+              })}
               {person?.emails?.map((email, i) => (
                 <CopyableItem key={i} icon={Mail} value={email.value} />
               ))}
