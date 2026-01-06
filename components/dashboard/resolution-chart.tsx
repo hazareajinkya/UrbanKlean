@@ -122,8 +122,33 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
           <CardTitle className="text-base">Resolution Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-            No data available
+          <div className="flex items-center gap-4">
+            <div className="flex h-[140px] w-[140px] flex-col items-center justify-center">
+              <span className="text-3xl font-semibold">0%</span>
+              <span className="text-xs text-muted-foreground">resolved</span>
+            </div>
+            <div className="flex-1 space-y-2.5">
+              {stats.map((stat) => (
+                <div key={stat.label} className="group">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <stat.icon
+                        className="h-3 w-3 shrink-0"
+                        style={{ color: stat.color }}
+                      />
+                      <span className="text-xs text-muted-foreground">{stat.label}</span>
+                    </div>
+                    <span className="text-xs font-medium tabular-nums">0</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: "0%", backgroundColor: stat.color }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

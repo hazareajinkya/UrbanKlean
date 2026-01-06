@@ -25,12 +25,35 @@ interface AnalyticsDashboardProps {
   isLoading?: boolean;
 }
 
+const emptySummary: IWorkspaceAnalyticsSummary = {
+  totalConversations: 0,
+  totalCreditsUsed: 0,
+  totalCost: 0,
+  resolution: {
+    resolved: 0,
+    "partially-resolved": 0,
+    unresolved: 0,
+    escalated: 0,
+  },
+  sentiment: {
+    positive: 0,
+    negative: 0,
+    neutral: 0,
+  },
+  totalClosedConversations: 0,
+  totalTokensUsed: 0,
+  peakHours: [],
+  avgCostPerConversation: 0,
+  avgCreditsPerConversation: 0,
+  lastUpdated: "",
+};
+
 export const AnalyticsDashboard = ({
   dailyAnalytics,
   summary,
   isLoading = false,
 }: AnalyticsDashboardProps) => {
-  if (isLoading || !summary) {
+  if (isLoading) {
     return (
       <div className="space-y-6  w-full">
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -55,6 +78,8 @@ export const AnalyticsDashboard = ({
     );
   }
 
+  const displaySummary = summary ?? emptySummary;
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -75,12 +100,13 @@ export const AnalyticsDashboard = ({
   };
 
   const resolutionRate = useMemo(() => {
-    if (summary.totalClosedConversations === 0) return "0";
+    if (displaySummary.totalClosedConversations === 0) return "0";
     return (
-      (summary.resolution.resolved / summary.totalClosedConversations) *
+      (displaySummary.resolution.resolved /
+        displaySummary.totalClosedConversations) *
       100
     ).toFixed(1);
-  }, [summary.resolution, summary.totalClosedConversations]);
+  }, [displaySummary.resolution, displaySummary.totalClosedConversations]);
 
   return (
     <div className="space-y-5 w-full">
@@ -92,11 +118,12 @@ export const AnalyticsDashboard = ({
             Analytics and insights for your workspace
           </p>
         </div>
-        {summary.lastUpdated && (
+        {displaySummary.lastUpdated && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             <span>
-              Updated {format(parseISO(summary.lastUpdated), "MMM d, h:mm a")}
+              Updated{" "}
+              {format(parseISO(displaySummary.lastUpdated), "MMM d, h:mm a")}
             </span>
           </div>
         )}
@@ -106,25 +133,25 @@ export const AnalyticsDashboard = ({
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Conversations"
-          value={summary.totalConversations}
+          value={displaySummary.totalConversations}
           icon={MessageSquare}
           formatValue={formatNumber}
         />
         <StatCard
           title="Closed Conversations"
-          value={summary.totalClosedConversations}
+          value={displaySummary.totalClosedConversations}
           icon={CheckCircle2}
           formatValue={formatNumber}
         />
         <StatCard
           title="Credits Used"
-          value={summary.totalCreditsUsed}
+          value={displaySummary.totalCreditsUsed}
           icon={Coins}
           formatValue={formatNumber}
         />
         <StatCard
           title="Total Cost"
-          value={summary.totalCost}
+          value={displaySummary.totalCost}
           icon={DollarSign}
           formatValue={formatCurrency}
         />
@@ -142,8 +169,8 @@ export const AnalyticsDashboard = ({
 
       {/* Resolution & Sentiment Row */}
       <div className="grid gap-3 lg:grid-cols-2">
-        <ResolutionChart resolution={summary.resolution} />
-        <SentimentChart sentiment={summary.sentiment} />
+        <ResolutionChart resolution={displaySummary.resolution} />
+        <SentimentChart sentiment={displaySummary.sentiment} />
       </div>
 
       {/* Key Metrics */}
@@ -155,13 +182,13 @@ export const AnalyticsDashboard = ({
         />
         <StatCard
           title="Avg Cost / Conv"
-          value={summary.avgCostPerConversation}
+          value={displaySummary.avgCostPerConversation}
           icon={DollarSign}
           formatValue={formatCurrency}
         />
         <StatCard
           title="Avg Credits / Conv"
-          value={summary.avgCreditsPerConversation}
+          value={displaySummary.avgCreditsPerConversation}
           icon={Coins}
           formatValue={(v) => v.toFixed(2)}
         />

@@ -41,11 +41,11 @@ class AnalyticsService {
       this.getLast7DaysAnalytics(wid),
       this.getWorkspaceAnalyticsSummary(wid),
     ]);
-
-    return {
+    const result = {
       dailyAnalytics,
       summary,
     };
+    return result;
   }
 }
 
