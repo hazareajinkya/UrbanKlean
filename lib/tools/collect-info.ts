@@ -16,15 +16,13 @@ const PersonInfo = z.object({
       "Email address, must be valid and will be stored in lowercase and the latest emails only."
     )
 
-    .default(""),
+    .optional(),
   phones: z
-
     .string()
     .describe(
-      "Phone number. Only digits and leading '+' allowed. If starting with '00', it will be treated as '+'. and the latest phone numbers only."
+      "Phone number in E.164 format (e.g., '+14155551234'). Must start with '+' followed by country code and number. Only digits allowed after '+'. Numbers starting with '00' will be converted to '+'. Minimum 8 digits, maximum 15 digits. Store only the most recent phone number."
     )
-
-    .default(""),
+    .optional(),
 
   // Company info
   company: z.string().optional(),
@@ -47,7 +45,13 @@ const PersonInfo = z.object({
     .array(z.string())
     .optional()
     .describe(
-      "Insights about conversations and issues about the person, it should be a list of strings described as your telling ur friends or teammates abou tthe person"
+      "Key insights and memorable context about this person worth retaining for future conversations. " +
+        "INCLUDE: 1. Pain points or challenges they've mentioned (e.g., 'frustrated with slow response times'), " +
+        "2. Important context about their situation (e.g., 'launching new product next month'), " +
+        "3. Preferences or communication style (e.g., 'prefers detailed explanations'), " +
+        "4. Past issues or resolutions (e.g., 'had billing issue resolved in March'). " +
+        "Write each insight as if briefing a teammate before they take over the conversation. " +
+        "AVOID: Trivial observations, temporary states, or information already captured in other fields."
     ),
 });
 
@@ -89,8 +93,12 @@ export const collectInformation = ({
 
       const data: Partial<IPerson> = {
         name: params.name,
-        emails: [{ value: params.emails, verified: false }],
-        phones: [{ value: params.phones, verified: false }],
+        emails: params.emails
+          ? [{ value: params.emails, verified: false }]
+          : [],
+        phones: params.phones
+          ? [{ value: params.phones, verified: false }]
+          : [],
         externalIds: externalIds,
         ips: ips ?? [],
         company: params.company,
@@ -100,6 +108,7 @@ export const collectInformation = ({
         interests: params.interests ?? [],
       };
 
+      console.log("Data: ", data);
       let personData;
 
       console.log("current person id: ", currentPersonId);
@@ -108,16 +117,18 @@ export const collectInformation = ({
         console.log("current user id: ", currentPersonId);
         try {
           // ✅ ALREADY IDENTIFIED - Just update their info
-          if (params.emails.length > 0 || params.phones.length > 0) {
-            console.log("Identifying person with emails: ", params.emails);
-            console.log("Identifying person with phones: ", params.phones);
-            const emails = [{ value: params.emails, verified: false }];
-            const phones = [{ value: params.phones, verified: false }];
+          if (
+            (data.emails && data.emails.length > 0) ||
+            (data.phones && data.phones.length > 0)
+          ) {
+            console.log("Identifying person with emails: ", data.emails);
+            console.log("Identifying person with phones: ", data.phones);
+
             const { existing, person, softmerge } =
               await peopleServiceV2.identifyPerson({
                 wid: wid,
-                emails: emails,
-                phones: phones,
+                emails: data.emails,
+                phones: data.phones,
                 ips: ips ?? [],
                 provider: provider,
               });
@@ -215,10 +226,10 @@ export const collectInformation = ({
           personData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: [{ value: params.emails, verified: false }],
-            phones: [{ value: params.phones, verified: false }],
+            emails: data.emails!,
+            phones: data.phones!,
             externalIds: externalIds,
-            name: params.name,
+            name: data.name,
             aid,
             ip: ips?.[0],
           });
@@ -233,8 +244,8 @@ export const collectInformation = ({
           const newPersonData = await peopleServiceV2.createPerson({
             wid: wid,
             sessionId: sessionId,
-            emails: [{ value: params.emails, verified: false }],
-            phones: [{ value: params.phones, verified: false }],
+            emails: data.emails!,
+            phones: data.phones!,
             externalIds: externalIds,
             name: params.name,
             aid,
