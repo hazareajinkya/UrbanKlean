@@ -17,6 +17,7 @@ import { useDemoModal } from "./demo-modal";
 import { coreConf } from "@/lib/utils/conf";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 export const Navbar = ({
   whyRefProgress,
@@ -29,8 +30,10 @@ export const Navbar = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isInside, setIsInside] = useState(false);
 
-  const { user } = useCurrentUser();
+  const { data: session } = useSession();
+  const email = session?.user?.email ?? "";
   const pathname = usePathname();
+  const {} = useCurrentUser();
 
   const { openDemoModal } = useDemoModal();
   useEffect(() => {
@@ -148,7 +151,9 @@ export const Navbar = ({
           </Link>
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href === "/#features" && pathname === "/");
+              const isActive =
+                pathname === link.href ||
+                (link.href === "/#features" && pathname === "/");
               return (
                 <Link
                   key={link.href}
@@ -157,7 +162,9 @@ export const Navbar = ({
                   tabIndex={0}
                   className={cn(
                     "transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary",
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {link.label}
@@ -169,12 +176,12 @@ export const Navbar = ({
                 <></>
               ) : (
                 <Link
-                  href={user ? "/workspaces" : "/auth"}
-                  aria-label={user ? "Dashboard" : "Sign in"}
+                  href={email ? "/workspaces" : "/auth"}
+                  aria-label={email ? "Dashboard" : "Sign in"}
                   tabIndex={0}
                   className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  {user ? "Dashboard" : "Sign in"}
+                  {email ? "Dashboard" : "Sign in"}
                 </Link>
               )}
               <button
@@ -243,15 +250,23 @@ export const Navbar = ({
           >
             <div className="flex flex-col px-8 gap-6 w-full max-w-lg mx-auto h-full overflow-y-auto pb-10">
               {navLinks.map((link, i) => {
-                const isActive = pathname === link.href || (link.href === "/#features" && pathname === "/");
+                const isActive =
+                  pathname === link.href ||
+                  (link.href === "/#features" && pathname === "/");
                 return (
-                  <motion.div key={link.href} custom={i} variants={itemVariants}>
+                  <motion.div
+                    key={link.href}
+                    custom={i}
+                    variants={itemVariants}
+                  >
                     <Link
                       href={link.href}
                       onClick={handleCloseMenu}
                       className={cn(
                         "block py-2 text-3xl font-medium tracking-tight transition-colors",
-                        isActive ? "text-primary" : "text-foreground hover:text-black/70"
+                        isActive
+                          ? "text-primary"
+                          : "text-foreground hover:text-black/70"
                       )}
                     >
                       {link.label}
@@ -263,11 +278,11 @@ export const Navbar = ({
               {!coreConf.isProd && (
                 <motion.div custom={navLinks.length} variants={itemVariants}>
                   <Link
-                    href={user ? "/workspaces" : "/auth"}
+                    href={email ? "/workspaces" : "/auth"}
                     onClick={handleCloseMenu}
                     className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
                   >
-                    {user ? "Dashboard" : "Sign in"}
+                    {email ? "Dashboard" : "Sign in"}
                   </Link>
                 </motion.div>
               )}

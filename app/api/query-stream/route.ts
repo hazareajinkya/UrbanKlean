@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
     // Save the user message after session is ensured
     const userMessage = messages[messages.length - 1];
-    await chatService.saveMessage(aid, sessionId, userMessage);
+    chatService.saveMessage(aid, sessionId, userMessage);
 
     let model = getModel(agent);
 
