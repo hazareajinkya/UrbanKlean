@@ -2,7 +2,12 @@ import {
   PaddleSubscriptionCustomData,
   PaddleSubscriptionData,
 } from "../clients/paddle";
-import { getPlanByPriceId, PLANS } from "../plans";
+import {
+  RazorpaySubscriptionData,
+  RazorpaySubscriptionCustomData,
+  mapRazorpayStatus,
+} from "../clients/razorpay";
+import { getPlanByPriceId, getPlanByRazorpayPlanId, PLANS } from "../plans";
 import { IUserSubscription } from "../types/user";
 import userService from "./user-service";
 import creditService from "./credit-service";
@@ -151,6 +156,237 @@ class PaymentService {
       console.log(`Payment failed email sent to ${email}`);
     } catch (error) {
       console.error("Error sending payment failed email:", error);
+    }
+  }
+
+  // Razorpay subscription handlers
+  async handleRazorpaySubscriptionActivated(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription activated:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        console.error("Missing user email in subscription notes");
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) throw new Error("User not found");
+
+      const plan = PLANS[notes.planId as keyof typeof PLANS];
+      if (!plan) throw new Error(`Plan ${notes.planId} not found`);
+
+      const tierData = plan.tiers.find((tier) => tier.id === notes.tierId);
+      if (!tierData) throw new Error(`Tier ${notes.tierId} not found`);
+
+      const recurringQuota = tierData.messages;
+
+      const subscription: IUserSubscription = {
+        subscriptionId: data.id,
+        customerId: data.customer_id,
+        planId: notes.planId,
+        tierId: notes.tierId,
+        razorpayPlanId: data.plan_id,
+        status: mapRazorpayStatus(data.status),
+        recurringQuota,
+        startedAt: new Date(data.current_start * 1000).toISOString(),
+        nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
+        renewsAt: new Date(data.current_end * 1000).toISOString(),
+      };
+
+      await userService.updateUser(notes.userEmail, { subscription });
+      await creditService.renewQuota(notes.userEmail, recurringQuota);
+
+      console.log(`Razorpay subscription activated for ${notes.userEmail}`);
+      return { success: true, user };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription activated:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleRazorpaySubscriptionCharged(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription charged:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const plan = PLANS[notes.planId as keyof typeof PLANS];
+      const tierData = plan?.tiers.find((tier) => tier.id === notes.tierId);
+      const recurringQuota = tierData?.messages || 0;
+
+      // Always set all subscription fields to handle race conditions
+      // where charged event may arrive before activated event completes
+      const updatedSubscription: IUserSubscription = {
+        subscriptionId: data.id,
+        customerId: data.customer_id,
+        planId: notes.planId,
+        tierId: notes.tierId,
+        razorpayPlanId: data.plan_id,
+        status: "active",
+        recurringQuota,
+        startedAt:
+          user.subscription?.startedAt ||
+          new Date(data.current_start * 1000).toISOString(),
+        lastPaymentAt: new Date().toISOString(),
+        nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
+        renewsAt: new Date(data.current_end * 1000).toISOString(),
+      };
+
+      await userService.updateUser(notes.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      // Renew credits on successful payment
+      await creditService.renewQuota(notes.userEmail, recurringQuota);
+
+      console.log(`Razorpay subscription charged for ${notes.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription charged:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleRazorpaySubscriptionPending(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription pending/halted:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const updatedSubscription: IUserSubscription = {
+        ...user.subscription,
+        status: "past_due",
+      };
+
+      await userService.updateUser(notes.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      // Send payment failed email
+      await this.sendPaymentFailedEmail(notes.userEmail, user.name);
+
+      console.log(`Razorpay subscription pending for ${notes.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription pending:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleRazorpaySubscriptionCancelled(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription cancelled:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const updatedSubscription: IUserSubscription = {
+        ...user.subscription,
+        status: "canceled",
+        planId: "none",
+        tierId: "none",
+        razorpayPlanId: "none",
+        recurringQuota: 0,
+        canceledAt: data.ended_at
+          ? new Date(data.ended_at * 1000).toISOString()
+          : new Date().toISOString(),
+      };
+      delete updatedSubscription.nextPaymentAt;
+      delete updatedSubscription.renewsAt;
+
+      await userService.updateUser(notes.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      console.log(`Razorpay subscription cancelled for ${notes.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription cancelled:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleRazorpaySubscriptionPaused(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription paused:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      await userService.updateUser(notes.userEmail, {
+        subscription: {
+          ...user.subscription,
+          status: "paused",
+        },
+      });
+
+      console.log(`Razorpay subscription paused for ${notes.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription paused:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handleRazorpaySubscriptionResumed(data: RazorpaySubscriptionData) {
+    try {
+      console.log("Handling Razorpay subscription resumed:", data.id);
+
+      const notes = data.notes as unknown as RazorpaySubscriptionCustomData;
+      if (!notes?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(notes.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      await userService.updateUser(notes.userEmail, {
+        subscription: {
+          ...user.subscription,
+          status: "active",
+          nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
+          renewsAt: new Date(data.current_end * 1000).toISOString(),
+        },
+      });
+
+      console.log(`Razorpay subscription resumed for ${notes.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Razorpay subscription resumed:", error);
+      return { success: false, error: error as Error };
     }
   }
 }

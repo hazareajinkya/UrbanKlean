@@ -193,7 +193,7 @@ export default function BillingPage() {
 
                     <p className="text-lg font-medium">
                       {" "}
-                      ${tier?.price} / month
+                      ${tier?.price?.usd || 0} / month
                     </p>
                   </div>
                 </CardHeader>

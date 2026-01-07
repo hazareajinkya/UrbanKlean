@@ -11,15 +11,17 @@ export const PLANS = {
     tiers: [
       {
         messages: 5000,
-        price: 99,
+        price: { inr: 9900, usd: 99 },
         id: "growth_5k_monthly",
         paddlePriceId: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
+        razorpayPlanId: "plan_S0ucywKrTQyOtd",
       },
       {
         messages: 10000,
-        price: 149,
+        price: { inr: 14900, usd: 149 },
         id: "growth_10k_monthly",
         paddlePriceId: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
+        razorpayPlanId: "plan_S0udQKkiRc30OX",
       },
     ],
     features: [
@@ -42,39 +44,45 @@ export const PLANS = {
     tiers: [
       {
         messages: 5000,
-        price: 169,
+        price: { inr: 16900, usd: 169 },
         id: "scale_5k_monthly",
         paddlePriceId: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
+        razorpayPlanId: "",
       },
       {
         messages: 10000,
-        price: 199,
+        price: { inr: 19900, usd: 199 },
         id: "scale_10k_monthly",
         paddlePriceId: "pri_01kc1mw2vb2a27yf2bs5phshh8",
+        razorpayPlanId: "",
       },
       {
         messages: 15000,
-        price: 229,
+        price: { inr: 22900, usd: 229 },
         id: "scale_15k_monthly",
         paddlePriceId: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
+        razorpayPlanId: "",
       },
       {
         messages: 20000,
-        price: 259,
+        price: { inr: 25900, usd: 259 },
         id: "scale_20k_monthly",
         paddlePriceId: "pri_01kc1mx7yw2m42726y49wqpzb6",
+        razorpayPlanId: "",
       },
       {
         messages: 25000,
-        price: 289,
+        price: { inr: 28900, usd: 289 },
         id: "scale_25k_monthly",
         paddlePriceId: "pri_01kc1mxn498qhsb7fhway6ea5f",
+        razorpayPlanId: "",
       },
       {
         messages: 30000,
-        price: 319,
+        price: { inr: 31900, usd: 319 },
         id: "scale_30k_monthly",
         paddlePriceId: "pri_01kc1my82mrddwgat580shdfz9",
+        razorpayPlanId: "",
       },
     ],
     features: [
@@ -96,6 +104,14 @@ export const PLANS = {
 export const getPlanByPriceId = (priceId: string) => {
   for (const [planKey, plan] of Object.entries(PLANS)) {
     const tier = plan.tiers.find((t) => t.paddlePriceId === priceId);
+    if (tier) return { planId: planKey, planName: plan.name, tier };
+  }
+  return null;
+};
+
+export const getPlanByRazorpayPlanId = (razorpayPlanId: string) => {
+  for (const [planKey, plan] of Object.entries(PLANS)) {
+    const tier = plan.tiers.find((t) => t.razorpayPlanId === razorpayPlanId);
     if (tier) return { planId: planKey, planName: plan.name, tier };
   }
   return null;

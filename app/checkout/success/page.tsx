@@ -1,15 +1,61 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { useCurrentUser } from "@/lib/hooks/user/use-user";
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(5);
+  const searchParams = useSearchParams();
 
+  const [countdown, setCountdown] = useState(5);
+  const [hasSubscription, setHasSubscription] = useState(false);
+
+  const plan = searchParams.get("plan");
+  const tier = searchParams.get("tier");
+
+  // Poll for subscription status - webhook will sync it
+  const { user, refetch } = useCurrentUser();
+
+  // Check if subscription has been synced by webhook
   useEffect(() => {
+    if (user?.subscription?.status) {
+      const subscriptionStatus = user.subscription.status;
+      const isActive =
+        subscriptionStatus !== "canceled" && subscriptionStatus !== "past_due";
+      if (isActive) {
+        setHasSubscription(true);
+      }
+    }
+  }, [user]);
+
+  // Poll for subscription sync (webhook may take a few seconds)
+  useEffect(() => {
+    if (hasSubscription) return;
+
+    const pollInterval = setInterval(() => {
+      refetch();
+    }, 2000); // Poll every 2 seconds
+
+    // Stop polling after 30 seconds
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval);
+      // Show success anyway - webhook will sync eventually
+      setHasSubscription(true);
+    }, 30000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeout);
+    };
+  }, [hasSubscription, refetch]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!hasSubscription) return;
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -20,8 +66,9 @@ export default function CheckoutSuccessPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [hasSubscription]);
 
+  // Redirect when countdown reaches 0
   useEffect(() => {
     if (countdown === 0) {
       router.push("/workspaces");
@@ -31,6 +78,27 @@ export default function CheckoutSuccessPage() {
   const handleGoToDashboard = () => {
     router.push("/workspaces");
   };
+
+  if (!hasSubscription) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="max-w-md w-full space-y-8 text-center">
+          <div className="flex justify-center">
+            <Loader2 className="w-16 h-16 text-primary animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-medium">
+              Activating your subscription...
+            </h1>
+            <p className="text-muted-foreground">
+              Please wait while we activate your subscription. This usually
+              takes just a few seconds.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

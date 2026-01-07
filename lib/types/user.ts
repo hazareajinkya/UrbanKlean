@@ -17,6 +17,7 @@ export interface IUserSubscription {
   planId?: string;
   tierId?: string;
   paddlePriceId?: string;
+  razorpayPlanId?: string;
   status?: "active" | "canceled" | "past_due" | "paused" | "trialing";
   recurringQuota?: number;
   trialEndsAt?: string;

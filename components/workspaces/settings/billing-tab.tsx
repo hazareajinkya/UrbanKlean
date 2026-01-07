@@ -171,7 +171,10 @@ export default function BillingTab({ wid }: BillingTabProps) {
                 </div>
               </div>
 
-              <p className="text-lg font-medium"> ${tier?.price} / month</p>
+              <p className="text-lg font-medium">
+                {" "}
+                ${tier?.price?.usd || 0} / month
+              </p>
             </div>
           </CardHeader>
 
