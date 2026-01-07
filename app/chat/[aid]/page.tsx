@@ -125,15 +125,21 @@ export default function ChatPage() {
       // Notify parent window that widget is ready
       window.parent.postMessage({ type: "MAGICALCX_WIDGET_READY" }, "*");
 
-      // Add widget-specific styling
+      // Add widget-specific styling for mobile viewport fix
       document.body.style.margin = "0";
       document.body.style.padding = "0";
       document.body.style.overflow = "hidden";
+      document.body.style.height = "100dvh";
+      document.documentElement.style.height = "100dvh";
+      document.documentElement.style.overflow = "hidden";
 
       return () => {
         document.body.style.margin = "";
         document.body.style.padding = "";
         document.body.style.overflow = "";
+        document.body.style.height = "";
+        document.documentElement.style.height = "";
+        document.documentElement.style.overflow = "";
       };
     }
   }, [isWidget]);
@@ -197,7 +203,7 @@ export default function ChatPage() {
   return (
     <div
       className={`h-full flex flex-col overflow-hidden bg-white relative ${
-        isWidget ? "h-screen" : "max-w-4xl mx-auto"
+        isWidget ? "h-dvh max-h-dvh" : "max-w-4xl mx-auto"
       }`}
     >
       <ChatHeader agent={agent} isWidget={isWidget} />

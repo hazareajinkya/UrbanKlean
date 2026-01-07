@@ -11,13 +11,10 @@ export default function DashboardPage() {
   const { workspace, isLoading: workspaceLoading } = useWorkspace(wid);
 
   const {
-    data,
     dailyAnalytics,
     summary,
     isLoading: analyticsLoading,
   } = useAnalyticsData(wid);
-
-  console.log(data);
 
   const isLoading = workspaceLoading || analyticsLoading;
 

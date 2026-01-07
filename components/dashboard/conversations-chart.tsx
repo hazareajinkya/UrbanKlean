@@ -90,8 +90,9 @@ export const ConversationsChart = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
-            No data available
+          <div className="flex h-[280px] flex-col items-center justify-center gap-2">
+            <span className="text-3xl font-semibold">0</span>
+            <span className="text-sm text-muted-foreground">conversations</span>
           </div>
         </CardContent>
       </Card>

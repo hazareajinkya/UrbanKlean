@@ -115,8 +115,39 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
           <CardTitle className="text-base">Sentiment Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-            No data available
+          <div className="flex items-center gap-4">
+            <div className="flex h-[140px] w-[140px] flex-col items-center justify-center">
+              <span className="text-2xl">😐</span>
+              <span className="text-xs text-muted-foreground mt-1">0 total</span>
+            </div>
+            <div className="flex-1 space-y-2">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center gap-3 rounded-lg p-2"
+                >
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: `${stat.color}15` }}
+                  >
+                    <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{stat.label}</span>
+                      <span className="text-xs font-semibold tabular-nums">0%</span>
+                    </div>
+                    <div className="mt-1 h-1 w-full rounded-full bg-muted/50 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: "0%", backgroundColor: stat.color }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium tabular-nums w-6 text-right">0</span>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -70,8 +70,15 @@ export const ChatInput = ({
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder={"Type your message here..."}
-                  className="text-sm md:text-base p-1 pl-1.5 rounded-none md:p-2 w-full min-h-[32px] max-h-[200px] resize-none border-0 bg-transparent leading-relaxed transition-all duration-200 focus:ring-0 focus:border-0 focus:outline-none focus-visible:ring-0 shadow-none"
+                  className="!text-base p-1 pl-1.5 rounded-none md:p-2 w-full min-h-[32px] max-h-[200px] resize-none border-0 bg-transparent leading-relaxed transition-all duration-200 focus:ring-0 focus:border-0 focus:outline-none focus-visible:ring-0 shadow-none"
                   rows={1}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="sentences"
+                  spellCheck={false}
+                  data-form-type="other"
+                  data-lpignore="true"
+                  data-1p-ignore
                 />
               </div>
 
@@ -119,7 +126,7 @@ export const ChatInput = ({
       <Link
         href={"/"}
         target="_blank"
-        className="pt-2.5 pb-2.5 text-center text-xs text-muted-foreground flex justify-center items-center gap-1"
+        className="pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] text-center text-xs text-muted-foreground flex justify-center items-center gap-1"
       >
         Powered by <p className="font-medium "> Magical CX</p>
       </Link>
