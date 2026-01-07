@@ -14,12 +14,7 @@ export const AboutContent = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="section-heading">
-              About Us{" "}
-              <span className="text-muted-foreground text-2xl md:text-3xl font-normal">
-                (from your side of the table)
-              </span>
-            </h1>
+            <h1 className="section-heading">About Us</h1>
           </motion.div>
 
           <motion.div
