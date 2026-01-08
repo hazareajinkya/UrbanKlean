@@ -25,11 +25,11 @@ export async function POST(req: NextRequest) {
     const event = JSON.parse(rawBody);
 
     const eventType = event.event;
+
     const subscriptionData = event.payload?.subscription
       ?.entity as RazorpaySubscriptionData;
 
     if (!subscriptionData) {
-      console.log("No subscription data in event");
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         await handleSubscriptionResumed(subscriptionData);
         break;
       default:
-        console.log(`Unhandled event type: ${eventType}`);
+        console.log(`Unhandled event type: ${eventType}`, { event });
     }
 
     return NextResponse.json({ received: true }, { status: 200 });

@@ -14,19 +14,17 @@ export async function GET(req: NextRequest) {
     }
 
     const isIndia = geo.country === "IN";
-    // const isIndia = false;
 
     return successResponse(
       {
         country: geo.country,
-        // country: geo.country || "India",
         city: geo.city || null,
         region: geo.region || null,
         isIndia,
       },
       "Geo data retrieved successfully"
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error retrieving geo data:", error);
     return errorResponse("Failed to retrieve geo data", 500);
   }

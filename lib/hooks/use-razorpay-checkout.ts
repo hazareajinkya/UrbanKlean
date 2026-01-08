@@ -77,13 +77,13 @@ export const useRazorpayCheckout = () => {
   const router = useRouter();
   const { user, isLoading } = useCurrentUser();
 
-  const createSubscriptionMutation = useMutation({
+  const createCheckoutMutation = useMutation({
     mutationFn: async (options: CheckoutOptions) => {
       const { data } = await axiosClient.post<{
         success: boolean;
         message: string;
         data: CreateSubscriptionResponse;
-      }>("/api/payments/razorpay/create-subscription", {
+      }>("/api/payments/razorpay/create-checkout", {
         planId: options.planId,
         tier: options.tier,
         userId: user?.id,
@@ -145,7 +145,7 @@ export const useRazorpayCheckout = () => {
 
     // create subscription
     try {
-      const { subscriptionId } = await createSubscriptionMutation.mutateAsync({
+      const { subscriptionId } = await createCheckoutMutation.mutateAsync({
         planId,
         tier,
       });
@@ -195,6 +195,6 @@ export const useRazorpayCheckout = () => {
   return {
     initiateCheckout,
     isAuthenticated: !!user?.email,
-    isLoading: isLoading || createSubscriptionMutation.isPending,
+    isLoading: isLoading || createCheckoutMutation.isPending,
   };
 };

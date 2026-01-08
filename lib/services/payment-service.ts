@@ -7,7 +7,17 @@ import {
   RazorpaySubscriptionCustomData,
   mapRazorpayStatus,
 } from "../clients/razorpay";
-import { getPlanByPriceId, getPlanByRazorpayPlanId, PLANS } from "../plans";
+import {
+  PolarSubscriptionData,
+  PolarSubscriptionCustomData,
+  mapPolarStatus,
+} from "../clients/polar";
+import {
+  getPlanByPriceId,
+  getPlanByRazorpayPlanId,
+  getPlanByPolarProductId,
+  PLANS,
+} from "../plans";
 import { IUserSubscription } from "../types/user";
 import userService from "./user-service";
 import creditService from "./credit-service";
@@ -386,6 +396,159 @@ class PaymentService {
       return { success: true };
     } catch (error) {
       console.error("Error handling Razorpay subscription resumed:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  // Polar subscription handlers
+  async handlePolarSubscriptionCreated(data: PolarSubscriptionData) {
+    try {
+      console.log("Handling Polar subscription created:", data.id);
+
+      const metadata = data.metadata as unknown as PolarSubscriptionCustomData;
+      if (!metadata?.userEmail) {
+        console.error("Missing user email in subscription metadata");
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(metadata.userEmail);
+      if (!user) throw new Error("User not found");
+
+      const plan = PLANS[metadata.planId as keyof typeof PLANS];
+      if (!plan) throw new Error(`Plan ${metadata.planId} not found`);
+
+      const tierData = plan.tiers.find((tier) => tier.id === metadata.tierId);
+      if (!tierData) throw new Error(`Tier ${metadata.tierId} not found`);
+
+      const recurringQuota = tierData.messages;
+
+      const subscription: IUserSubscription = {
+        subscriptionId: data.id,
+        customerId: data.customerId,
+        planId: metadata.planId,
+        tierId: metadata.tierId,
+        polarSubscriptionId: data.id,
+        status: mapPolarStatus(data.status),
+        recurringQuota,
+        startedAt: data.currentPeriodStart,
+        nextPaymentAt: data.currentPeriodEnd || undefined,
+        renewsAt: data.currentPeriodEnd || undefined,
+      };
+
+      await userService.updateUser(metadata.userEmail, { subscription });
+      await creditService.renewQuota(metadata.userEmail, recurringQuota);
+
+      console.log(`Polar subscription created for ${metadata.userEmail}`);
+      return { success: true, user };
+    } catch (error) {
+      console.error("Error handling Polar subscription created:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handlePolarSubscriptionUpdated(data: PolarSubscriptionData) {
+    try {
+      console.log("Handling Polar subscription updated:", data.id);
+
+      const metadata = data.metadata as unknown as PolarSubscriptionCustomData;
+      if (!metadata?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(metadata.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const plan = PLANS[metadata.planId as keyof typeof PLANS];
+      const tierData = plan?.tiers.find((tier) => tier.id === metadata.tierId);
+      const recurringQuota = tierData?.messages || user.subscription?.recurringQuota || 0;
+
+      // Check for plan change via product_id
+      const currentProductId = data.productId;
+      if (currentProductId) {
+        const planInfo = getPlanByPolarProductId(currentProductId);
+        if (planInfo && planInfo.tier.id !== user.subscription?.tierId) {
+          const updatedSubscription: IUserSubscription = {
+            ...user.subscription,
+            planId: planInfo.planId,
+            tierId: planInfo.tier.id,
+            recurringQuota: planInfo.tier.messages,
+            status: mapPolarStatus(data.status),
+            nextPaymentAt: data.currentPeriodEnd || undefined,
+            renewsAt: data.currentPeriodEnd || undefined,
+          };
+          await userService.updateUser(metadata.userEmail, {
+            subscription: updatedSubscription,
+          });
+          console.log(
+            `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`
+          );
+          return { success: true };
+        }
+      }
+
+      const updatedSubscription: IUserSubscription = {
+        ...user.subscription,
+        status: mapPolarStatus(data.status),
+        nextPaymentAt: data.currentPeriodEnd || undefined,
+        renewsAt: data.currentPeriodEnd || undefined,
+        recurringQuota,
+      };
+
+      await userService.updateUser(metadata.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      // Send email if payment failed (past_due)
+      if (data.status === "past_due") {
+        await this.sendPaymentFailedEmail(metadata.userEmail, user.name);
+      }
+
+      console.log(
+        `Polar subscription updated for ${metadata.userEmail}: status=${data.status}`
+      );
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Polar subscription updated:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+
+  async handlePolarSubscriptionCanceled(data: PolarSubscriptionData) {
+    try {
+      console.log("Handling Polar subscription canceled:", data.id);
+
+      const metadata = data.metadata as unknown as PolarSubscriptionCustomData;
+      if (!metadata?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(metadata.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const updatedSubscription: IUserSubscription = {
+        ...user.subscription,
+        status: "canceled",
+        planId: "none",
+        tierId: "none",
+        polarSubscriptionId: "none",
+        recurringQuota: 0,
+        canceledAt: data.canceledAt || new Date().toISOString(),
+      };
+      delete updatedSubscription.nextPaymentAt;
+      delete updatedSubscription.renewsAt;
+
+      await userService.updateUser(metadata.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      console.log(`Polar subscription canceled for ${metadata.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Polar subscription canceled:", error);
       return { success: false, error: error as Error };
     }
   }

@@ -15,6 +15,7 @@ export const PLANS = {
         id: "growth_5k_monthly",
         paddlePriceId: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
         razorpayPlanId: "plan_S0ucywKrTQyOtd",
+        polarProductId: "42f12571-1107-4ac3-a7cb-291f0e3db87b", // Set in Polar.sh dashboard
       },
       {
         messages: 10000,
@@ -22,6 +23,7 @@ export const PLANS = {
         id: "growth_10k_monthly",
         paddlePriceId: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
         razorpayPlanId: "plan_S0udQKkiRc30OX",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
     ],
     features: [
@@ -48,6 +50,7 @@ export const PLANS = {
         id: "scale_5k_monthly",
         paddlePriceId: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
       {
         messages: 10000,
@@ -55,6 +58,7 @@ export const PLANS = {
         id: "scale_10k_monthly",
         paddlePriceId: "pri_01kc1mw2vb2a27yf2bs5phshh8",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
       {
         messages: 15000,
@@ -62,6 +66,7 @@ export const PLANS = {
         id: "scale_15k_monthly",
         paddlePriceId: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
       {
         messages: 20000,
@@ -69,6 +74,7 @@ export const PLANS = {
         id: "scale_20k_monthly",
         paddlePriceId: "pri_01kc1mx7yw2m42726y49wqpzb6",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
       {
         messages: 25000,
@@ -76,6 +82,7 @@ export const PLANS = {
         id: "scale_25k_monthly",
         paddlePriceId: "pri_01kc1mxn498qhsb7fhway6ea5f",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
       {
         messages: 30000,
@@ -83,6 +90,7 @@ export const PLANS = {
         id: "scale_30k_monthly",
         paddlePriceId: "pri_01kc1my82mrddwgat580shdfz9",
         razorpayPlanId: "",
+        polarProductId: "", // Set in Polar.sh dashboard
       },
     ],
     features: [
@@ -112,6 +120,14 @@ export const getPlanByPriceId = (priceId: string) => {
 export const getPlanByRazorpayPlanId = (razorpayPlanId: string) => {
   for (const [planKey, plan] of Object.entries(PLANS)) {
     const tier = plan.tiers.find((t) => t.razorpayPlanId === razorpayPlanId);
+    if (tier) return { planId: planKey, planName: plan.name, tier };
+  }
+  return null;
+};
+
+export const getPlanByPolarProductId = (polarProductId: string) => {
+  for (const [planKey, plan] of Object.entries(PLANS)) {
+    const tier = plan.tiers.find((t) => t.polarProductId === polarProductId);
     if (tier) return { planId: planKey, planName: plan.name, tier };
   }
   return null;

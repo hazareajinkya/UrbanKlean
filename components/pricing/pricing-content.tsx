@@ -8,30 +8,20 @@ import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemoModal } from "../landing/demo-modal";
 import { MESSAGE_TIERS, PLANS } from "@/lib/plans";
-import { usePaddleCheckout } from "@/lib/hooks/use-paddle-checkout";
+import { usePolarCheckout } from "@/lib/hooks/use-polar-checkout";
 import { useRazorpayCheckout } from "@/lib/hooks/use-razorpay-checkout";
-import { initializePaddle } from "@/lib/clients/paddle";
 import { PricingFaq } from "./pricing-faq";
 import { useGeo } from "@/lib/hooks/geo/use-geo";
 
 export const PricingContent = () => {
   const [usage, setUsage] = useState([10]); // 10k default
-  const { initiateCheckout: initiatePaddleCheckout } = usePaddleCheckout();
+  const { initiateCheckout: initiatePolarCheckout } = usePolarCheckout();
   const { initiateCheckout: initiateRazorpayCheckout } = useRazorpayCheckout();
   const { openDemoModal } = useDemoModal();
 
   // Fetch user's geo location
   const { isIndia, isLoading: isGeoLoading } = useGeo();
   const currencySymbol = isIndia ? "₹" : "$";
-
-  // Initialize Paddle SDK on mount only for non-India users
-  useEffect(() => {
-    if (!isGeoLoading && !isIndia) {
-      initializePaddle().catch((error) => {
-        console.error("Failed to initialize Paddle:", error);
-      });
-    }
-  }, [isGeoLoading, isIndia]);
 
   const handleSliderChange = (value: number[]) => {
     setUsage(value);
@@ -198,14 +188,14 @@ export const PricingContent = () => {
     }
 
     if (tier.planId && tier.tier !== undefined) {
-      // Use Razorpay for India, Paddle for international
+      // Use Razorpay for India, Polar for international
       if (isIndia) {
         initiateRazorpayCheckout({
           planId: tier.planId,
           tier: tier.tier,
         });
       } else {
-        initiatePaddleCheckout({
+        initiatePolarCheckout({
           planId: tier.planId,
           tier: tier.tier,
         });
