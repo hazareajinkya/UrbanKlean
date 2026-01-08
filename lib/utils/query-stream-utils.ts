@@ -1,9 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { IAgent } from "../types/agent";
 import { google } from "@ai-sdk/google";
-import workflowservice from "../services/workflow-service";
 import {
-  coreSystemPrompt,
   geminiHumanPrompt,
   getRequestPromptFromHints,
   identityCollectionPrompt,
@@ -11,76 +9,24 @@ import {
 import { IChannelProvider } from "../types/channel";
 import { Geo } from "@vercel/functions";
 import { channelPrompts } from "@/prompts/channel-prompts";
+import { IWorkflow } from "../types/workflow";
 
 export const getModel = (agent: IAgent) => {
   let model = openai("gpt-4.1-mini");
-
-  if (agent.settings.model.includes("gpt")) {
+  if (agent.settings.model.includes("gpt"))
     model = openai(agent.settings.model);
-  } else if (agent.settings.model.includes("gemini")) {
+  else if (agent.settings.model.includes("gemini"))
     model = google(agent.settings.model);
-  }
   return model;
 };
 
-export const getSystemPrompt = async (
-  agent: IAgent,
-  query: string,
-  channel: IChannelProvider,
-  personId?: string,
-  geo?: Geo,
-  isFinetuning?: boolean,
-  reasoning?: string,
-  suggestion?: string
-) => {
-  const workflowstext = await retrieveWorkflow(agent.id, query);
-  const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
-  // ${coreSystemPrompt}
-
-  return `
-  ${geminiHumanPrompt}
-
-  ${!isFinetuning && geoInfo}
-
-
-  ${agent.settings.systemPrompt}
-
-
-  ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
-
-  ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
-
-  ${channel === "whatsapp" && channelPrompts.whatsapp}
-  ${channel === "email" && channelPrompts.email}
-  ${channel === "messenger" && channelPrompts.messenger}
-  ${channel === "instagram" && channelPrompts.instagram}
-
-
-  These are workflow that u should keep in mind 
-  There's trigger when u feel like that trigger statisfy then follow the instructions
-
-  - Available Workflow: ${workflowstext}
-
-  PREFER WORKFLOW OVER ANYTHING EVEN TOOL IF IT STATSIFY IN WORKFLOW FOLLOW THAT ONLY
-
-  ## Context
-  - Channel:${channel}
-
-
-`;
-};
-
-export const retrieveWorkflow = async (aid: string, query: string) => {
-  const workflows = await workflowservice.getWorkflows(aid);
-  const workflowstext = workflows
+export const workflowsToText = (workflows: IWorkflow[]) =>
+  workflows
     .map(
       (w) =>
         `Name: ${w.name} \n Trigger: ${w.trigger} \n Instructions: ${w.instructions}`
     )
     .join("\n\n");
-
-  return workflowstext;
-};
 
 const fineTuningInstructions = (
   reasoning?: string,
@@ -137,4 +83,48 @@ const fineTuningInstructions = (
       : ""
   }
   `;
+};
+
+export const getSystemPrompt = (arg: {
+  agent: IAgent;
+  workflows: IWorkflow[];
+  channel: IChannelProvider;
+  personId?: string;
+  geo?: Geo;
+  isFinetuning?: boolean;
+  reasoning?: string;
+  suggestion?: string;
+}) => {
+  const {
+    agent,
+    workflows,
+    channel,
+    personId,
+    geo,
+    isFinetuning,
+    reasoning,
+    suggestion,
+  } = arg;
+  const workflowsText = workflowsToText(workflows);
+  const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
+
+  return `${geminiHumanPrompt}
+  ${!isFinetuning && geoInfo}
+  ${agent.settings.systemPrompt}
+  ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
+  ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
+  ${channel === "whatsapp" && channelPrompts.whatsapp}
+  ${channel === "email" && channelPrompts.email}
+  ${channel === "messenger" && channelPrompts.messenger}
+  ${channel === "instagram" && channelPrompts.instagram}
+  ${channel === "web" && channelPrompts.web}
+
+  These are workflow that u should keep in mind 
+  There's trigger when u feel like that trigger statisfy then follow the instructions
+  - Available Workflow: ${workflowsText}
+  PREFER WORKFLOW OVER ANYTHING EVEN TOOL IF IT STATSIFY IN WORKFLOW FOLLOW THAT ONLY
+
+  ## Context
+  - Channel:${channel}
+`;
 };

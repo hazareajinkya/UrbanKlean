@@ -27,6 +27,7 @@ export const useAgent = (aid: string) => {
   const query = useQuery({
     queryKey: agentKey(aid),
     queryFn: () => agentService.fetchAgent(aid),
+    staleTime: 1000 * 60 * 5, // 5 minutes - agent data rarely changes
   });
 
   return {

@@ -15,6 +15,8 @@ import { generateDefaultAgent, IAgent } from "../types/agent";
 import workspaceService from "./workspace-service";
 import { deleteCollection, checkRecentlyActive } from "../utils";
 import channelService from "./channel-service";
+import cacheService from "./cache-service";
+import { invalidateCache, invalidateCaches } from "../utils/cache-utils";
 
 class AgentService {
   async createAgent({ wid, name }: { wid: string; name: string }) {
@@ -31,9 +33,19 @@ class AgentService {
   }
 
   async fetchAgent(aid: string) {
+    // Try cache first
+    const cached = await cacheService.getAgent(aid);
+    if (cached) return cached;
+
+    // Cache miss - fetch from Firestore
     const snap = await getDoc(doc(db, `agents/${aid}`));
     if (!snap.exists()) return null;
+
     const agent = snap.data() as IAgent;
+
+    // Store in cache (fire and forget)
+    cacheService.setAgent(aid, agent);
+
     this.updateLastActivity(agent);
     return agent;
   }
@@ -49,10 +61,13 @@ class AgentService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "agent", id: aid });
   }
 
   deleteAgent = async ({ aid }: { aid: string }) => {
-    // Fetch agent
+    // Fetch agent (will use cache if available)
     const agent = await this.fetchAgent(aid);
     if (!agent) {
       throw new Error("Agent not found");
@@ -76,6 +91,12 @@ class AgentService {
     }
     // Delete agent
     await deleteDoc(doc(db, `agents/${aid}`));
+
+    // Invalidate server-side cache via API (agent + workflows)
+    invalidateCaches([
+      { type: "agent", id: aid },
+      { type: "workflows", id: aid },
+    ]);
   };
 
   // Updating last activity of agent and workspace
@@ -92,22 +113,35 @@ class AgentService {
     await updateDoc(doc(db, `workspaces/${agent.wid}`), {
       lastActivity: new Date().toISOString(),
     });
+
+    // Note: We don't invalidate cache here because lastActivity is not critical
+    // and the cache will naturally expire or be invalidated on next real update
   };
 
   removeFolderFromAgents = async (wid: string, folderId: string) => {
     try {
       const agents = await this.fetchAgents(wid);
-      const updatePromises = agents
-        .filter((agent) => agent.knowledgeFolders?.includes(folderId))
-        .map((agent) =>
-          updateDoc(doc(db, `agents/${agent.id}`), {
-            knowledgeFolders: agent.knowledgeFolders.filter(
-              (id) => id !== folderId
-            ),
-            updatedAt: new Date().toISOString(),
-          })
-        );
+      const agentsToUpdate = agents.filter((agent) =>
+        agent.knowledgeFolders?.includes(folderId)
+      );
+
+      const updatePromises = agentsToUpdate.map((agent) =>
+        updateDoc(doc(db, `agents/${agent.id}`), {
+          knowledgeFolders: agent.knowledgeFolders.filter(
+            (id) => id !== folderId
+          ),
+          updatedAt: new Date().toISOString(),
+        })
+      );
       await Promise.all(updatePromises);
+
+      // Invalidate server-side cache via API for all updated agents
+      invalidateCaches(
+        agentsToUpdate.map((agent) => ({
+          type: "agent" as const,
+          id: agent.id,
+        }))
+      );
     } catch (error) {
       console.error("Error removing folder from agents:", error);
     }

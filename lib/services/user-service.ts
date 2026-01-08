@@ -1,6 +1,15 @@
 import { generateDefaultUser, IUser } from "@/lib/types/user";
 import { db } from "../clients/firebase";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { DEFAULT_PROFILE_PIC } from "../constants";
 import { User } from "firebase/auth";
 import storageService from "./storage-service";
@@ -11,6 +20,36 @@ class UserService {
     const snap = await getDoc(docRef);
 
     return snap.data() as IUser | undefined;
+  }
+
+  async getUsers(emails: string[]): Promise<Map<string, IUser>> {
+    if (emails.length === 0) return new Map();
+
+    // Deduplicate emails to avoid redundant queries
+    const uniqueEmails = [...new Set(emails)];
+
+    // Firestore 'in' query supports max 30 items, so chunk if needed
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueEmails.length; i += 30) {
+      chunks.push(uniqueEmails.slice(i, i + 30));
+    }
+
+    const userRef = collection(db, "users");
+
+    const results = await Promise.all(
+      chunks.map((chunk) =>
+        getDocs(query(userRef, where("email", "in", chunk)))
+      )
+    );
+
+    const usersMap = new Map<string, IUser>();
+    for (const snapshot of results) {
+      for (const docSnap of snapshot.docs) {
+        usersMap.set(docSnap.id, docSnap.data() as IUser);
+      }
+    }
+
+    return usersMap;
   }
 
   async createUser(fbuser: User) {

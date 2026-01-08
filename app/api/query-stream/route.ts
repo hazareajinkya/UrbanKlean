@@ -19,7 +19,8 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { normIp, getCustomTools, getClientIp } from "@/lib/utils";
+import { normIp, getCustomTools, getClientIp, latency } from "@/lib/utils";
+import workflowService from "@/lib/services/workflow-service";
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -50,62 +51,104 @@ export async function POST(req: Request) {
     console.log("fromPage: ", fromPage);
 
     const ip = getClientIp(req);
+    const geo = geolocation(req);
+    const lastMessage = getLastMessage(messages);
 
-    const { success } = await ratelimit.limit(ip);
+    latency.start();
 
-    if (!success) {
-      return new Response(getRandomRateLimitMessage(), {
-        status: 429,
-      });
+    // First batch: rate limit + agent + workflows (parallel with granular timing)
+    const batch1Start = performance.now();
+    const [rateLimitResult, agent, workflows] = await Promise.all([
+      ratelimit.limit(ip).then((r) => {
+        console.log(
+          `  ├─ rateLimit: ${(performance.now() - batch1Start).toFixed(0)}ms`
+        );
+        return r;
+      }),
+      agentService.fetchAgent(aid).then((a) => {
+        console.log(
+          `  ├─ agent: ${(performance.now() - batch1Start).toFixed(0)}ms`
+        );
+        return a;
+      }),
+      workflowService.getWorkflows(aid).then((w) => {
+        console.log(
+          `  ├─ workflows: ${(performance.now() - batch1Start).toFixed(0)}ms`
+        );
+        return w;
+      }),
+    ]);
+    console.log(
+      `[query-stream] Batch 1 total: ${(
+        performance.now() - batch1Start
+      ).toFixed(0)}ms`
+    );
+
+    if (!rateLimitResult.success) {
+      return new Response(getRandomRateLimitMessage(), { status: 429 });
     }
-
-    const agent = await agentService.fetchAgent(aid);
     if (!agent) throw new Error("Agent not found");
 
-    const creditInfo = await creditService.getCredit(agent.ownerId);
+    // Second batch: all agent-dependent calls (parallel with granular timing)
+    const batch2Start = performance.now();
+    const systemPrompt = getSystemPrompt({
+      agent,
+      workflows,
+      channel: "web",
+      personId,
+      geo,
+    });
+    const [creditInfo, , actions] = await Promise.all([
+      creditService.getCredit(agent.ownerId).then((c) => {
+        console.log(
+          `  ├─ credit: ${(performance.now() - batch2Start).toFixed(0)}ms`
+        );
+        return c;
+      }),
+      chatService
+        .ensureSession(
+          agent.wid,
+          aid,
+          sessionId,
+          personId,
+          deviceId,
+          fromPage,
+          geo
+        )
+        .then((s) => {
+          console.log(
+            `  ├─ session: ${(performance.now() - batch2Start).toFixed(0)}ms`
+          );
+          return s;
+        }),
+      actionService.getActionsForWorflows(agent.wid, workflows).then((a) => {
+        console.log(
+          `  ├─ actions: ${(performance.now() - batch2Start).toFixed(0)}ms`
+        );
+        return a;
+      }),
+    ]);
+
+    console.log(
+      `[query-stream] Batch 2 total: ${(
+        performance.now() - batch2Start
+      ).toFixed(0)}ms\n`
+    );
 
     if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
       console.log("Insufficient credits: ", creditInfo);
-      return new Response("Insufficient credits", {
-        status: 400,
-      });
+      return new Response("Insufficient credits", { status: 400 });
     }
 
-    const geo = geolocation(req);
-
-    // Ensure session exists in DB before processing the message
-    await chatService.ensureSession(
-      agent.wid,
-      aid,
-      sessionId,
-      personId,
-      deviceId,
-      fromPage,
-      geo
-    );
-
-    // Save the user message after session is ensured
+    // Save user message (fire and forget)
     const userMessage = messages[messages.length - 1];
     chatService.saveMessage(aid, sessionId, userMessage);
 
-    let model = getModel(agent);
-
-    const lastMessage = getLastMessage(messages);
-    const actions = await actionService.getActionsInWorkflow(
-      agent.wid,
-      agent.id
-    );
+    const model = getModel(agent);
     const customTools = getCustomTools(actions);
-
-    const systemPrompt = await getSystemPrompt(
-      agent,
-      lastMessage,
-      "web",
-      personId,
-      geo
-    );
     const convertedMessages = convertToMyModelMessages(messages);
 
+    console.log("model:", model.modelId);
     const result = streamText({
       model,
       system: systemPrompt,
@@ -130,11 +173,12 @@ export async function POST(req: Request) {
       },
     });
 
-    const totalTokens = (await result.usage).totalTokens;
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
       sendReasoning: false,
+
       onFinish: async ({ responseMessage }) => {
+        const totalTokens = (await result.usage).totalTokens;
         const aiMessage = {
           ...responseMessage,
           id: v4(),
@@ -145,9 +189,6 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString(),
           },
         } as IChatMessage;
-
-        await chatService.saveMessage(agent.id, sessionId, aiMessage);
-        await creditService.decreaseCredit(creditCosts.query, creditInfo);
 
         const usage = defaultUsage(
           agent.wid,
@@ -161,7 +202,13 @@ export async function POST(req: Request) {
           tokenUsage: totalTokens || 0,
         };
 
-        await usageService.addUsage(agent.ownerId, usage);
+        await Promise.all([
+          chatService.saveMessage(agent.id, sessionId, aiMessage),
+          creditService.decreaseCredit(creditCosts.query, creditInfo),
+          usageService.addUsage(agent.ownerId, usage),
+        ]);
+
+        latency.end();
       },
     });
   } catch (error: any) {
