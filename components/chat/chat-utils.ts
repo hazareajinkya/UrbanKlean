@@ -17,7 +17,8 @@ export const initChat = async (agent: IAgent) => {
   const deviceId = getOrCreateDeviceId(agent.wid);
   const sid = getLocalSession(agent.id);
 
-  const sessionsPromise = sid
+  // Fetch all in parallel - IP included
+  const sessionPromise = sid
     ? chatService.getSessionsByFilter({
         sid,
         aid: agent.id,
@@ -25,17 +26,20 @@ export const initChat = async (agent: IAgent) => {
         nLimit: 1,
       })
     : Promise.resolve([]);
-  const ip = await getClientIpFromApi();
 
-  const personPromise = peopleServiceV2.identifyPerson({
-    provider: "web",
-    wid: agent.wid,
-    externalIds: [{ provider: "web", id: deviceId }],
-    ips: ip ? [ip] : undefined,
-  });
+  const personPromise = getClientIpFromApi()
+    .catch(() => null)
+    .then((ip) =>
+      peopleServiceV2.identifyPerson({
+        provider: "web",
+        wid: agent.wid,
+        externalIds: [{ provider: "web", id: deviceId }],
+        ips: ip ? [ip] : undefined,
+      })
+    );
 
   const [sessions, { person }] = await Promise.all([
-    sessionsPromise,
+    sessionPromise,
     personPromise,
   ]);
 

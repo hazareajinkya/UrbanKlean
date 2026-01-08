@@ -1,5 +1,4 @@
 import { IPostmarkMessage } from "@/lib/types/postmark-api";
-import postmarkService from "./postmark-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IAgent } from "@/lib/types/agent";
 import peopleService from "../people-service";
@@ -11,7 +10,6 @@ import {
   defaultUserMessage,
   IChatMessage,
 } from "@/lib/types/session";
-import { v4 } from "uuid";
 import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { collectInformation } from "@/lib/tools/collect-info";
@@ -24,6 +22,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
+import workflowService from "../workflow-service";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -36,59 +35,50 @@ class PostmarkBotService {
     channel: IChannelProvider // userId: string, // waMsg: IWAMessage,
   ) {
     try {
-      //   //supercx ai agent id
       const aid = await channelService.resolveAgent(email, channel);
-
       console.log("resolved agent: ", aid);
       if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      const creditInfo = await creditService.getCredit(agent.ownerId);
+      // Parallel fetch: creditInfo, session, workflows
+      const [creditInfo, session, workflows] = await Promise.all([
+        creditService.getCredit(agent.ownerId),
+        this.getOrCreateSession({
+          email: personEmail,
+          agent,
+          channel,
+          name: postmarkMsg.fromName,
+        }),
+        workflowService.getWorkflows(agent.id),
+      ]);
+
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
         console.log("Insufficient credits: ", creditInfo);
         throw this.ERROR_MESSAGE;
       }
 
-      let session = await this.getOrCreateSession({
-        email: personEmail,
-        agent,
-        channel,
-        name: postmarkMsg.fromName,
-      });
-
-      // Format textBody to preserve intended line breaks and structure
-      //   const query = (postmarkMsg.textBody ?? "").replace(/\r\n|\r|\n/g, "\n");
       const query = postmarkMsg.textBody ?? "";
-
       console.log("postmarkMsg: ", postmarkMsg.textBody);
       console.log("query: ", query);
       const userMsg = defaultUserMessage(query, postmarkMsg.id);
-
-      const person = await peopleService.getPerson(
-        agent.wid,
-        session.personId ?? "test"
-      );
-      console.log("person: ", person);
-      console.log("personId: ", session.personId);
-      const actions = await actionService.getActionsInWorkflow(
-        agent.wid,
-        agent.id
-      );
-      const customTools = getCustomTools(actions);
-      //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
-      //prepare messages for ai
+
+      const actions = await actionService.getActionsForWorflows(
+        agent.wid,
+        workflows
+      );
+      const model = getModel(agent);
+      const systemPrompt = getSystemPrompt({
+        agent,
+        workflows,
+        channel,
+        personId: session.personId,
+      });
+      const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
-      const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(
-        agent,
-        query,
-        channel,
-        session.personId
-      );
       const result = await generateText({
         model,
         system: systemPrompt,

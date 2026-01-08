@@ -9,6 +9,8 @@ import {
 } from "firebase/firestore";
 import { IWorkflow } from "../types/workflow";
 import { db } from "../clients/firebase";
+import cacheService from "./cache-service";
+import { invalidateCache } from "../utils/cache-utils";
 
 class WorkflowService {
   async createWorkflow({
@@ -19,6 +21,9 @@ class WorkflowService {
     workflow: IWorkflow;
   }) {
     await setDoc(doc(db, `agents/${aid}/workflows/${workflow.id}`), workflow);
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "workflows", id: aid });
   }
 
   async updateWorkflow({
@@ -26,7 +31,7 @@ class WorkflowService {
     workflowId,
     updates,
   }: {
-    aid: string;  
+    aid: string;
     workflowId: string;
     updates: Partial<IWorkflow>;
   }) {
@@ -34,6 +39,9 @@ class WorkflowService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "workflows", id: aid });
   }
 
   async getWorkflow(aid: string, workflowId: string) {
@@ -43,12 +51,19 @@ class WorkflowService {
   }
 
   async getWorkflows(aid: string) {
-    console.log("aid: ", aid);
+    // Try cache first
+    const cached = await cacheService.getWorkflows(aid);
+    if (cached) return cached;
 
+    // Cache miss - fetch from Firestore
     const docRef = collection(db, `agents/${aid}/workflows`);
     const docSnap = await getDocs(docRef);
+    const workflows = docSnap.docs.map((doc) => doc.data() as IWorkflow);
 
-    return docSnap.docs.map((doc) => doc.data() as IWorkflow);
+    // Store in cache (fire and forget)
+    cacheService.setWorkflows(aid, workflows);
+
+    return workflows;
   }
 
   async deleteWorkflow({
@@ -59,6 +74,9 @@ class WorkflowService {
     workflowId: string;
   }) {
     await deleteDoc(doc(db, `agents/${aid}/workflows/${workflowId}`));
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "workflows", id: aid });
   }
 }
 

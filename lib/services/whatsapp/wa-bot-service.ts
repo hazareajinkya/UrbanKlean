@@ -11,10 +11,6 @@ import {
 } from "@/lib/types/session";
 import { IWAMessage } from "@/lib/types/wa-api";
 import { IAgent } from "@/lib/types/agent";
-import peopleService from "../people-service";
-import { metadata } from "@/app/layout";
-import { v4 } from "uuid";
-import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
@@ -24,6 +20,7 @@ import { IExternalIds } from "@/lib/types/person";
 import actionService from "../action-service";
 import { getCustomTools } from "@/lib/utils";
 import peopleServiceV2 from "../people-service-v2";
+import workflowService from "../workflow-service";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -47,41 +44,32 @@ class WABotService {
     try {
       const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
-      const creditInfo = await creditService.getCredit(agent.ownerId);
+
+      // Parallel fetch: creditInfo, session, workflows
+      const [creditInfo, session, workflows] = await Promise.all([
+        creditService.getCredit(agent.ownerId),
+        this.getOrCreateSession({ agent, channel, waPhoneId, name }),
+        workflowService.getWorkflows(agent.id),
+      ]);
+
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
         console.log("Insufficient credits: ", creditInfo);
         throw this.ERROR_MESSAGE;
       }
 
-      let session = await this.getOrCreateSession({
-        agent,
-        channel,
-        waPhoneId,
-        name,
-      });
-
       const query = waMsg.text ?? "";
       const userMsg = defaultUserMessage(query, waMsg.id);
-
-      // const person = await peopleService.getPerson(agent.wid, session.personId);
-      // console.log("person: ", person);
-      // console.log("personId: ", session.personId);
-
-      //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      //prepare messages for ai
+      const actions = await actionService.getActionsForWorflows(
+        agent.wid,
+        workflows
+      );
+      const model = getModel(agent);
+      const systemPrompt = getSystemPrompt({ agent, workflows, channel });
+      const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
-
-      const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(agent, query, channel);
-
-      const actions = await actionService.getActionsInWorkflow(
-        agent.wid,
-        agent.id
-      );
-      const customTools = getCustomTools(actions);
 
       const result = await generateText({
         model,

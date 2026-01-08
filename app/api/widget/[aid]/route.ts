@@ -24,8 +24,6 @@ export async function GET(
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    console.log("agent: ", agent);
-
     // Get the base widget script
     const widgetPath = join(process.cwd(), "lib", "widget", "widget.js");
     let widgetScript = readFileSync(widgetPath, "utf-8");

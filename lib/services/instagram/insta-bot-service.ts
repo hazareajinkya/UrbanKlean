@@ -4,14 +4,8 @@ import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import {
-  defaultAImessage,
-  defaultUserMessage,
-  IChatMessage,
-} from "@/lib/types/session";
+import { defaultAImessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
-import peopleService from "../people-service";
-
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
 import creditService from "../credit-service";
@@ -23,6 +17,7 @@ import { getCustomTools } from "@/lib/utils";
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
 import instaService from "./insta-service";
+import workflowService from "../workflow-service";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -47,40 +42,28 @@ class InstaBotService {
       const agent = await agentService.fetchAgent(agentId);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      const creditInfo = await creditService.getCredit(agent.ownerId);
+      // Parallel fetch: creditInfo, session, workflows
+      const [creditInfo, session, workflows] = await Promise.all([
+        creditService.getCredit(agent.ownerId),
+        this.getOrCreateSession({ instaUserId, agent, channel, accessToken }),
+        workflowService.getWorkflows(agent.id),
+      ]);
+
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
         console.log("Insufficient credits: ", creditInfo);
         return { success: false, message: "Insufficient credits" };
       }
 
-      let session = await this.getOrCreateSession({
-        instaUserId,
-        agent,
-        channel,
-        accessToken,
-      });
-
       const query = instaMsg.text ?? "";
       const userMsg = defaultUserMessage(query, instaMsg.id);
-
-      // const person = await peopleService.getPerson(agent.wid, session.personId);
-      // console.log("person: ", person);
-      // console.log("personId: ", session.personId);
-
-      //save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
-      const actions = await actionService.getActionsInWorkflow(
-        agent.wid,
-        agent.id
-      );
-      const customTools = getCustomTools(actions);
 
-      //prepare messages for ai
+      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const model = getModel(agent);
+      const systemPrompt = getSystemPrompt({ agent, workflows, channel });
+      const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
-
-      const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(agent, query, channel);
 
       const result = await generateText({
         model,

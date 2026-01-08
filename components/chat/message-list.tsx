@@ -244,7 +244,7 @@ const MessageParts = memo(
           return (
             <div
               key={index}
-              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:my-0 "
+              className="text-sm md:text-base prose prose-sm md:prose-base max-w-none leading-loose prose-p:mt-0  prose-p:last:mb-0"
             >
               <Streamdown components={streamdownComponents}>
                 {part.text}
