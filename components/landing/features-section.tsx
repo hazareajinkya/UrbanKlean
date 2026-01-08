@@ -117,6 +117,73 @@ const ActionsVisual = () => (
   </div>
 );
 
+const HumanlyClearVisual = () => (
+  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-blue-50/50 to-indigo-50/50 flex items-center justify-center p-4 overflow-hidden">
+    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
+    <div className="relative w-full max-w-[280px] space-y-3">
+      {/* Customer frustrated message */}
+      <motion.div
+        className="flex items-start gap-2"
+        initial={{ x: -20, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="w-7 h-7 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
+          <User className="w-3.5 h-3.5 text-neutral-500" />
+        </div>
+        <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm border border-border/50">
+          <p className="text-[11px] text-neutral-600">I've been waiting 2 weeks for my order! 😤</p>
+        </div>
+      </motion.div>
+      {/* Typing indicator */}
+      <motion.div
+        className="flex justify-end"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: [0, 1, 1, 0] }}
+        transition={{ delay: 0.5, duration: 1.2, times: [0, 0.2, 0.8, 1] }}
+      >
+        <div className="bg-primary/10 px-3 py-2 rounded-2xl rounded-tr-none flex gap-1">
+          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" />
+          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:75ms]" />
+          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:150ms]" />
+        </div>
+      </motion.div>
+      {/* Empathetic AI response */}
+      <motion.div
+        className="flex items-start gap-2 justify-end"
+        initial={{ x: 20, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.4 }}
+      >
+        <div className="bg-primary text-white rounded-2xl rounded-tr-none px-3 py-2 shadow-md max-w-[200px] relative overflow-hidden">
+          <motion.div
+            className="absolute inset-0 bg-white/20 skew-x-12"
+            initial={{ x: "-100%" }}
+            whileInView={{ x: "200%" }}
+            transition={{ delay: 1.4, duration: 0.8 }}
+          />
+          <p className="text-[11px] relative z-10">I completely understand—that's frustrating. Let me check and fix this right now.</p>
+        </div>
+        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Brain className="w-3.5 h-3.5 text-primary" />
+        </div>
+      </motion.div>
+      {/* Humanly Clear badge */}
+      <motion.div
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full shadow-lg border border-green-100"
+        initial={{ y: 20, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.8, type: "spring", stiffness: 200 }}
+      >
+        <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+          <Check className="w-2.5 h-2.5 text-green-600" />
+        </div>
+        <span className="text-[10px] font-semibold text-green-700">HumanlyClear™</span>
+      </motion.div>
+    </div>
+  </div>
+);
+
 const LearningVisual = () => (
   <div className="relative w-full h-full min-h-[200px] bg-neutral-50/50 flex items-center justify-center p-4 overflow-hidden">
     <div className="relative w-full max-w-[220px] aspect-video bg-white rounded-xl border border-border/50 shadow-sm p-3 flex items-end gap-1">
@@ -144,80 +211,117 @@ const LearningVisual = () => (
   </div>
 );
 
-const OmnichannelVisual = () => (
-  <div className="relative w-full h-full min-h-[240px] bg-gradient-to-b from-neutral-50 to-white flex flex-col items-center justify-center p-6 overflow-hidden">
-    <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
-      <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,#E2E8F0_1px,transparent_1px)] [background-size:20px_20px] rotate-12" />
-    </div>
+const OmnichannelVisual = () => {
+  const channels = [
+    { icon: Instagram, label: "Instagram", color: "from-pink-500 to-purple-500", bg: "bg-gradient-to-br from-pink-100 to-purple-100" },
+    { icon: Mail, label: "Email", color: "from-blue-500 to-cyan-500", bg: "bg-gradient-to-br from-blue-100 to-cyan-100" },
+    { icon: Phone, label: "WhatsApp", color: "from-green-500 to-emerald-500", bg: "bg-gradient-to-br from-green-100 to-emerald-100" },
+    { icon: MessageSquare, label: "Messenger", color: "from-blue-600 to-indigo-500", bg: "bg-gradient-to-br from-blue-100 to-indigo-100" },
+  ];
 
-    <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-border/60 overflow-hidden flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <div className="w-full md:w-64 bg-neutral-50/80 border-b md:border-b-0 md:border-r border-border/50 p-3 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible">
-        {[
-          { icon: MessageSquare, label: "All Chats", active: true, count: 5 },
-          { icon: Instagram, label: "Instagram", count: 2 },
-          { icon: Mail, label: "Email", count: 1 },
-          { icon: Phone, label: "WhatsApp", count: 2 },
-        ].map((item, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex items-center gap-3 p-2 rounded-lg text-sm font-medium cursor-pointer transition-colors min-w-[120px] md:min-w-0",
-              item.active
-                ? "bg-white shadow-sm text-primary"
-                : "hover:bg-neutral-100 text-neutral-600"
-            )}
-          >
-            <item.icon className="w-4 h-4" />
-            <span className="flex-1">{item.label}</span>
-            {item.count > 0 && (
-              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-1.5 py-0.5 rounded-full">
-                {item.count}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex-1 p-4 space-y-4 bg-white relative">
-        <div className="flex items-center justify-between border-b border-border/30 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-              JD
+  return (
+    <div className="relative w-full h-full min-h-[300px] bg-gradient-to-br from-slate-50 to-neutral-100 flex items-center justify-center p-6 overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      {/* Central Unified Inbox */}
+      <motion.div
+        className="relative z-10 w-full max-w-[260px] bg-white rounded-2xl shadow-xl border border-border/50 overflow-hidden"
+        initial={{ scale: 0.9, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+      >
+        {/* Header */}
+        <div className="bg-neutral-50/80 border-b border-border/50 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-3.5 h-3.5 text-primary" />
             </div>
-            <div>
-              <div className="text-sm font-semibold">Jane Doe</div>
-              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Instagram className="w-3 h-3" /> via Instagram
+            <span className="text-sm font-semibold text-neutral-700">Unified Inbox</span>
+          </div>
+          <motion.div
+            className="flex items-center gap-1 text-[10px] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full"
+            initial={{ opacity: 0, scale: 0 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, type: "spring" }}
+          >
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            <span>Live</span>
+          </motion.div>
+        </div>
+
+        {/* Messages from different channels */}
+        <div className="p-3 space-y-2">
+          {[
+            { icon: Instagram, name: "Sarah M.", msg: "Love your products! 💕", color: "text-pink-500", delay: 0.3 },
+            { icon: Mail, name: "John D.", msg: "Order inquiry #4521", color: "text-blue-500", delay: 0.5 },
+            { icon: Phone, name: "Mike R.", msg: "Thanks for the help!", color: "text-green-500", delay: 0.7 },
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              className="flex items-center gap-3 p-2 rounded-xl bg-neutral-50/80 border border-border/30"
+              initial={{ x: -20, opacity: 0 }}
+              whileInView={{ x: 0, opacity: 1 }}
+              transition={{ delay: item.delay, duration: 0.4 }}
+            >
+              <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0 relative">
+                <span className="text-[10px] font-bold text-neutral-500">{item.name.charAt(0)}</span>
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <item.icon className={cn("w-2.5 h-2.5", item.color)} />
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="text-[10px] text-muted-foreground">Just now</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-medium text-neutral-700 truncate">{item.name}</div>
+                <div className="text-[10px] text-neutral-500 truncate">{item.msg}</div>
+              </div>
+            </motion.div>
+          ))}
         </div>
+      </motion.div>
 
-        <div className="space-y-3">
+      {/* Floating Channel Icons */}
+      {channels.map((channel, i) => {
+        const positions = [
+          { x: -90, y: -60 },
+          { x: 100, y: -40 },
+          { x: -80, y: 80 },
+          { x: 90, y: 60 },
+        ];
+        return (
           <motion.div
-            className="bg-neutral-100 rounded-2xl rounded-tl-none p-3 text-sm text-neutral-700 max-w-[80%]"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            key={i}
+            className={cn("absolute w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border border-white/50", channel.bg)}
+            style={{ left: `calc(50% + ${positions[i].x}px)`, top: `calc(50% + ${positions[i].y}px)` }}
+            initial={{ scale: 0, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 + i * 0.15, type: "spring", stiffness: 200 }}
           >
-            When will my order #8829 arrive?
+            <channel.icon className={cn("w-5 h-5 bg-gradient-to-br bg-clip-text", channel.color.replace("from-", "text-").split(" ")[0])} />
+            {/* Connection line to center */}
+            <motion.div
+              className="absolute w-[40px] h-[2px] bg-gradient-to-r from-neutral-200 to-transparent origin-left"
+              style={{
+                transform: `rotate(${Math.atan2(-positions[i].y, -positions[i].x) * 180 / Math.PI}deg)`,
+                left: positions[i].x > 0 ? "auto" : "100%",
+                right: positions[i].x > 0 ? "100%" : "auto",
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              whileInView={{ scaleX: 1, opacity: 0.5 }}
+              transition={{ delay: 0.5 + i * 0.1, duration: 0.3 }}
+            />
           </motion.div>
-          <motion.div
-            className="bg-primary text-white rounded-2xl rounded-tr-none p-3 text-sm max-w-[80%] ml-auto shadow-md"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            It's out for delivery today! 🚚
-          </motion.div>
-        </div>
-      </div>
+        );
+      })}
+
+      {/* Pulse ring around central inbox */}
+      <motion.div
+        className="absolute w-[280px] h-[280px] rounded-3xl border-2 border-primary/20"
+        initial={{ scale: 0.8, opacity: 0 }}
+        whileInView={{ scale: [0.9, 1.1, 0.9], opacity: [0.3, 0.1, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 const SyncVisual = () => (
   <div className="relative w-full h-full min-h-[240px] bg-neutral-50/50 flex items-center justify-center p-4 overflow-hidden">
@@ -365,7 +469,7 @@ export const FeaturesSection = () => {
         <FeatureCard
           title="HumanlyClear™ Conversations"
           description="Interactions that feel like your best human agents. Clear, empathetic, and context‑aware."
-          Visual={LearningVisual}
+          Visual={HumanlyClearVisual}
         />
         <FeatureCard
           title="EFRO™ Engine "
