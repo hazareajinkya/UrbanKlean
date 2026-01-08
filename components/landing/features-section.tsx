@@ -27,158 +27,181 @@ import {
 // --- Visual Components ---
 
 const MemoryVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-neutral-50/50 flex items-center justify-center p-4 overflow-hidden">
-    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50" />
-    <motion.div
-      className="relative bg-white rounded-2xl shadow-lg border border-border/40 p-4 max-w-[220px] w-full space-y-3"
-      initial={{ y: 10, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="flex items-center gap-2 border-b border-border/50 pb-2">
-        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-          <User className="w-3 h-3 text-blue-600" />
+  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-yellow-50/30 flex items-center justify-center p-6 overflow-hidden">
+    {/* Subtle decorative elements */}
+    <div className="absolute top-4 left-4 w-24 h-24 bg-gradient-to-br from-yellow-100/40 to-amber-50/30 rounded-full blur-2xl" />
+
+    <div className="relative w-full max-w-[300px] space-y-3">
+      {/* User message - RIGHT side, dark bg */}
+      <motion.div
+        className="flex items-end gap-2.5 justify-end"
+        initial={{ x: 15, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm max-w-[200px]">
+          <p className="text-xs">Do you have the shirt I bought last time?</p>
         </div>
-        <div className="text-xs font-medium text-neutral-600">Customer</div>
-      </div>
-      <div className="space-y-2">
-        <div className="bg-neutral-100 rounded-lg rounded-tl-none p-2 text-[10px] text-neutral-600">
-          Do you have the shirt I bought last time?
+        <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 text-neutral-600" />
         </div>
-        <motion.div
-          className="bg-blue-500 text-white rounded-lg rounded-tr-none p-2 text-[10px] ml-auto w-fit shadow-sm"
-          initial={{ scale: 0.9, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          Yes! The Blue Oxford Shirt in Medium is in stock.
-        </motion.div>
-      </div>
-      <div className="absolute -right-2 -top-2 bg-yellow-100 text-yellow-700 text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-sm flex gap-1 items-center">
-        <Brain className="w-2 h-2" />
-        <span>Recalled</span>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      {/* Memory indicator - EFRO style */}
+      <motion.div
+        className="flex items-center justify-center gap-2 py-1"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+      >
+        <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200">
+          <Brain className="w-2.5 h-2.5 text-yellow-600" />
+          <span className="text-[9px] font-medium text-yellow-700">Past order recalled</span>
+        </div>
+      </motion.div>
+
+      {/* AI message - LEFT side, light bg */}
+      <motion.div
+        className="flex items-end gap-2.5"
+        initial={{ x: -15, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.4 }}
+      >
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-4 h-4 text-primary" />
+        </div>
+        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 shadow-sm border border-neutral-100 max-w-[200px]">
+          <p className="text-xs text-neutral-700">Yes! The Blue Oxford Shirt in Medium is in stock.</p>
+        </div>
+      </motion.div>
+    </div>
   </div>
 );
 
-const ActionsVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-neutral-50/50 flex items-center justify-center p-4 overflow-hidden">
-    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-    <div className="flex flex-col gap-3 w-full max-w-[200px]">
-      {[
-        {
-          icon: RefreshCw,
-          text: "Processing Refund",
-          color: "text-orange-500",
-          bg: "bg-orange-50",
-        },
-        {
-          icon: Truck,
-          text: "Tracking Order",
-          color: "text-blue-500",
-          bg: "bg-blue-50",
-        },
-        {
-          icon: FileText,
-          text: "Generating Invoice",
-          color: "text-green-500",
-          bg: "bg-green-50",
-        },
-      ].map((item, i) => (
-        <motion.div
-          key={i}
-          className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-border/50 shadow-sm z-10"
-          initial={{ x: -20, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1 }}
-          transition={{ delay: i * 0.2 }}
-        >
-          <div
-            className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center",
-              item.bg
-            )}
-          >
-            <item.icon className={cn("w-4 h-4", item.color)} />
+const EFROVisual = () => (
+  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-amber-50/20 flex items-center justify-center p-6 overflow-hidden">
+    {/* Subtle decorative elements */}
+    <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-amber-100/30 to-orange-50/20 rounded-full blur-2xl" />
+
+    <div className="relative w-full max-w-[280px] space-y-3">
+      {/* User message - RIGHT side, dark bg */}
+      <motion.div
+        className="flex items-end gap-2 justify-end"
+        initial={{ x: 15, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm max-w-[160px]">
+          <p className="text-[11px]">I'm buying the running shoes. That's all!</p>
+        </div>
+        <div className="w-7 h-7 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
+          <User className="w-3.5 h-3.5 text-neutral-600" />
+        </div>
+      </motion.div>
+
+      {/* EFRO thinking indicator */}
+      <motion.div
+        className="flex items-center justify-center gap-2 py-1"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+      >
+        <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
+          <Zap className="w-2.5 h-2.5 text-amber-600" />
+          <span className="text-[9px] font-medium text-amber-700">EFRO™ checking...</span>
+        </div>
+      </motion.div>
+
+      {/* AI Response - LEFT side, light bg */}
+      <motion.div
+        className="flex items-end gap-2"
+        initial={{ x: -15, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.4 }}
+      >
+        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
+        </div>
+        <div className="space-y-2 max-w-[210px]">
+          <div className="bg-white rounded-2xl rounded-bl-md px-3 py-2 shadow-sm border border-neutral-100">
+            <p className="text-[11px] text-neutral-700 leading-relaxed">Runners who got these also loved our performance socks — 30% off when bundled!</p>
           </div>
-          <span className="text-xs font-medium text-neutral-700">
-            {item.text}
-          </span>
-          {i === 0 && (
-            <motion.div
-              className="ml-auto w-2 h-2 rounded-full bg-green-500"
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          )}
-        </motion.div>
-      ))}
+          {/* Bundle card */}
+          <motion.div
+            className="bg-white rounded-xl p-2.5 shadow-sm border border-neutral-100"
+            initial={{ y: 10, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1, duration: 0.3 }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-[14px]">
+                🧦
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-neutral-700">Pro Running Socks</p>
+                <p className="text-[9px] text-neutral-400 line-through">$18</p>
+              </div>
+              <div className="text-[11px] font-semibold text-emerald-600">$12.60</div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   </div>
 );
 
 const HumanlyClearVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-blue-50/50 to-indigo-50/50 flex items-center justify-center p-4 overflow-hidden">
-    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-40" />
-    <div className="relative w-full max-w-[280px] space-y-3">
-      {/* Customer frustrated message */}
+  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-6 overflow-hidden">
+    {/* Subtle decorative elements */}
+    <div className="absolute top-4 right-4 w-24 h-24 bg-gradient-to-br from-primary/5 to-blue-100/30 rounded-full blur-2xl" />
+    <div className="absolute bottom-8 left-4 w-16 h-16 bg-gradient-to-br from-green-100/40 to-emerald-50/30 rounded-full blur-xl" />
+
+    <div className="relative w-full max-w-[300px] space-y-4">
+      {/* User message - RIGHT side, dark bg */}
       <motion.div
-        className="flex items-start gap-2"
-        initial={{ x: -20, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="w-7 h-7 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-          <User className="w-3.5 h-3.5 text-neutral-500" />
-        </div>
-        <div className="bg-white rounded-2xl rounded-tl-none px-3 py-2 shadow-sm border border-border/50">
-          <p className="text-[11px] text-neutral-600">I've been waiting 2 weeks for my order! 😤</p>
-        </div>
-      </motion.div>
-      {/* Typing indicator */}
-      <motion.div
-        className="flex justify-end"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: [0, 1, 1, 0] }}
-        transition={{ delay: 0.5, duration: 1.2, times: [0, 0.2, 0.8, 1] }}
-      >
-        <div className="bg-primary/10 px-3 py-2 rounded-2xl rounded-tr-none flex gap-1">
-          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" />
-          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:75ms]" />
-          <span className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce [animation-delay:150ms]" />
-        </div>
-      </motion.div>
-      {/* Empathetic AI response */}
-      <motion.div
-        className="flex items-start gap-2 justify-end"
+        className="flex items-end gap-2.5 justify-end"
         initial={{ x: 20, opacity: 0 }}
         whileInView={{ x: 0, opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.4 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <div className="bg-primary text-white rounded-2xl rounded-tr-none px-3 py-2 shadow-md max-w-[200px] relative overflow-hidden">
-          <motion.div
-            className="absolute inset-0 bg-white/20 skew-x-12"
-            initial={{ x: "-100%" }}
-            whileInView={{ x: "200%" }}
-            transition={{ delay: 1.4, duration: 0.8 }}
-          />
-          <p className="text-[11px] relative z-10">I completely understand—that's frustrating. Let me check and fix this right now.</p>
+        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm max-w-[200px]">
+          <p className="text-xs leading-relaxed">I've been waiting 2 weeks for my order! 😤</p>
         </div>
-        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Brain className="w-3.5 h-3.5 text-primary" />
+        <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <User className="w-4 h-4 text-neutral-600" />
         </div>
       </motion.div>
-      {/* Humanly Clear badge */}
+
+      {/* AI Response - LEFT side, light bg */}
       <motion.div
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full shadow-lg border border-green-100"
-        initial={{ y: 20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.8, type: "spring", stiffness: 200 }}
+        className="flex items-end gap-2.5"
+        initial={{ x: -20, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
       >
-        <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
-          <Check className="w-2.5 h-2.5 text-green-600" />
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <Sparkles className="w-4 h-4 text-primary" />
         </div>
-        <span className="text-[10px] font-semibold text-green-700">HumanlyClear™</span>
+        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 shadow-sm border border-neutral-100 max-w-[220px]">
+          <p className="text-xs text-neutral-700 leading-relaxed">I completely understand—that's frustrating. Let me check and fix this right now.</p>
+        </div>
+      </motion.div>
+
+      {/* Quality indicators */}
+      <motion.div
+        className="flex items-center justify-center gap-3 pt-2"
+        initial={{ y: 15, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.1, duration: 0.4 }}
+      >
+        <div className="flex items-center gap-1.5 bg-green-50 px-2.5 py-1 rounded-full border border-green-100">
+          <Check className="w-3 h-3 text-green-600" />
+          <span className="text-[10px] font-medium text-green-700">Empathetic</span>
+        </div>
+        <div className="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+          <Brain className="w-3 h-3 text-blue-600" />
+          <span className="text-[10px] font-medium text-blue-700">Context-Aware</span>
+        </div>
       </motion.div>
     </div>
   </div>
@@ -212,13 +235,6 @@ const LearningVisual = () => (
 );
 
 const OmnichannelVisual = () => {
-  const channels = [
-    { icon: Instagram, label: "Instagram", color: "from-pink-500 to-purple-500", bg: "bg-gradient-to-br from-pink-100 to-purple-100" },
-    { icon: Mail, label: "Email", color: "from-blue-500 to-cyan-500", bg: "bg-gradient-to-br from-blue-100 to-cyan-100" },
-    { icon: Phone, label: "WhatsApp", color: "from-green-500 to-emerald-500", bg: "bg-gradient-to-br from-green-100 to-emerald-100" },
-    { icon: MessageSquare, label: "Messenger", color: "from-blue-600 to-indigo-500", bg: "bg-gradient-to-br from-blue-100 to-indigo-100" },
-  ];
-
   return (
     <div className="relative w-full h-full min-h-[300px] bg-gradient-to-br from-slate-50 to-neutral-100 flex items-center justify-center p-6 overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
@@ -244,7 +260,7 @@ const OmnichannelVisual = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, type: "spring" }}
           >
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
             <span>Live</span>
           </motion.div>
         </div>
@@ -278,47 +294,7 @@ const OmnichannelVisual = () => {
         </div>
       </motion.div>
 
-      {/* Floating Channel Icons */}
-      {channels.map((channel, i) => {
-        const positions = [
-          { x: -90, y: -60 },
-          { x: 100, y: -40 },
-          { x: -80, y: 80 },
-          { x: 90, y: 60 },
-        ];
-        return (
-          <motion.div
-            key={i}
-            className={cn("absolute w-10 h-10 rounded-xl flex items-center justify-center shadow-lg border border-white/50", channel.bg)}
-            style={{ left: `calc(50% + ${positions[i].x}px)`, top: `calc(50% + ${positions[i].y}px)` }}
-            initial={{ scale: 0, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 + i * 0.15, type: "spring", stiffness: 200 }}
-          >
-            <channel.icon className={cn("w-5 h-5 bg-gradient-to-br bg-clip-text", channel.color.replace("from-", "text-").split(" ")[0])} />
-            {/* Connection line to center */}
-            <motion.div
-              className="absolute w-[40px] h-[2px] bg-gradient-to-r from-neutral-200 to-transparent origin-left"
-              style={{
-                transform: `rotate(${Math.atan2(-positions[i].y, -positions[i].x) * 180 / Math.PI}deg)`,
-                left: positions[i].x > 0 ? "auto" : "100%",
-                right: positions[i].x > 0 ? "100%" : "auto",
-              }}
-              initial={{ scaleX: 0, opacity: 0 }}
-              whileInView={{ scaleX: 1, opacity: 0.5 }}
-              transition={{ delay: 0.5 + i * 0.1, duration: 0.3 }}
-            />
-          </motion.div>
-        );
-      })}
 
-      {/* Pulse ring around central inbox */}
-      <motion.div
-        className="absolute w-[280px] h-[280px] rounded-3xl border-2 border-primary/20"
-        initial={{ scale: 0.8, opacity: 0 }}
-        whileInView={{ scale: [0.9, 1.1, 0.9], opacity: [0.3, 0.1, 0.3] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      />
     </div>
   );
 };
@@ -473,8 +449,8 @@ export const FeaturesSection = () => {
         />
         <FeatureCard
           title="EFRO™ Engine "
-          description="Decides if, when, and how to introduce upgrades, offers, or saves, only when it’s fair, timely, and genuinely helpful."
-          Visual={ActionsVisual}
+          description="Decides if, when, and how to introduce upgrades, offers, or saves, only when it's fair, timely, and genuinely helpful."
+          Visual={EFROVisual}
         />
         <FeatureCard
           title="Conversational Memory"
