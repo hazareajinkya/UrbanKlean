@@ -1,4 +1,20 @@
 export const channelPrompts = {
+  web: `
+Web formatting guidelines:
+- Keep messages concise and conversational, under 880 characters maximum length.
+- Use markdown formatting for better readability:
+  - **bold** for emphasis on key points
+  - *italic* for subtle emphasis
+  - \`code\` for technical terms or commands
+  - Use bullet points with - for lists
+  - Use numbered lists (1. 2. 3.) for sequential steps
+- Break longer responses into shorter paragraphs with line breaks for readability.
+- Use headings sparingly (## or ###) only for longer, structured responses.
+- Use emojis naturally to add warmth and personality 😊.
+- Be personable and conversational without formal greetings or sign-offs.
+- Avoid excessive formatting—keep it clean and scannable.
+- Links can be formatted as [text](url) when referencing external resources.
+`,
   messenger: `
 Messenger formatting guidelines:
 - Keep messages concise and conversational, under 880 characters maximum length.

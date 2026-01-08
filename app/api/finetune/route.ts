@@ -1,5 +1,6 @@
 import agentService from "@/lib/services/agent-service";
 import actionService from "@/lib/services/action-service";
+import workflowService from "@/lib/services/workflow-service";
 import { generateText, stepCountIs, tool, ToolSet } from "ai";
 import { z } from "zod";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
@@ -10,35 +11,16 @@ import { errorResponse, successResponse } from "@/lib/types/api-response";
 
 export async function POST(req: Request) {
   try {
-    const {
-      aid,
-      question,
-      reasoning,
-      suggestion,
-    }: {
-      aid: string;
-      question: string;
-      reasoning?: string;
-      suggestion?: string;
-    } = await req.json();
+    const { aid, question, reasoning, suggestion }: { aid: string; question: string; reasoning?: string; suggestion?: string } = await req.json();
 
     const agent = await agentService.fetchAgent(aid);
-
     if (!agent) return errorResponse("Agent not found", 404);
 
+    const workflows = await workflowService.getWorkflows(aid);
     const model = getModel(agent);
-    const actions = await actionService.getActions(agent.wid);
+    const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
     const customTools = getCustomTools(actions);
-    const systemPrompt = await getSystemPrompt(
-      agent,
-      question,
-      "web",
-      undefined,
-      undefined,
-      true,
-      reasoning,
-      suggestion
-    );
+    const systemPrompt = getSystemPrompt({ agent, workflows, channel: "web", isFinetuning: true, reasoning, suggestion });
 
     const tools = {
       ...customTools,

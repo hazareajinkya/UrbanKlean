@@ -38,21 +38,16 @@ class MemberService {
     wid: string
   ): Promise<(IMember & { user?: IUser })[]> {
     const members = await this.fetchMembers(wid);
+    if (members.length === 0) return [];
 
-    // Fetch user information for each member
-    const membersWithUserInfo = await Promise.all(
-      members.map(async (member) => {
-        try {
-          const user = await userService.getUser(member.email);
-          return { ...member, user };
-        } catch (error) {
-          console.warn(`Failed to fetch user info for ${member.email}:`, error);
-          return { ...member, user: undefined };
-        }
-      })
-    );
+    // Batch fetch all users in one query instead of N individual calls
+    const emails = members.map((m) => m.email);
+    const usersMap = await userService.getUsers(emails);
 
-    return membersWithUserInfo;
+    return members.map((member) => ({
+      ...member,
+      user: usersMap.get(member.email),
+    }));
   }
 
   async fetchMember(wid: string, email: string): Promise<IMember | null> {

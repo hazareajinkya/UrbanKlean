@@ -1,21 +1,10 @@
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import agentService from "../agent-service";
-import {
-  convertToModelMessages,
-  generateText,
-  stepCountIs,
-  tool,
-  ToolSet,
-} from "ai";
+import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import {
-  defaultAImessage,
-  defaultToolMessage,
-  defaultUserMessage,
-  IChatMessage,
-} from "@/lib/types/session";
+import { defaultAImessage, defaultToolMessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
 import { ISlackMessage } from "@/lib/types/slack-api";
 import { IAgent } from "@/lib/types/agent";
 import { IExternalIds } from "@/lib/types/person";
@@ -24,12 +13,10 @@ import { v4 } from "uuid";
 import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import slackService from "./slack-service";
-import z from "zod";
 import actionService from "../action-service";
-import { IAction } from "@/lib/types/actions";
-import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getCustomTools } from "@/lib/utils";
 import peopleServiceV2 from "../people-service-v2";
+import workflowService from "../workflow-service";
 
 class SlackBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -42,51 +29,34 @@ class SlackBotService {
     channel: "slack"
   ) {
     try {
-      // Resolve the SuperCX AI agent ID
       const aid = await channelService.resolveAgent(teamId, channel);
       console.log("resolved agent: ", aid);
-
       if (!aid) throw this.UNABLE_RESOLVE_AGENT_MESSAGE;
 
       const agent = await agentService.fetchAgent(aid);
       if (!agent) throw this.ERROR_MESSAGE;
 
-      let session = await this.getOrCreateSession({
-        userId,
-        channelId: slackMsg.channel,
-        agent,
-        channel,
-        teamId,
-      });
+      // Parallel fetch: session, workflows, slackHistory
+      const [session, workflows, slackHistory] = await Promise.all([
+        this.getOrCreateSession({ userId, channelId: slackMsg.channel, agent, channel, teamId }),
+        workflowService.getWorkflows(agent.id),
+        slackService.getLastMentionedMessages(slackMsg.channel, teamId, 10),
+      ]);
 
       const query = slackMsg.text ?? "";
       const userMsg = defaultUserMessage(query, slackMsg.id);
-
-      const slackHistory = await slackService.getLastMentionedMessages(
-        slackMsg.channel,
-        teamId,
-        10
-      );
-      // Save user message
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      // Prepare messages for AI
+      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const model = getModel(agent);
+      const systemPrompt = getSystemPrompt({ agent, workflows, channel });
+      const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [
-        {
-          id: v4(),
-          role: "system",
-          metadata: { createdAt: new Date().toISOString() },
-          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
-        },
+        { id: v4(), role: "system", metadata: { createdAt: new Date().toISOString() }, parts: [{ type: "text", text: `PersonID: ${session.personId}` }] },
         ...session.messages,
         userMsg,
       ];
       const messages = convertToModelMessages(chatHistory);
-
-      const model = getModel(agent);
-      const systemPrompt = await getSystemPrompt(agent, query, channel);
-      const actions = await actionService.getActions(agent.wid);
-      const customTools = getCustomTools(actions);
       const result = await generateText({
         model,
         system: `

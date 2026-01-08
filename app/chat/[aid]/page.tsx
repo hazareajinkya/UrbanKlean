@@ -33,7 +33,7 @@ export default function ChatPage() {
   const lastToolRef = useRef<string | null>(null);
   const isWidget = searchParams.get("widget") === "true";
   const fromPage = searchParams.get("fromPage") || undefined;
-  const { agent } = useAgent(aid);
+  const { agent, isLoading: agentLoading } = useAgent(aid);
   const { sessionId, session, person, isLoading, updatePerson } =
     useChatInit(aid);
 
@@ -144,6 +144,8 @@ export default function ChatPage() {
     }
   }, [isWidget]);
 
+  if (agentLoading) return <ChatLoader />;
+
   if (!agent)
     return (
       <div className="flex items-center justify-center flex-col h-screen bg-background px-6">
@@ -245,3 +247,31 @@ export default function ChatPage() {
     </div>
   );
 }
+
+const ChatLoader = () => (
+  <div className="h-screen flex flex-col bg-white">
+    <div className="px-4 pr-2 py-3 bg-gray-200 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse" />
+          <div className="h-3 bg-gray-300 rounded animate-pulse w-32" />
+        </div>
+      </div>
+    </div>
+    <div className="flex-1" />
+    <div className="px-3 pb-0 pt-3">
+      <div className="flex items-end gap-3">
+        <div className="flex-1 border-1 relative rounded-lg">
+          <div className="flex items-end gap-2 p-1 h-10">
+            <div className="w-full flex-1 relative">
+              <div className="h-0 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="py-4 text-center flex justify-center items-center gap-0">
+      <div className="h-2 bg-gray-200 rounded animate-pulse w-32" />
+    </div>
+  </div>
+);
