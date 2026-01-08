@@ -1,0 +1,7 @@
+
+{
+    "scripts": {
+        "setup": "pnpm install; cp $CONDUCTOR_ROOT_PATH/.env .env; cp $CONDUCTOR_ROOT_PATH/.env.production .env.production; cp $CONDUCTOR_ROOT_PATH/.env.development .env.development",
+        "run": "pnpm run dev"
+    }
+}
