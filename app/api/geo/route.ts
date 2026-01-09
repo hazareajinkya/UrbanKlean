@@ -13,12 +13,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // const isIndia = geo.country === "IN";
-    const isIndia = true;
+    const isIndia = geo.country === "IN";
     return successResponse(
       {
-        // country: geo.country,
-        country: "India",
+        country: geo.country,
         city: geo.city || null,
         region: geo.region || null,
         isIndia,
