@@ -3,25 +3,25 @@
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemoModal } from "../landing/demo-modal";
 import { MESSAGE_TIERS, PLANS } from "@/lib/plans";
-import { usePaddleCheckout } from "@/lib/hooks/use-paddle-checkout";
-import { initializePaddle } from "@/lib/clients/paddle";
+import { usePolarCheckout } from "@/lib/hooks/use-polar-checkout";
+import { useRazorpayCheckout } from "@/lib/hooks/use-razorpay-checkout";
 import { PricingFaq } from "./pricing-faq";
+import { useGeo } from "@/lib/hooks/geo/use-geo";
 
 export const PricingContent = () => {
   const [usage, setUsage] = useState([10]); // 10k default
-  const { initiateCheckout } = usePaddleCheckout();
+  const { initiateCheckout: initiatePolarCheckout } = usePolarCheckout();
+  const { initiateCheckout: initiateRazorpayCheckout } = useRazorpayCheckout();
   const { openDemoModal } = useDemoModal();
 
-  // Initialize Paddle SDK on mount
-  useEffect(() => {
-    initializePaddle().catch((error) => {
-      console.error("Failed to initialize Paddle:", error);
-    });
-  }, []);
+  // Fetch user's geo location
+  const { isIndia, isLoading: isGeoLoading } = useGeo();
+  const currencySymbol = isIndia ? "₹" : "$";
 
   const handleSliderChange = (value: number[]) => {
     setUsage(value);
@@ -45,6 +45,14 @@ export const PricingContent = () => {
     const growthPlan = PLANS.growth;
     const scalePlan = PLANS.scale;
 
+    // Helper to get price based on currency
+    const getPrice = (
+      tierData: { price: { inr: number; usd: number } } | undefined
+    ) => {
+      if (!tierData) return null;
+      return isIndia ? tierData.price.inr : tierData.price.usd;
+    };
+
     const growthPlanData = (() => {
       const maxMessages = growthPlan.maxMessages;
       const isWithinGrowthLimit = currentUsage <= maxMessages;
@@ -60,14 +68,14 @@ export const PricingContent = () => {
       let buttonText = "Choose Plan";
 
       if (isWithinGrowthLimit && tierData) {
-        price = tierData.price;
+        price = getPrice(tierData);
         isActive = true;
         messages = `${selectedTierInK}k`;
         messagePrefix = "Includes";
         if (currentUsage <= 10000) isRecommended = true;
       } else {
         const maxTier = growthPlan.tiers.find((t) => t.messages === 10000);
-        price = maxTier?.price || null;
+        price = getPrice(maxTier);
         messages = "10k";
         messagePrefix = "Includes";
         buttonText = "Available up to 10k only";
@@ -87,7 +95,8 @@ export const PricingContent = () => {
         badgeText: isRecommended ? "Recommended" : undefined,
         planId: growthPlan.id as "growth" | "scale",
         tier: selectedTier,
-        paddlePriceId: tierData?.paddlePriceId,
+        paddlePriceId: tierData?.priceIds.paddle,
+        razorpayPlanId: tierData?.priceIds.razorpay,
       };
     })();
 
@@ -102,14 +111,14 @@ export const PricingContent = () => {
       let buttonText = "Choose Plan";
 
       if (tierData && currentUsage <= 30000) {
-        price = tierData.price;
+        price = getPrice(tierData);
         isActive = true;
         messages = `${selectedTierInK}k`;
         messagePrefix = "Includes";
         if (currentUsage > 10000 && currentUsage <= 30000) isRecommended = true;
       } else if (currentUsage > 30000) {
         const maxTier = scalePlan.tiers.find((t) => t.messages === 30000);
-        price = maxTier?.price || null;
+        price = getPrice(maxTier);
         messages = "30k";
         messagePrefix = "Includes";
         buttonText = "Available up to 30k only";
@@ -129,7 +138,8 @@ export const PricingContent = () => {
         badgeText: isRecommended ? "Best Value" : undefined,
         planId: scalePlan.id as "growth" | "scale",
         tier: selectedTier,
-        paddlePriceId: tierData?.paddlePriceId,
+        paddlePriceId: tierData?.priceIds.paddle,
+        razorpayPlanId: tierData?.priceIds.razorpay,
       };
     })();
 
@@ -163,14 +173,13 @@ export const PricingContent = () => {
     return [growthPlanData, scalePlanData, enterprisePlanData];
   };
 
-  const pricingTiers = useMemo(() => getPricingData(), [currentUsage]);
+  const pricingTiers = useMemo(() => getPricingData(), [currentUsage, isIndia]);
 
   const handleCheckout = (tier: (typeof pricingTiers)[0]) => {
     if (tier.id === "enterprise") {
       openDemoModal();
       return;
     }
-    console.log("process.env: ", process.env);
 
     // In production, open demo modal for all pricing buttons
     if (process.env.NEXT_PUBLIC_ENV === "production") {
@@ -179,10 +188,18 @@ export const PricingContent = () => {
     }
 
     if (tier.planId && tier.tier !== undefined) {
-      initiateCheckout({
-        planId: tier.planId,
-        tier: tier.tier,
-      });
+      // Use Razorpay for India, Polar for international
+      if (isIndia) {
+        initiateRazorpayCheckout({
+          planId: tier.planId,
+          tier: tier.tier,
+        });
+      } else {
+        initiatePolarCheckout({
+          planId: tier.planId,
+          tier: tier.tier,
+        });
+      }
     }
   };
 
@@ -193,7 +210,7 @@ export const PricingContent = () => {
 
   return (
     <>
-      <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6">
+      <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full">
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
           <h1 className="section-heading">
@@ -254,75 +271,123 @@ export const PricingContent = () => {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
-          {pricingTiers.map((tier) => (
-            <div
-              key={tier.name}
-              className={cn(
-                "relative flex flex-col p-8 rounded-xl border transition-all duration-200",
-                tier.isRecommended
-                  ? "border-primary shadow-lg scale-105 z-10 bg-card"
-                  : "border-border bg-card/50",
-                !tier.isActive && "opacity-60 cursor-not-allowed"
-              )}
-            >
-              {tier.isRecommended && tier.badgeText && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                  {tier.badgeText}
-                </div>
-              )}
-
-              <div className="mb-8">
-                <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-                <p className="text-sm text-muted-foreground min-h-[40px]">
-                  {tier.description}
-                </p>
-              </div>
-
-              <div className="mb-8">
-                {tier.price !== null ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold">${tier.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+        {isGeoLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
+            {[...Array(3)].map((_, index) => {
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "relative flex flex-col p-8 rounded-xl border transition-all duration-200 h-full"
+                  )}
+                >
+                  <div className="mb-8">
+                    <Skeleton className="h-8 w-32 mb-2" />
+                    <Skeleton className="h-4 w-48" />
                   </div>
-                ) : (
-                  <div className="text-3xl font-bold">Talk to us</div>
-                )}
-                <div className="text-sm font-medium text-primary mt-2">
-                  {tier.price !== null
-                    ? `${tier.messagePrefix} ${tier.messages} messages / month`
-                    : `${tier.messages} messages`}
-                </div>
-              </div>
 
-              <Button
-                disabled={!tier.isActive}
-                onClick={() => handleCheckout(tier)}
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <Skeleton className="h-10 w-40" />
+                    </div>
+                    <Skeleton className="h-5 w-36" />
+                  </div>
+
+                  <Skeleton className="h-10 w-full rounded-full mb-8" />
+
+                  <div className="space-y-4 flex-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                        <Skeleton
+                          className={cn(
+                            "h-4 rounded",
+                            i % 2 === 0 ? "w-3/4" : "w-1/2"
+                          )}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
+            {pricingTiers.map((tier) => (
+              <div
+                key={tier.name}
                 className={cn(
-                  "w-full mb-8 rounded-full",
+                  "relative flex flex-col p-8 rounded-xl border transition-all duration-200",
                   tier.isRecommended
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : !tier.isActive
-                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                    : "bg-foreground text-background"
+                    ? "border-primary shadow-lg scale-105 z-10 bg-card"
+                    : "border-border bg-card/50",
+                  !tier.isActive && "opacity-60 cursor-not-allowed"
                 )}
               >
-                {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
-                {tier.buttonText}
-              </Button>
+                {tier.isRecommended && tier.badgeText && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                    {tier.badgeText}
+                  </div>
+                )}
 
-              <ul className="space-y-4 flex-1">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className="w-5 h-5 text-primary shrink-0" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
+                  <p className="text-sm text-muted-foreground min-h-[40px]">
+                    {tier.description}
+                  </p>
+                </div>
+
+                <div className="mb-8">
+                  {tier.price !== null ? (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold">
+                        {currencySymbol}
+                        {tier.price.toLocaleString()}
+                      </span>
+                      <span className="text-muted-foreground">/month</span>
+                    </div>
+                  ) : (
+                    <div className="text-3xl font-bold">Talk to us</div>
+                  )}
+                  <div className="text-sm font-medium text-primary mt-2">
+                    {tier.price !== null
+                      ? `${tier.messagePrefix} ${tier.messages} messages / month`
+                      : `${tier.messages} messages`}
+                  </div>
+                </div>
+
+                <Button
+                  disabled={!tier.isActive}
+                  onClick={() => handleCheckout(tier)}
+                  className={cn(
+                    "w-full mb-8 rounded-full",
+                    tier.isRecommended
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : !tier.isActive
+                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      : "bg-foreground text-background"
+                  )}
+                >
+                  {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
+                  {tier.buttonText}
+                </Button>
+
+                <ul className="space-y-4 flex-1">
+                  {tier.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm"
+                    >
+                      <Check className="w-5 h-5 text-primary shrink-0" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Footer CTA */}
         <div className="text-center mt-16 text-muted-foreground text-sm">
