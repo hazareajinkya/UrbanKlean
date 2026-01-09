@@ -32,6 +32,8 @@ import {
 import { useUsage } from "@/lib/hooks/usage/use-usage";
 import { IUsage } from "@/lib/types/usage";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSubscriptionActions } from "@/lib/hooks/subscription/use-subscription-actions";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 interface BillingTabProps {
   wid?: string;
@@ -81,6 +83,14 @@ export default function BillingTab({ wid }: BillingTabProps) {
   const { user } = useCurrentUser();
   const { data: usageData, isLoading: isUsageLoading } = useUsage(wid || "");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const {
+    provider,
+    manageSubscription,
+    cancelSubscription,
+    isManaging,
+    isCanceling,
+  } = useSubscriptionActions();
 
   const subscription = user?.subscription;
 
@@ -132,12 +142,23 @@ export default function BillingTab({ wid }: BillingTabProps) {
     }
   }, [totalPages, currentPage]);
 
-  const manageSubscription = () => {
-    const paddleCustomerPortalUrl =
-      process.env.NEXT_PUBLIC_PADDLE_CUSTOMER_PORTAL;
-    if (paddleCustomerPortalUrl) {
-      window.open(paddleCustomerPortalUrl, "_blank");
+  const handleManageSubscription = () => {
+    console.log("provider", provider);
+    manageSubscription();
+  };
+
+  const handleCancelClick = () => {
+    if (provider === "razorpay" || provider === "polar") {
+      setShowCancelDialog(true);
+    } else {
+      // For Paddle, cancellation is handled in their portal
+      manageSubscription();
     }
+  };
+
+  const handleCancelConfirm = () => {
+    cancelSubscription(true); // Cancel at cycle end
+    setShowCancelDialog(false);
   };
 
   return (
@@ -171,7 +192,10 @@ export default function BillingTab({ wid }: BillingTabProps) {
                 </div>
               </div>
 
-              <p className="text-lg font-medium"> ${tier?.price} / month</p>
+              <p className="text-lg font-medium">
+                {" "}
+                ${tier?.price?.usd || 0} / month
+              </p>
             </div>
           </CardHeader>
 
@@ -199,18 +223,22 @@ export default function BillingTab({ wid }: BillingTabProps) {
               <Button
                 variant="outline"
                 className="rounded-full"
-                onClick={manageSubscription}
+                onClick={handleManageSubscription}
+                disabled={isManaging || !provider}
               >
                 <CreditCard className="w-4 h-4" />
                 Manage Subscription
               </Button>
-              <Button
-                variant="outline"
-                className="text-destructive rounded-full"
-                onClick={manageSubscription}
-              >
-                Cancel
-              </Button>
+              {(provider === "razorpay" || provider === "polar") && (
+                <Button
+                  variant="outline"
+                  className="text-destructive rounded-full"
+                  onClick={handleCancelClick}
+                  disabled={isCanceling}
+                >
+                  Cancel
+                </Button>
+              )}
             </div>
           </CardFooter>
         </Card>
@@ -363,6 +391,19 @@ export default function BillingTab({ wid }: BillingTabProps) {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmationDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={handleCancelConfirm}
+        title="Cancel Subscription"
+        description="Are you sure you want to cancel your subscription? Your subscription will remain active until the end of the current billing period."
+        warningMessage="You will lose access to premium features at the end of your billing cycle."
+        confirmText="Cancel Subscription"
+        cancelText="Keep Subscription"
+        isLoading={isCanceling}
+        variant="destructive"
+      />
     </motion.div>
   );
 }

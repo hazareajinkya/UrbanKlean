@@ -11,15 +11,23 @@ export const PLANS = {
     tiers: [
       {
         messages: 5000,
-        price: 99,
+        price: { inr: 9900, usd: 99 },
         id: "growth_5k_monthly",
-        paddlePriceId: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
+        priceIds: {
+          paddle: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
+          razorpay: "plan_S0ucywKrTQyOtd",
+          polar: "42f12571-1107-4ac3-a7cb-291f0e3db87b",
+        },
       },
       {
         messages: 10000,
-        price: 149,
+        price: { inr: 14900, usd: 149 },
         id: "growth_10k_monthly",
-        paddlePriceId: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
+        priceIds: {
+          paddle: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
+          razorpay: "plan_S0udQKkiRc30OX",
+          polar: "876c54dd-f455-4eaa-adc7-660fdef9780a",
+        },
       },
     ],
     features: [
@@ -42,39 +50,63 @@ export const PLANS = {
     tiers: [
       {
         messages: 5000,
-        price: 169,
+        price: { inr: 16900, usd: 169 },
         id: "scale_5k_monthly",
-        paddlePriceId: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
+        priceIds: {
+          paddle: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
+          razorpay: "",
+          polar: "",
+        },
       },
       {
         messages: 10000,
-        price: 199,
+        price: { inr: 19900, usd: 199 },
         id: "scale_10k_monthly",
-        paddlePriceId: "pri_01kc1mw2vb2a27yf2bs5phshh8",
+        priceIds: {
+          paddle: "pri_01kc1mw2vb2a27yf2bs5phshh8",
+          razorpay: "",
+          polar: "",
+        },
       },
       {
         messages: 15000,
-        price: 229,
+        price: { inr: 22900, usd: 229 },
         id: "scale_15k_monthly",
-        paddlePriceId: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
+        priceIds: {
+          paddle: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
+          razorpay: "",
+          polar: "",
+        },
       },
       {
         messages: 20000,
-        price: 259,
+        price: { inr: 25900, usd: 259 },
         id: "scale_20k_monthly",
-        paddlePriceId: "pri_01kc1mx7yw2m42726y49wqpzb6",
+        priceIds: {
+          paddle: "pri_01kc1mx7yw2m42726y49wqpzb6",
+          razorpay: "",
+          polar: "",
+        },
       },
       {
         messages: 25000,
-        price: 289,
+        price: { inr: 28900, usd: 289 },
         id: "scale_25k_monthly",
-        paddlePriceId: "pri_01kc1mxn498qhsb7fhway6ea5f",
+        priceIds: {
+          paddle: "pri_01kc1mxn498qhsb7fhway6ea5f",
+          razorpay: "",
+          polar: "",
+        },
       },
       {
         messages: 30000,
-        price: 319,
+        price: { inr: 31900, usd: 319 },
         id: "scale_30k_monthly",
-        paddlePriceId: "pri_01kc1my82mrddwgat580shdfz9",
+        priceIds: {
+          paddle: "pri_01kc1my82mrddwgat580shdfz9",
+          razorpay: "",
+          polar: "",
+        },
       },
     ],
     features: [
@@ -93,9 +125,25 @@ export const PLANS = {
   },
 } as const;
 
-export const getPlanByPriceId = (priceId: string) => {
+export const getPlanByPaddlePriceId = (priceId: string) => {
   for (const [planKey, plan] of Object.entries(PLANS)) {
-    const tier = plan.tiers.find((t) => t.paddlePriceId === priceId);
+    const tier = plan.tiers.find((t) => t.priceIds.paddle === priceId);
+    if (tier) return { planId: planKey, planName: plan.name, tier };
+  }
+  return null;
+};
+
+export const getPlanByRazorpayPlanId = (razorpayPlanId: string) => {
+  for (const [planKey, plan] of Object.entries(PLANS)) {
+    const tier = plan.tiers.find((t) => t.priceIds.razorpay === razorpayPlanId);
+    if (tier) return { planId: planKey, planName: plan.name, tier };
+  }
+  return null;
+};
+
+export const getPlanByPolarProductId = (polarProductId: string) => {
+  for (const [planKey, plan] of Object.entries(PLANS)) {
+    const tier = plan.tiers.find((t) => t.priceIds.polar === polarProductId);
     if (tier) return { planId: planKey, planName: plan.name, tier };
   }
   return null;

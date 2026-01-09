@@ -44,7 +44,7 @@ export const usePaddleCheckout = () => {
     }
 
     const tierData = plan.tiers.find((t) => t.messages === tier);
-    if (!tierData?.paddlePriceId) {
+    if (!tierData?.priceIds.paddle) {
       const errorMessage = `Price ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
       toast.error(errorMessage);
@@ -71,7 +71,7 @@ export const usePaddleCheckout = () => {
       paddle.Checkout.open({
         items: [
           {
-            priceId: tierData.paddlePriceId,
+            priceId: tierData.priceIds.paddle,
             quantity: 1,
           },
         ],
