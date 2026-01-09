@@ -1,13 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IAnalytics } from "@/lib/types/analytics";
@@ -19,11 +17,11 @@ interface ConversationsChartProps {
 
 const channelColors: Record<string, string> = {
   web: "hsl(221, 83%, 53%)", // Blue
-  email: "hsl(142, 76%, 36%)", // Green
-  whatsapp: "hsl(142, 71%, 45%)", // Green variant
-  messenger: "hsl(262, 83%, 58%)", // Purple
-  instagram: "hsl(340, 75%, 55%)", // Pink
-  slack: "hsl(0, 0%, 20%)", // Dark gray
+  email: "hsl(38, 92%, 50%)", // Orange
+  whatsapp: "hsl(142, 70%, 45%)", // WhatsApp Green
+  messenger: "hsl(214, 89%, 52%)", // Messenger Blue
+  instagram: "hsl(326, 78%, 55%)", // Instagram Pink/Magenta
+  slack: "hsl(283, 65%, 50%)", // Slack Purple
 };
 
 export const ConversationsChart = ({
@@ -106,161 +104,100 @@ export const ConversationsChart = ({
           7-Day Conversations by Channel
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[280px] w-full">
-          <AreaChart
+      <CardContent className="space-y-4">
+        <ChartContainer config={chartConfig} className="h-[260px] w-full">
+          <BarChart
             data={chartData}
-            margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
+            barCategoryGap="20%"
           >
-            <defs>
-              <linearGradient id="web" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.web}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.web}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="email" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.email}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.email}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="whatsapp" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.whatsapp}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.whatsapp}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="messenger" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.messenger}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.messenger}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="instagram" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.instagram}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.instagram}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="slack" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor={channelColors.slack}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={channelColors.slack}
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              className="stroke-muted/30"
+            />
             <XAxis
               dataKey="formattedDate"
               tickLine={false}
               axisLine={false}
-              tickMargin={6}
+              tickMargin={8}
               className="text-xs"
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
-              tickMargin={6}
+              tickMargin={8}
+              width={35}
               className="text-xs"
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
             />
             <ChartTooltip
+              cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
               content={
                 <ChartTooltipContent
+                  labelFormatter={(label) => `Date: ${label}`}
                   formatter={(value, name) => [
-                    `${value} `,
+                    `${value} conversations`,
                     chartConfig[name as keyof typeof chartConfig]?.label ||
                       name,
                   ]}
                 />
               }
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="web"
               stackId="1"
-              stroke={channelColors.web}
-              fill="url(#web)"
+              fill={channelColors.web}
+              className="transition-opacity hover:opacity-80"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="email"
               stackId="1"
-              stroke={channelColors.email}
-              fill="url(#email)"
+              fill={channelColors.email}
+              className="transition-opacity hover:opacity-80"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="whatsapp"
               stackId="1"
-              stroke={channelColors.whatsapp}
-              fill="url(#whatsapp)"
+              fill={channelColors.whatsapp}
+              className="transition-opacity hover:opacity-80"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="messenger"
               stackId="1"
-              stroke={channelColors.messenger}
-              fill="url(#messenger)"
+              fill={channelColors.messenger}
+              className="transition-opacity hover:opacity-80"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="instagram"
               stackId="1"
-              stroke={channelColors.instagram}
-              fill="url(#instagram)"
+              fill={channelColors.instagram}
+              className="transition-opacity hover:opacity-80"
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="slack"
               stackId="1"
-              stroke={channelColors.slack}
-              fill="url(#slack)"
+              fill={channelColors.slack}
+              radius={[4, 4, 0, 0]}
+              className="transition-opacity hover:opacity-80"
             />
-            <ChartLegend
-              content={<ChartLegendContent nameKey="name" />}
-              className="-bottom-1"
-            />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 border-t border-border/50">
+          {Object.entries(chartConfig).map(([key, config]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <span
+                className="h-3 w-3 rounded-sm shrink-0"
+                style={{ backgroundColor: config.color }}
+                aria-hidden="true"
+              />
+              <span className="text-xs text-muted-foreground font-medium">
+                {config.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

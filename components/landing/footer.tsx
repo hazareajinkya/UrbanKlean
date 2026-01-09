@@ -91,7 +91,7 @@ export const Footer = () => {
               <img
                 src="/logos/magicalcx-full-trans-light.png"
                 alt="Magical CX Logo"
-                className="w-10 h-10 sm:w-30 sm:h-12 object-contain rounded-md"
+                className="h-10 w-24 sm:w-30 sm:h-12 object-contain rounded-md"
               />
             </div>
 
