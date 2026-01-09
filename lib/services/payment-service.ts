@@ -13,7 +13,7 @@ import {
   mapPolarStatus,
 } from "../clients/polar";
 import {
-  getPlanByPriceId,
+  getPlanByPaddlePriceId,
   getPlanByRazorpayPlanId,
   getPlanByPolarProductId,
   PLANS,
@@ -51,7 +51,7 @@ class PaymentService {
         customerId: data.customer_id,
         planId: customData.planId,
         tierId: customData.tierId,
-        paddlePriceId: tierData.paddlePriceId,
+        paddlePriceId: tierData.priceIds.paddle,
         status: data.status,
         recurringQuota,
         startedAt: data.started_at,
@@ -93,13 +93,18 @@ class PaymentService {
       // Check for plan change via price_id
       const currentPriceId = data.items?.[0]?.price_id;
       if (currentPriceId) {
-        const planInfo = getPlanByPriceId(currentPriceId);
+        const planInfo = getPlanByPaddlePriceId(currentPriceId);
         if (planInfo && planInfo.tier.id !== user.subscription?.tierId) {
           updatedSubscription.planId = planInfo.planId;
           updatedSubscription.tierId = planInfo.tier.id;
           updatedSubscription.recurringQuota = planInfo.tier.messages;
           console.log(
             `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`
+          );
+          // Update recurring credits to match new tier
+          await creditService.renewQuota(
+            customData.userEmail,
+            planInfo.tier.messages
           );
         }
       }
@@ -147,6 +152,9 @@ class PaymentService {
       await userService.updateUser(customData.userEmail, {
         subscription: updatedSubscription,
       });
+
+      // Update recurring credits to 0 when subscription is canceled
+      await creditService.renewQuota(customData.userEmail, 0);
 
       console.log(`Subscription canceled for ${customData.userEmail}`);
       return { success: true };
@@ -332,6 +340,9 @@ class PaymentService {
         subscription: updatedSubscription,
       });
 
+      // Update recurring credits to 0 when subscription is canceled
+      await creditService.renewQuota(notes.userEmail, 0);
+
       console.log(`Razorpay subscription cancelled for ${notes.userEmail}`);
       return { success: true };
     } catch (error) {
@@ -462,7 +473,8 @@ class PaymentService {
 
       const plan = PLANS[metadata.planId as keyof typeof PLANS];
       const tierData = plan?.tiers.find((tier) => tier.id === metadata.tierId);
-      const recurringQuota = tierData?.messages || user.subscription?.recurringQuota || 0;
+      const recurringQuota =
+        tierData?.messages || user.subscription?.recurringQuota || 0;
 
       // Check for plan change via product_id
       const currentProductId = data.productId;
@@ -481,6 +493,11 @@ class PaymentService {
           await userService.updateUser(metadata.userEmail, {
             subscription: updatedSubscription,
           });
+          // Update recurring credits to match new tier
+          await creditService.renewQuota(
+            metadata.userEmail,
+            planInfo.tier.messages
+          );
           console.log(
             `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`
           );
@@ -544,6 +561,9 @@ class PaymentService {
       await userService.updateUser(metadata.userEmail, {
         subscription: updatedSubscription,
       });
+
+      // Update recurring credits to 0 when subscription is canceled
+      await creditService.renewQuota(metadata.userEmail, 0);
 
       console.log(`Polar subscription canceled for ${metadata.userEmail}`);
       return { success: true };

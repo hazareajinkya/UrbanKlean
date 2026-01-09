@@ -70,7 +70,7 @@ export const usePolarCheckout = () => {
     }
 
     const tierData = plan.tiers.find((t) => t.messages === tier);
-    if (!tierData?.polarProductId) {
+    if (!tierData?.priceIds.polar) {
       const errorMessage = `Polar Product ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
       toast.error(errorMessage);
@@ -106,4 +106,3 @@ export const usePolarCheckout = () => {
     isLoading: isLoading || createCheckoutMutation.isPending,
   };
 };
-

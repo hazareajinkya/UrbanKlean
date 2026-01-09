@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tierData = plan.tiers.find((t) => t.messages === tier);
-    if (!tierData?.razorpayPlanId) {
+    if (!tierData?.priceIds.razorpay) {
       return errorResponse(
         `Razorpay Plan ID not found for ${planId} tier ${tier}`,
         400
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     };
 
     const subscription = await razorpayApi.createSubscription({
-      planId: tierData.razorpayPlanId,
+      planId: tierData.priceIds.razorpay,
       totalCount: 12,
       notes,
     });

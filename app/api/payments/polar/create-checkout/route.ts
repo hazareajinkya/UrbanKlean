@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tierData = plan.tiers.find((t) => t.messages === tier);
-    if (!tierData?.polarProductId) {
+    if (!tierData?.priceIds.polar) {
       return errorResponse(
         `Polar Product ID not found for ${planId} tier ${tier}`,
         400
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }/checkout/success?plan=${planId}&tier=${tier}`;
 
     const checkout = await polarApi.createCheckoutSession({
-      productId: tierData.polarProductId,
+      productId: tierData.priceIds.polar,
       customerEmail: userEmail,
       successUrl,
       metadata,

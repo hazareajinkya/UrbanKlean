@@ -128,7 +128,7 @@ export const useRazorpayCheckout = () => {
     }
 
     const tierData = plan.tiers.find((t) => t.messages === tier);
-    if (!tierData?.razorpayPlanId) {
+    if (!tierData?.priceIds.razorpay) {
       const errorMessage = `Razorpay Plan ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
       toast.error(errorMessage);

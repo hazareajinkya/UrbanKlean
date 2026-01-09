@@ -7,6 +7,7 @@ import {
 } from "@/lib/types/api-response";
 import userService from "@/lib/services/user-service";
 import paymentService from "@/lib/services/payment-service";
+import creditService from "@/lib/services/credit-service";
 import { IUserSubscription } from "@/lib/types/user";
 
 import z from "zod";
@@ -147,6 +148,9 @@ export async function POST(req: NextRequest) {
       await userService.updateUser(userEmail, {
         subscription: updatedSubscription,
       });
+
+      // Update recurring credits to 0 when subscription is canceled immediately
+      await creditService.renewQuota(userEmail, 0);
     }
 
     return successResponse({

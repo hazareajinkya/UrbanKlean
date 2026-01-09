@@ -42,19 +42,21 @@ export async function POST(req: NextRequest) {
     const eventType = event.type;
     const eventData = event.data;
 
+    const subscriptionData = mapSubscriptionToPolarData(eventData as any);
+
     switch (eventType) {
       case "subscription.created":
       case "subscription.active":
-        await handleSubscriptionActive(eventData as any);
+        await handleSubscriptionActive(subscriptionData);
         break;
       case "subscription.updated":
-        await handleSubscriptionUpdated(eventData as any);
+        await handleSubscriptionUpdated(subscriptionData);
         break;
       case "subscription.canceled":
-        await handleSubscriptionCanceled(eventData as any);
+        await handleSubscriptionCanceled(subscriptionData);
         break;
       case "subscription.revoked":
-        await handleSubscriptionRevoked(eventData as any);
+        await handleSubscriptionRevoked(subscriptionData);
         break;
       default:
         console.log(`Unhandled event type: ${eventType}`);
@@ -105,21 +107,26 @@ function mapSubscriptionToPolarData(data: any): PolarSubscriptionData {
   };
 }
 
-async function handleSubscriptionActive(data: any) {
-  const subscriptionData = mapSubscriptionToPolarData(data);
+async function handleSubscriptionActive(
+  subscriptionData: PolarSubscriptionData
+) {
   await paymentService.handlePolarSubscriptionCreated(subscriptionData);
 }
 
-async function handleSubscriptionUpdated(data: any) {
-  const subscriptionData = mapSubscriptionToPolarData(data);
+async function handleSubscriptionUpdated(
+  subscriptionData: PolarSubscriptionData
+) {
   await paymentService.handlePolarSubscriptionUpdated(subscriptionData);
 }
 
-async function handleSubscriptionCanceled(data: any) {
-  const subscriptionData = mapSubscriptionToPolarData(data);
+async function handleSubscriptionCanceled(
+  subscriptionData: PolarSubscriptionData
+) {
   await paymentService.handlePolarSubscriptionCanceled(subscriptionData);
 }
 
-async function handleSubscriptionRevoked(data: any) {
-  await handleSubscriptionCanceled(data);
+async function handleSubscriptionRevoked(
+  subscriptionData: PolarSubscriptionData
+) {
+  await handleSubscriptionCanceled(subscriptionData);
 }

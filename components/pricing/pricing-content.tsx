@@ -95,8 +95,8 @@ export const PricingContent = () => {
         badgeText: isRecommended ? "Recommended" : undefined,
         planId: growthPlan.id as "growth" | "scale",
         tier: selectedTier,
-        paddlePriceId: tierData?.paddlePriceId,
-        razorpayPlanId: tierData?.razorpayPlanId,
+        paddlePriceId: tierData?.priceIds.paddle,
+        razorpayPlanId: tierData?.priceIds.razorpay,
       };
     })();
 
@@ -138,8 +138,8 @@ export const PricingContent = () => {
         badgeText: isRecommended ? "Best Value" : undefined,
         planId: scalePlan.id as "growth" | "scale",
         tier: selectedTier,
-        paddlePriceId: tierData?.paddlePriceId,
-        razorpayPlanId: tierData?.razorpayPlanId,
+        paddlePriceId: tierData?.priceIds.paddle,
+        razorpayPlanId: tierData?.priceIds.razorpay,
       };
     })();
 
