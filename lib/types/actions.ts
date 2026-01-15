@@ -9,18 +9,19 @@ export interface IAction {
   description: string;
   type: IActionType;
 
+  integration: IActionIntegration;
   apiUrl: string;
   requestType: IRequestType;
   headers: Record<string, string>;
   authorization: IActionAuthorization;
   inputs: IActionInput[];
-
+  status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
 }
-
+export type IActionIntegration = "shopify" | "none";
 export type IActionAuthorization = {
-  type: "none" | "api-key" | "bearer-token";
+  type: "none" | "api-key" | "bearer-token" | "parent";
   apiKey?: {
     key: string;
     value: string;
@@ -54,6 +55,8 @@ export const generateDefaultAction = (
 ): IAction => {
   return {
     id: v4(),
+    integration: "none",
+    status: "active",
     wid,
     name,
     slug,

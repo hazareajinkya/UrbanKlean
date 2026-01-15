@@ -1,25 +1,44 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { useState } from "react";
-import { RefreshCw, Plus, Code, Edit, Trash2, Loader } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Code, Loader } from "lucide-react";
 import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
-import { formatDate } from "@/lib/utils";
+import { useIntegrations } from "@/lib/hooks/integrations/use-integrations";
+import { useGlobalActions } from "@/lib/hooks/actions/use-global-actions";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { AddApiActionModal } from "@/components/actions";
+import { WorkspaceActionCard } from "@/components/actions/workspace-action-card";
+import { AvailableActionsPanel } from "@/components/actions/available-actions-panel";
+import { IAction } from "@/lib/types/actions";
 
 export default function ActionsPage() {
   const { wid } = useParams() as { wid: string };
   const [isAddActionModalOpen, setIsAddActionModalOpen] = useState(false);
-  const [editingAction, setEditingAction] = useState<any>(null);
+  const [editingAction, setEditingAction] = useState<IAction | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingAction, setDeletingAction] = useState<any>(null);
+  const [deletingAction, setDeletingAction] = useState<IAction | null>(null);
 
-  const { actions, isLoading } = useAIActions(wid);
-  const { deleteAction } = useAiActionsActions();
+  const { actions: workspaceActions, isLoading: isLoadingWorkspaceActions } =
+    useAIActions(wid);
+  const { integrations, isLoading: isLoadingIntegrations } =
+    useIntegrations(wid);
+
+  // Get integration types from connected integrations
+  const integrationTypes = useMemo(() => {
+    if (!integrations) return [];
+    return integrations
+      .filter((integration) => integration.status === "active")
+      .map((integration) => integration.type);
+  }, [integrations]);
+
+  const { actions: globalActions, isLoading: isLoadingGlobalActions } =
+    useGlobalActions(integrationTypes);
+
+  const { deleteAction, toggleActionStatus, addIntegrationAction } =
+    useAiActionsActions();
 
   const handleDeleteAction = () => {
     if (!deletingAction) return;
@@ -35,13 +54,41 @@ export default function ActionsPage() {
     );
   };
 
+  const handleToggleStatus = (
+    actionId: string,
+    status: "active" | "inactive"
+  ) => {
+    toggleActionStatus.mutate({ wid, actionId, status });
+  };
+
+  const handleAddIntegrationAction = (action: IAction) => {
+    addIntegrationAction.mutate({ wid, globalAction: action });
+  };
+
+  const handleEditAction = (action: IAction) => {
+    if (action.type === "user") {
+      setEditingAction(action);
+      setIsAddActionModalOpen(true);
+    }
+  };
+
+  const handleDeleteActionClick = (action: IAction) => {
+    setDeletingAction(action);
+    setIsDeleteModalOpen(true);
+  };
+
+  const isLoading =
+    isLoadingWorkspaceActions ||
+    isLoadingIntegrations ||
+    isLoadingGlobalActions;
+
   return (
-    <div className="p-4">
+    <div className="p-4 h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl ">Actions</h1>
+          <h1 className="text-xl font-medium">Actions</h1>
           <p className="text-sm text-muted-foreground">
-            Manage your custom API actions
+            Manage your workspace actions and add integration actions
           </p>
         </div>
         <Button
@@ -49,75 +96,56 @@ export default function ActionsPage() {
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add Action
+          Create Custom Action
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <Loader className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading actions...</p>
-        </div>
-      ) : actions && actions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {actions.map((action) => (
-            <Card key={action.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="space-y-0 pt-0">
-                <div className="mb-4 flex gap-2 items-center justify-between">
-                  <div>
-                    <p className="font-mediu">{action.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {action.description}
-                    </p>
-                  </div>
-                  <div className="">
-                    <img
-                      src="/api-logo.png"
-                      alt="API Logo"
-                      className="w-8 h-8 rounded-sm object-cover"
-                    />
-                  </div>
-
-                  {/* <div className="uppercase text-xs text-muted-foreground bg-muted px-2 rounded-sm py-0.5">
-                    {action.type}
-                  </div> */}
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-xs text-muted-foreground">{action.slug}</p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingAction(action);
-                        setIsAddActionModalOpen(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setDeletingAction(action);
-                        setIsDeleteModalOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading actions...</p>
+          </div>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <Code className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            No custom actions yet. <br /> Create your first API action to get
-            started.
-          </p>
+        <div className="flex-1 flex gap-6 min-h-0">
+          {/* Left Panel - Workspace Actions */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto">
+              {workspaceActions && workspaceActions.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {workspaceActions.map((action) => (
+                    <WorkspaceActionCard
+                      key={action.id}
+                      action={action}
+                      onToggleStatus={handleToggleStatus}
+                      onEdit={
+                        action.type === "user" ? handleEditAction : undefined
+                      }
+                      onDelete={handleDeleteActionClick}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Code className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    No actions in your workspace yet. <br /> Add integration
+                    actions from the right panel or create a custom action.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="w-[340px] flex-shrink-0 border rounded-lg p-4 bg-muted/30">
+            <AvailableActionsPanel
+              actions={globalActions}
+              workspaceActions={workspaceActions}
+              isLoading={isLoadingGlobalActions}
+              onAddAction={handleAddIntegrationAction}
+            />
+          </div>
         </div>
       )}
 

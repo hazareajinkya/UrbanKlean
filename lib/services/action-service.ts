@@ -7,6 +7,7 @@ import {
   getDocs,
   collection,
 } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 import { IAction } from "../types/actions";
 import { db } from "../clients/firebase";
 import { IWorkflow } from "../types/workflow";
@@ -85,6 +86,52 @@ class ActionService {
     // Short-circuit: no workflows or no toolIds means no actions
     if (actionIds.size === 0) return [];
     return this.getActions(wid, { ids: Array.from(actionIds) });
+  }
+
+  async toggleActionStatus({
+    wid,
+    actionId,
+    status,
+  }: {
+    wid: string;
+    actionId: string;
+    status: "active" | "inactive";
+  }) {
+    await updateDoc(doc(db, `workspaces/${wid}/actions/${actionId}`), {
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "actions", id: wid });
+  }
+
+  async addIntegrationAction({
+    wid,
+    globalAction,
+  }: {
+    wid: string;
+    globalAction: IAction;
+  }) {
+    // Create a copy of the global action with new ID and workspace ID
+    const workspaceAction: IAction = {
+      ...globalAction,
+      id: uuidv4(), // Generate new ID to avoid conflicts
+      wid,
+      status: "active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(
+      doc(db, `workspaces/${wid}/actions/${workspaceAction.id}`),
+      workspaceAction
+    );
+
+    // Invalidate server-side cache via API
+    invalidateCache({ type: "actions", id: wid });
+
+    return workspaceAction;
   }
 }
 
