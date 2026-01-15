@@ -20,14 +20,10 @@ export default function SharePage() {
       <main className="flex-grow pt-20 pb-8 sm:pt-24 sm:pb-16 border-x section-container section-content-padding w-full flex flex-col justify-center">
         {/* Mobile: Compact header above iframe */}
         <div className="lg:hidden text-center mb-4 px-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
-            <Sparkles className="h-3 w-3" />
-            <span>AI-Powered Support</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-medium tracking-tight mb-2">
             Try it live
           </h1>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
             Chat with this AI agent built on Magical CX
           </p>
         </div>
@@ -36,14 +32,10 @@ export default function SharePage() {
           {/* Left Column: Text & CTA - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:flex flex-col items-start text-left space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                <Sparkles className="h-4 w-4" />
-                <span>AI-Powered Support</span>
-              </div>
               <h1 className="text-4xl sm:text-5xl font-medium tracking-tight">
                 Experience the future of customer support.
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-lg">
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed">
                 You're viewing a live AI agent built with Magical CX. Want to
                 create your own intelligent support experience that converts
                 visitors into customers?
@@ -110,7 +102,7 @@ export default function SharePage() {
               <h2 className="text-lg sm:text-xl font-medium">
                 Want your own AI agent?
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Create intelligent support that converts visitors into customers
               </p>
             </div>

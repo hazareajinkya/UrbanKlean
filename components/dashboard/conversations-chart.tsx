@@ -16,7 +16,7 @@ interface ConversationsChartProps {
 }
 
 const channelColors: Record<string, string> = {
-  web: "hsl(221, 83%, 53%)", // Blue
+  web: "hsl(var(--primary))", // Primary
   email: "hsl(38, 92%, 50%)", // Orange
   whatsapp: "hsl(142, 70%, 45%)", // WhatsApp Green
   messenger: "hsl(214, 89%, 52%)", // Messenger Blue
@@ -81,7 +81,7 @@ export const ConversationsChart = ({
 
   if (chartData.length === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-base">
             7-Day Conversations by Channel
@@ -98,7 +98,7 @@ export const ConversationsChart = ({
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">
           7-Day Conversations by Channel
@@ -134,16 +134,53 @@ export const ConversationsChart = ({
             />
             <ChartTooltip
               cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(label) => `Date: ${label}`}
-                  formatter={(value, name) => [
-                    `${value} conversations`,
-                    chartConfig[name as keyof typeof chartConfig]?.label ||
-                      name,
-                  ]}
-                />
-              }
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+
+                const filteredPayload = payload.filter(
+                  (item) => item.value !== 0
+                );
+
+                if (filteredPayload.length === 0) return null;
+
+                return (
+                  <div className="rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                    <div className="font-medium mb-1.5">Date: {label}</div>
+                    <div className="grid gap-1">
+                      {filteredPayload.map((item) => (
+                        <div
+                          key={item.dataKey}
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${
+                              item.dataKey === "web" ? "bg-primary" : ""
+                            }`}
+                            style={
+                              item.dataKey !== "web"
+                                ? {
+                                    backgroundColor:
+                                      chartConfig[
+                                        item.dataKey as keyof typeof chartConfig
+                                      ]?.color || item.color,
+                                  }
+                                : undefined
+                            }
+                          />
+                          <span className="text-muted-foreground">
+                            {chartConfig[
+                              item.dataKey as keyof typeof chartConfig
+                            ]?.label || item.dataKey}
+                          </span>
+                          <span className="ml-auto font-mono font-medium tabular-nums">
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Bar
               dataKey="web"
@@ -188,8 +225,12 @@ export const ConversationsChart = ({
           {Object.entries(chartConfig).map(([key, config]) => (
             <div key={key} className="flex items-center gap-1.5">
               <span
-                className="h-3 w-3 rounded-sm shrink-0"
-                style={{ backgroundColor: config.color }}
+                className={`h-3 w-3 rounded-sm shrink-0 ${
+                  key === "web" ? "bg-primary" : ""
+                }`}
+                style={
+                  key !== "web" ? { backgroundColor: config.color } : undefined
+                }
                 aria-hidden="true"
               />
               <span className="text-xs text-muted-foreground font-medium">

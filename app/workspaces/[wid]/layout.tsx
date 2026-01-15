@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   Rss,
   Settings2,
+  Code,
   Shield,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
@@ -156,6 +157,11 @@ const navigation = [
     title: "Actions",
     href: "/actions",
     icon: Zap,
+  },
+  {
+    title: "Integrations",
+    href: "/integrations",
+    icon: Code,
   },
 
   {
