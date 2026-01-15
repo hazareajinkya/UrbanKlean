@@ -418,3 +418,17 @@ export const getClientIp = (req: Request | { headers: Headers }): string => {
 
   return "unknown";
 };
+
+export const generateToken = (): string => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const part1 = Array.from({ length: 4 }, () =>
+    chars.charAt(Math.floor(Math.random() * chars.length))
+  ).join("");
+  const part2 = Array.from({ length: 4 }, () =>
+    chars.charAt(Math.floor(Math.random() * chars.length))
+  ).join("");
+  return `${part1}-${part2}`;
+};
+
+export const getShopifyProductActionId = (storeId: string) =>
+  `shopify-products-${storeId}`;

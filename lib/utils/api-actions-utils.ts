@@ -30,16 +30,20 @@ export const executeAPIAction = async (
       action.authorization.apiKey.value;
   }
 
+  // For integration actions, automatically include wid in params
+  const actionParams =
+    action.type === "integration" ? { ...params, wid: action.wid } : params;
+
   // Add input parameters based on request type
   const requestConfig = {
     url: action.apiUrl,
     method: action.requestType,
     headers,
     ...(action.requestType === "GET"
-      ? { params: { ...params, ...queryParams } }
+      ? { params: { ...actionParams, ...queryParams } }
       : {}),
     ...(action.requestType !== "GET"
-      ? { data: params, params: queryParams }
+      ? { data: actionParams, params: queryParams }
       : {}),
   };
 

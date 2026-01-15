@@ -13,6 +13,7 @@ import {
   resendconf,
   blogconf,
   backendconf,
+  shopifyconf,
 } from "../utils/conf";
 
 // Create axios instance with default configuration
@@ -78,6 +79,12 @@ export const resendClient = axios.create({
   },
 });
 
+export const shopifyClient = axios.create({
+  baseURL: `${shopifyconf.baseURL}/api`,
+  headers: {
+    Authorization: `Bearer ${shopifyconf.accessToken}`,
+  },
+});
 // Request interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

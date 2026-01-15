@@ -105,3 +105,8 @@ export const backendconf = {
   accessToken: process.env.BACKEND_API_KEY,
   baseURL: process.env.BACKEND_URL,
 };
+
+export const shopifyconf = {
+  baseURL: process.env.SHOPIFY_URL,
+  accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+};
