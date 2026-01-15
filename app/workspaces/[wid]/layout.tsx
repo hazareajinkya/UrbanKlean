@@ -94,7 +94,7 @@ export default function WorkspaceLayout({
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -213,7 +213,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   return (
     <aside
       className={`
-        fixed lg:static inset-y-0 left-0 z-10 bg-card border-r border-border
+        fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border
         flex flex-col transform transition-all duration-200 ease-in-out lg:translate-x-0
         ${isCollapsed ? "w-16" : "w-64"}
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
