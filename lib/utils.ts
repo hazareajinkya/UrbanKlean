@@ -432,3 +432,18 @@ export const generateToken = (): string => {
 
 export const getShopifyProductActionId = (storeId: string) =>
   `shopify-products-${storeId}`;
+
+export const getShopifyTrackOrderActionId = (storeId: string) =>
+  `shopify-track-order-${storeId}`;
+
+export const getShopifyCancelOrderActionId = (storeId: string) =>
+  `shopify-cancel-order-${storeId}`;
+
+export const getShopifyRefundOrderActionId = (storeId: string) =>
+  `shopify-refund-order-${storeId}`;
+
+export const getShopifyReturnOrderActionId = (storeId: string) =>
+  `shopify-return-order-${storeId}`;
+
+export const getShopifyChangeShippingAddressActionId = (storeId: string) =>
+  `shopify-change-shipping-address-${storeId}`;

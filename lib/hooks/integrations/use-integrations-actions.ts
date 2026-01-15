@@ -45,8 +45,18 @@ export const useIntegrationsActions = () => {
     onError: handleError,
   });
 
+  const addIntegration = useMutation({
+    mutationFn: integrationsService.addIntegration,
+    onSuccess: (_, variables) => {
+      toast.success("Integration added successfully");
+      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   return {
     addShopifyIntegration,
+    addIntegration,
     deleteIntegration,
     regenerateToken,
     deleteShopifyIntegration,
