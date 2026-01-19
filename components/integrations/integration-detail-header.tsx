@@ -73,7 +73,7 @@ const IntegrationDetailHeader = ({
               {isDisconnecting ? (
                 <>
                   <Loader className="w-4 h-4 animate-spin" />
-                  Disconnecting...
+                  Disconnecting
                 </>
               ) : (
                 "Disconnect"
