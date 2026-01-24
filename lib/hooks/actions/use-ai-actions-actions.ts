@@ -43,27 +43,68 @@ export const useAiActionsActions = () => {
     mutationFn: actionService.toggleActionStatus,
     onMutate: async (variables) => {
       const { wid, actionId, status } = variables;
-
-      // Cancel any outgoing refetches
       await qc.cancelQueries({ queryKey: actionsKey(wid) });
-
-      // Snapshot the previous value
       const previousActions = qc.getQueryData<IAction[]>(actionsKey(wid));
-
-      // Optimistically update the cache
       if (previousActions) {
         qc.setQueryData<IAction[]>(actionsKey(wid), (old) => {
           if (!old) return old;
           return old.map((action) =>
             action.id === actionId
               ? { ...action, status, updatedAt: new Date().toISOString() }
-              : action
+              : action,
           );
         });
       }
 
-      // Return context with the snapshot
       return { previousActions };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousActions) {
+        qc.setQueryData(actionsKey(variables.wid), context.previousActions);
+      }
+      handleError(err);
+    },
+    onSettled: (_, __, variables) => {
+      qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
+    },
+  });
+
+  const addIntegrationAction = useMutation({
+    mutationFn: actionService.addIntegrationAction,
+    onMutate: async (variables) => {
+      const { wid, globalAction } = variables;
+
+      await qc.cancelQueries({ queryKey: actionsKey(wid) });
+
+      const previousActions = qc.getQueryData<IAction[]>(actionsKey(wid));
+
+      qc.setQueryData<IAction[]>(actionsKey(wid), (old) => {
+        if (!old) return [globalAction];
+
+        if (
+          old.some(
+            (a) =>
+              a.slug === globalAction.slug &&
+              a.integration === globalAction.integration,
+          )
+        )
+          return old;
+
+        return [
+          ...old,
+          {
+            ...globalAction,
+            id: "temp-" + Date.now(),
+            wid,
+            type: "integration",
+          },
+        ];
+      });
+
+      return { previousActions };
+    },
+    onSuccess: (_, variables) => {
+      toast.success("Action added to workspace");
     },
     onError: (err, variables, context) => {
       // Rollback to previous value on error
@@ -76,16 +117,6 @@ export const useAiActionsActions = () => {
       // Refetch to ensure we have the latest data
       qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
     },
-  });
-
-  const addIntegrationAction = useMutation({
-    mutationFn: actionService.addIntegrationAction,
-    onSuccess: (_, variables) => {
-      toast.success("Action added to workspace");
-      const { wid } = variables;
-      qc.invalidateQueries({ queryKey: actionsKey(wid) });
-    },
-    onError: handleError,
   });
 
   return {

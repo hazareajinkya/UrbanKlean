@@ -13,9 +13,8 @@ export const useAIActions = (wid?: string) => {
     queryKey: actionsKey(workspaceId),
     queryFn: () =>
       actionService.getActions(workspaceId).then((actions) => {
-        // Cache individual actions
         actions?.forEach((action) =>
-          qc.setQueryData(actionKey(workspaceId, action.id), action)
+          qc.setQueryData(actionKey(workspaceId, action.id), action),
         );
         return actions;
       }),

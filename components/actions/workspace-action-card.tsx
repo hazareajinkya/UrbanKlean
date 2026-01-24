@@ -1,9 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2 } from "lucide-react";
 import { IAction } from "@/lib/types/actions";
 import { getIntegrationConfig } from "@/lib/data/integration-configs";
 
@@ -32,68 +29,57 @@ export const WorkspaceActionCard = ({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="space-y-0 pt-6">
-        <div className="mb-4 flex gap-2 items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <p className="font-medium">{action.name}</p>
-              {action.integration !== "none" && (
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-sm">
-                  {action.integration}
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {action.description}
-            </p>
-          </div>
+    <div className="relative border rounded-xl bg-card text-card-foreground p-4">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             {IntegrationLogo ? (
-              <IntegrationLogo className="w-8 h-8" />
+              <IntegrationLogo className="w-10 h-10" />
             ) : (
-              <img
-                src="/api-logo.png"
-                alt="API Logo"
-                className="w-8 h-8 rounded-sm object-cover"
-              />
+              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xs">API</span>
+              </div>
             )}
           </div>
+          <div>
+            <h3 className="font-semibold text-base leading-tight mb-0.5">
+              {action.name}
+            </h3>
+            <p className="text-xs text-muted-foreground capitalize">
+              {action.integration !== "none" ? action.integration : "API"}
+            </p>
+          </div>
         </div>
+        <Switch
+          checked={action.status === "active"}
+          onCheckedChange={handleToggle}
+        />
+      </div>
 
-        <div className="flex items-center justify-between mt-4 pt-4 border-t">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">Status</span>
-            <Switch
-              checked={action.status === "active"}
-              onCheckedChange={handleToggle}
-            />
-            <span className="text-xs text-muted-foreground">
-              {action.status === "active" ? "Active" : "Inactive"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isUserAction && onEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(action)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(action)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="mb-4">
+        <p className="text-sm text-muted-foreground leading-snug line-clamp-2">
+          {action.description}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-end gap-3">
+        {isUserAction && onEdit && (
+          <button
+            onClick={() => onEdit(action)}
+            className="text-indigo-600 hover:text-indigo-700 font-medium text-xs transition-colors"
+          >
+            Edit
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(action)}
+            className="text-red-500 hover:text-red-600 font-medium text-xs transition-colors"
+          >
+            Delete
+          </button>
+        )}
+      </div>
+    </div>
   );
 };

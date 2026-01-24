@@ -53,7 +53,7 @@ export const integrationConfigs: IntegrationConfig[] = [
 ];
 
 export const getIntegrationConfig = (
-  slug: string
+  slug: string,
 ): IntegrationConfig | undefined => {
   return integrationConfigs.find((config) => config.slug === slug);
 };

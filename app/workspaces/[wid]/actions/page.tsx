@@ -26,7 +26,6 @@ export default function ActionsPage() {
   const { integrations, isLoading: isLoadingIntegrations } =
     useIntegrations(wid);
 
-  // Get integration types from connected integrations
   const integrationTypes = useMemo(() => {
     if (!integrations) return [];
     return integrations
@@ -50,19 +49,19 @@ export default function ActionsPage() {
           setIsDeleteModalOpen(false);
           setDeletingAction(null);
         },
-      }
+      },
     );
   };
 
   const handleToggleStatus = (
     actionId: string,
-    status: "active" | "inactive"
+    status: "active" | "inactive",
   ) => {
     toggleActionStatus.mutate({ wid, actionId, status });
   };
 
-  const handleAddIntegrationAction = (action: IAction) => {
-    addIntegrationAction.mutate({ wid, globalAction: action });
+  const handleAddIntegrationAction = async (action: IAction) => {
+    await addIntegrationAction.mutateAsync({ wid, globalAction: action });
   };
 
   const handleEditAction = (action: IAction) => {
@@ -109,7 +108,6 @@ export default function ActionsPage() {
         </div>
       ) : (
         <div className="flex-1 flex gap-6 min-h-0">
-          {/* Left Panel - Workspace Actions */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto">
               {workspaceActions && workspaceActions.length > 0 ? (
@@ -138,7 +136,7 @@ export default function ActionsPage() {
             </div>
           </div>
 
-          <div className="w-[340px] flex-shrink-0 border rounded-lg p-4 bg-muted/30">
+          <div className="w-[340px] flex-shrink-0 border rounded-lg p-4 bg-background">
             <AvailableActionsPanel
               actions={globalActions}
               workspaceActions={workspaceActions}
@@ -149,7 +147,6 @@ export default function ActionsPage() {
         </div>
       )}
 
-      {/* Modals */}
       {isAddActionModalOpen && (
         <AddApiActionModal
           isOpen={isAddActionModalOpen}
