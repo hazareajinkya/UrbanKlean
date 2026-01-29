@@ -9,37 +9,11 @@ import { actionsKey } from "../actions/use-ai-actions";
 export const useIntegrationsActions = () => {
   const qc = useQueryClient();
 
-  const addShopifyIntegration = useMutation({
-    mutationFn: shopifyService.addShopifyIntegration,
-    onSuccess: (data, variables) => {
-      toast.success("Shopify integration added successfully");
-      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
-    },
-    onError: handleError,
-  });
 
   const deleteIntegration = useMutation({
     mutationFn: integrationsService.deleteIntegration,
     onSuccess: (_, variables) => {
       toast.success("Integration deleted successfully");
-      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
-    },
-    onError: handleError,
-  });
-  const deleteShopifyIntegration = useMutation({
-    mutationFn: shopifyService.deleteShopifyIntegration,
-    onSuccess: (_, variables) => {
-      toast.success("Shopify integration deleted successfully");
-      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
-      qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
-    },
-    onError: handleError,
-  });
-
-  const regenerateToken = useMutation({
-    mutationFn: shopifyService.regenerateToken,
-    onSuccess: (_, variables) => {
-      toast.success("Token regenerated successfully");
       qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
     },
     onError: handleError,
@@ -54,11 +28,38 @@ export const useIntegrationsActions = () => {
     onError: handleError,
   });
 
+
+  const addShopifyIntegration = useMutation({
+    mutationFn: shopifyService.addShopifyIntegration,
+    onSuccess: (data, variables) => {
+      toast.success("Shopify integration added successfully");
+      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+  const regenerateShopifyToken = useMutation({
+    mutationFn: shopifyService.regenerateToken,
+    onSuccess: (_, variables) => {
+      toast.success("Token regenerated successfully");
+      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+  const deleteShopifyIntegration = useMutation({
+    mutationFn: shopifyService.deleteShopifyIntegration,
+    onSuccess: (_, variables) => {
+      toast.success("Shopify integration deleted successfully");
+      qc.invalidateQueries({ queryKey: integrationsKey(variables.wid) });
+      qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   return {
     addShopifyIntegration,
     addIntegration,
     deleteIntegration,
-    regenerateToken,
+    regenerateShopifyToken,
     deleteShopifyIntegration,
   };
 };
