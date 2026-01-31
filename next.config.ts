@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: ["magicalcx.ratcat.in"],
   experimental: {},
+  reactStrictMode: false,
   devIndicators: false,
 };
 

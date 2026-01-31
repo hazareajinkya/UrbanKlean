@@ -1,28 +1,28 @@
-import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import ChatPageClient from "@/components/chat/chat-page-client";
-import { agentKey } from "@/lib/hooks/agent/use-agent";
-import { getServerQueryClient } from "@/lib/clients/get-server-query-client";
 import agentService from "@/lib/services/agent-service";
-import { IAgent } from "@/lib/types/agent";
+
+const fetchAgent = async (aid: string) => {
+  const agent = await agentService.fetchAgent(aid);
+  return agent ?? undefined;
+};
 
 export default async function ChatPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ aid: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { aid } = await params;
-  const queryClient = getServerQueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: agentKey(aid),
-    queryFn: () => agentService.fetchAgent(aid),
-  });
-  const initialAgent = queryClient.getQueryData(agentKey(aid)) as
-    | IAgent
-    | undefined;
+  const { widget, fromPage } = await searchParams;
+  const initialAgent = await fetchAgent(aid);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <ChatPageClient aid={aid} initialAgent={initialAgent} />
-    </HydrationBoundary>
+    <ChatPageClient
+      aid={aid}
+      initialAgent={initialAgent}
+      widget={widget as string}
+      fromPageValue={fromPage as string}
+    />
   );
 }
