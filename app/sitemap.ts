@@ -47,6 +47,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
     },
     {
+      url: `${baseUrl}/free-tools`,
+      lastModified: new Date(),
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/free-tools/customer-support-and-refund-policy-generator`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/free-tools/ai-vs-human-support-roi-calculator`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/free-tools/refund-risk-predictor`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+
+    {
+      url: `${baseUrl}/free-tools/customer-support-tone-checker`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      url: `${baseUrl}/free-tools/customer-support-response-grader`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
       url: `${baseUrl}/legal/privacy`,
       lastModified: new Date(),
       priority: 0.5,

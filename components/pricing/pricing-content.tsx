@@ -1,397 +1,214 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Lock } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemoModal } from "../landing/demo-modal";
-import { MESSAGE_TIERS, PLANS } from "@/lib/plans";
+import { useGeo } from "@/lib/hooks/geo/use-geo";
+import { PricingFaq } from "./pricing-faq";
+import { PLANS } from "@/lib/plans";
 import { usePolarCheckout } from "@/lib/hooks/use-polar-checkout";
 import { useRazorpayCheckout } from "@/lib/hooks/use-razorpay-checkout";
-import { PricingFaq } from "./pricing-faq";
-import { useGeo } from "@/lib/hooks/geo/use-geo";
+import plans from "razorpay/dist/types/plans";
 
 export const PricingContent = () => {
-  const [usage, setUsage] = useState([10]); // 10k default
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">(
+    "annually",
+  );
+  const { openDemoModal } = useDemoModal();
+  const { isIndia ,isLoading } = useGeo();
   const { initiateCheckout: initiatePolarCheckout } = usePolarCheckout();
   const { initiateCheckout: initiateRazorpayCheckout } = useRazorpayCheckout();
-  const { openDemoModal } = useDemoModal();
 
-  // Fetch user's geo location
-  const { isIndia, isLoading: isGeoLoading } = useGeo();
-  const currencySymbol = isIndia ? "₹" : "$";
-
-  const handleSliderChange = (value: number[]) => {
-    setUsage(value);
-  };
-
-  const currentUsage = usage[0] * 1000; // Convert to actual message count
-
-  // Find the closest tier that matches or is just above the current usage
-  const findClosestTier = (usageValue: number) => {
-    return (
-      MESSAGE_TIERS.find((tier) => tier >= usageValue) ||
-      MESSAGE_TIERS[MESSAGE_TIERS.length - 1]
-    );
-  };
-
-  // Dynamic pricing logic
-  const getPricingData = () => {
-    const selectedTier = findClosestTier(currentUsage);
-    const selectedTierInK = selectedTier / 1000;
-
-    const growthPlan = PLANS.growth;
-    const scalePlan = PLANS.scale;
-
-    // Helper to get price based on currency
-    const getPrice = (
-      tierData: { price: { inr: number; usd: number } } | undefined
-    ) => {
-      if (!tierData) return null;
-      return isIndia ? tierData.price.inr : tierData.price.usd;
-    };
-
-    const growthPlanData = (() => {
-      const maxMessages = growthPlan.maxMessages;
-      const isWithinGrowthLimit = currentUsage <= maxMessages;
-      const tierData = growthPlan.tiers.find(
-        (t) => t.messages === selectedTier
-      );
-
-      let price: number | null = null;
-      let isRecommended = false;
-      let isActive = false;
-      let messages = "";
-      let messagePrefix = "Starts at";
-      let buttonText = "Choose Plan";
-
-      if (isWithinGrowthLimit && tierData) {
-        price = getPrice(tierData);
-        isActive = true;
-        messages = `${selectedTierInK}k`;
-        messagePrefix = "Includes";
-        if (currentUsage <= 10000) isRecommended = true;
-      } else {
-        const maxTier = growthPlan.tiers.find((t) => t.messages === 10000);
-        price = getPrice(maxTier);
-        messages = "10k";
-        messagePrefix = "Includes";
-        buttonText = "Available up to 10k only";
-      }
-
-      return {
-        id: growthPlan.id,
-        name: growthPlan.name,
-        description: growthPlan.description,
-        price,
-        isRecommended,
-        isActive,
-        messages,
-        messagePrefix,
-        buttonText,
-        features: growthPlan.features,
-        badgeText: isRecommended ? "Recommended" : undefined,
-        planId: growthPlan.id as "growth" | "scale",
-        tier: selectedTier,
-        paddlePriceId: tierData?.priceIds.paddle,
-        razorpayPlanId: tierData?.priceIds.razorpay,
-      };
-    })();
-
-    const scalePlanData = (() => {
-      const tierData = scalePlan.tiers.find((t) => t.messages === selectedTier);
-
-      let price: number | null = null;
-      let isRecommended = false;
-      let isActive = false;
-      let messages = "";
-      let messagePrefix = "Starts at";
-      let buttonText = "Choose Plan";
-
-      if (tierData && currentUsage <= 30000) {
-        price = getPrice(tierData);
-        isActive = true;
-        messages = `${selectedTierInK}k`;
-        messagePrefix = "Includes";
-        if (currentUsage > 10000 && currentUsage <= 30000) isRecommended = true;
-      } else if (currentUsage > 30000) {
-        const maxTier = scalePlan.tiers.find((t) => t.messages === 30000);
-        price = getPrice(maxTier);
-        messages = "30k";
-        messagePrefix = "Includes";
-        buttonText = "Available up to 30k only";
-      }
-
-      return {
-        id: scalePlan.id,
-        name: scalePlan.name,
-        description: scalePlan.description,
-        price,
-        isRecommended,
-        isActive,
-        messages,
-        messagePrefix,
-        buttonText,
-        features: scalePlan.features,
-        badgeText: isRecommended ? "Best Value" : undefined,
-        planId: scalePlan.id as "growth" | "scale",
-        tier: selectedTier,
-        paddlePriceId: tierData?.priceIds.paddle,
-        razorpayPlanId: tierData?.priceIds.razorpay,
-      };
-    })();
-
-    const enterprisePlanData = (() => {
-      const isActive = currentUsage > 30000;
-      const isRecommended = currentUsage > 30000;
-      return {
-        id: "enterprise",
-        name: "Enterprise",
-        description: "Custom solutions for large scale operations.",
-        price: null,
-        isRecommended,
-        isActive,
-        messages: "30k+",
-        messagePrefix: "Includes",
-        buttonText: "Talk to Sales",
-        features: [
-          "Everything in Scale",
-          "Custom Model Fine-tuning",
-          "Dedicated Success Manager",
-          "SSO & Enterprise Security",
-          "SLA Guarantee",
-        ],
-        badgeText: isRecommended ? "High Value" : undefined,
-        planId: undefined as "growth" | "scale" | undefined,
-        tier: undefined as number | undefined,
-        paddlePriceId: undefined as string | undefined,
-      };
-    })();
-
-    return [growthPlanData, scalePlanData, enterprisePlanData];
-  };
-
-  const pricingTiers = useMemo(() => getPricingData(), [currentUsage, isIndia]);
-
-  const handleCheckout = (tier: (typeof pricingTiers)[0]) => {
-    if (tier.id === "enterprise") {
-      openDemoModal();
-      return;
-    }
-
-    // In production, open demo modal for all pricing buttons
+  const handleCheckout = () => {
     if (process.env.NEXT_PUBLIC_ENV === "production") {
       openDemoModal();
       return;
     }
 
-    if (tier.planId && tier.tier !== undefined) {
-      // Use Razorpay for India, Polar for international
+    const plan = PLANS.all_in_one;
+
+    const targetTier = plan.tiers.find((t) => t.billingCycle === billingCycle);
+
+    if (targetTier) {
       if (isIndia) {
         initiateRazorpayCheckout({
-          planId: tier.planId,
-          tier: tier.tier,
+          planId: "all_in_one" as any,
+          tier: targetTier.messages,
         });
       } else {
         initiatePolarCheckout({
-          planId: tier.planId,
-          tier: tier.tier,
+          planId: "all_in_one" as any,
+          tier: targetTier.messages,
         });
       }
     }
   };
 
-  const tierValues = MESSAGE_TIERS.map((tier) => tier / 1000);
-  const minTier = tierValues[0];
-  const maxTier = tierValues[tierValues.length - 1];
-  const currentUsageInK = currentUsage / 1000;
+  const currencySymbol = isIndia ? "₹" : "$";
+  const plan = PLANS.all_in_one;
+  const price = useMemo(() => {
+    if (billingCycle === "monthly") {
+      return isIndia ? "13,999" : "249";
+    }
+    return isIndia ? "9,999" : "199";
+  }, [billingCycle, isIndia]);
+
+  const originalPrice = useMemo(() => {
+    if (billingCycle === "annually") {
+      return isIndia ? "13,999" : "249";
+    }
+    return null;
+  }, [billingCycle, isIndia]);
+
+  const features = plan.features;
 
   return (
     <>
       <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full">
-        {/* Header */}
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="section-heading">
-            Choose the plan that fits your volume.
-          </h1>
-          <p className="section-subheadline">
-            Simple pricing that scales with your AI interactions. No hidden
-            fees.
+        <div className="text-center mb-12 space-y-4 max-w-3xl mx-auto">
+          <h1 className="section-heading">Simple, transparent pricing</h1>
+          <p className="section-subheadline text-lg">
+            Everything you need to automate your customer support and boost
+            revenue.
           </p>
         </div>
 
-        {/* Usage Estimator */}
-        <div className="max-w-3xl mx-auto mb-20">
-          <div className="flex flex-col items-center text-center mb-10">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-              Estimate your usage
-            </h3>
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-2xl md:text-3xl font-medium text-primary tracking-tight">
-                {currentUsageInK}k
+        <div className="flex items-center justify-center mb-12">
+          <div className="bg-secondary/50 p-1 rounded-full flex relative">
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={cn(
+                "px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 z-10",
+                billingCycle === "monthly"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle("annually")}
+              className={cn(
+                "px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 z-10 flex items-center gap-2",
+                billingCycle === "annually"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Annually
+              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                SAVE ~20%
               </span>
-              <span className="text-lg md:text-xl font-medium text-muted-foreground">
-                messages/mo
-              </span>
-            </div>
-            <p className="text-muted-foreground">
-              Slide to adjust your monthly volume
-            </p>
-          </div>
-
-          <div className="px-4">
-            <div className="relative">
-              <Slider
-                defaultValue={[10]}
-                max={maxTier}
-                min={minTier}
-                step={5}
-                value={usage}
-                onValueChange={handleSliderChange}
-                className="mb-8 py-4"
-              />
-              <div className="absolute top-12 left-0 right-0 h-6 pointer-events-none">
-                {tierValues.map((value) => {
-                  const percentage =
-                    ((value - minTier) / (maxTier - minTier)) * 100;
-                  return (
-                    <span
-                      key={value}
-                      className="absolute text-sm font-medium text-muted-foreground/50 uppercase tracking-widest -translate-x-1/2"
-                      style={{ left: `${percentage}%` }}
-                    >
-                      {value}k{value === maxTier ? "+" : ""}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
+            </button>
           </div>
         </div>
 
-        {isGeoLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
-            {[...Array(3)].map((_, index) => {
-              return (
-                <div
-                  key={index}
-                  className={cn(
-                    "relative flex flex-col p-8 rounded-xl border transition-all duration-200 h-full"
-                  )}
-                >
-                  <div className="mb-8">
-                    <Skeleton className="h-8 w-32 mb-2" />
-                    <Skeleton className="h-4 w-48" />
-                  </div>
-
-                  <div className="mb-8">
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <Skeleton className="h-10 w-40" />
-                    </div>
-                    <Skeleton className="h-5 w-36" />
-                  </div>
-
-                  <Skeleton className="h-10 w-full rounded-full mb-8" />
-
-                  <div className="space-y-4 flex-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <Skeleton className="h-5 w-5 rounded-full shrink-0" />
-                        <Skeleton
-                          className={cn(
-                            "h-4 rounded",
-                            i % 2 === 0 ? "w-3/4" : "w-1/2"
-                          )}
-                        />
-                      </div>
-                    ))}
-                  </div>
+        {isLoading ? (
+          <div className="w-full bg-card rounded-3xl border shadow-sm overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+              <div className="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
+                <div className="mt-8 mb-6 space-y-2">
+                  <div className="h-8 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
+                  <div className="h-5 w-40 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
                 </div>
-              );
-            })}
+
+                <div className="flex items-end gap-2 mb-2">
+                  <div className="h-16 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
+                  <div className="h-6 w-20 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-1.5" />
+                  <div className="h-5 w-16 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-1.5 ml-1" />
+                </div>
+
+                <div className="h-4 w-28 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-8" />
+
+                <div className="h-12 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
+
+                <div className="h-3 w-48 mx-auto mt-4 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
+              </div>
+
+              <div className="lg:col-span-7 p-8 md:p-12 bg-background/50">
+                <div className="h-6 w-36 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-6" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                  {Array.from({ length: 8 }).map((_, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="mt-1 h-4 w-4 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%] shrink-0" />
+                      <div className="h-4 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
-            {pricingTiers.map((tier) => (
-              <div
-                key={tier.name}
-                className={cn(
-                  "relative flex flex-col p-8 rounded-xl border transition-all duration-200",
-                  tier.isRecommended
-                    ? "border-primary shadow-lg scale-105 z-10 bg-card"
-                    : "border-border bg-card/50",
-                  !tier.isActive && "opacity-60 cursor-not-allowed"
-                )}
-              >
-                {tier.isRecommended && tier.badgeText && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                    {tier.badgeText}
-                  </div>
-                )}
-
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-                  <p className="text-sm text-muted-foreground min-h-[40px]">
-                    {tier.description}
-                  </p>
+          <div className="w-full  bg-card rounded-3xl border shadow-sm overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+              <div className="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
+                <div className="mt-8 mb-6">
+                  <h3 className="text-2xl font-bold mb-1">All in One</h3>
+                  <p className="text-muted-foreground">Everything included.</p>
                 </div>
 
-                <div className="mb-8">
-                  {tier.price !== null ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold">
-                        {currencySymbol}
-                        {tier.price.toLocaleString()}
-                      </span>
-                      <span className="text-muted-foreground">/month</span>
-                    </div>
-                  ) : (
-                    <div className="text-3xl font-bold">Talk to us</div>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-5xl md:text-6xl font-bold tracking-tight leading-none">
+                    {currencySymbol}
+                    {price}
+                  </span>
+                  {originalPrice && (
+                    <span className="text-xl text-muted-foreground line-through decoration-muted-foreground/50 mb-1.5">
+                      {currencySymbol}
+                      {originalPrice}
+                    </span>
                   )}
-                  <div className="text-sm font-medium text-primary mt-2">
-                    {tier.price !== null
-                      ? `${tier.messagePrefix} ${tier.messages} messages / month`
-                      : `${tier.messages} messages`}
-                  </div>
+                  <span className="text-muted-foreground font-medium mb-1.5 ml-1">
+                    /month
+                  </span>
                 </div>
+
+                <p className="text-sm text-muted-foreground mb-8">
+                  {billingCycle === "annually"
+                    ? "Billed annually"
+                    : "Billed monthly"}
+                </p>
 
                 <Button
-                  disabled={!tier.isActive}
-                  onClick={() => handleCheckout(tier)}
-                  className={cn(
-                    "w-full mb-8 rounded-full",
-                    tier.isRecommended
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : !tier.isActive
-                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      : "bg-foreground text-background"
-                  )}
+                  size="lg"
+                  className="w-full text-lg h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:scale-[1.02]"
+                  onClick={handleCheckout}
                 >
-                  {!tier.isActive && <Lock className="w-4 h-4 mr-2" />}
-                  {tier.buttonText}
+                  Get Started
                 </Button>
 
-                <ul className="space-y-4 flex-1">
-                  {tier.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-3 text-sm"
-                    >
-                      <Check className="w-5 h-5 text-primary shrink-0" />
-                      <span className="text-muted-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  Cancel anytime. No questions asked!
+                </p>
               </div>
-            ))}
+
+              <div className="lg:col-span-7 p-8 md:p-12 bg-background/50">
+                <h4 className="text-lg font-semibold mb-6">
+                  What&apos;s included:
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                  {features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="mt-1 bg-primary/10 rounded-full p-0.5 shrink-0">
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span className="text-sm text-muted-foreground leading-snug">
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Footer CTA */}
         <div className="text-center mt-16 text-muted-foreground text-sm">
-          Need more than 30k messages?{" "}
+          Need more than 10k messages?{" "}
           <button
             onClick={openDemoModal}
             className="text-primary underline underline-offset-4 hover:text-primary/80 cursor-pointer"
@@ -401,9 +218,6 @@ export const PricingContent = () => {
           with our engineering team.
         </div>
       </div>
-
-      {/* FAQ Section */}
-
       <PricingFaq />
     </>
   );

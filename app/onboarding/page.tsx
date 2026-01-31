@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,10 +22,11 @@ import { useOnboardingActions } from "@/lib/hooks/onboarding/use-onboarding-acti
 import { Loader, PartyPopper, Timer } from "lucide-react";
 import { OnboardingData } from "@/lib/types/onboarding";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
+import { OnboardingAnimation } from "@/components/onboarding/onboarding-animation";
 
 type Phase = "form" | "onboarding" | "success";
 
-export default function Page() {
+function OnboardingContent() {
   const [email, setEmail] = useState("");
   const [domain, setDomain] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -33,7 +35,7 @@ export default function Page() {
   const [phase, setPhase] = useState<Phase>("form");
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
-    null
+    null,
   );
 
   const { startOnboarding, uploadLogo, generateOnboardingInfo } =
@@ -94,6 +96,26 @@ export default function Page() {
     setDomain(normalized);
     if (domainError) validateDomainInput(normalized);
   };
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const urlParam = searchParams.get("url");
+    if (urlParam) {
+      const normalized = normalizeDomain(urlParam);
+      setDomain(normalized);
+      // Validate immediately so user sees if it's valid
+      if (normalized) {
+        if (!validateDomain(normalized)) {
+          setDomainError("Please enter a valid domain");
+        } else if (isBlockedCompanyDomain(normalized)) {
+          setDomainError("Please enter your own company domain");
+        } else {
+          setDomainError("");
+        }
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,11 +185,12 @@ export default function Page() {
                     placeholder="you@company.com"
                     value={email}
                     onChange={handleEmailChange}
+                    autoFocus
                     onBlur={() => validateEmail(email)}
                     className={cn(
                       "h-11 transition-all",
                       emailError &&
-                        "border-destructive focus-visible:ring-destructive/20"
+                        "border-destructive focus-visible:ring-destructive/20",
                     )}
                   />
                   {emailError && (
@@ -318,7 +341,15 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="flex-1 bg-primary"></div>
+      <OnboardingAnimation />
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingContent />
+    </Suspense>
   );
 }

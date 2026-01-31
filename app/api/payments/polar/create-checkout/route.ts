@@ -9,28 +9,33 @@ import {
 
 import z from "zod";
 const createCheckoutSchema = z.object({
-  planId: z.enum(["growth", "scale"]),
+  planId: z.enum(["growth", "scale", "all_in_one"]),
   tier: z.number().int().positive(),
   userId: z.string().min(1, "User ID is required"),
   userEmail: z.string().email("Invalid email address"),
+  billingCycle: z.enum(["monthly", "annually"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const validatedData = createCheckoutSchema.parse(body);
-    const { planId, tier, userId, userEmail } = validatedData;
+    const { planId, tier, userId, userEmail, billingCycle } = validatedData;
 
     const plan = PLANS[planId];
     if (!plan) {
       return errorResponse(`Plan ${planId} not found`, 400);
     }
 
-    const tierData = plan.tiers.find((t) => t.messages === tier);
+    const tierData = plan.tiers.find(
+      (t) =>
+        t.messages === tier &&
+        (!billingCycle || t.billingCycle === billingCycle),
+    );
     if (!tierData?.priceIds.polar) {
       return errorResponse(
         `Polar Product ID not found for ${planId} tier ${tier}`,
-        400
+        400,
       );
     }
 

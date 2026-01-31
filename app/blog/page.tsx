@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, Calendar, ArrowRight } from "lucide-react";
 import { coreConf } from "@/lib/utils/conf";
+import type { BlogWithAuthor } from "@/lib/types/blog";
 
 export const revalidate = 86400;
 
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogListPage() {
-  const { blogs } = await blogService.getAllBlogs();
+  const { blogs }: { blogs: BlogWithAuthor[] } = await blogService.getAllBlogs();
 
   return (
     <div className="">
@@ -72,7 +73,7 @@ export default async function BlogListPage() {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium mb-3">
                     <span>
                       {new Date(
-                        blog.publishedAt || blog.updatedAt
+                        blog.publishedAt || blog.createdAt
                       ).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "short",

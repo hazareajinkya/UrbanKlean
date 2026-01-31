@@ -17,7 +17,7 @@ interface ChatInputProps {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (
     e: FormEvent<HTMLFormElement>,
-    options: ChatRequestOptions
+    options: ChatRequestOptions,
   ) => void;
   status: ChatStatus;
   isWidget?: boolean;
@@ -51,7 +51,7 @@ export const ChatInput = ({
         <div className="flex items-end gap-3">
           <div
             className={cn(
-              `flex-1 border-1 relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:border-color-[${agent.customization.primaryColor}]`
+              `flex-1 border-1 relative rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:border-color-[${agent.customization.primaryColor}]`,
             )}
             style={
               {
@@ -69,7 +69,7 @@ export const ChatInput = ({
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder={"Type your message here..."}
+                  placeholder={"Ask me anything..."}
                   className="!text-base p-1 pl-1.5 rounded-none md:p-2 w-full min-h-[32px] max-h-[200px] resize-none border-0 bg-transparent leading-relaxed transition-all duration-200 focus:ring-0 focus:border-0 focus:outline-none focus-visible:ring-0 shadow-none"
                   rows={1}
                   autoComplete="off"
@@ -103,11 +103,11 @@ export const ChatInput = ({
                         isLoading || !input.trim()
                           ? "black"
                           : getContrastingColor(
-                              agent.customization.primaryColor
+                              agent.customization.primaryColor,
                             ),
                     }}
                     className={clsx(
-                      "md:w-10 md:h-10 w-8 h-8 rounded-full transition-colors disabled:opacity-50"
+                      "md:w-10 md:h-10 w-8 h-8 rounded-full transition-colors disabled:opacity-50",
                     )}
                   >
                     {isLoading ? (

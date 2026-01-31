@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { faqSchemaItems } from "@/lib/data/faq-schema-items";
 
 const faqData = [
   {

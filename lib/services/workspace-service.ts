@@ -190,6 +190,15 @@ class WorkspaceService {
         console.error(` Failed to delete teaching session:`, error);
         throw new Error("Failed to delete teaching session.");
       }
+
+      // Delete workspace analytics
+      try {
+        await deleteCollection(`workspaces/${wid}/analytics`);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete analytics:`, error);
+        throw new Error("Failed to delete analytics.");
+      }
+
       // Delete Qdrant collection
       try {
         await axiosClient.delete(`/api/embeddings/${wid}/qdrant-delete`);
@@ -234,10 +243,13 @@ class WorkspaceService {
         `workspaces/${wid}/knowledge/teach/sessions`,
         `workspaces/${wid}/knowledge`,
         `workspaces/${wid}/members`,
+        `workspaces/${wid}/analytics`,
       ];
 
       await Promise.all(subCollections.map((path) => deleteCollection(path)));
       await deleteDoc(doc(db, `workspaces/${wid}/knowledge/teach`));
+
+
 
       //  Delete document
       await deleteDoc(doc(db, `workspaces/${wid}`));

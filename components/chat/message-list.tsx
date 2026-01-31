@@ -240,6 +240,23 @@ const MessageParts = memo(
           return null;
         }
 
+        // Handle dynamic-tool parts - show loading when tool is being called
+        if (part.type === "dynamic-tool") {
+          const toolPart = part as { state?: string };
+          const isToolCalling = toolPart.state === "call" || toolPart.state === "partial-call";
+
+          const nextParts = parts.slice(index + 1);
+          const hasSubsequentText = nextParts.some(
+            (p) => p.type === "text" && p.text && p.text.length > 0
+          );
+
+          // Show loading if tool is being called and no text follows
+          if (isLast && isToolCalling && !hasSubsequentText) {
+            return <MessageLoading key={index} style={{ padding: 0 }} />;
+          }
+          return null;
+        }
+
         if (part.type === "text") {
           return (
             <div

@@ -22,6 +22,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: coreConf.baseUrl ? new URL(coreConf.baseUrl) : undefined,
   title: "MagicalCX | Empathy-First AI for magical customer experience",
   description:
     "MagicalCX is an empathy-first AI platform that transforms customer experience into a growth engine",

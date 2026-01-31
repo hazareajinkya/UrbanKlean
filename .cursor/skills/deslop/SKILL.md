@@ -1,3 +1,8 @@
+---
+name: deslop
+description: Remove AI code slop
+disable-model-invocation: true
+---
 # Remove AI code slop
 
 Check the diff against main, and remove all AI generated slop introduced in this branch.

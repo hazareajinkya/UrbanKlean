@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IAnalytics } from "@/lib/types/analytics";
 import { Clock } from "lucide-react";
 import { format, parse } from "date-fns";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PeakHoursCardProps {
   dailyAnalytics: IAnalytics[];
@@ -37,11 +41,9 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
     const data = sorted.map((day) => {
       const parsedDate = parse(day.date, "dd-MM-yyyy", new Date());
       const formattedDate = format(parsedDate, "dd MMM");
-      
+
       // Create a map of period -> count for quick lookup
-      const periodMap = new Map(
-        day.peakHours.map((h) => [h.period, h.count])
-      );
+      const periodMap = new Map(day.peakHours.map((h) => [h.period, h.count]));
 
       // Get count for each time slot, defaulting to 0
       const slots = timeSlots.map((period) => ({
@@ -71,31 +73,31 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
   };
 
   const getColor = (intensity: number) => {
-    // Gradient from light blue (0%) to dark blue (100%)
-    // Using opacity/lightness for gradient effect
+    // Gradient from light primary (0%) to full primary (100%)
+    // Using opacity for gradient effect
     if (intensity === 0) {
-      return "bg-blue-50 dark:bg-blue-950/20";
+      return "bg-primary/5";
     }
     if (intensity < 20) {
-      return "bg-blue-100 dark:bg-blue-900/30";
+      return "bg-primary/10";
     }
     if (intensity < 40) {
-      return "bg-blue-200 dark:bg-blue-800/40";
+      return "bg-primary/20";
     }
     if (intensity < 60) {
-      return "bg-blue-300 dark:bg-blue-700/50";
+      return "bg-primary/40";
     }
     if (intensity < 80) {
-      return "bg-blue-400 dark:bg-blue-600/60";
+      return "bg-primary/60";
     }
-    return "bg-blue-500 dark:bg-blue-500/70";
+    return "bg-primary/80";
   };
 
   const getTextColor = (intensity: number) => {
     if (intensity < 50) {
-      return "text-gray-700 dark:text-gray-300";
+      return "text-foreground";
     }
-    return "text-white";
+    return "text-primary-foreground";
   };
 
   if (heatmapData.length === 0) {
@@ -110,7 +112,9 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
         <CardContent>
           <div className="flex h-[280px] flex-col items-center justify-center gap-2">
             <span className="text-3xl font-semibold">0</span>
-            <span className="text-sm text-muted-foreground">peak hours recorded</span>
+            <span className="text-sm text-muted-foreground">
+              peak hours recorded
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -164,7 +168,7 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
                             ${bgColor} ${textColor}
                             rounded-md p-1.5 text-center
                             cursor-pointer transition-all hover:scale-105
-                            border border-transparent hover:border-blue-400
+                            border border-transparent hover:border-primary
                             min-h-[32px] flex items-center justify-center
                           `}
                         >
@@ -178,7 +182,8 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
                           <p className="font-medium">{day.formattedDate}</p>
                           <p>{slot.period}</p>
                           <p className="text-muted-foreground">
-                            {slot.count} conversation{slot.count !== 1 ? "s" : ""}
+                            {slot.count} conversation
+                            {slot.count !== 1 ? "s" : ""}
                           </p>
                         </div>
                       </TooltipContent>
@@ -207,4 +212,3 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
     </Card>
   );
 };
-

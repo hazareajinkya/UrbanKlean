@@ -6,8 +6,9 @@ import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
 
 interface CheckoutOptions {
-  planId: "growth" | "scale";
+  planId: "all_in_one";
   tier: number;
+  billingCycle?: "monthly" | "annually";
 }
 
 interface CreateSubscriptionResponse {
@@ -93,7 +94,11 @@ export const useRazorpayCheckout = () => {
     },
   });
 
-  const initiateCheckout = async ({ planId, tier }: CheckoutOptions) => {
+  const initiateCheckout = async ({
+    planId,
+    tier,
+    billingCycle,
+  }: CheckoutOptions) => {
     // Check authentication
     if (isLoading) {
       return;
@@ -113,7 +118,7 @@ export const useRazorpayCheckout = () => {
 
     if (hasActiveSubscription) {
       toast.error(
-        "You already have an active subscription. Please cancel your current subscription before purchasing a new one."
+        "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
       );
       return;
     }
@@ -127,7 +132,11 @@ export const useRazorpayCheckout = () => {
       return;
     }
 
-    const tierData = plan.tiers.find((t) => t.messages === tier);
+    const tierData = plan.tiers.find(
+      (t) =>
+        t.messages === tier &&
+        (!billingCycle || t.billingCycle === billingCycle),
+    );
     if (!tierData?.priceIds.razorpay) {
       const errorMessage = `Razorpay Plan ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
@@ -148,7 +157,8 @@ export const useRazorpayCheckout = () => {
       const { subscriptionId } = await createCheckoutMutation.mutateAsync({
         planId,
         tier,
-      });
+        billingCycle,
+      } as any);
 
       // Open Razorpay checkout
       const options: RazorpayOptions = {

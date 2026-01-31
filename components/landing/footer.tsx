@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AiSummaryFooter } from "@/components/landing/ai-summary-footer";
 
 const footerLinks = {
   product: {
@@ -9,6 +10,7 @@ const footerLinks = {
       { label: "Overview", href: "/" },
       { label: "Features", href: "/#features" },
       { label: "Pricing", href: "/pricing" },
+      { label: "Free Tools", href: "/free-tools" },
     ],
   },
   company: {
@@ -91,7 +93,7 @@ export const Footer = () => {
               <img
                 src="/logos/magicalcx-full-trans-light.png"
                 alt="Magical CX Logo"
-                className="w-10 h-10 sm:w-30 sm:h-12 object-contain rounded-md"
+                className="h-10 w-24 sm:w-30 sm:h-12 object-contain rounded-md"
               />
             </div>
 
@@ -124,6 +126,7 @@ export const Footer = () => {
         </div>
       </div>
 
+      <AiSummaryFooter />
       <div
         className={`section-content-padding py-4 sm:py-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 relative z-10`}
       >

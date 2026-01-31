@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { blogClient } from "../clients/axios-client";
+import type { BlogWithAuthor, GetBlogResponse, GetBlogsResponse } from "../types/blog";
 
 export const blogService = {
   async getAllBlogs(): Promise<GetBlogsResponse> {

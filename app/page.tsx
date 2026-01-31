@@ -1,50 +1,74 @@
-"use client";
-
-import { Navbar } from "@/components/landing/navbar";
-import { HeroSection } from "@/components/landing/hero-section";
-import { SocialProofStrip } from "@/components/landing/social-proof-strip";
-import { OldNewWay } from "@/components/landing/old-new-way";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { FeaturesSection } from "@/components/landing/features-section";
-import { WhyChooseUs } from "@/components/landing/why-choose-us";
-import { Footer } from "@/components/landing/footer";
-import { CtaSection } from "@/components/landing/cta-section";
-import { FaqSection } from "@/components/landing/faq-section";
-import { useMotionValueEvent, useScroll } from "framer-motion";
-import { useRef } from "react";
+import Script from "next/script";
+import { coreConf } from "@/lib/utils/conf";
+import { faqSchemaItems } from "@/lib/data/faq-schema-items";
+import { HomepageClientWrapper } from "@/components/landing/homepage-client-wrapper";
 
 export default function LandingPage() {
-  const whyRef = useRef(null);
-  const ctaRef = useRef(null);
+  const baseUrl = coreConf.baseUrl || "";
 
-  const { scrollYProgress: whyRefProgress } = useScroll({
-    target: whyRef,
-    offset: ["start start", "end start"],
-  });
-  const { scrollYProgress: ctaRefProgress } = useScroll({
-    target: ctaRef,
-    offset: ["start start", "end start"],
-  });
+  const schemaGraph = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "MagicalCX",
+        url: baseUrl,
+        logo: `${baseUrl}/logo.png`,
+        sameAs: [
+          "https://x.com/MagicalCX_",
+          "https://www.linkedin.com/company/magicalcx",
+          "https://www.facebook.com/profile.php?id=61583111064272",
+          "https://www.instagram.com/themagicalcx/",
+          "https://www.youtube.com/@MagicalCX",
+        ],
+      },
+      {
+        "@type": "WebSite",
+        name: "MagicalCX",
+        url: baseUrl,
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "MagicalCX",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        description:
+          "Empathy-first AI customer experience platform that automates support and drives revenue.",
+        url: baseUrl,
+      },
+    ],
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqSchemaItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div className="bg-background min-h-screen">
-      <Navbar whyRefProgress={whyRefProgress} ctaRefProgress={ctaRefProgress} />
-
-      <HeroSection />
-      {/* <SocialProofStrip /> */}
-      <OldNewWay />
-      <FeaturesSection />
-
-      <div className="bg-background dark " ref={whyRef}>
-        <WhyChooseUs />
-      </div>
-
-      <HowItWorks />
-
-      <FaqSection />
-      <div className="bg-background dark" ref={ctaRef}>
-        <CtaSection />
-        <Footer />
-      </div>
+      <Script
+        id="home-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schemaGraph),
+        }}
+      />
+      <Script
+        id="home-faq-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
+      <HomepageClientWrapper />
     </div>
   );
 }

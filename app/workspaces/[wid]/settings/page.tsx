@@ -25,9 +25,9 @@ const sections = [
     icon: Settings2,
   },
   {
-    id: "domains",
-    label: "Domains",
-    icon: Globe,
+    id: "members",
+    label: "Members",
+    icon: User,
   },
   {
     id: "billing",
@@ -35,9 +35,9 @@ const sections = [
     icon: CreditCard,
   },
   {
-    id: "members",
-    label: "Members",
-    icon: User,
+    id: "domains",
+    label: "Domains",
+    icon: Globe,
   },
 ];
 
@@ -126,13 +126,13 @@ export default function SettingsPage() {
               <GeneralTab workspace={workspace} wid={wid} />
             )}
 
-            {activeSection === "domains" && (
-              <DomainsTab workspace={workspace} wid={wid} />
-            )}
-
             {activeSection === "members" && <MembersTab />}
 
             {activeSection === "billing" && <BillingTab wid={wid} />}
+
+            {activeSection === "domains" && (
+              <DomainsTab workspace={workspace} wid={wid} />
+            )}
           </AnimatePresence>
         </div>
       </main>

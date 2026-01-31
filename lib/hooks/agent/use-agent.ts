@@ -1,4 +1,5 @@
 import agentService from "@/lib/services/agent-service";
+import { IAgent } from "@/lib/types/agent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const agentKey = (id: string) => ["agents", id];

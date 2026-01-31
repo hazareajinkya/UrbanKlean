@@ -6,8 +6,9 @@ import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
 
 interface CheckoutOptions {
-  planId: "growth" | "scale";
+  planId: "all_in_one";
   tier: number;
+  billingCycle?: "monthly" | "annually";
 }
 
 interface CreateCheckoutResponse {
@@ -35,7 +36,11 @@ export const usePolarCheckout = () => {
     },
   });
 
-  const initiateCheckout = async ({ planId, tier }: CheckoutOptions) => {
+  const initiateCheckout = async ({
+    planId,
+    tier,
+    billingCycle,
+  }: CheckoutOptions) => {
     // Check authentication
     if (isLoading) {
       return;
@@ -55,7 +60,7 @@ export const usePolarCheckout = () => {
 
     if (hasActiveSubscription) {
       toast.error(
-        "You already have an active subscription. Please cancel your current subscription before purchasing a new one."
+        "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
       );
       return;
     }
@@ -69,7 +74,11 @@ export const usePolarCheckout = () => {
       return;
     }
 
-    const tierData = plan.tiers.find((t) => t.messages === tier);
+    const tierData = plan.tiers.find(
+      (t) =>
+        t.messages === tier &&
+        (!billingCycle || t.billingCycle === billingCycle),
+    );
     if (!tierData?.priceIds.polar) {
       const errorMessage = `Polar Product ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
@@ -82,7 +91,8 @@ export const usePolarCheckout = () => {
       const { checkoutUrl } = await createCheckoutMutation.mutateAsync({
         planId,
         tier,
-      });
+        billingCycle,
+      } as any);
 
       // Redirect to Polar checkout
       if (checkoutUrl) {
