@@ -47,123 +47,26 @@ export const PLANS = {
       "API Access",
     ],
   },
-
-  growth: {
-    id: "growth",
-    name: "Growth",
-    description: "Perfect for growing brands getting started with MagicalCX.",
-    maxMessages: 10000, // Growth caps at 10K
+  lifetime: {
+    id: "lifetime",
+    name: "Lifetime Deal",
+    description: "One-time payment for lifetime access to MagicalCX",
+    maxMessages: 10000,
     tiers: [
       {
-        messages: 5000,
-        price: { inr: 9900, usd: 99 },
-        id: "growth_5k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
-          razorpay: "plan_S0ucywKrTQyOtd",
-          polar: "42f12571-1107-4ac3-a7cb-291f0e3db87b",
-        },
-      },
-      {
         messages: 10000,
-        price: { inr: 14900, usd: 149 },
-        id: "growth_10k_monthly",
-        billingCycle: "monthly",
+        price: { inr: 49999, usd: 599 },
+        id: "lifetime_10k",
+        billingCycle: "lifetime",
         priceIds: {
-          paddle: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
-          razorpay: "plan_S0udQKkiRc30OX",
-          polar: "876c54dd-f455-4eaa-adc7-660fdef9780a",
+          paddle: null,
+          razorpay: null,
+          polar: "8b578923-7362-4570-b206-0c6c38ec81d5",
         },
       },
     ],
     features: [
-      "1 AI Agent",
-      "Omnichannel Inbox",
-      "Basic Memory",
-      "Order Tracking",
-      "Basic FAQs & Policies",
-      "1 Workspace",
-      "Standard Response Model",
-      "Business Hours Controls",
-    ],
-  },
-  scale: {
-    id: "scale",
-    name: "Scale",
-    description:
-      "Automation, revenue boosts, and advanced CX for teams that want to move faster.",
-    maxMessages: null, // No cap until enterprise
-    tiers: [
-      {
-        messages: 5000,
-        price: { inr: 16900, usd: 169 },
-        id: "scale_5k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 10000,
-        price: { inr: 19900, usd: 199 },
-        id: "scale_10k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1mw2vb2a27yf2bs5phshh8",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 15000,
-        price: { inr: 22900, usd: 229 },
-        id: "scale_15k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 20000,
-        price: { inr: 25900, usd: 259 },
-        id: "scale_20k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1mx7yw2m42726y49wqpzb6",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 25000,
-        price: { inr: 28900, usd: 289 },
-        id: "scale_25k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1mxn498qhsb7fhway6ea5f",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 30000,
-        price: { inr: 31900, usd: 319 },
-        id: "scale_30k_monthly",
-        billingCycle: "monthly",
-        priceIds: {
-          paddle: "pri_01kc1my82mrddwgat580shdfz9",
-          razorpay: "",
-          polar: "",
-        },
-      },
-    ],
-    features: [
-      "Everything in Growth",
+      "Lifetime Access to MagicalCX",
       "AI Revenue Engine (EFRO)",
       "Automations (refunds, exchanges, cancellations)",
       "Zero-Repetition Memory",
@@ -174,9 +77,23 @@ export const PLANS = {
       "Brand Guardrails",
       "Unlimited Agents",
       "API Access",
+      "10,000 messages included",
     ],
+  }
+} as const;
+
+export const CREDIT_ADDON = {
+  id: "credit_addon",
+  name: "Message Credits",
+  messagesPerUnit: 1000,
+  price: { inr: 999, usd: 15 },
+  productId: {
+    polar: "524874f5-8d38-4ff8-8638-4dc8a638e1c6",
+    razorpay: null,
   },
 } as const;
+
+
 
 export const getPlanByPaddlePriceId = (priceId: string) => {
   for (const [planKey, plan] of Object.entries(PLANS)) {
@@ -201,3 +118,5 @@ export const getPlanByPolarProductId = (polarProductId: string) => {
   }
   return null;
 };
+
+export const LIFETIME_PLAN = PLANS.lifetime;

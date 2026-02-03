@@ -6,9 +6,9 @@ import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
 
 interface CheckoutOptions {
-  planId: "all_in_one";
+  planId: "all_in_one" | "lifetime";
   tier: number;
-  billingCycle?: "monthly" | "annually";
+  billingCycle?: "monthly" | "annually" | "lifetime";
 }
 
 interface CreateCheckoutResponse {
@@ -29,6 +29,7 @@ export const usePolarCheckout = () => {
       }>("/api/payments/polar/create-checkout", {
         planId: options.planId,
         tier: options.tier,
+        billingCycle: options.billingCycle,
         userId: user?.id,
         userEmail: user?.email,
       });
@@ -47,26 +48,35 @@ export const usePolarCheckout = () => {
     }
 
     if (!user?.email) {
-      const returnUrl = `/pricing`;
+      const returnUrl = `/pricing?plan=${planId}&tier=${tier}&billingCycle=${billingCycle}`;
       router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
-    const subscriptionStatus = user.subscription?.status;
-    const hasActiveSubscription =
-      subscriptionStatus &&
-      subscriptionStatus !== "canceled" &&
-      subscriptionStatus !== "past_due";
+    // Check for existing subscription (skip for lifetime if user already has lifetime)
+    if (billingCycle !== "lifetime") {
+      const subscriptionStatus = user.subscription?.status;
+      const hasActiveSubscription =
+        subscriptionStatus &&
+        subscriptionStatus !== "canceled" &&
+        subscriptionStatus !== "past_due";
 
-    if (hasActiveSubscription) {
-      toast.error(
-        "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
-      );
-      return;
+      if (hasActiveSubscription) {
+        toast.error(
+          "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
+        );
+        return;
+      }
+    } else {
+      // For lifetime, check if user already has lifetime access
+      if (user.subscription?.planId === "lifetime") {
+        toast.error("You already have lifetime access to MagicalCX.");
+        return;
+      }
     }
 
     // Get plan data
-    const plan = PLANS[planId];
+    const plan = PLANS[planId as keyof typeof PLANS];
     if (!plan) {
       const errorMessage = `Plan ${planId} not found`;
       console.error(errorMessage);

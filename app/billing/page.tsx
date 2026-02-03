@@ -61,17 +61,25 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => (
     </TableCell>
     <TableCell>
       <p className="text-muted-foreground text-sm">
-        {usage.eventType === "chat_response" ? "Chat Response" : "Tool Call"}
+        {usage.eventType === "chat_response"
+          ? "Chat Response"
+          : usage.eventType === "tool_call"
+            ? "Tool Call"
+            : usage.eventType === "credit_purchase"
+              ? "Credit Purchase"
+              : usage.eventType === "credit_renewal"
+                ? "Credit Renewal"
+                : "Unknown"}
       </p>
     </TableCell>
     <TableCell>
       <span className="text-sm text-foreground">
-        {usage.metadata.model || "N/A"}
+        {usage.metadata?.model || "N/A"}
       </span>
     </TableCell>
     <TableCell>
       <span className="text-sm text-muted-foreground">
-        {usage.metadata.tokenUsage.toLocaleString()}
+        {usage.metadata?.tokenUsage.toLocaleString()}
       </span>
     </TableCell>
     <TableCell>
@@ -81,7 +89,7 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => (
     </TableCell>
     <TableCell className="text-right pr-6">
       <span className="text-xs text-muted-foreground font-mono">
-        {usage.aid.slice(0, 8)}...
+        {usage.aid?.slice(0, 8) || "N/A"}...
       </span>
     </TableCell>
   </TableRow>
@@ -350,7 +358,7 @@ export default function BillingPage() {
                           variant={"outline"}
                           className={cn(
                             "w-[260px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-1 h-4 w-4" />
@@ -542,12 +550,12 @@ const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
       [
         `"${formatDateTime(usage.createdAt)}"`,
         `"${usage.eventType}"`,
-        `"${usage.metadata.model}"`,
-        usage.metadata.tokenUsage,
+        `"${usage.metadata?.model || "N/A"}"`,
+        usage.metadata?.tokenUsage.toLocaleString() || "0",
         usage.amount,
         `"${usage.aid}"`,
         `"${usage.sessionId}"`,
-      ].join(",")
+      ].join(","),
     ),
   ].join("\n");
 
@@ -560,7 +568,7 @@ const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
     ? dateRange.to
       ? `${format(dateRange.from, "yyyy-MM-dd")}-to-${format(
           dateRange.to,
-          "yyyy-MM-dd"
+          "yyyy-MM-dd",
         )}`
       : `${format(dateRange.from, "yyyy-MM-dd")}`
     : "all_time";

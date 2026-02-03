@@ -35,7 +35,7 @@ export const usePaddleCheckout = () => {
     }
 
     // Get plan and tier data
-    const plan = PLANS[planId];
+    const plan = PLANS[planId as keyof typeof PLANS];
     if (!plan) {
       const errorMessage = `Plan ${planId} not found`;
       console.error(errorMessage);

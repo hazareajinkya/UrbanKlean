@@ -58,12 +58,12 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => (
     </TableCell>
     <TableCell>
       <span className="text-sm text-foreground">
-        {usage.metadata.model || "N/A"}
+        {usage.metadata?.model || "N/A"}
       </span>
     </TableCell>
     <TableCell>
       <span className="text-sm text-muted-foreground">
-        {usage.metadata.tokenUsage.toLocaleString()}
+        {usage.metadata?.tokenUsage.toLocaleString()}
       </span>
     </TableCell>
     <TableCell>
@@ -73,7 +73,7 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => (
     </TableCell>
     <TableCell className="text-right pr-6">
       <span className="text-xs text-muted-foreground font-mono">
-        {usage.sessionId.slice(0, 8)}...
+        {usage.sessionId?.slice(0, 8)}...
       </span>
     </TableCell>
   </TableRow>
@@ -82,6 +82,7 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => (
 export default function BillingTab({ wid }: BillingTabProps) {
   const { user } = useCurrentUser();
   const { data: usageData, isLoading: isUsageLoading } = useUsage(wid || "");
+  console.log("usageData", usageData);
   const [currentPage, setCurrentPage] = useState(1);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const {
@@ -108,7 +109,7 @@ export default function BillingTab({ wid }: BillingTabProps) {
     if (!usageData || usageData.length === 0) return [];
     return [...usageData].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [usageData]);
 
@@ -117,7 +118,7 @@ export default function BillingTab({ wid }: BillingTabProps) {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedData = useMemo(
     () => sortedUsageData.slice(startIndex, endIndex),
-    [sortedUsageData, startIndex, endIndex]
+    [sortedUsageData, startIndex, endIndex],
   );
 
   const handlePreviousPage = () => {

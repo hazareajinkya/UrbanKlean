@@ -4,56 +4,22 @@ import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
+import type { RazorpayOptions, RazorpayResponse } from "@/lib/types/razorpay";
 
 interface CheckoutOptions {
-  planId: "all_in_one";
+  planId: "all_in_one" | "lifetime";
   tier: number;
-  billingCycle?: "monthly" | "annually";
+  billingCycle?: "monthly" | "annually" | "lifetime";
 }
 
 interface CreateSubscriptionResponse {
-  subscriptionId: string;
-  shortUrl: string;
+  subscriptionId?: string;
+  shortUrl?: string;
+  orderId: string;
+  amount: number;
+  currency: string;
 }
 
-// Extend Window interface for Razorpay
-declare global {
-  interface Window {
-    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
-  }
-}
-
-interface RazorpayOptions {
-  key: string;
-  subscription_id: string;
-  name: string;
-  description: string;
-  handler: (response: RazorpayResponse) => void;
-  prefill: {
-    name?: string;
-    email: string;
-  };
-  notes: Record<string, string>;
-  theme: {
-    color: string;
-  };
-  modal?: {
-    ondismiss?: () => void;
-  };
-}
-
-interface RazorpayInstance {
-  open: () => void;
-  close: () => void;
-}
-
-interface RazorpayResponse {
-  razorpay_payment_id: string;
-  razorpay_subscription_id: string;
-  razorpay_signature: string;
-}
-
-// Load Razorpay script dynamically
 const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (typeof window === "undefined") {
@@ -87,6 +53,7 @@ export const useRazorpayCheckout = () => {
       }>("/api/payments/razorpay/create-checkout", {
         planId: options.planId,
         tier: options.tier,
+        billingCycle: options.billingCycle,
         userId: user?.id,
         userEmail: user?.email,
       });
@@ -99,32 +66,41 @@ export const useRazorpayCheckout = () => {
     tier,
     billingCycle,
   }: CheckoutOptions) => {
-    // Check authentication
+
     if (isLoading) {
       return;
     }
 
     if (!user?.email) {
-      const returnUrl = `/pricing`;
+      const returnUrl = `/pricing?plan=${planId}&tier=${tier}&billingCycle=${billingCycle}`;
       router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
-    const subscriptionStatus = user.subscription?.status;
-    const hasActiveSubscription =
-      subscriptionStatus &&
-      subscriptionStatus !== "canceled" &&
-      subscriptionStatus !== "past_due";
+    // Check for existing subscription (skip for lifetime if user already has lifetime)
+    if (billingCycle !== "lifetime") {
+      const subscriptionStatus = user.subscription?.status;
+      const hasActiveSubscription =
+        subscriptionStatus &&
+        subscriptionStatus !== "canceled" &&
+        subscriptionStatus !== "past_due";
 
-    if (hasActiveSubscription) {
-      toast.error(
-        "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
-      );
-      return;
+      if (hasActiveSubscription) {
+        toast.error(
+          "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
+        );
+        return;
+      }
+    } else {
+      // For lifetime, check if user already has lifetime access
+      if (user.subscription?.planId === "lifetime") {
+        toast.error("You already have lifetime access to MagicalCX.");
+        return;
+      }
     }
 
     // Get plan data
-    const plan = PLANS[planId];
+    const plan = PLANS[planId as keyof typeof PLANS];
     if (!plan) {
       const errorMessage = `Plan ${planId} not found`;
       console.error(errorMessage);
@@ -137,8 +113,18 @@ export const useRazorpayCheckout = () => {
         t.messages === tier &&
         (!billingCycle || t.billingCycle === billingCycle),
     );
-    if (!tierData?.priceIds.razorpay) {
+
+    // For lifetime purchases, we only need the tier data for pricing (uses one-time orders, not subscriptions)
+    // For subscriptions, we need a valid Razorpay plan ID
+    if (billingCycle !== "lifetime" && !tierData?.priceIds.razorpay) {
       const errorMessage = `Razorpay Plan ID not found for ${planId} tier ${tier}`;
+      console.error(errorMessage);
+      toast.error(errorMessage);
+      return;
+    }
+
+    if (!tierData) {
+      const errorMessage = `Tier not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
       toast.error(errorMessage);
       return;
@@ -152,22 +138,35 @@ export const useRazorpayCheckout = () => {
       return;
     }
 
-    // create subscription
+    // Create checkout (subscription or lifetime order)
     try {
-      const { subscriptionId } = await createCheckoutMutation.mutateAsync({
+      const response = await createCheckoutMutation.mutateAsync({
         planId,
         tier,
         billingCycle,
-      } as any);
+      });
 
-      // Open Razorpay checkout
+      const { subscriptionId, orderId, amount, currency } = response;
+
+      // Determine description and success URL based on plan type
+      const isLifetime = billingCycle === "lifetime";
+      const description = isLifetime
+        ? `${plan.name} - Lifetime Access`
+        : `${plan.name} - ${tier / 1000}k messages/month`;
+      const successUrl = isLifetime
+        ? `/checkout/success?type=lifetime`
+        : `/checkout/success?plan=${planId}&tier=${tier}&subscriptionId=${subscriptionId}`;
+
+      // Open Razorpay checkout with order_id for full payment modal
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        subscription_id: subscriptionId,
+        order_id: orderId,
+        amount,
+        currency,
         name: "MagicalCX",
-        description: `${plan.name} - ${tier / 1000}k messages/month`,
+        description,
         handler: () => {
-          router.push(`/checkout/success?plan=${planId}&tier=${tier}`);
+          router.push(successUrl);
         },
         prefill: {
           name: user.name,
@@ -179,6 +178,8 @@ export const useRazorpayCheckout = () => {
           planId,
           tier: tier.toString(),
           tierId: tierData.id,
+          ...(subscriptionId && { subscriptionId }),
+          type: billingCycle === "lifetime" ? "lifetime_purchase" : "subscription",
         },
         theme: {
           color: "#000000",

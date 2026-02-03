@@ -28,19 +28,27 @@ export async function POST(req: NextRequest) {
         console.error("Invalid Polar webhook signature:", error);
         return NextResponse.json(
           { error: "Invalid signature" },
-          { status: 401 }
+          { status: 401 },
         );
       }
       throw error;
     }
 
-    console.log("Polar webhook event received:", {
-      eventType: event.type,
-      timestamp: event.timestamp,
-    });
-
     const eventType = event.type;
     const eventData = event.data;
+
+    if (eventType === "checkout.created" || eventType === "order.created") {
+      const metadata = (eventData as any)?.metadata || {};
+
+      if (metadata.type === "credit_purchase") {
+        await handleCreditPurchase(eventData as any);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+      if (metadata.type === "lifetime_purchase") {
+        await handleLifetimePurchase(eventData as any);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+    }
 
     const subscriptionData = mapSubscriptionToPolarData(eventData as any);
 
@@ -67,7 +75,7 @@ export async function POST(req: NextRequest) {
     console.error("Error processing Polar webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -87,15 +95,15 @@ function mapSubscriptionToPolarData(data: any): PolarSubscriptionData {
       data.currentPeriodEnd === null
         ? null
         : typeof data.currentPeriodEnd === "string"
-        ? data.currentPeriodEnd
-        : data.currentPeriodEnd?.toISOString() || null,
+          ? data.currentPeriodEnd
+          : data.currentPeriodEnd?.toISOString() || null,
     cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
     canceledAt:
       data.canceledAt === null
         ? null
         : typeof data.canceledAt === "string"
-        ? data.canceledAt
-        : data.canceledAt?.toISOString() || null,
+          ? data.canceledAt
+          : data.canceledAt?.toISOString() || null,
     createdAt:
       typeof data.createdAt === "string"
         ? data.createdAt
@@ -108,25 +116,45 @@ function mapSubscriptionToPolarData(data: any): PolarSubscriptionData {
 }
 
 async function handleSubscriptionActive(
-  subscriptionData: PolarSubscriptionData
+  subscriptionData: PolarSubscriptionData,
 ) {
   await paymentService.handlePolarSubscriptionCreated(subscriptionData);
 }
 
 async function handleSubscriptionUpdated(
-  subscriptionData: PolarSubscriptionData
+  subscriptionData: PolarSubscriptionData,
 ) {
   await paymentService.handlePolarSubscriptionUpdated(subscriptionData);
 }
 
 async function handleSubscriptionCanceled(
-  subscriptionData: PolarSubscriptionData
+  subscriptionData: PolarSubscriptionData,
 ) {
   await paymentService.handlePolarSubscriptionCanceled(subscriptionData);
 }
 
 async function handleSubscriptionRevoked(
-  subscriptionData: PolarSubscriptionData
+  subscriptionData: PolarSubscriptionData,
 ) {
   await handleSubscriptionCanceled(subscriptionData);
+}
+
+async function handleCreditPurchase(checkoutData: any) {
+  const metadata = checkoutData.metadata || {};
+  if (metadata.type === "credit_purchase" && checkoutData.status === "paid") {
+    await paymentService.handlePolarCreditPurchase({
+      checkoutId: checkoutData.id,
+      metadata: metadata as Record<string, string | number | boolean>,
+    });
+  }
+}
+
+async function handleLifetimePurchase(checkoutData: any) {
+  const metadata = checkoutData.metadata || {};
+  if (metadata.type === "lifetime_purchase") {
+    await paymentService.handlePolarLifetimePurchase({
+      checkoutId: checkoutData.id,
+      metadata: metadata as Record<string, string | number | boolean>,
+    });
+  }
 }

@@ -27,15 +27,15 @@ export interface RazorpaySubscriptionData {
   entity: "subscription";
   plan_id: string;
   status:
-    | "created"
-    | "authenticated"
-    | "active"
-    | "pending"
-    | "halted"
-    | "cancelled"
-    | "completed"
-    | "expired"
-    | "paused";
+  | "created"
+  | "authenticated"
+  | "active"
+  | "pending"
+  | "halted"
+  | "cancelled"
+  | "completed"
+  | "expired"
+  | "paused";
   current_start: number;
   current_end: number;
   ended_at: number | null;
@@ -59,6 +59,36 @@ export interface RazorpaySubscriptionCustomData {
   tier: string;
   tierId: string;
 }
+
+export interface RazorpayCreditPurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  quantity: number;
+  type: "credit_purchase";
+}
+
+export interface RazorpayLifetimePurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  type: "lifetime_purchase";
+  planId: string;
+}
+
+export interface RazorpaySubscriptionOrderCustomData {
+  userId: string;
+  userEmail: string;
+  quantity: number;
+  type: "subscription";
+  subscriptionId: string;
+  planId: string;
+  tier: string;
+  tierId: string;
+}
+
+export type RazorpayOrderCustomData =
+  | RazorpayCreditPurchaseCustomData
+  | RazorpayLifetimePurchaseCustomData
+  | RazorpaySubscriptionOrderCustomData;
 
 // Map Razorpay status to your app status
 export const mapRazorpayStatus = (
@@ -134,5 +164,21 @@ export const razorpayApi = {
     return razorpay.subscriptions.resume(subscriptionId, {
       resume_at: "now",
     });
+  },
+
+  async createOrder(arg: {
+    amount: number; // Amount in paise (INR * 100)
+    currency: string;
+    notes: RazorpayOrderCustomData;
+  }) {
+    const razorpay = getRazorpayInstance();
+
+    const order = await razorpay.orders.create({
+      amount: arg.amount,
+      currency: arg.currency,
+      notes: arg.notes as unknown as Record<string, string>,
+    });
+
+    return order;
   },
 };

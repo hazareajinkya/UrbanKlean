@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import {
   razorpayApi,
   RazorpaySubscriptionCustomData,
+  RazorpayLifetimePurchaseCustomData,
 } from "@/lib/clients/razorpay";
 import { PLANS } from "@/lib/plans";
 import {
@@ -12,11 +13,11 @@ import {
 
 import z from "zod";
 const createSubscriptionSchema = z.object({
-  planId: z.enum(["growth", "scale", "all_in_one"]),
+  planId: z.enum(["growth", "scale", "all_in_one", "lifetime"]),
   tier: z.number().int().positive(),
   userId: z.string().min(1, "User ID is required"),
   userEmail: z.string().email("Invalid email address"),
-  billingCycle: z.enum(["monthly", "annually"]).optional(),
+  billingCycle: z.enum(["monthly", "annually", "lifetime"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -26,11 +27,41 @@ export async function POST(req: NextRequest) {
     const { planId, tier, userId, userEmail, billingCycle } = validatedData;
     console.log("validatedData", validatedData);
 
-    const plan = PLANS[planId];
+    const plan = PLANS[planId as keyof typeof PLANS];
     if (!plan) {
       return errorResponse(`Plan ${planId} not found`, 400);
     }
 
+    // Handle lifetime plan - create order only (no subscription)
+    if (billingCycle === "lifetime") {
+      const tierData = plan.tiers[0];
+      if (!tierData) {
+        return errorResponse("Tier not found for lifetime plan", 400);
+      }
+
+      const amountInPaise = tierData.price.inr * 100;
+
+      const notes: RazorpayLifetimePurchaseCustomData = {
+        userId,
+        userEmail,
+        type: "lifetime_purchase",
+        planId,
+      };
+
+      const order = await razorpayApi.createOrder({
+        amount: amountInPaise,
+        currency: "INR",
+        notes,
+      });
+
+      return successResponse({
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      });
+    }
+
+    // Handle subscription plans - create subscription + order
     const tierData = plan.tiers.find(
       (t) =>
         t.messages === tier &&
@@ -57,9 +88,29 @@ export async function POST(req: NextRequest) {
       notes,
     });
 
+    const amountInPaise = tierData.price.inr * 100;
+
+    const order = await razorpayApi.createOrder({
+      amount: amountInPaise,
+      currency: "INR",
+      notes: {
+        userId,
+        userEmail,
+        quantity: 0,
+        type: "subscription",
+        subscriptionId: subscription.id,
+        planId,
+        tier: tier.toString(),
+        tierId: tierData.id,
+      },
+    });
+
     return successResponse({
       subscriptionId: subscription.id,
       shortUrl: subscription.short_url,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
     });
   } catch (error: any) {
     console.error("Error creating Razorpay subscription:", error);

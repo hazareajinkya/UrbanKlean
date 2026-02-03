@@ -159,18 +159,17 @@ function OnboardingContent() {
 
   return (
     <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-      {/* Left Side: Interaction Area */}
+
       <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white">
         <div className="max-w-md w-full mx-auto">
           {phase === "form" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div>
                 <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-                  Get Started
+                  Get a MagicalCX™ demo trained on your website
                 </h1>
                 <p className="text-muted-foreground text-base">
-                  Enter your work email and business domain to begin setting up
-                  your Empathy-First AI customer experience agent.
+                  See how EFRO™ + HumanlyClear™ handles real customer moments for your business.
                 </p>
               </div>
 
@@ -190,7 +189,7 @@ function OnboardingContent() {
                     className={cn(
                       "h-11 transition-all",
                       emailError &&
-                        "border-destructive focus-visible:ring-destructive/20",
+                      "border-destructive focus-visible:ring-destructive/20",
                     )}
                   />
                   {emailError && (
@@ -200,7 +199,7 @@ function OnboardingContent() {
 
                 <div className="space-y-2">
                   <Label htmlFor="domain" className="text-sm font-medium">
-                    Business Domain
+                    Company website
                   </Label>
                   <InputGroup className="h-11">
                     <InputGroupAddon
@@ -265,6 +264,7 @@ function OnboardingContent() {
 
           {phase === "onboarding" && url && (
             <OnboardingMultiStepForm
+              email={email}
               url={url}
               onFinish={handleOnboardingFinish}
               generateOnboardingInfo={generateOnboardingInfo}
@@ -273,6 +273,8 @@ function OnboardingContent() {
               showEstimatedTime={true}
               isSubmitting={startOnboarding.isPending}
               submitButtonText="Finish Setup"
+              onParsedPhaseChange={setPhase}
+              onEmailError={setEmailError}
             />
           )}
 

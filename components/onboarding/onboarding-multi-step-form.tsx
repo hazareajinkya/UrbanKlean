@@ -30,6 +30,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
+import { stepCountIs } from "ai";
 
 type ProcessingStep = {
   id: number;
@@ -95,13 +96,15 @@ const CONFIRMATION_STEPS = [
 type Phase = "processing" | "confirmation";
 
 interface OnboardingMultiStepFormProps {
+
+  email?: string;
   url?: string;
   initialData?: Partial<OnboardingData>;
   onFinish: (data: OnboardingData) => void;
   generateOnboardingInfo: UseMutationResult<
     { data: { data: OnboardingData } },
     Error,
-    { url: string }
+    { url: string; email?: string }
   >;
   uploadLogo: UseMutationResult<string, Error, File>;
   mode?: "onboarding" | "workspace";
@@ -111,6 +114,8 @@ interface OnboardingMultiStepFormProps {
   isSubmitting?: boolean;
   submitButtonText?: string;
   onCompanyNameValidate?: (name: string) => string | null;
+  onParsedPhaseChange?: (phase: "form" | "onboarding" | "success") => void;
+  onEmailError?: (message: string) => void;
 }
 
 const getDefaultOnboardingData = (): OnboardingData => ({
@@ -130,6 +135,7 @@ const getDefaultOnboardingData = (): OnboardingData => ({
 });
 
 export const OnboardingMultiStepForm = ({
+  email,
   url,
   initialData,
   onFinish,
@@ -142,6 +148,10 @@ export const OnboardingMultiStepForm = ({
   isSubmitting = false,
   submitButtonText = "Finish Setup",
   onCompanyNameValidate,
+  onParsedPhaseChange,
+  onEmailError
+
+
 }: OnboardingMultiStepFormProps) => {
   const [phase, setPhase] = useState<Phase>(
     url && !initialData ? "processing" : "confirmation"
@@ -162,13 +172,21 @@ export const OnboardingMultiStepForm = ({
 
     setProcessingStep(1);
     generateOnboardingInfo.mutate(
-      { url },
+      { url, email },
       {
         onSuccess: (result) => {
           setOnboardingData(result.data.data);
         },
-        onError: () => {
-          setPhase("confirmation");
+        onError: (error: any) => {
+          const status = error.status
+          if ((status === 409 || status === 429) && onParsedPhaseChange) {
+            if (status === 409 && onEmailError) {
+              onEmailError("You already have an agent. Please check your email for more information.");
+            }
+            onParsedPhaseChange("form");
+          } else {
+            setPhase("confirmation");
+          }
           setProcessingStep(0);
         },
       }
@@ -296,8 +314,8 @@ export const OnboardingMultiStepForm = ({
                     isCompleted
                       ? "text-green-500"
                       : isActive
-                      ? "text-primary"
-                      : "text-gray-200"
+                        ? "text-primary"
+                        : "text-gray-200"
                   )}
                 >
                   {isCompleted ? (
@@ -315,8 +333,8 @@ export const OnboardingMultiStepForm = ({
                       isActive
                         ? "text-gray-900"
                         : isCompleted
-                        ? "text-gray-500"
-                        : "text-gray-300"
+                          ? "text-gray-500"
+                          : "text-gray-300"
                     )}
                   >
                     {step.title}
@@ -348,9 +366,8 @@ export const OnboardingMultiStepForm = ({
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                 style={{
-                  width: `${
-                    (confirmationStep / CONFIRMATION_STEPS.length) * 100
-                  }%`,
+                  width: `${(confirmationStep / CONFIRMATION_STEPS.length) * 100
+                    }%`,
                 }}
               />
             </div>
@@ -726,6 +743,17 @@ export const OnboardingMultiStepForm = ({
             Back
           </Button>
         )}
+        {onParsedPhaseChange && confirmationStep === 1 && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => onParsedPhaseChange("form")}
+            className="w-auto max-w-max rounded-full"
+          >
+            <ChevronLeft className="size-4" />
+            Back
+          </Button>
+        )}
         <Button
           size="lg"
           onClick={handleNextConfirmationStep}
@@ -745,6 +773,7 @@ export const OnboardingMultiStepForm = ({
             </>
           )}
         </Button>
+
       </div>
     </div>
   );

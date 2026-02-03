@@ -18,7 +18,9 @@ export const useUsageActions = () => {
       return await usageService.addUsage(userId, usage);
     },
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: usageKey(variables.usage.wid) });
+      if (variables.usage.wid) {
+        qc.invalidateQueries({ queryKey: usageKey(variables.usage.wid) });
+      }
     },
     onError: handleError,
   });

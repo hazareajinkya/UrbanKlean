@@ -23,6 +23,7 @@ class UsageService {
     const year = today.getFullYear();
     const dateKey = `${day}-${month}-${year}`;
     const usageRef = doc(db, `users/${userId}/usage/${dateKey}`);
+
     try {
       await updateDoc(usageRef, {
         events: arrayUnion(usage),
@@ -80,11 +81,11 @@ class UsageService {
 
       const usageCollection = query(
         collection(db, `users/${email}/usage`),
-        limit(5)
+        limit(5),
       );
       const snapshot = await getDocs(usageCollection);
       const data = snapshot.docs.map(
-        (doc) => doc.data() as { createdAt: string; events: IUsage[] }
+        (doc) => doc.data() as { createdAt: string; events: IUsage[] },
       );
       const usageEvents: IUsage[] = [];
       data.forEach((event) => {
@@ -107,7 +108,7 @@ class UsageService {
       const usageCollection = query(
         collection(db, `users/${ownerId}/usage`),
         orderBy("createdAt", "desc"),
-        limit(2)
+        limit(2),
       );
       const snapshot = await getDocs(usageCollection);
       const allUsageEvents: IUsage[] = [];
@@ -116,12 +117,12 @@ class UsageService {
         const data = doc.data();
         if (data.events && Array.isArray(data.events)) {
           const filteredEvents = data.events.filter(
-            (event: IUsage) => event.wid === wid
+            (event: IUsage) => event.wid === wid,
           );
           allUsageEvents.push(...filteredEvents);
         }
       });
-
+      console.log("allUsageEvents", allUsageEvents);
       return allUsageEvents;
     } catch (error) {
       console.error("Error getting usage: ", error);
