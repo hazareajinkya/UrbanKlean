@@ -239,7 +239,9 @@ export const PricingContent = () => {
     >
       <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full">
         <div className="text-center mb-12 space-y-4 max-w-3xl mx-auto">
-          <h1 className="section-heading">Start for Free, Choose your plan later</h1>
+          <h1 className="section-heading">
+            Start for Free, Choose your plan later
+          </h1>
           <p className="section-subheadline text-lg">
             Everything you need to automate your customer support and boost
             revenue.
@@ -377,7 +379,7 @@ export const PricingContent = () => {
                       Processing
                     </>
                   ) : (
-                    "Start 14 days free trial"
+                    "Get Started"
                   )}
                 </Button>
 
