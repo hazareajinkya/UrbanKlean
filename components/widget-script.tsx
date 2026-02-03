@@ -9,7 +9,9 @@ export const WidgetScript = () => {
     !pathname?.startsWith("/workspaces") &&
     !pathname?.startsWith("/widget-test") &&
     !pathname?.startsWith("/api") &&
-    !pathname?.startsWith("/chat");
+    !pathname?.startsWith("/chat") &&
+    !pathname?.startsWith("/share") &&
+    !pathname?.startsWith("/onboard-share");
 
   if (!shouldLoad) return null;
 

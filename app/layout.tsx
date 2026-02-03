@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Bodoni_Moda, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ClientProvider } from "./client-provider";
-import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import { coreConf } from "@/lib/utils/conf";
 import { WidgetScript } from "@/components/widget-script";
@@ -49,7 +48,6 @@ export default function RootLayout({
         className={` ${inter.variable} ${playfair.variable} ${bodona.variable} font-sans antialiased`}
       >
         <ClientProvider>{children}</ClientProvider>
-        <Analytics />
         <WidgetScript />
         <Script
           defer
