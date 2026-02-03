@@ -14,6 +14,8 @@ export const WidgetScript = () => {
     !pathname?.startsWith("/billing") &&
     !pathname?.startsWith("/onboard-share");
 
+  console.log("shouldLoad: ", shouldLoad);
+
   if (!shouldLoad) return null;
 
   return (
