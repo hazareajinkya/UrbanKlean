@@ -379,7 +379,7 @@ export const PricingContent = () => {
                       Processing
                     </>
                   ) : (
-                    "Get Started"
+                    "Get Started Now"
                   )}
                 </Button>
 
