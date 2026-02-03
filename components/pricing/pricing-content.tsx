@@ -379,7 +379,7 @@ export const PricingContent = () => {
                       Processing
                     </>
                   ) : (
-                    "Get Started Now"
+                    "Start 14 days free trial"
                   )}
                 </Button>
 
