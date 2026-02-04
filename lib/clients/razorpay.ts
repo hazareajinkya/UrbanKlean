@@ -97,6 +97,7 @@ export const mapRazorpayStatus = (
 ): "active" | "canceled" | "past_due" | "paused" | "trialing" => {
   switch (status) {
     case "active":
+    case "authenticated":
       return "active";
     case "cancelled":
     case "completed":
@@ -107,7 +108,6 @@ export const mapRazorpayStatus = (
       return "past_due";
     case "paused":
       return "paused";
-    case "authenticated":
     case "created":
       return "trialing";
     default:

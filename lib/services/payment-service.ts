@@ -223,6 +223,7 @@ class PaymentService {
 
       const recurringQuota = tierData.messages;
 
+
       const subscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customer_id,
@@ -273,7 +274,7 @@ class PaymentService {
         planId: notes.planId,
         tierId: notes.tierId,
         razorpayPlanId: data.plan_id,
-        status: "active",
+        status: mapRazorpayStatus(data.status),
         recurringQuota,
         startedAt:
           user.subscription?.startedAt ||
@@ -420,7 +421,7 @@ class PaymentService {
       await userService.updateUser(notes.userEmail, {
         subscription: {
           ...user.subscription,
-          status: "active",
+          status: mapRazorpayStatus(data.status),
           nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
           renewsAt: new Date(data.current_end * 1000).toISOString(),
         },
@@ -789,7 +790,7 @@ class PaymentService {
         planId: notes.planId,
         tierId: notes.tierId,
         razorpayPlanId: tierData.priceIds.razorpay ?? undefined,
-        status: "active",
+        status: mapRazorpayStatus("created"),
         recurringQuota,
         startedAt: now.toISOString(),
         lastPaymentAt: now.toISOString(),
