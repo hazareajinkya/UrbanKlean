@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Modal from "@/components/ui/modal";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import {
   Loader,
   Trash,
@@ -31,6 +32,7 @@ import { IWorkspace } from "@/lib/types/workspace";
 import { normalizeDomain, validateDomain, cn } from "@/lib/utils";
 import storageService from "@/lib/services/storage-service";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   InputGroup,
   InputGroupAddon,
@@ -44,6 +46,7 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ workspace, wid }: GeneralTabProps) {
+  const router = useRouter();
   // General workspace fields
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
@@ -80,6 +83,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
   const [isWebsiteDialogOpen, setIsWebsiteDialogOpen] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [urlError, setUrlError] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const isUrlInvalid = Boolean(urlError);
 
@@ -100,7 +104,8 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
     handleUrlChange(normalized);
   };
 
-  const { updateWorkspace, generateWorkspaceInfo } = useWorkspaceActions();
+  const { updateWorkspace, generateWorkspaceInfo, deleteWorkspace } =
+    useWorkspaceActions();
   const isInitializing = useRef(true);
 
   useEffect(() => {
@@ -237,6 +242,22 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
         onError: () => {
           setIsGenerating(false);
           setIsWebsiteDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleDeleteWorkspace = () => setIsDeleteModalOpen(true);
+
+  const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
+
+  const confirmDeleteWorkspace = () => {
+    deleteWorkspace.mutate(
+      { wid },
+      {
+        onSuccess: () => {
+          setIsDeleteModalOpen(false);
+          router.push("/workspaces");
         },
       }
     );
@@ -615,7 +636,14 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
                 knowledge bases, members, and all associated content.
               </p>
               <div className="mt-4">
-                <Button variant="destructive" disabled>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteWorkspace}
+                  disabled={deleteWorkspace.isPending}
+                >
+                  {deleteWorkspace.isPending && (
+                    <Loader className="h-4 w-4 animate-spin" />
+                  )}
                   Delete Workspace
                 </Button>
               </div>
@@ -634,6 +662,18 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
         onUrlChange={handleUrlChange}
         onUrlPaste={handleUrlPaste}
         onGenerate={startAIGeneration}
+      />
+      <ConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={confirmDeleteWorkspace}
+        title="Delete Workspace"
+        description={`Are you sure you want to delete "${workspace?.name}"?`}
+        warningMessage="This action cannot be undone. All data associated with this workspace will be permanently removed."
+        confirmText="Delete Workspace"
+        cancelText="Cancel"
+        isLoading={deleteWorkspace.isPending}
+        variant="destructive"
       />
     </motion.div>
   );

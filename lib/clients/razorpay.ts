@@ -27,16 +27,17 @@ export interface RazorpaySubscriptionData {
   id: string;
   entity: "subscription";
   plan_id: string;
+  start_at: number;
   status:
-  | "created"
-  | "authenticated"
-  | "active"
-  | "pending"
-  | "halted"
-  | "cancelled"
-  | "completed"
-  | "expired"
-  | "paused";
+    | "created"
+    | "authenticated"
+    | "active"
+    | "pending"
+    | "halted"
+    | "cancelled"
+    | "completed"
+    | "expired"
+    | "paused";
   current_start: number;
   current_end: number;
   ended_at: number | null;
@@ -100,7 +101,6 @@ export const mapRazorpayStatus = (
       return "active";
     case "authenticated":
     case "created":
-
       return "trialing";
     case "cancelled":
     case "completed":
@@ -134,7 +134,6 @@ export const razorpayApi = {
       notes: arg.notes as unknown as Record<string, string>,
     };
 
-
     if (arg.startAt) {
       params.start_at = arg.startAt;
     }
@@ -152,6 +151,7 @@ export const razorpayApi = {
 
   async cancelSubscription(subscriptionId: string, cancelAtCycleEnd = true) {
     const razorpay = getRazorpayInstance();
+
     return razorpay.subscriptions.cancel(subscriptionId, cancelAtCycleEnd);
   },
 

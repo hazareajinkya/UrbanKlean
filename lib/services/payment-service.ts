@@ -14,22 +14,37 @@ import {
   PolarSubscriptionCustomData,
   mapPolarStatus,
 } from "../clients/polar";
-import {
-  getPlanByPaddlePriceId,
-  getPlanByPolarProductId,
-  PLANS,
-} from "../plans";
-import { IUserSubscription } from "../types/user";
+import { getPlanByPolarProductId, PLANS } from "../plans";
+import { IPlanId, IUserSubscription } from "../types/user";
 import userService from "./user-service";
 import creditService from "./credit-service";
 import resendService from "./resend/resend-service";
 import usageService from "./usage-service";
 import { defaultUsage } from "../types/usage";
 import { backendClient } from "../clients/axios-client";
+import workspaceService from "./workspace-service";
 
 class PaymentService {
+  private async syncWorkspacesPlan(userEmail: string, planId?: string) {
+    try {
+      if (!userEmail) return;
+      const nextPlanId = (
+        planId && planId in PLANS ? planId : "none"
+      ) as IPlanId;
+      await workspaceService.syncOwnerWorkspacesPlan({
+        ownerId: userEmail,
+        planId: nextPlanId,
+      });
+    } catch (error) {
+      console.error("Error syncing workspace plans:", error);
+    }
+  }
 
-  async onPaymentCompleted(userEmail: string, planId: string, type: "subscription" | "lifetime") {
+  async onPaymentCompleted(
+    userEmail: string,
+    planId: string,
+    type: "subscription" | "lifetime"
+  ) {
     try {
       const q = query(
         collection(db, "workspaces"),
@@ -46,14 +61,14 @@ class PaymentService {
             await backendClient.post("/workspace/transfer", {
               wid: data.id,
               fromUserId: data.ownerId,
-              toUserId: userEmail
-            })
-
+              toUserId: userEmail,
+            });
           } catch (error) {
             console.error(`PaymentCompleted Error updating workspace:`, error);
           }
         });
       }
+      await this.syncWorkspacesPlan(userEmail, planId);
     } catch (error) {
       console.error(`PaymentCompleted Error checking workspaces:`, error);
     }
@@ -79,9 +94,9 @@ class PaymentService {
       const subscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customer_id,
-        planId: customData.planId,
+        planId: customData.planId as IPlanId,
         tierId: customData.tierId,
-        paddlePriceId: tierData.priceIds.paddle ?? undefined,
+
         status: data.status,
         recurringQuota,
         startedAt: data.started_at,
@@ -94,97 +109,15 @@ class PaymentService {
 
       await creditService.renewQuota(customData.userEmail, recurringQuota);
 
-      this.onPaymentCompleted(customData.userEmail, customData.planId, "subscription");
+      this.onPaymentCompleted(
+        customData.userEmail,
+        customData.planId,
+        "subscription"
+      );
 
       return { success: true, user };
     } catch (error) {
       console.error("Error handling subscription.created:", error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  async handleSubscriptionUpdated(data: PaddleSubscriptionData) {
-    try {
-      console.log("Handling subscription.updated:", data);
-
-      const customData =
-        data.custom_data as unknown as PaddleSubscriptionCustomData;
-      const user = await userService.getUser(customData.userEmail);
-      if (!user) throw new Error("User not found");
-
-      const updatedSubscription: IUserSubscription = {
-        ...user.subscription,
-        status: data.status,
-        nextPaymentAt: data.next_billed_at,
-        renewsAt: data.next_billed_at,
-      };
-
-      const currentPriceId = data.items?.[0]?.price_id;
-      if (currentPriceId) {
-        const planInfo = getPlanByPaddlePriceId(currentPriceId);
-        if (planInfo && planInfo.tier.id !== user.subscription?.tierId) {
-          updatedSubscription.planId = planInfo.planId;
-          updatedSubscription.tierId = planInfo.tier.id;
-          updatedSubscription.recurringQuota = planInfo.tier.messages;
-          console.log(
-            `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`,
-          );
-          await creditService.renewQuota(
-            customData.userEmail,
-            planInfo.tier.messages,
-          );
-        }
-      }
-
-      await userService.updateUser(customData.userEmail, {
-        subscription: updatedSubscription,
-      });
-
-      if (data.status === "past_due") {
-        await this.sendPaymentFailedEmail(customData.userEmail, user.name);
-      }
-
-      console.log(
-        `Subscription updated for ${customData.userEmail}: status=${data.status}`,
-      );
-      return { success: true };
-    } catch (error) {
-      console.error("Error handling subscription.updated:", error);
-      return { success: false, error: error as Error };
-    }
-  }
-
-  async handleSubscriptionCanceled(data: PaddleSubscriptionData) {
-    try {
-      console.log("Handling subscription.canceled:", data);
-
-      const customData =
-        data.custom_data as unknown as PaddleSubscriptionCustomData;
-      const user = await userService.getUser(customData.userEmail);
-      if (!user) throw new Error("User not found");
-
-      const updatedSubscription: IUserSubscription = {
-        ...user.subscription,
-        status: "canceled",
-        planId: "none",
-        tierId: "none",
-        paddlePriceId: "none",
-        recurringQuota: 0,
-        canceledAt: data.canceled_at || new Date().toISOString(),
-      };
-      delete updatedSubscription.nextPaymentAt;
-      delete updatedSubscription.renewsAt;
-
-      await userService.updateUser(customData.userEmail, {
-        subscription: updatedSubscription,
-      });
-
-      await creditService.renewQuota(customData.userEmail, 0);
-
-      console.log(`Subscription canceled for ${customData.userEmail}`);
-      return { success: true };
-    } catch (error) {
-      console.error("Error handling subscription.canceled:", error);
       return { success: false, error: error as Error };
     }
   }
@@ -222,19 +155,17 @@ class PaymentService {
       if (!tierData) throw new Error(`Tier ${notes.tierId} not found`);
 
       const recurringQuota = tierData.messages;
-
-
       const subscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customer_id,
-        planId: notes.planId,
+        planId: notes.planId as IPlanId,
         tierId: notes.tierId,
         razorpayPlanId: data.plan_id,
         status: mapRazorpayStatus(data.status),
         recurringQuota,
-        startedAt: new Date(data.current_start * 1000).toISOString(),
+        startedAt: new Date(data.start_at * 1000).toISOString(),
         nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
-        renewsAt: new Date(data.current_end * 1000).toISOString(),
+        renewsAt: new Date(data.charge_at * 1000).toISOString(),
       };
 
       await userService.updateUser(notes.userEmail, { subscription });
@@ -271,7 +202,7 @@ class PaymentService {
       const updatedSubscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customer_id,
-        planId: notes.planId,
+        planId: notes.planId as IPlanId,
         tierId: notes.tierId,
         razorpayPlanId: data.plan_id,
         status: mapRazorpayStatus(data.status),
@@ -322,6 +253,10 @@ class PaymentService {
       await userService.updateUser(notes.userEmail, {
         subscription: updatedSubscription,
       });
+      await this.syncWorkspacesPlan(
+        notes.userEmail,
+        updatedSubscription.planId
+      );
 
       await this.sendPaymentFailedEmail(notes.userEmail, user.name);
 
@@ -357,6 +292,7 @@ class PaymentService {
         canceledAt: data.ended_at
           ? new Date(data.ended_at * 1000).toISOString()
           : new Date().toISOString(),
+        canceledAtPeriodEnd: true,
       };
       delete updatedSubscription.nextPaymentAt;
       delete updatedSubscription.renewsAt;
@@ -364,6 +300,7 @@ class PaymentService {
       await userService.updateUser(notes.userEmail, {
         subscription: updatedSubscription,
       });
+      await this.syncWorkspacesPlan(notes.userEmail, "none");
 
       await creditService.renewQuota(notes.userEmail, 0);
 
@@ -395,6 +332,7 @@ class PaymentService {
           status: "paused",
         },
       });
+      await this.syncWorkspacesPlan(notes.userEmail, user.subscription?.planId);
 
       console.log(`Razorpay subscription paused for ${notes.userEmail}`);
       return { success: true };
@@ -426,6 +364,7 @@ class PaymentService {
           renewsAt: new Date(data.current_end * 1000).toISOString(),
         },
       });
+      await this.syncWorkspacesPlan(notes.userEmail, user.subscription?.planId);
 
       console.log(`Razorpay subscription resumed for ${notes.userEmail}`);
       return { success: true };
@@ -459,20 +398,25 @@ class PaymentService {
       const subscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customerId,
-        planId: metadata.planId,
+        planId: metadata.planId as IPlanId,
         tierId: metadata.tierId,
         polarSubscriptionId: data.id,
         status: mapPolarStatus(data.status),
         recurringQuota,
         startedAt: data.currentPeriodStart,
         nextPaymentAt: data.currentPeriodEnd || undefined,
+        canceledAtPeriodEnd: data.cancelAtPeriodEnd,
         renewsAt: data.currentPeriodEnd || undefined,
       };
 
       await userService.updateUser(metadata.userEmail, { subscription });
       await creditService.renewQuota(metadata.userEmail, recurringQuota);
 
-      this.onPaymentCompleted(metadata.userEmail, metadata.planId, "subscription");
+      this.onPaymentCompleted(
+        metadata.userEmail,
+        metadata.planId,
+        "subscription"
+      );
 
       console.log(`Polar subscription created for ${metadata.userEmail}`);
       return { success: true, user };
@@ -507,22 +451,27 @@ class PaymentService {
         if (planInfo && planInfo.tier.id !== user.subscription?.tierId) {
           const updatedSubscription: IUserSubscription = {
             ...user.subscription,
-            planId: planInfo.planId,
+            planId: planInfo.planId as IPlanId,
             tierId: planInfo.tier.id,
             recurringQuota: planInfo.tier.messages,
             status: mapPolarStatus(data.status),
             nextPaymentAt: data.currentPeriodEnd || undefined,
             renewsAt: data.currentPeriodEnd || undefined,
+            canceledAtPeriodEnd: data.cancelAtPeriodEnd,
           };
           await userService.updateUser(metadata.userEmail, {
             subscription: updatedSubscription,
           });
+          await this.syncWorkspacesPlan(
+            metadata.userEmail,
+            updatedSubscription.planId
+          );
           await creditService.renewQuota(
             metadata.userEmail,
-            planInfo.tier.messages,
+            planInfo.tier.messages
           );
           console.log(
-            `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`,
+            `Plan changed to ${planInfo.planId} - ${planInfo.tier.id}`
           );
           return { success: true };
         }
@@ -533,19 +482,24 @@ class PaymentService {
         status: mapPolarStatus(data.status),
         nextPaymentAt: data.currentPeriodEnd || undefined,
         renewsAt: data.currentPeriodEnd || undefined,
+        canceledAtPeriodEnd: data.cancelAtPeriodEnd,
         recurringQuota,
       };
 
       await userService.updateUser(metadata.userEmail, {
         subscription: updatedSubscription,
       });
+      await this.syncWorkspacesPlan(
+        metadata.userEmail,
+        updatedSubscription.planId
+      );
 
       if (data.status === "past_due") {
         await this.sendPaymentFailedEmail(metadata.userEmail, user.name);
       }
 
       console.log(
-        `Polar subscription updated for ${metadata.userEmail}: status=${data.status}`,
+        `Polar subscription updated for ${metadata.userEmail}: status=${data.status}`
       );
       return { success: true };
     } catch (error) {
@@ -570,12 +524,44 @@ class PaymentService {
 
       const updatedSubscription: IUserSubscription = {
         ...user.subscription,
+        canceledAtPeriodEnd: data.cancelAtPeriodEnd,
+        canceledAt: data.canceledAt || new Date().toISOString(),
+      };
+
+      await userService.updateUser(metadata.userEmail, {
+        subscription: updatedSubscription,
+      });
+
+      console.log(`Polar subscription canceled for ${metadata.userEmail}`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error handling Polar subscription canceled:", error);
+      return { success: false, error: error as Error };
+    }
+  }
+  async handlePolarSubscriptionRevoked(data: PolarSubscriptionData) {
+    try {
+      console.log("Handling Polar subscription revoked:", data.id);
+
+      const metadata = data.metadata as unknown as PolarSubscriptionCustomData;
+      if (!metadata?.userEmail) {
+        return { success: false, error: new Error("Missing user email") };
+      }
+
+      const user = await userService.getUser(metadata.userEmail);
+      if (!user) {
+        return { success: false, error: new Error("User not found") };
+      }
+
+      const updatedSubscription: IUserSubscription = {
+        ...user.subscription,
         status: "canceled",
         planId: "none",
         tierId: "none",
         polarSubscriptionId: "none",
         recurringQuota: 0,
         canceledAt: data.canceledAt || new Date().toISOString(),
+        canceledAtPeriodEnd: data.cancelAtPeriodEnd,
       };
       delete updatedSubscription.nextPaymentAt;
       delete updatedSubscription.renewsAt;
@@ -583,13 +569,14 @@ class PaymentService {
       await userService.updateUser(metadata.userEmail, {
         subscription: updatedSubscription,
       });
+      await this.syncWorkspacesPlan(metadata.userEmail, "none");
 
       await creditService.renewQuota(metadata.userEmail, 0);
 
-      console.log(`Polar subscription canceled for ${metadata.userEmail}`);
+      console.log(`Polar subscription revoked for ${metadata.userEmail}`);
       return { success: true };
     } catch (error) {
-      console.error("Error handling Polar subscription canceled:", error);
+      console.error("Error handling Polar subscription revoked:", error);
       return { success: false, error: error as Error };
     }
   }
@@ -624,7 +611,7 @@ class PaymentService {
         undefined,
         undefined,
         undefined,
-        "credit_purchase",
+        "credit_purchase"
       );
       usage.amount = creditsToAdd;
 
@@ -670,7 +657,7 @@ class PaymentService {
       const subscription: IUserSubscription = {
         subscriptionId: `lifetime_polar_${arg.checkoutId}`,
         customerId: metadata.userId || "",
-        planId: metadata.planId,
+        planId: metadata.planId as IPlanId,
         tierId: tier.id,
         status: "active",
         recurringQuota,
@@ -683,15 +670,10 @@ class PaymentService {
 
       this.onPaymentCompleted(metadata.userEmail, metadata.planId, "lifetime");
 
-      console.log(
-        `Polar lifetime access activated for ${metadata.userEmail}`,
-      );
+      console.log(`Polar lifetime access activated for ${metadata.userEmail}`);
       return { success: true, user };
     } catch (error) {
-      console.error(
-        "Error handling Polar lifetime purchase:",
-        error,
-      );
+      console.error("Error handling Polar lifetime purchase:", error);
       return { success: false, error: error as Error };
     }
   }
@@ -730,7 +712,7 @@ class PaymentService {
         undefined,
         undefined,
         undefined,
-        "credit_purchase",
+        "credit_purchase"
       );
       usage.amount = creditsToAdd;
 
@@ -779,7 +761,7 @@ class PaymentService {
       const subscription: IUserSubscription = {
         subscriptionId: `lifetime_${arg.paymentId}`,
         customerId: notes.userId || "",
-        planId: notes.planId,
+        planId: notes.planId as IPlanId,
         tierId: tier.id,
         status: "active",
         recurringQuota,
@@ -792,15 +774,10 @@ class PaymentService {
 
       this.onPaymentCompleted(notes.userEmail, notes.planId, "lifetime");
 
-      console.log(
-        `Lifetime access activated for ${notes.userEmail}`,
-      );
+      console.log(`Lifetime access activated for ${notes.userEmail}`);
       return { success: true, user };
     } catch (error) {
-      console.error(
-        "Error handling Razorpay lifetime purchase:",
-        error,
-      );
+      console.error("Error handling Razorpay lifetime purchase:", error);
       return { success: false, error: error as Error };
     }
   }

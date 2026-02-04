@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemoModal } from "../landing/demo-modal";
 import { useGeo } from "@/lib/hooks/geo/use-geo";
@@ -146,19 +146,27 @@ export const PricingContent = () => {
 
   const currencySymbol = isIndia ? "₹" : "$";
   const plan = PLANS.all_in_one;
-  const price = useMemo(() => {
-    if (billingCycle === "monthly") {
-      return isIndia ? "13,999" : "249";
-    }
-    return isIndia ? "9,999" : "199";
-  }, [billingCycle, isIndia]);
-
-  const originalPrice = useMemo(() => {
-    if (billingCycle === "annually") {
-      return isIndia ? "13,999" : "249";
-    }
-    return null;
-  }, [billingCycle, isIndia]);
+  const monthlyTier = plan.tiers.find((t) => t.billingCycle === "monthly");
+  const annualTier = plan.tiers.find((t) => t.billingCycle === "annually");
+  const monthlyPrice = isIndia
+    ? monthlyTier?.price.inr
+    : monthlyTier?.price.usd;
+  const annualPrice = isIndia ? annualTier?.price.inr : annualTier?.price.usd;
+  const savingsPercent =
+    monthlyPrice && annualPrice
+      ? Math.max(0, Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100))
+      : null;
+  const activeMonthlyPrice =
+    billingCycle === "annually" && annualPrice
+      ? Math.round(annualPrice / 12)
+      : monthlyPrice;
+  const price = (activeMonthlyPrice ?? 0).toLocaleString(
+    isIndia ? "en-IN" : "en-US"
+  );
+  const originalPrice =
+    billingCycle === "annually" && monthlyPrice
+      ? monthlyPrice.toLocaleString(isIndia ? "en-IN" : "en-US")
+      : null;
 
   const features = plan.features;
 
@@ -237,7 +245,10 @@ export const PricingContent = () => {
       transition={{ duration: 0.2 }}
       className=""
     >
-      <div className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full">
+      <div
+        id="pricing-plans"
+        className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full"
+      >
         <div className="text-center mb-12 space-y-4 max-w-3xl mx-auto">
           <h1 className="section-heading">
             Start for Free, Choose your plan later
@@ -286,9 +297,11 @@ export const PricingContent = () => {
               >
                 Annually
               </span>
-              <span className="relative z-10 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                SAVE 20%
-              </span>
+              {savingsPercent !== null && (
+                <span className="relative z-10 text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                  SAVE {savingsPercent}%
+                </span>
+              )}
               {billingCycle === "annually" && (
                 <motion.div
                   layoutId="active-billing-pill"
@@ -375,7 +388,7 @@ export const PricingContent = () => {
                 >
                   {isSubscriptionCheckoutLoading ? (
                     <>
-                      <Loader2 className=" h-5 w-5 animate-spin" />
+                      <Loader className=" h-5 w-5 animate-spin" />
                       Processing
                     </>
                   ) : (
@@ -596,7 +609,7 @@ export const PricingContent = () => {
                           <span className="relative z-10 flex items-center justify-center gap-2 text-zinc-900">
                             {isLifetimeCheckoutLoading ? (
                               <>
-                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <Loader className="h-5 w-5 animate-spin" />
                                 <span>Securing your spot...</span>
                               </>
                             ) : hasLifetimeAccess ? (
@@ -654,7 +667,7 @@ export const PricingContent = () => {
           )}
         </div>
 
-        <div className="mt-16">
+        <div id="extra-credits" className="mt-16">
           <div className="text-center mb-8 space-y-2">
             <h2 className="text-2xl font-medium">Need Extra Credits?</h2>
             <p className="text-muted-foreground">
@@ -701,17 +714,8 @@ export const PricingContent = () => {
                     <div>
                       <h3 className="text-base font-medium">Extra credits</h3>
                       <p className="text-sm text-muted-foreground">
-                        Add extra credits to your workspace.
+                        Add extra credits to your account.
                       </p>
-                      <div className="mt-3 text-xs text-muted-foreground">
-                        Total: {currencySymbol}
-                        {creditTotalPriceFormatted} one-time • You&apos;ll
-                        receive{" "}
-                        {(
-                          creditQuantity * CREDIT_ADDON.messagesPerUnit
-                        ).toLocaleString()}{" "}
-                        credits
-                      </div>
                       {!hasActiveSubscription && (
                         <p className="mt-2 text-xs text-muted-foreground italic">
                           Subscribe to a plan to purchase credits
@@ -724,9 +728,17 @@ export const PricingContent = () => {
                     <div className="text-sm text-muted-foreground">
                       <span className="text-base font-medium text-foreground">
                         {currencySymbol}
-                        {creditPrice.toLocaleString()}
+                        {creditTotalPriceFormatted}
                       </span>
-                      <span className="ml-1">per 1,000 message credits</span>
+                      <span className="ml-1">
+                        for{" "}
+                        <span className="text-foreground font-medium">
+                          {(
+                            creditQuantity * CREDIT_ADDON.messagesPerUnit
+                          ).toLocaleString()}{" "}
+                          message credits
+                        </span>
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -775,7 +787,14 @@ export const PricingContent = () => {
                         onClick={handleCreditPurchase}
                         disabled={isCreditLoading || !hasActiveSubscription}
                       >
-                        {isCreditLoading ? "Adding credits" : "Get Add-on"}
+                        {isCreditLoading ? (
+                          <>
+                            <Loader className="h-4 w-4 animate-spin" />
+                            Adding credits
+                          </>
+                        ) : (
+                          "Get Add-on"
+                        )}
                       </Button>
                     </div>
                   </div>

@@ -1,6 +1,8 @@
 import { v4 } from "uuid";
 import { getTagsForIndustry } from "../utils/industry-tags";
 import { IWorkspaceAnalyticsSummary } from "./analytics";
+import { PLANS } from "../plans";
+import { IPlanId } from "./user";
 
 export type IWorkspaceType = "onboarding" | "default";
 export interface IWorkspaceInfo {
@@ -30,6 +32,7 @@ export interface IWorkspace {
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
+  planId: IPlanId;
 }
 
 export const generateDefaultWorkspace = (): IWorkspace => {
@@ -42,6 +45,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     folders: [],
     availableTags: getTagsForIndustry(),
     domains: [],
+    planId: "none",
     info: {
       businessType: "",
       description: "",

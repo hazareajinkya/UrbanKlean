@@ -96,7 +96,6 @@ const CONFIRMATION_STEPS = [
 type Phase = "processing" | "confirmation";
 
 interface OnboardingMultiStepFormProps {
-
   email?: string;
   url?: string;
   initialData?: Partial<OnboardingData>;
@@ -149,9 +148,7 @@ export const OnboardingMultiStepForm = ({
   submitButtonText = "Finish Setup",
   onCompanyNameValidate,
   onParsedPhaseChange,
-  onEmailError
-
-
+  onEmailError,
 }: OnboardingMultiStepFormProps) => {
   const [phase, setPhase] = useState<Phase>(
     url && !initialData ? "processing" : "confirmation"
@@ -178,10 +175,12 @@ export const OnboardingMultiStepForm = ({
           setOnboardingData(result.data.data);
         },
         onError: (error: any) => {
-          const status = error.status
+          const status = error.status;
           if ((status === 409 || status === 429) && onParsedPhaseChange) {
             if (status === 409 && onEmailError) {
-              onEmailError("You already have an agent. Please check your email for more information.");
+              onEmailError(
+                "You already have an agent. Please check your email for more information."
+              );
             }
             onParsedPhaseChange("form");
           } else {
@@ -314,8 +313,8 @@ export const OnboardingMultiStepForm = ({
                     isCompleted
                       ? "text-green-500"
                       : isActive
-                        ? "text-primary"
-                        : "text-gray-200"
+                      ? "text-primary"
+                      : "text-gray-200"
                   )}
                 >
                   {isCompleted ? (
@@ -333,8 +332,8 @@ export const OnboardingMultiStepForm = ({
                       isActive
                         ? "text-gray-900"
                         : isCompleted
-                          ? "text-gray-500"
-                          : "text-gray-300"
+                        ? "text-gray-500"
+                        : "text-gray-300"
                     )}
                   >
                     {step.title}
@@ -366,8 +365,9 @@ export const OnboardingMultiStepForm = ({
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
                 style={{
-                  width: `${(confirmationStep / CONFIRMATION_STEPS.length) * 100
-                    }%`,
+                  width: `${
+                    (confirmationStep / CONFIRMATION_STEPS.length) * 100
+                  }%`,
                 }}
               />
             </div>
@@ -773,8 +773,11 @@ export const OnboardingMultiStepForm = ({
             </>
           )}
         </Button>
-
       </div>
+
+      <p className="text-xs text-muted-foreground text-center pt-0">
+        Don&apos;t worry, you can always change this in settings later.
+      </p>
     </div>
   );
 };

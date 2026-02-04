@@ -139,8 +139,12 @@ export const useSubscriptionActions = () => {
     manageSubscriptionMutation.mutate();
   };
 
-  const cancelSubscription = (cancelAtCycleEnd: boolean = true) => {
-    cancelSubscriptionMutation.mutate(cancelAtCycleEnd);
+  const cancelSubscription = async ({
+    cancelAtCycleEnd = true,
+  }: {
+    cancelAtCycleEnd: boolean;
+  }) => {
+    await cancelSubscriptionMutation.mutateAsync(cancelAtCycleEnd);
   };
 
   return {

@@ -64,12 +64,12 @@ export async function POST(req: NextRequest) {
     const tierData = plan.tiers.find(
       (t) =>
         t.messages === tier &&
-        (!billingCycle || t.billingCycle === billingCycle),
+        (!billingCycle || t.billingCycle === billingCycle)
     );
     if (!tierData?.priceIds.razorpay) {
       return errorResponse(
         `Razorpay Plan ID not found for ${planId} tier ${tier}`,
-        400,
+        400
       );
     }
 
@@ -81,7 +81,6 @@ export async function POST(req: NextRequest) {
       tierId: tierData.id,
     };
 
-
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 14);
     const startAt = Math.floor(trialEndDate.getTime() / 1000);
@@ -90,9 +89,8 @@ export async function POST(req: NextRequest) {
       planId: tierData.priceIds.razorpay,
       totalCount: 12,
       notes,
-      startAt,
+      // startAt,
     });
-
 
     return successResponse({
       subscriptionId: subscription.id,

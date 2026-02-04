@@ -26,11 +26,12 @@ export async function POST(req: NextRequest) {
 
     const eventType = event.event;
 
+    // console.log("event: ", event);
+
     console.log("Razorpay webhook event:", {
       eventType,
       paymentNotes: event.payload?.payment?.entity?.notes,
     });
-
 
     if (eventType === "payment.captured") {
       const paymentData = event.payload?.payment?.entity;
@@ -42,8 +43,9 @@ export async function POST(req: NextRequest) {
         await handleLifetimePurchase(paymentData);
         return NextResponse.json({ received: true }, { status: 200 });
       }
-
     }
+
+    console.warn(eventType, ": ", eventType);
 
     const subscriptionData = event.payload?.subscription
       ?.entity as RazorpaySubscriptionData;
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
     console.error("Error processing Razorpay webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
 function verifyRazorpaySignature(
   body: string,
   signature: string,
-  secret: string,
+  secret: string
 ): boolean {
   try {
     const expectedSignature = crypto
@@ -100,7 +102,7 @@ function verifyRazorpaySignature(
 
     return crypto.timingSafeEqual(
       Buffer.from(signature),
-      Buffer.from(expectedSignature),
+      Buffer.from(expectedSignature)
     );
   } catch (error) {
     console.error("Error verifying Razorpay signature:", error);
