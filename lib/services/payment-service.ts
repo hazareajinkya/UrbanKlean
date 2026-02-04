@@ -781,7 +781,6 @@ class PaymentService {
         customerId: notes.userId || "",
         planId: notes.planId,
         tierId: tier.id,
-        razorpayPlanId: undefined,
         status: "active",
         recurringQuota,
         startedAt: new Date().toISOString(),
