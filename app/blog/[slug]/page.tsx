@@ -1,7 +1,6 @@
 import { blogService } from "@/lib/services/blog-service";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { remark } from "remark";
 import html from "remark-html";
@@ -111,8 +110,8 @@ export default async function BlogPage({
   const metaDescription = blog.metaDescription || blog.excerpt || "";
   const tagPool = new Set(
     [...(blog.tags || []), ...(blog.categories || [])].map((tag) =>
-      tag.toLowerCase(),
-    ),
+      tag.toLowerCase()
+    )
   );
   const relatedBlogs = blogs
     .filter(
@@ -120,8 +119,8 @@ export default async function BlogPage({
         item.slug !== blog.slug &&
         (item.tags?.some((tag: string) => tagPool.has(tag.toLowerCase())) ||
           item.categories?.some((tag: string) =>
-            tagPool.has(tag.toLowerCase()),
-          )),
+            tagPool.has(tag.toLowerCase())
+          ))
     )
     .slice(0, 3);
   const fallbackBlogs = blogs
@@ -285,7 +284,7 @@ export default async function BlogPage({
               </p>
             )}
             <div className="flex items-center gap-4 mt-6 sm:mt-8">
-              <Image
+              <img
                 src={blog.author.profilePicture || "/placeholder.svg"}
                 alt={`${blog.author.name}'s profile picture`}
                 width={48}
@@ -299,7 +298,7 @@ export default async function BlogPage({
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <time dateTime={blog.publishedAt || blog.createdAt}>
                     {new Date(
-                      blog.publishedAt || blog.createdAt,
+                      blog.publishedAt || blog.createdAt
                     ).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
@@ -320,14 +319,11 @@ export default async function BlogPage({
 
         {blog.featuredImage && (
           <div className="relative w-full aspect-[21/9] overflow-hidden ">
-            <Image
+            <img
               src={blog.featuredImage || "/placeholder.svg"}
               alt={blog.title}
-              fill
               loading="eager"
-              className="object-cover"
-              priority
-              sizes="100vw"
+              className="w-full h-full object-cover"
             />
           </div>
         )}
@@ -417,12 +413,10 @@ export default async function BlogPage({
                 >
                   {item.featuredImage && (
                     <div className="relative w-full aspect-video overflow-hidden bg-muted border-b">
-                      <Image
+                      <img
                         src={item.featuredImage || "/placeholder.svg"}
                         alt={item.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                   )}
@@ -430,7 +424,7 @@ export default async function BlogPage({
                     <div className="flex items-center gap-3 text-xs text-muted-foreground uppercase tracking-widest font-medium mb-3">
                       <span>
                         {new Date(
-                          item.publishedAt || item.createdAt,
+                          item.publishedAt || item.createdAt
                         ).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",

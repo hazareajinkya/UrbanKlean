@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 export const userKey = (email: string) => ["users", email];
 
 export const useCurrentUser = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const email = session?.user?.email ?? "";
 
   const query = useQuery({
@@ -17,6 +17,7 @@ export const useCurrentUser = () => {
   return {
     user: query.data,
     ...query,
+    isLoading: query.isLoading || status === "loading",
   };
 };
 

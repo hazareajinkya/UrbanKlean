@@ -1,6 +1,5 @@
 import { blogService } from "@/lib/services/blog-service";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Clock, Calendar, ArrowRight } from "lucide-react";
 import { coreConf } from "@/lib/utils/conf";
@@ -24,7 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogListPage() {
-  const { blogs }: { blogs: BlogWithAuthor[] } = await blogService.getAllBlogs();
+  const { blogs }: { blogs: BlogWithAuthor[] } =
+    await blogService.getAllBlogs();
 
   return (
     <div className="">
@@ -59,12 +59,10 @@ export default async function BlogListPage() {
               >
                 {blog.featuredImage && (
                   <div className="relative w-full aspect-video overflow-hidden bg-muted border-b">
-                    <Image
+                    <img
                       src={blog.featuredImage || "/placeholder.svg"}
                       alt={blog.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
                 )}

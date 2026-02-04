@@ -29,7 +29,7 @@ export const HeroSection = () => {
       {
         threshold: 0,
         rootMargin: "-20px 0px 0px 0px",
-      },
+      }
     );
 
     if (inputRef.current) {
@@ -66,11 +66,26 @@ export const HeroSection = () => {
     <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
       <div className="flex flex-col items-center text-center mt-8 sm:mt-12 md:mt-18">
         <h1 className="text-3xl leading-normal md:text-4xl mb-4 px-4 ">
-          From "How can I help?" to "It's already done."
+          AI Customer Support that delivers <br className="hidden sm:block" />
+          Faster resolutions and <span className="">Feels human</span>
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
-          The world's first AI that makes superior customer experience simple
-          and scalable, while increasing profits and lowering costs.
+          {/* The world's first & only AI that responds with empathy, never makes
+          people repeat themselves, and finds revenue opportunities
+          automatically across your web chat, email, WhatsApp, Instagram, and
+          Messenger. */}
+          {/* The world's first & only omnichannel AI Agent that responds with
+          empathy, remembers everything, and finds revenue opportunities
+          automatically */}
+          {/* The world's first & only omnichannel AI Agent that responds with
+          empathy, remembers everything, and finds revenue opportunities
+          automatically */}
+          {/* AI agents that remember, respond with empathy, speak HumanlyClear™ and
+          find revenue opportunities across every channel—web chat, email,
+          WhatsApp, Instagram, Messenger. */}
+          AI agents with memory and empathy delivering HumanlyClear™ responses.
+          MagicalCX AI find revenue opportunities for your business across web
+          chat, email, WhatsApp, Instagram, and Messenger.
         </p>
 
         <div ref={inputRef} className="w-full">
@@ -125,7 +140,7 @@ export const HeroSection = () => {
               </motion.div>
             )}
           </AnimatePresence>,
-          document.body,
+          document.body
         )}
     </div>
   );

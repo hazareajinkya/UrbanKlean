@@ -14,7 +14,6 @@ import {
   Variants,
 } from "framer-motion";
 import { useDemoModal } from "./demo-modal";
-import { coreConf } from "@/lib/utils/conf";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -133,7 +132,7 @@ export const Navbar = ({
         }`}
       >
         <div
-          className={`section-container py-2 px-4 pr-2 md:px-6 lg:px-0 flex items-center justify-between`}
+          className={`section-container py-2 px-4 pr-2 md:px-6 lg:px-4 flex items-center justify-between`}
         >
           <Link
             href="/"
@@ -142,8 +141,8 @@ export const Navbar = ({
             className="relative inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary z-50"
             onClick={handleCloseMenu}
           >
-            <span className="font-medium text-base text-primary tracking-tight">
-              Magical CX
+            <span className="font-medium text-base text-primary ">
+              MagicalCX
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
@@ -169,18 +168,14 @@ export const Navbar = ({
               );
             })}
             <div className="flex items-center gap-6 ml-0">
-              {coreConf.isProd ? (
-                <></>
-              ) : (
-                <Link
-                  href={email ? "/workspaces" : "/auth"}
-                  aria-label={email ? "Dashboard" : "Sign in"}
-                  tabIndex={0}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {email ? "Dashboard" : "Sign in"}
-                </Link>
-              )}
+              <Link
+                href={email ? "/workspaces" : "/auth"}
+                aria-label={email ? "Dashboard" : "Sign in"}
+                tabIndex={0}
+                className="text-muted-foreground hover:text-foreground transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {email ? "Dashboard" : "Sign in"}
+              </Link>
               <button
                 onClick={openDemoModal}
                 aria-label="Book Demo"
@@ -272,17 +267,15 @@ export const Navbar = ({
                 );
               })}
 
-              {!coreConf.isProd && (
-                <motion.div custom={navLinks.length} variants={itemVariants}>
-                  <Link
-                    href={email ? "/workspaces" : "/auth"}
-                    onClick={handleCloseMenu}
-                    className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
-                  >
-                    {email ? "Dashboard" : "Sign in"}
-                  </Link>
-                </motion.div>
-              )}
+              <motion.div custom={navLinks.length} variants={itemVariants}>
+                <Link
+                  href={email ? "/workspaces" : "/auth"}
+                  onClick={handleCloseMenu}
+                  className="block py-2 text-3xl font-medium tracking-tight text-foreground hover:text-black/70 transition-colors"
+                >
+                  {email ? "Dashboard" : "Sign in"}
+                </Link>
+              </motion.div>
 
               <motion.div variants={buttonVariants} className="mt-8">
                 <button
