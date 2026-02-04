@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
 import type { RazorpayOptions, RazorpayResponse } from "@/lib/types/razorpay";
+import { razorpayconf } from "../utils/conf";
 
 interface CheckoutOptions {
   planId: "all_in_one" | "lifetime";
@@ -159,7 +160,7 @@ export const useRazorpayCheckout = () => {
 
       // Open Razorpay checkout with order_id for full payment modal
       const options: RazorpayOptions = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        key: razorpayconf.keyId!,
         order_id: orderId,
         amount,
         currency,

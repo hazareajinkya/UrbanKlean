@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import { razorpayconf } from "../utils/conf";
 
 // Server-side Razorpay instance
 let razorpayInstance: Razorpay | null = null;
@@ -6,8 +7,8 @@ let razorpayInstance: Razorpay | null = null;
 export const getRazorpayInstance = (): Razorpay => {
   if (razorpayInstance) return razorpayInstance;
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = razorpayconf.keyId;
+  const keySecret = razorpayconf.keySecret;
 
   if (!keyId || !keySecret) {
     throw new Error("Razorpay credentials are not set");

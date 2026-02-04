@@ -7,6 +7,7 @@ import type {
   RazorpayOptions,
   RazorpayResponse,
 } from "@/lib/types/razorpay";
+import { razorpayconf } from "../utils/conf";
 
 interface CreateCreditOrderResponse {
   orderId: string;
@@ -85,7 +86,7 @@ export const useRazorpayCreditCheckout = () => {
 
       // Open Razorpay checkout
       const options: RazorpayOptions = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        key: razorpayconf.keyId!,
         order_id: orderId,
         name: "MagicalCX",
         description: `${quantity * 1000} message credits`,
