@@ -15,6 +15,7 @@ import {
   Sparkles,
   Zap,
   LoaderIcon,
+  MoreHorizontal,
 } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
@@ -124,13 +125,12 @@ export default function AuthPageV2() {
             rotate: [0, 10, 0],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute -top-[20%] -right-[10%] w-[80%] h-[80%] blur-[120px] rounded-full mix-blend-screen transition-colors duration-2000 ${
-            sentiment === "frustrated"
-              ? "bg-orange-500/10"
-              : sentiment === "resolved"
+          className={`absolute -top-[20%] -right-[10%] w-[80%] h-[80%] blur-[120px] rounded-full mix-blend-screen transition-colors duration-2000 ${sentiment === "frustrated"
+            ? "bg-orange-500/10"
+            : sentiment === "resolved"
               ? "bg-emerald-500/10"
               : "bg-white/5"
-          }`}
+            }`}
         />
         <motion.div
           animate={{
@@ -144,13 +144,12 @@ export default function AuthPageV2() {
             ease: "easeInOut",
             delay: 1,
           }}
-          className={`absolute bottom-[10%] -left-[10%] w-[60%] h-[60%] blur-[100px] rounded-full mix-blend-screen transition-colors duration-2000 ${
-            sentiment === "frustrated"
-              ? "bg-red-500/10"
-              : sentiment === "resolved"
+          className={`absolute bottom-[10%] -left-[10%] w-[60%] h-[60%] blur-[100px] rounded-full mix-blend-screen transition-colors duration-2000 ${sentiment === "frustrated"
+            ? "bg-red-500/10"
+            : sentiment === "resolved"
               ? "bg-teal-500/10"
               : "bg-white/5"
-          }`}
+            }`}
         />
 
         {/* Chat Interface Mockup with Parallax */}
@@ -168,7 +167,7 @@ export default function AuthPageV2() {
               delay={1.5}
               text="Sentiment: Frustrated"
               icon={<Zap className="w-3 h-3 text-orange-400" />}
-              position="top-20 -right-24"
+              position="top-18 -right-28"
               color="border-orange-500/30 bg-orange-500/10 text-orange-200"
             />
 
@@ -177,7 +176,7 @@ export default function AuthPageV2() {
               delay={2.0}
               text="Intent: Damaged Item"
               icon={<ScanLine className="w-3 h-3 text-blue-400" />}
-              position="top-32 -left-24"
+              position="top-35 -left-24"
               color="border-blue-500/30 bg-blue-500/10 text-blue-200"
             />
 
@@ -186,26 +185,39 @@ export default function AuthPageV2() {
               delay={8.5}
               text="Action: Replacement"
               icon={<CheckCircle2 className="w-3 h-3 text-emerald-400" />}
-              position="bottom-32 -right-24"
+              position="bottom-40 -right-24"
               color="border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
             />
           </div>
 
           <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative z-10">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
+            <div className="relative z-10 flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-6 py-4 backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div className="h-6 w-6  flex items-center justify-center">
-                  <img src="/logo-transparent.png" alt="" />
+                <div className="relative">
+                  <img
+                    src="/logos/magicalcx-appicon-light.png"
+                    alt="logo"
+                    className="h-8 w-8 rounded-full shadow-lg shadow-black/20"
+                  />
+                  <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-zinc-900" />
                 </div>
-                <span className="text-sm font-medium tracking-wide text-zinc-200">
-                  MagicalCX
-                </span>
+                <div>
+                  <span className="block text-sm font-medium tracking-wide text-zinc-100">
+                    MagicalCX
+                  </span>
+                  <span className="block text-[10px] text-zinc-400 font-medium">
+                    Always active
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <MoreHorizontal className="w-5 h-5 text-zinc-500" />
               </div>
             </div>
 
             {/* Chat Content */}
-            <div className="p-6 space-y-6 min-h-[320px]">
+            <div className="p-6 space-y-6 h-[537px]">
               {/* User Message 1 */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}

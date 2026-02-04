@@ -1,10 +1,28 @@
 import type { Metadata } from "next";
-import { Bodoni_Moda, Inter, Playfair_Display } from "next/font/google";
+import {
+  Bodoni_Moda,
+  Inter,
+  STIX_Two_Text,
+  Playfair_Display,
+} from "next/font/google";
 import "./globals.css";
 import { ClientProvider } from "./client-provider";
 import Script from "next/script";
 import { coreConf } from "@/lib/utils/conf";
+
 import { WidgetScript } from "@/components/widget-script";
+
+const stixTwoText = STIX_Two_Text({
+  subsets: ["latin"],
+  variable: "--font-stix-two-text",
+  style: "italic",
+});
+
+const playfairItalic = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair-italic",
+  style: "italic",
+});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,9 +33,15 @@ const bodona = Bodoni_Moda({
   subsets: ["latin"],
   variable: "--font-bodoni-moda",
 });
-const playfair = Playfair_Display({
+// const playfair = Playfair_Display({
+//   subsets: ["latin"],
+//   variable: "--font-playfair",
+// });
+
+const playfair = STIX_Two_Text({
   subsets: ["latin"],
   variable: "--font-playfair",
+  style: "italic",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={` ${inter.variable} ${playfair.variable} ${bodona.variable} font-sans antialiased`}
+        className={` ${inter.variable} ${stixTwoText.variable} ${playfair.variable} ${playfairItalic.variable} ${bodona.variable} font-sans antialiased`}
       >
         <ClientProvider>{children}</ClientProvider>
         <WidgetScript />

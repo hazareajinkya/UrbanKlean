@@ -6,7 +6,8 @@ declare global {
 
 export interface RazorpayOptions {
   key: string;
-  order_id: string;
+  order_id?: string;
+  subscription_id?: string;
   name: string;
   description: string;
   amount?: number;

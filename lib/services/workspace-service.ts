@@ -38,6 +38,7 @@ class WorkspaceService {
   async fetchWorkspace(id: string) {
     const docRef = doc(db, `workspaces/${id}`);
     const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
     return snap.data() as IWorkspace;
   }
 
@@ -248,8 +249,6 @@ class WorkspaceService {
 
       await Promise.all(subCollections.map((path) => deleteCollection(path)));
       await deleteDoc(doc(db, `workspaces/${wid}/knowledge/teach`));
-
-
 
       //  Delete document
       await deleteDoc(doc(db, `workspaces/${wid}`));

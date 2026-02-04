@@ -25,7 +25,9 @@ export async function GET(
     const result = await firecrawl.map(url);
     const uniqueUrls = Array.from(new Set(result.links || []));
 
-    const folders = (await workspaceService.fetchWorkspace(wid)).folders;
+    const workspace = await workspaceService.fetchWorkspace(wid);
+    if (!workspace) return errorResponse("Workspace not found", 404);
+    const folders = workspace.folders;
     const categorizeUrlsResult = await categorizeUrls(uniqueUrls, folders);
     return successResponse(
       {

@@ -35,7 +35,7 @@ function OnboardingContent() {
   const [phase, setPhase] = useState<Phase>("form");
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
-    null,
+    null
   );
 
   const { startOnboarding, uploadLogo, generateOnboardingInfo } =
@@ -61,16 +61,16 @@ function OnboardingContent() {
 
   const validateDomainInput = (value: string): boolean => {
     if (!value) {
-      setDomainError("Business domain is required");
+      setDomainError("Company website is required");
       return false;
     }
     const normalized = normalizeDomain(value);
     if (!validateDomain(normalized)) {
-      setDomainError("Please enter a valid domain");
+      setDomainError("Please enter a valid company website");
       return false;
     }
     if (isBlockedCompanyDomain(normalized)) {
-      setDomainError("Please enter your own company domain");
+      setDomainError("Please enter your own company website");
       return false;
     }
     setDomainError("");
@@ -157,19 +157,28 @@ function OnboardingContent() {
     }
   };
 
+  const getCompanyNameFromDomain = (domain?: string) => {
+    if (!domain) return "your website";
+
+    return domain;
+  };
+
   return (
     <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-
       <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white">
         <div className="max-w-md w-full mx-auto">
           {phase === "form" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div>
-                <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-                  Get a MagicalCX™ demo trained on your website
+                <h1 className="text-3xl font-medium leading-normal text-foreground mb-3 ">
+                  See it work for your business before you pay a penny
                 </h1>
-                <p className="text-muted-foreground text-base">
-                  See how EFRO™ + HumanlyClear™ handles real customer moments for your business.
+                <p className="text-muted-foreground text-base ">
+                  We'll create your personalized demo trained on{" "}
+                  <span className="font-medium ">
+                    {getCompanyNameFromDomain(domain)}
+                  </span>
+                  . No credit card needed.
                 </p>
               </div>
 
@@ -189,7 +198,7 @@ function OnboardingContent() {
                     className={cn(
                       "h-11 transition-all",
                       emailError &&
-                      "border-destructive focus-visible:ring-destructive/20",
+                        "border-destructive focus-visible:ring-destructive/20"
                     )}
                   />
                   {emailError && (
@@ -237,7 +246,8 @@ function OnboardingContent() {
                       Initializing...
                     </>
                   ) : (
-                    "Continue"
+                    // "Continue"
+                    "Build My AI Agent"
                   )}
                 </Button>
               </form>

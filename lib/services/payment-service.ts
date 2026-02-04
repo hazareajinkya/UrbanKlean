@@ -223,6 +223,7 @@ class PaymentService {
 
       const recurringQuota = tierData.messages;
 
+
       const subscription: IUserSubscription = {
         subscriptionId: data.id,
         customerId: data.customer_id,
@@ -273,7 +274,7 @@ class PaymentService {
         planId: notes.planId,
         tierId: notes.tierId,
         razorpayPlanId: data.plan_id,
-        status: "active",
+        status: mapRazorpayStatus(data.status),
         recurringQuota,
         startedAt:
           user.subscription?.startedAt ||
@@ -420,7 +421,7 @@ class PaymentService {
       await userService.updateUser(notes.userEmail, {
         subscription: {
           ...user.subscription,
-          status: "active",
+          status: mapRazorpayStatus(data.status),
           nextPaymentAt: new Date(data.charge_at * 1000).toISOString(),
           renewsAt: new Date(data.current_end * 1000).toISOString(),
         },
@@ -742,79 +743,6 @@ class PaymentService {
     }
   }
 
-  async handleRazorpaySubscriptionFirstPayment(arg: {
-    paymentId: string;
-    orderId: string;
-    subscriptionId: string;
-    amount: number;
-    currency: string;
-    notes: Record<string, string>;
-  }) {
-    try {
-      const notes = arg.notes as {
-        userId?: string;
-        userEmail?: string;
-        planId?: string;
-        tier?: string;
-        tierId?: string;
-        subscriptionId?: string;
-        type?: string;
-      };
-
-      if (!notes.userEmail || !notes.planId || !notes.tierId) {
-        console.error("Missing required data in payment notes");
-        return { success: false, error: new Error("Missing required data") };
-      }
-
-      const user = await userService.getUser(notes.userEmail);
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      const plan = PLANS[notes.planId as keyof typeof PLANS];
-      if (!plan) throw new Error(`Plan ${notes.planId} not found`);
-
-      const tierData = plan.tiers.find((tier) => tier.id === notes.tierId);
-      if (!tierData) throw new Error(`Tier ${notes.tierId} not found`);
-
-      const recurringQuota = tierData.messages;
-
-      const now = new Date();
-      const nextPaymentDate = new Date(now);
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-
-      const subscription: IUserSubscription = {
-        subscriptionId: arg.subscriptionId,
-        customerId: notes.userId || "",
-        planId: notes.planId,
-        tierId: notes.tierId,
-        razorpayPlanId: tierData.priceIds.razorpay ?? undefined,
-        status: "active",
-        recurringQuota,
-        startedAt: now.toISOString(),
-        lastPaymentAt: now.toISOString(),
-        nextPaymentAt: nextPaymentDate.toISOString(),
-        renewsAt: nextPaymentDate.toISOString(),
-      };
-
-      await userService.updateUser(notes.userEmail, { subscription });
-      await creditService.renewQuota(notes.userEmail, recurringQuota);
-
-      this.onPaymentCompleted(notes.userEmail, notes.planId, "subscription");
-
-      console.log(
-        `Subscription activated for ${notes.userEmail} via first payment`,
-      );
-      return { success: true, user };
-    } catch (error) {
-      console.error(
-        "Error handling Razorpay subscription first payment:",
-        error,
-      );
-      return { success: false, error: error as Error };
-    }
-  }
-
   async handleRazorpayLifetimePurchase(arg: {
     paymentId: string;
     orderId: string;
@@ -853,7 +781,6 @@ class PaymentService {
         customerId: notes.userId || "",
         planId: notes.planId,
         tierId: tier.id,
-        razorpayPlanId: undefined,
         status: "active",
         recurringQuota,
         startedAt: new Date().toISOString(),

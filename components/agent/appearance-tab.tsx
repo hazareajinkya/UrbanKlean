@@ -7,13 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAgent } from "@/lib/types/agent";
-import { Loader, Upload, Building, Plus, X, GripVertical } from "lucide-react";
+import { Loader, Upload, Building, Plus, X, GripVertical, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
-import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
-import storageService from "@/lib/services/storage-service";
 import { toast } from "sonner";
 import { ChatPreview } from "@/components/chat/chat-preview";
+import { useAppearanceActions } from "@/lib/hooks/agent/use-appearance-actions";
 
 interface AppearanceTabProps {
   agent: IAgent;
@@ -31,8 +30,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   );
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSavingStarters, setIsSavingStarters] = useState(false);
+
 
   // Drag state for reordering
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -48,44 +46,26 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wid = getwid();
-  const { updateAgent } = useAgentActions(wid);
+  const { saveAppearance, generateStarters, isSaving } = useAppearanceActions(agent);
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      let botIconUrl = agent.customization.botIcon;
-      botIconUrl = (await uploadLogo()) || botIconUrl;
+      await saveAppearance({
+        name,
+        greetingMessage,
+        primaryColor,
+        botIcon: logoPreview || agent.customization.botIcon,
+        logoFile,
+        starterMessagesEnabled,
+        starterMessages,
+      });
 
-      // Filter out empty starter messages
-
-      const updates = {
-        customization: {
-          ...agent.customization,
-          name,
-          greetingMessage,
-          primaryColor,
-          botIcon: botIconUrl,
-          starterMessagesEnabled,
-          starterMessages: starterMessages.filter((msg) => msg.trim() !== ""),
-        },
-      };
-
-      updateAgent.mutate(
-        { aid: agent.id, updates },
-        {
-          onSuccess: () => {
-            setLogoFile(null);
-            setLogoPreview(null);
-          },
-          onSettled: () => {
-            setIsSaving(false);
-          },
-        }
-      );
+      // If we get here, save was successful
+      setLogoFile(null);
+      setLogoPreview(null);
     } catch (error) {
-      toast.error("Failed to upload logo");
-      console.error(error);
-      setIsSaving(false);
+      // Error is handled by the hook (toasts)
+      console.error("Save failed", error);
     }
   };
 
@@ -93,21 +73,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     fileInputRef.current?.click();
   };
 
-  const uploadLogo = async () => {
-    if (logoFile) {
-      const res = await storageService.uploadFile(
-        logoFile,
-        `w/${wid}/agents/${agent.id}/logo`,
-        logoFile.name
-      );
-      const url = res.downloadURL;
-      if (logoPreview) {
-        URL.revokeObjectURL(logoPreview);
-      }
-      return url;
-    }
-    return null;
-  };
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -156,6 +122,21 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     setDragIndex(null);
   };
 
+
+  const handleGenerateStarters = async () => {
+    generateStarters.mutate(undefined, {
+      onSuccess: (starters: string[]) => {
+        if (Array.isArray(starters)) {
+          const sortedStarters = starters.sort(
+            (a: string, b: string) => a.length - b.length
+          );
+          setStarterMessages(sortedStarters);
+          setStarterMessagesEnabled(true);
+        }
+      },
+    });
+  };
+
   // Create preview agent with current state
   const previewAgent: IAgent = {
     ...agent,
@@ -185,9 +166,9 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                 onClick={handleSave}
                 size={"sm"}
                 className="rounded-full"
-                disabled={isSaving || updateAgent.isPending}
+                disabled={isSaving}
               >
-                {isSaving || updateAgent.isPending ? (
+                {isSaving ? (
                   <Loader className="w-4 h-4 animate-spin" />
                 ) : null}
                 Save
@@ -226,7 +207,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                       variant="outline"
                       size="sm"
                       onClick={handleUploadClick}
-                      disabled={isSaving || updateAgent.isPending}
+                      disabled={isSaving}
                     >
                       <Upload className="w-4 h-4 mr-1" />
                       Upload Logo
@@ -287,10 +268,25 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     </p>
                   </div>
 
-                  <Switch
-                    checked={starterMessagesEnabled}
-                    onCheckedChange={setStarterMessagesEnabled}
-                  />
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateStarters}
+                      disabled={generateStarters.isPending || isSaving}
+                    >
+                      {generateStarters.isPending ? (
+                        <Loader className="w-4 h-4 animate-spin mr-1" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-1" />
+                      )}
+                      Generate with AI
+                    </Button>
+                    <Switch
+                      checked={starterMessagesEnabled}
+                      onCheckedChange={setStarterMessagesEnabled}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -306,19 +302,17 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     }
                     onDragEnd={handleDragEnd}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-all group
-                      ${
-                        dragIndex === index
-                          ? "bg-primary/10 border-2 border-dashed border-primary/40"
-                          : "bg-muted/30 hover:bg-muted/50"
+                      ${dragIndex === index
+                        ? "bg-primary/10 border-2 border-dashed border-primary/40"
+                        : "bg-muted/30 hover:bg-muted/50"
                       } ${!starterMessagesEnabled ? "opacity-50" : ""}`}
                   >
                     {/* Drag handle */}
                     <div
-                      className={`text-muted-foreground p-1 ${
-                        starterMessagesEnabled
-                          ? "cursor-grab active:cursor-grabbing hover:text-foreground"
-                          : "cursor-not-allowed opacity-50"
-                      }`}
+                      className={`text-muted-foreground p-1 ${starterMessagesEnabled
+                        ? "cursor-grab active:cursor-grabbing hover:text-foreground"
+                        : "cursor-not-allowed opacity-50"
+                        }`}
                       title={
                         starterMessagesEnabled ? "Drag to reorder" : "Disabled"
                       }
@@ -343,11 +337,10 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                       size="icon"
                       disabled={!starterMessagesEnabled}
                       onClick={() => handleRemoveStarterMessage(index)}
-                      className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${
-                        starterMessagesEnabled
-                          ? "opacity-0 group-hover:opacity-100"
-                          : "opacity-0 cursor-not-allowed"
-                      }`}
+                      className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${starterMessagesEnabled
+                        ? "opacity-0 group-hover:opacity-100"
+                        : "opacity-0 cursor-not-allowed"
+                        }`}
                     >
                       <X className="w-4 h-4" />
                     </Button>

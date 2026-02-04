@@ -61,7 +61,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Handle subscription plans - create subscription + order
     const tierData = plan.tiers.find(
       (t) =>
         t.messages === tier &&
@@ -82,35 +81,22 @@ export async function POST(req: NextRequest) {
       tierId: tierData.id,
     };
 
+
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 14);
+    const startAt = Math.floor(trialEndDate.getTime() / 1000);
+
     const subscription = await razorpayApi.createSubscription({
       planId: tierData.priceIds.razorpay,
       totalCount: 12,
       notes,
+      startAt,
     });
 
-    const amountInPaise = tierData.price.inr * 100;
-
-    const order = await razorpayApi.createOrder({
-      amount: amountInPaise,
-      currency: "INR",
-      notes: {
-        userId,
-        userEmail,
-        quantity: 0,
-        type: "subscription",
-        subscriptionId: subscription.id,
-        planId,
-        tier: tier.toString(),
-        tierId: tierData.id,
-      },
-    });
 
     return successResponse({
       subscriptionId: subscription.id,
       shortUrl: subscription.short_url,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
     });
   } catch (error: any) {
     console.error("Error creating Razorpay subscription:", error);

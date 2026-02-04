@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
 
     const isIndia = geo.country === "IN";
 
+
     return successResponse(
       {
         country: geo.country,

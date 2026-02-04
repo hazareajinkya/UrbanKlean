@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import { razorpayconf } from "../utils/conf";
 
 // Server-side Razorpay instance
 let razorpayInstance: Razorpay | null = null;
@@ -6,8 +7,8 @@ let razorpayInstance: Razorpay | null = null;
 export const getRazorpayInstance = (): Razorpay => {
   if (razorpayInstance) return razorpayInstance;
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = razorpayconf.keyId;
+  const keySecret = razorpayconf.keySecret;
 
   if (!keyId || !keySecret) {
     throw new Error("Razorpay credentials are not set");
@@ -97,6 +98,10 @@ export const mapRazorpayStatus = (
   switch (status) {
     case "active":
       return "active";
+    case "authenticated":
+    case "created":
+
+      return "trialing";
     case "cancelled":
     case "completed":
     case "expired":
@@ -106,9 +111,6 @@ export const mapRazorpayStatus = (
       return "past_due";
     case "paused":
       return "paused";
-    case "authenticated":
-    case "created":
-      return "trialing";
     default:
       return "canceled";
   }
@@ -121,21 +123,22 @@ export const razorpayApi = {
     customerId?: string;
     totalCount: number;
     notes: RazorpaySubscriptionCustomData;
+    startAt?: number;
   }) {
     const razorpay = getRazorpayInstance();
-
-    // Set trial end date to 14 days from now
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 14);
-    const startAt = Math.floor(trialEndDate.getTime() / 1000);
 
     const params: any = {
       plan_id: arg.planId,
       total_count: arg.totalCount,
       quantity: 1,
       notes: arg.notes as unknown as Record<string, string>,
-      start_at: startAt,
     };
+
+
+    if (arg.startAt) {
+      params.start_at = arg.startAt;
+    }
+
     if (arg.customerId) {
       params.customer_notify = 1;
     }

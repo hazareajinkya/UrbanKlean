@@ -20,7 +20,7 @@ export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
 // Instagram Configuration
 export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
-export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
+export const INSTAGRAM_APP_SECRET = process.env.IsubscriptionNSTAGRAM_APP_SECRET ?? "";
 export const INSTAGRAM_REDIRECT_URI =
   process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ??
   "http://localhost:3000/api/oauth/instagram";
@@ -34,9 +34,15 @@ export const SLACK_REDIRECT_URI =
   process.env.NEXT_PUBLIC_SLACK_REDIRECT_URI ??
   "http://localhost:3000/api/oauth/slack";
 
+
+
 // Slack webhook verification
 export const SLACK_WEBHOOK_VERIFY_TOKEN =
   process.env.SLACK_WEBHOOK_VERIFY_TOKEN ?? "";
+
+export const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? ""
+export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET ?? ""
+export const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET ?? ""
 
 // API Configs
 export const waconf = {
@@ -104,4 +110,10 @@ export const blogconf = {
 export const backendconf = {
   accessToken: process.env.BACKEND_API_KEY,
   baseURL: process.env.BACKEND_URL,
+};
+
+export const razorpayconf = {
+  keyId: RAZORPAY_KEY_ID,
+  keySecret: RAZORPAY_KEY_SECRET,
+  webHookSecret: RAZORPAY_KEY_SECRET
 };
