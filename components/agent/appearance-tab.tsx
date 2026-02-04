@@ -122,8 +122,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     setDragIndex(null);
   };
 
-  // Handle AI generation of conversation starters
-  // Handle AI generation of conversation starters
+
   const handleGenerateStarters = async () => {
     generateStarters.mutate(undefined, {
       onSuccess: (starters: string[]) => {
