@@ -16,9 +16,9 @@ interface CheckoutOptions {
 interface CreateSubscriptionResponse {
   subscriptionId?: string;
   shortUrl?: string;
-  orderId: string;
-  amount: number;
-  currency: string;
+  orderId?: string;
+  amount?: number;
+  currency?: string;
 }
 
 const loadRazorpayScript = (): Promise<boolean> => {
@@ -153,17 +153,14 @@ export const useRazorpayCheckout = () => {
       const isLifetime = billingCycle === "lifetime";
       const description = isLifetime
         ? `${plan.name} - Lifetime Access`
-        : `${plan.name} - ${tier / 1000}k messages/month`;
+        : `${plan.name} - ${tier / 1000}k messages/month (14-day trial)`;
       const successUrl = isLifetime
         ? `/checkout/success?type=lifetime`
         : `/checkout/success?plan=${planId}&tier=${tier}&subscriptionId=${subscriptionId}`;
 
-      // Open Razorpay checkout with order_id for full payment modal
+      // Build options: use order_id for lifetime, subscription_id for subscriptions
       const options: RazorpayOptions = {
         key: razorpayconf.keyId!,
-        order_id: orderId,
-        amount,
-        currency,
         name: "MagicalCX",
         description,
         handler: () => {
@@ -179,8 +176,7 @@ export const useRazorpayCheckout = () => {
           planId,
           tier: tier.toString(),
           tierId: tierData.id,
-          ...(subscriptionId && { subscriptionId }),
-          type: billingCycle === "lifetime" ? "lifetime_purchase" : "subscription",
+          type: isLifetime ? "lifetime_purchase" : "subscription",
         },
         theme: {
           color: "#000000",
@@ -191,6 +187,16 @@ export const useRazorpayCheckout = () => {
           },
         },
       };
+
+      // For lifetime: use order_id flow
+      // For subscriptions: use subscription_id flow
+      if (isLifetime && orderId) {
+        options.order_id = orderId;
+        options.amount = amount;
+        options.currency = currency;
+      } else if (subscriptionId) {
+        options.subscription_id = subscriptionId;
+      }
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();

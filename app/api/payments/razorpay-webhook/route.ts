@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       paymentNotes: event.payload?.payment?.entity?.notes,
     });
 
+
     if (eventType === "payment.captured") {
       const paymentData = event.payload?.payment?.entity;
       if (paymentData?.notes?.type === "credit_purchase") {
@@ -41,10 +42,7 @@ export async function POST(req: NextRequest) {
         await handleLifetimePurchase(paymentData);
         return NextResponse.json({ received: true }, { status: 200 });
       }
-      if (paymentData?.notes?.type === "subscription") {
-        await handleSubscriptionFirstPayment(paymentData);
-        return NextResponse.json({ received: true }, { status: 200 });
-      }
+
     }
 
     const subscriptionData = event.payload?.subscription
@@ -153,20 +151,6 @@ async function handleLifetimePurchase(paymentData: any) {
     await paymentService.handleRazorpayLifetimePurchase({
       paymentId: paymentData.id,
       orderId: paymentData.order_id,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      notes: notes as Record<string, string>,
-    });
-  }
-}
-
-async function handleSubscriptionFirstPayment(paymentData: any) {
-  const notes = paymentData.notes || {};
-  if (notes.type === "subscription" && notes.subscriptionId) {
-    await paymentService.handleRazorpaySubscriptionFirstPayment({
-      paymentId: paymentData.id,
-      orderId: paymentData.order_id,
-      subscriptionId: notes.subscriptionId,
       amount: paymentData.amount,
       currency: paymentData.currency,
       notes: notes as Record<string, string>,

@@ -97,8 +97,11 @@ export const mapRazorpayStatus = (
 ): "active" | "canceled" | "past_due" | "paused" | "trialing" => {
   switch (status) {
     case "active":
-    case "authenticated":
       return "active";
+    case "authenticated":
+    case "created":
+
+      return "trialing";
     case "cancelled":
     case "completed":
     case "expired":
@@ -108,8 +111,6 @@ export const mapRazorpayStatus = (
       return "past_due";
     case "paused":
       return "paused";
-    case "created":
-      return "trialing";
     default:
       return "canceled";
   }
@@ -122,21 +123,22 @@ export const razorpayApi = {
     customerId?: string;
     totalCount: number;
     notes: RazorpaySubscriptionCustomData;
+    startAt?: number;
   }) {
     const razorpay = getRazorpayInstance();
-
-    // Set trial end date to 14 days from now
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 14);
-    const startAt = Math.floor(trialEndDate.getTime() / 1000);
 
     const params: any = {
       plan_id: arg.planId,
       total_count: arg.totalCount,
       quantity: 1,
       notes: arg.notes as unknown as Record<string, string>,
-      start_at: startAt,
     };
+
+
+    if (arg.startAt) {
+      params.start_at = arg.startAt;
+    }
+
     if (arg.customerId) {
       params.customer_notify = 1;
     }
