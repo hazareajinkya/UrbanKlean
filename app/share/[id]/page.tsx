@@ -87,7 +87,7 @@ export default function SharePage() {
                     src={`/chat/${id}`}
                     className="w-[355px] h-[647px] border-0 max-w-full"
                     title="Magical CX"
-                    sandbox="allow-scripts allow-same-origin allow-forms"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                   />
                 </div>
               </div>

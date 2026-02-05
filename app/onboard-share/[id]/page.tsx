@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation";
 export default function SharePage() {
   const params = useParams();
   const id = params.id;
-  const router = useRouter()
+  const router = useRouter();
   const onTrialStart = () => {
-    router.push(`/pricing`)
-  }
+    router.push(`/pricing`);
+  };
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
@@ -34,7 +34,6 @@ export default function SharePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-24 items-center max-w-6xl mx-auto w-full">
           {/* Left Column: Text & CTA - Hidden on mobile, shown on desktop */}
 
-
           {/* Center/Right Column: Mobile Frame */}
           <div className="flex justify-center lg:justify-end w-full">
             <div className="relative">
@@ -46,7 +45,7 @@ export default function SharePage() {
                     src={`/chat/${id}`}
                     className="w-[355px] h-[647px] border-0 max-w-full"
                     title="Magical CX"
-                    sandbox="allow-scripts allow-same-origin allow-forms"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                   />
                 </div>
               </div>
@@ -58,9 +57,8 @@ export default function SharePage() {
                 Experience the future of customer support.
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed">
-                You're viewing a live AI agent built with Magical CX. Start
-                your 14 day trial and create your own intelligent support
-                experience.
+                You're viewing a live AI agent built with Magical CX. Start your
+                14 day trial and create your own intelligent support experience.
               </p>
             </div>
 
@@ -93,9 +91,7 @@ export default function SharePage() {
         <div className="lg:hidden mt-6 px-2">
           <div className="bg-muted/50 rounded-2xl p-4 sm:p-6 space-y-4">
             <div className="text-center space-y-2">
-              <h2 className="text-lg sm:text-xl">
-                Want your own AI agent?
-              </h2>
+              <h2 className="text-lg sm:text-xl">Want your own AI agent?</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Start your 14 day trial and create intelligent support
               </p>
@@ -125,11 +121,11 @@ export default function SharePage() {
             </div>
           </div>
         </div>
-      </main >
+      </main>
 
       <div className="bg-background dark">
         <Footer />
       </div>
-    </div >
+    </div>
   );
 }

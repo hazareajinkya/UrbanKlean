@@ -29,7 +29,6 @@ import {
   WidgetTab,
 } from "@/components/agent";
 import clsx from "clsx";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AgentPage() {
   const router = useRouter();
