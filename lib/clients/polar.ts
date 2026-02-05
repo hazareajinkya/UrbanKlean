@@ -23,14 +23,14 @@ export const getPolarInstance = (): Polar => {
 export interface PolarSubscriptionData {
   id: string;
   status:
-  | "active"
-  | "canceled"
-  | "past_due"
-  | "trialing"
-  | "incomplete"
-  | "incomplete_expired"
-  | "unpaid"
-  | "paused";
+    | "active"
+    | "canceled"
+    | "past_due"
+    | "trialing"
+    | "incomplete"
+    | "incomplete_expired"
+    | "unpaid"
+    | "paused";
   customerId: string;
   productId: string;
   priceId: string;
@@ -65,7 +65,7 @@ export interface PolarLifetimePurchaseCustomData {
 }
 
 export const mapPolarStatus = (
-  status: PolarSubscriptionData["status"],
+  status: PolarSubscriptionData["status"]
 ): "active" | "canceled" | "past_due" | "paused" | "trialing" => {
   switch (status) {
     case "active":
@@ -164,15 +164,16 @@ export const polarApi = {
         createdAt: result.createdAt.toISOString(),
         metadata: result.metadata as Record<string, string | number | boolean>,
       } as PolarSubscriptionData;
-    } else {
-      // Revoke immediately
-      await polar.subscriptions.revoke({
-        id: subscriptionId,
-      });
-
-      // Get updated subscription
-      return this.getSubscription(subscriptionId);
     }
+    // else {
+    //   // Revoke immediately
+    //   await polar.subscriptions.revoke({
+    //     id: subscriptionId,
+    //   });
+
+    //   // Get updated subscription
+    //   return this.getSubscription(subscriptionId);
+    // }
   },
 
   async createCustomerPortalSession(arg: { customerId: string }) {
@@ -199,16 +200,16 @@ export const polarApi = {
 
     if (arg.quantity < 1 || arg.quantity > 50) {
       throw new Error(
-        `Invalid quantity: ${arg.quantity}. Quantity must be between 1 and 50.`,
+        `Invalid quantity: ${arg.quantity}. Quantity must be between 1 and 50.`
       );
     }
 
     const priceAmountCents = Math.round(
-      CREDIT_ADDON.price.usd * 100 * arg.quantity,
+      CREDIT_ADDON.price.usd * 100 * arg.quantity
     );
     if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
       throw new Error(
-        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`
       );
     }
 
@@ -245,7 +246,7 @@ export const polarApi = {
         const detail = res?.data?.detail;
         if (detail != null) {
           throw new Error(
-            `Polar checkout creation failed: ${JSON.stringify(detail)}`,
+            `Polar checkout creation failed: ${JSON.stringify(detail)}`
           );
         }
       }
@@ -269,7 +270,7 @@ export const polarApi = {
     const priceAmountCents = tier.price.usd * 100;
     if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
       throw new Error(
-        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`
       );
     }
 
@@ -306,7 +307,7 @@ export const polarApi = {
         const detail = res?.data?.detail;
         if (detail != null) {
           throw new Error(
-            `Polar lifetime checkout creation failed: ${JSON.stringify(detail)}`,
+            `Polar lifetime checkout creation failed: ${JSON.stringify(detail)}`
           );
         }
       }

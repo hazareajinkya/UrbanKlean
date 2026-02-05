@@ -30,6 +30,8 @@ import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
 import { useMember } from "@/lib/hooks/members/use-members";
 import { GeminiLogo } from "@/lib/logos";
+import { isWorkspacePlanActive } from "@/lib/utils/plan-utils";
+import { toast } from "sonner";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -43,6 +45,7 @@ export default function WorkspaceLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { data: session, status } = useSession();
   const userEmail = session?.user?.email ?? "";
+  const { user, isLoading: isUserLoading } = useCurrentUser();
   const { data: member, isLoading: isMemberLoading } = useMember(
     wid,
     userEmail
@@ -63,7 +66,7 @@ export default function WorkspaceLayout({
     redirect("/auth");
   }
 
-  if (isMemberLoading) {
+  if (isMemberLoading || isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
@@ -75,6 +78,7 @@ export default function WorkspaceLayout({
   }
 
   if (!member) {
+    toast.error("You are not a member of this workspace");
     redirect("/workspaces");
   }
 
@@ -87,6 +91,21 @@ export default function WorkspaceLayout({
         </div>
       </div>
     );
+  }
+
+  if (!workspace) {
+    toast.error("Workspace not found or has been deleted");
+    redirect("/workspaces");
+  }
+
+  if (!isWorkspacePlanActive(workspace)) {
+    toast.dismiss();
+    toast.error("Your workspace plan has expired. Please upgrade to continue.");
+    if (workspace.ownerId === user?.email) {
+      redirect(`/billing`);
+    } else {
+      redirect(`/pricing`);
+    }
   }
 
   return (
@@ -273,9 +292,10 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 className={`
                   flex items-center rounded-lg text-sm font-medium gap-3 px-3 py-2
                   transition-colors duration-200 hover:bg-accent hover:text-primary
-                  ${isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-neutral-600 -foreground hover:text-primary"
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-neutral-600 -foreground hover:text-primary"
                   }
                   ${isCollapsed ? "justify-center" : ""}
                 `}
@@ -283,8 +303,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <item.icon
-                    className={`h-4 w-4 shrink-0 ${isCollapsed ? "h-4.5 w-4.5" : ""
-                      }`}
+                    className={`h-4 w-4 shrink-0 ${
+                      isCollapsed ? "h-4.5 w-4.5" : ""
+                    }`}
                   />
                   {!isCollapsed && (
                     <span className="line-clamp-1 overflow-hidden truncate">
@@ -336,8 +357,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         `}
         >
           <div
-            className={`flex items-center gap-3 ${!isCollapsed && "flex-1"
-              } min-w-0 cursor-pointer`}
+            className={`flex items-center gap-3 ${
+              !isCollapsed && "flex-1"
+            } min-w-0 cursor-pointer`}
             onClick={handleModalOpen}
           >
             <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">

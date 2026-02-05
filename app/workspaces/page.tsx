@@ -41,6 +41,8 @@ import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-mult
 import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { canCreateWorkspace } from "@/lib/utils/permissions";
+import { toast } from "sonner";
 
 export default function WorkspacesPage() {
   const router = useRouter();
@@ -86,6 +88,15 @@ export default function WorkspacesPage() {
   };
 
   const openCreateModal = () => {
+    if (!canCreateWorkspace(user?.subscription?.planId)) {
+      toast.error("Upgrade your plan to create a workspace", {
+        action: {
+          label: "Upgrade",
+          onClick: () => router.push("/pricing"),
+        },
+      });
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -131,7 +142,9 @@ export default function WorkspacesPage() {
               <div
                 key={workspace.id}
                 className="dark:border group relative h-[340px] w-full cursor-pointer overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5 transition-all duration-500 hover:shadow-2xl hover:ring-black/10 hover:-translate-y-1"
-                onClick={() => router.push(`/workspaces/${workspace.id}`)}
+                onClick={() =>
+                  router.push(`/workspaces/${workspace.id}/dashboard`)
+                }
               >
                 {/* Full Background Layer */}
                 <div

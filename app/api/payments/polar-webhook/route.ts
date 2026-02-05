@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         console.error("Invalid Polar webhook signature:", error);
         return NextResponse.json(
           { error: "Invalid signature" },
-          { status: 401 },
+          { status: 401 }
         );
       }
       throw error;
@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
     const eventType = event.type;
     const eventData = event.data;
 
-    if (eventType === "checkout.created" || eventType === "order.created") {
+    console.log("eventType: ", eventType);
+
+    if (eventType === "order.paid") {
       const metadata = (eventData as any)?.metadata || {};
 
       if (metadata.type === "credit_purchase") {
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
     console.error("Error processing Polar webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -95,15 +97,15 @@ function mapSubscriptionToPolarData(data: any): PolarSubscriptionData {
       data.currentPeriodEnd === null
         ? null
         : typeof data.currentPeriodEnd === "string"
-          ? data.currentPeriodEnd
-          : data.currentPeriodEnd?.toISOString() || null,
+        ? data.currentPeriodEnd
+        : data.currentPeriodEnd?.toISOString() || null,
     cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
     canceledAt:
       data.canceledAt === null
         ? null
         : typeof data.canceledAt === "string"
-          ? data.canceledAt
-          : data.canceledAt?.toISOString() || null,
+        ? data.canceledAt
+        : data.canceledAt?.toISOString() || null,
     createdAt:
       typeof data.createdAt === "string"
         ? data.createdAt
@@ -116,27 +118,27 @@ function mapSubscriptionToPolarData(data: any): PolarSubscriptionData {
 }
 
 async function handleSubscriptionActive(
-  subscriptionData: PolarSubscriptionData,
+  subscriptionData: PolarSubscriptionData
 ) {
   await paymentService.handlePolarSubscriptionCreated(subscriptionData);
 }
 
 async function handleSubscriptionUpdated(
-  subscriptionData: PolarSubscriptionData,
+  subscriptionData: PolarSubscriptionData
 ) {
   await paymentService.handlePolarSubscriptionUpdated(subscriptionData);
 }
 
 async function handleSubscriptionCanceled(
-  subscriptionData: PolarSubscriptionData,
+  subscriptionData: PolarSubscriptionData
 ) {
   await paymentService.handlePolarSubscriptionCanceled(subscriptionData);
 }
 
 async function handleSubscriptionRevoked(
-  subscriptionData: PolarSubscriptionData,
+  subscriptionData: PolarSubscriptionData
 ) {
-  await handleSubscriptionCanceled(subscriptionData);
+  await paymentService.handlePolarSubscriptionRevoked(subscriptionData);
 }
 
 async function handleCreditPurchase(checkoutData: any) {

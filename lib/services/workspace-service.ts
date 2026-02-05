@@ -17,6 +17,7 @@ import {
   IWorkspace,
   IWorkspaceInfo,
 } from "../types/workspace";
+import { IPlanId } from "../types/user";
 import userService from "./user-service";
 import agentService from "./agent-service";
 import axiosClient from "../clients/axios-client";
@@ -25,6 +26,7 @@ import memberService from "./member-service";
 import { IAgent } from "../types/agent";
 import knowledgeService from "./knowledge-service";
 import folderService from "./folder-service";
+import { canCreateWorkspace } from "../utils/permissions";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -42,6 +44,31 @@ class WorkspaceService {
     return snap.data() as IWorkspace;
   }
 
+  async syncOwnerWorkspacesPlan({
+    ownerId,
+    planId,
+  }: {
+    ownerId: string;
+    planId: IPlanId;
+  }) {
+    if (!ownerId) return;
+    const q = query(
+      collection(db, "workspaces"),
+      where("ownerId", "==", ownerId)
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return;
+    const updatedAt = new Date().toISOString();
+    await Promise.all(
+      snapshot.docs.map((docSnap) =>
+        updateDoc(doc(db, `workspaces/${docSnap.id}`), {
+          planId,
+          updatedAt,
+        })
+      )
+    );
+  }
+
   async createWorkspace({
     name,
     description,
@@ -55,12 +82,17 @@ class WorkspaceService {
     info?: IWorkspaceInfo;
     domains: string[];
   }) {
+    const user = await userService.getUser(ownerId);
+    if (!canCreateWorkspace(user?.subscription?.planId)) {
+      throw new Error("You don't have an active plan to create a workspace");
+    }
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
     workspace.oneLiner = description;
     workspace.ownerId = ownerId;
     workspace.domains = domains;
+    workspace.planId = user?.subscription?.planId || "none";
     if (info) {
       workspace.info = info;
     }

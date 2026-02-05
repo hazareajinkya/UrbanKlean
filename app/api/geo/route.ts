@@ -13,8 +13,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const isIndia = geo.country === "IN";
-
+    // const isIndia = geo.country === "IN";
+    const isIndia = true;
 
     return successResponse(
       {

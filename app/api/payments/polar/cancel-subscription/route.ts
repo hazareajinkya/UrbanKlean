@@ -35,31 +35,31 @@ export async function POST(req: NextRequest) {
       cancelAtCycleEnd
     );
 
-    if (cancelAtCycleEnd) {
-      const updatedSubscription: IUserSubscription = {
-        ...subscription,
-        canceledAt: new Date().toISOString(),
-      };
-      await userService.updateUser(userEmail, {
-        subscription: updatedSubscription,
-      });
-    } else {
-      const updatedSubscription: IUserSubscription = {
-        ...subscription,
-        status: "canceled",
-        planId: "none",
-        tierId: "none",
-        polarSubscriptionId: "none",
-        recurringQuota: 0,
-        canceledAt: new Date().toISOString(),
-      };
-      delete updatedSubscription.nextPaymentAt;
-      delete updatedSubscription.renewsAt;
+    // if (cancelAtCycleEnd) {
+    //   const updatedSubscription: IUserSubscription = {
+    //     ...subscription,
+    //     canceledAt: new Date().toISOString(),
+    //   };
+    //   await userService.updateUser(userEmail, {
+    //     subscription: updatedSubscription,
+    //   });
+    // } else {
+    //   const updatedSubscription: IUserSubscription = {
+    //     ...subscription,
+    //     status: "canceled",
+    //     planId: "none",
+    //     tierId: "none",
+    //     polarSubscriptionId: "none",
+    //     recurringQuota: 0,
+    //     canceledAt: new Date().toISOString(),
+    //   };
+    //   delete updatedSubscription.nextPaymentAt;
+    //   delete updatedSubscription.renewsAt;
 
-      await userService.updateUser(userEmail, {
-        subscription: updatedSubscription,
-      });
-    }
+    //   await userService.updateUser(userEmail, {
+    //     subscription: updatedSubscription,
+    //   });
+    // }
 
     return successResponse({
       message: cancelAtCycleEnd
