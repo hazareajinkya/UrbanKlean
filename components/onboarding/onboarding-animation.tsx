@@ -11,6 +11,7 @@ import {
 import {
   Sparkles,
   Zap,
+  ScanLine,
   ShieldCheck,
   RefreshCw,
   ShoppingBag,
@@ -25,6 +26,12 @@ import {
 type Message = {
   role: "user" | "agent";
   text: string;
+  chips?: MessageChip[];
+};
+
+type MessageChip = {
+  type: "intent" | "sentiment" | "action";
+  label: string;
 };
 
 type Scenario = {
@@ -42,10 +49,10 @@ const SCENARIOS: Scenario[] = [
     color: "cyan",
     icon: <ShoppingBag className="w-4 h-4" />,
     messages: [
-      { role: "user", text: "I need to return order #8821." },
+      { role: "user", text: "I need to return order #8821.", chips: [{ type: "intent", label: "INTENT: RETURNS" }] },
       { role: "agent", text: "I can help. Is the item damaged?" },
       { role: "user", text: "No, just wrong size." },
-      { role: "agent", text: "Got it. Return label sent to your inbox!" },
+      { role: "agent", text: "Got it. Return label sent to your inbox!", chips: [{ type: "action", label: "ACTION: RETURN LABEL" }] },
     ],
     tag: "Instant Resolution",
     chips: ["Automated Returns"],
@@ -55,7 +62,7 @@ const SCENARIOS: Scenario[] = [
     color: "emerald",
     icon: <ShieldCheck className="w-4 h-4" />,
     messages: [
-      { role: "user", text: "Is my customer data secure?" },
+      { role: "user", text: "Is my customer data secure?", chips: [{ type: "intent", label: "INTENT: SECURITY" }] },
       { role: "agent", text: "Yes, we use enterprise-grade encryption." },
       { role: "user", text: "Do you train on my data?" },
       { role: "agent", text: "Never. Your data stays private." },
@@ -68,10 +75,10 @@ const SCENARIOS: Scenario[] = [
     color: "indigo",
     icon: <CreditCard className="w-4 h-4" />,
     messages: [
-      { role: "user", text: "Do you offer enterprise plans?" },
+      { role: "user", text: "Do you offer enterprise plans?", chips: [{ type: "intent", label: "INTENT: PRICING" }] },
       { role: "agent", text: "Yes! Unlimited seats & dedicated support." },
       { role: "user", text: "Can I get a demo?" },
-      { role: "agent", text: "Booking you a slot for Tuesday!" },
+      { role: "agent", text: "Booking you a slot for Tuesday!", chips: [{ type: "action", label: "ACTION: CALENDAR" }] },
     ],
     tag: "Sales Agent",
     chips: ["Lead Qualification"],
@@ -81,10 +88,10 @@ const SCENARIOS: Scenario[] = [
     color: "blue",
     icon: <Truck className="w-4 h-4" />,
     messages: [
-      { role: "user", text: "Where is my package?" },
+      { role: "user", text: "Where is my package?", chips: [{ type: "intent", label: "INTENT: TRACKING" }] },
       { role: "agent", text: "Order #8821 is out for delivery." },
       { role: "user", text: "Can I change delivery instructions?" },
-      { role: "agent", text: "Updated: Leave at front door." },
+      { role: "agent", text: "Updated: Leave at front door.", chips: [{ type: "action", label: "ACTION: UPDATE NOTE" }] },
     ],
     tag: "Logistics",
     chips: [],
@@ -107,7 +114,7 @@ const SCENARIOS: Scenario[] = [
     color: "teal",
     icon: <Heart className="w-4 h-4" />,
     messages: [
-      { role: "user", text: "I'm really frustrated, my bill is wrong again!" },
+      { role: "user", text: "I'm really frustrated, my bill is wrong again!", chips: [{ type: "sentiment", label: "SENTIMENT: FRUSTRATED" }, { type: "intent", label: "INTENT: BILLING ERROR" }] },
       {
         role: "agent",
         text: "I hear you, and I am truly sorry for the stress this caused.",
@@ -115,7 +122,7 @@ const SCENARIOS: Scenario[] = [
       { role: "user", text: "I just want it fixed." },
       {
         role: "agent",
-        text: "I've credited your account $50 and fixed the error permanently.",
+        text: "I've credited your account $50 and fixed the error permanently.", chips: [{ type: "action", label: "ACTION: REFUND" }]
       },
     ],
     tag: "Empathy Engine",
@@ -165,18 +172,17 @@ export function OnboardingAnimation() {
       {/* Background Ambience */}
       <motion.div
         className={`absolute inset-0 bg-gradient-to-br transition-colors duration-[2000ms] ease-in-out
-          ${
-            scenario.color === "cyan"
-              ? "from-cyan-950/40 via-blue-950/20 to-zinc-950"
-              : scenario.color === "emerald"
+          ${scenario.color === "cyan"
+            ? "from-cyan-950/40 via-blue-950/20 to-zinc-950"
+            : scenario.color === "emerald"
               ? "from-emerald-950/40 via-teal-950/20 to-zinc-950"
               : scenario.color === "blue"
-              ? "from-blue-950/40 via-sky-950/20 to-zinc-950"
-              : scenario.color === "orange"
-              ? "from-orange-950/40 via-amber-950/20 to-zinc-950"
-              : scenario.color === "teal"
-              ? "from-teal-950/40 via-emerald-950/20 to-zinc-950"
-              : "from-indigo-950/40 via-violet-950/20 to-zinc-950"
+                ? "from-blue-950/40 via-sky-950/20 to-zinc-950"
+                : scenario.color === "orange"
+                  ? "from-orange-950/40 via-amber-950/20 to-zinc-950"
+                  : scenario.color === "teal"
+                    ? "from-teal-950/40 via-emerald-950/20 to-zinc-950"
+                    : "from-indigo-950/40 via-violet-950/20 to-zinc-950"
           }
         `}
       />
@@ -201,27 +207,26 @@ export function OnboardingAnimation() {
         {/* Glow Core */}
         <motion.div
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full blur-[80px] -z-10 transition-colors duration-[2000ms]
-                ${
-                  scenario.color === "cyan"
-                    ? "bg-cyan-500/20"
-                    : scenario.color === "emerald"
-                    ? "bg-emerald-500/20"
-                    : scenario.color === "blue"
-                    ? "bg-blue-500/20"
-                    : scenario.color === "orange"
+                ${scenario.color === "cyan"
+              ? "bg-cyan-500/20"
+              : scenario.color === "emerald"
+                ? "bg-emerald-500/20"
+                : scenario.color === "blue"
+                  ? "bg-blue-500/20"
+                  : scenario.color === "orange"
                     ? "bg-orange-500/20"
                     : scenario.color === "teal"
-                    ? "bg-teal-500/20"
-                    : "bg-indigo-500/20"
-                }
+                      ? "bg-teal-500/20"
+                      : "bg-indigo-500/20"
+            }
             `}
           animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative z-10 ring-1 ring-white/5 flex flex-col min-h-[500px]">
+        <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl relative z-10 ring-1 ring-white/5 flex flex-col min-h-[500px]">
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-6 py-4 backdrop-blur-xl">
+          <div className="relative z-10 flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-6 py-4 backdrop-blur-xl rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <img
@@ -280,18 +285,17 @@ const ChatSequence = ({ scenario }: { scenario: Scenario }) => {
               key={i}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border
-                ${
-                  scenario.color === "cyan"
-                    ? "bg-cyan-500/5 text-cyan-300 border-cyan-500/10"
-                    : scenario.color === "emerald"
+                ${scenario.color === "cyan"
+                  ? "bg-cyan-500/5 text-cyan-300 border-cyan-500/10"
+                  : scenario.color === "emerald"
                     ? "bg-emerald-500/5 text-emerald-300 border-emerald-500/10"
                     : scenario.color === "blue"
-                    ? "bg-blue-500/5 text-blue-300 border-blue-500/10"
-                    : scenario.color === "orange"
-                    ? "bg-orange-500/5 text-orange-300 border-orange-500/10"
-                    : scenario.color === "teal"
-                    ? "bg-teal-500/5 text-teal-300 border-teal-500/10"
-                    : "bg-indigo-500/5 text-indigo-300 border-indigo-500/10"
+                      ? "bg-blue-500/5 text-blue-300 border-blue-500/10"
+                      : scenario.color === "orange"
+                        ? "bg-orange-500/5 text-orange-300 border-orange-500/10"
+                        : scenario.color === "teal"
+                          ? "bg-teal-500/5 text-teal-300 border-teal-500/10"
+                          : "bg-indigo-500/5 text-indigo-300 border-indigo-500/10"
                 }
               `}
             >
@@ -319,11 +323,10 @@ const MessageBubble = ({
       <div
         className={`
             max-w-[85%] text-[13px] leading-relaxed shadow-lg relative
-            ${
-              isAgent
-                ? "bg-zinc-900/60 backdrop-blur-md border border-white/10 text-zinc-300 rounded-2xl rounded-tl-sm px-4 py-3"
-                : "bg-zinc-800/80 backdrop-blur-md border border-white/5 text-zinc-200 rounded-2xl rounded-tr-sm px-4 py-3"
-            }
+            ${isAgent
+            ? "bg-zinc-900/60 backdrop-blur-md border border-white/10 text-zinc-300 rounded-2xl rounded-tl-sm px-4 py-3"
+            : "bg-zinc-800/80 backdrop-blur-md border border-white/5 text-zinc-200 rounded-2xl rounded-tr-sm px-4 py-3"
+          }
         `}
       >
         {isAgent && (
@@ -333,6 +336,49 @@ const MessageBubble = ({
         )}
         <div className="relative z-10">
           <span>{message.text}</span>
+        </div>
+
+        {/* Chips - Absolutely Positioned */}
+        <div className="absolute inset-0 pointer-events-none overflow-visible">
+          {message.chips?.map((chip, i) => {
+            // Determine position based on chip type and message role
+            let positionClass = "";
+            if (chip.type === "intent") {
+              positionClass = isAgent
+                ? "left-0 -top-8" // Should not happen for agent usually, but fallback
+                : "right-full top-1/2 -translate-y-1/2 mr-3"; // Left of user bubble
+            } else if (chip.type === "sentiment") {
+              positionClass = isAgent
+                ? "right-0 -top-8"
+                : "right-0 -top-8"; // Above user bubble
+            } else if (chip.type === "action") {
+              positionClass = isAgent
+                ? "left-full top-1/2 -translate-y-1/2 ml-3" // Right of agent bubble
+                : "left-0 -bottom-8";
+            }
+
+            return (
+              <span
+                key={i}
+                className={`
+                  absolute whitespace-nowrap z-[100]
+                  text-[10px] tracking-widest font-bold px-3 py-1.5 rounded-full border flex items-center gap-1.5 shadow-sm backdrop-blur-xl
+                  ${chip.type === "intent"
+                    ? "bg-zinc-950/80 text-blue-300 border-blue-500/30"
+                    : chip.type === "sentiment"
+                      ? "bg-zinc-950/80 text-orange-300 border-orange-500/30"
+                      : "bg-zinc-950/80 text-emerald-300 border-emerald-500/30"
+                  }
+                  ${positionClass}
+                `}
+              >
+                {chip.type === "intent" && <ScanLine className="w-3.5 h-3.5" />}
+                {chip.type === "sentiment" && <Zap className="w-3.5 h-3.5" />}
+                {chip.type === "action" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                {chip.label}
+              </span>
+            )
+          })}
         </div>
       </div>
     </div>
