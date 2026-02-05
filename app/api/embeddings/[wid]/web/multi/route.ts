@@ -1,4 +1,5 @@
 import { firecrawl } from "@/lib/clients/firecrawl";
+import folderService from "@/lib/services/folder-service";
 import knowledgeService from "@/lib/services/knowledge-service";
 import {
   errorResponse,
@@ -21,10 +22,30 @@ export async function POST(
     const { wid } = await params;
     if (!wid) return errorResponse("Workspace ID is required", 400);
 
-    const { urls: urlObjects, workspaceType } = await validateRequestBody(
-      request
+    const body = await request.json();
+    const { urls: urlObjects, workspaceType } = validateRequestBody(body);
+
+
+    const uniqueFolderNames = new Set(
+      urlObjects
+        .filter((obj) => obj.folderId === "none" && obj.folderName)
+        .map((obj) => obj.folderName as string)
     );
 
+    const folderIdMap = new Map<string, string>();
+    await Promise.all(
+      [...uniqueFolderNames].map(async (folderName) => {
+        const folder = await folderService.createFolder(wid, folderName);
+        folderIdMap.set(folderName, folder.id);
+      })
+    );
+
+
+    const mainUrl = urlObjects.map((obj) =>
+      obj.folderId === "none"
+        ? { url: obj.url, folderId: folderIdMap.get(obj.folderName) || "" }
+        : obj
+    );
     const targetUrls: string[] = [];
     const urlMetadata: Record<
       string,
@@ -32,7 +53,7 @@ export async function POST(
     > = {};
 
     await Promise.all(
-      urlObjects.map(async (obj) => {
+      mainUrl.map(async (obj) => {
         const title = new URL(obj.url).hostname;
         const knowledgeId = await knowledgeService.s_createPendingWebKnowledge(
           wid,
@@ -86,6 +107,7 @@ const webEmbeddingSchema = z.object({
     z.object({
       folderId: z.string(),
       url: z.string().url("Invalid URL"),
+      folderName: z.string(),
     })
   ),
   workspaceType: z
@@ -94,14 +116,6 @@ const webEmbeddingSchema = z.object({
     .default("default"),
 });
 
-const validateRequestBody = async (request: NextRequest) => {
-  try {
-    const body = await request.json();
-    return webEmbeddingSchema.parse(body);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw error;
-    }
-    throw new Error("Failed to parse request body");
-  }
+const validateRequestBody = (body: unknown) => {
+  return webEmbeddingSchema.parse(body);
 };

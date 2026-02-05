@@ -29,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 
+
 interface ScrapedCategory {
   folderId: string;
   folderName: string;
@@ -56,7 +57,7 @@ export default function KnowledgeTab() {
 
   const [scrapedUrls, setScrapedUrls] = useState<ScrapedCategory[]>([]);
   const [selectedUrls, setSelectedUrls] = useState<
-    { url: string; folderId: string }[]
+    { url: string; folderId: string, folderName: string }[]
   >([]);
   const [websiteView, setWebsiteView] = useState<"input" | "list">("input");
 
@@ -136,8 +137,8 @@ export default function KnowledgeTab() {
       if (categories) {
         setScrapedUrls(categories);
         const allUrls = categories.flatMap(
-          (cat: { urls: any[]; folderId: any }) =>
-            cat.urls.map((url) => ({ url, folderId: cat.folderId }))
+          (cat: { urls: any[]; folderId: any; folderName: string }) =>
+            cat.urls.map((url) => ({ url, folderId: cat.folderId, folderName: cat.folderName }))
         );
         setSelectedUrls(allUrls);
         setWebsiteView("list");
@@ -149,7 +150,7 @@ export default function KnowledgeTab() {
 
   const handleAddMultipleUrls = async () => {
     if (selectedUrls.length === 0) return;
-
+    console.log({ selectedUrls })
     try {
       await crawlWebsites.mutateAsync({
         wid,
@@ -163,13 +164,13 @@ export default function KnowledgeTab() {
     }
   };
 
-  const handleUrlSelection = (url: string, folderId: string) => {
+  const handleUrlSelection = (url: string, folderId: string, folderName: string) => {
     setSelectedUrls((prev) => {
       const exists = prev.some((u) => u.url === url && u.folderId === folderId);
       if (exists) {
         return prev.filter((u) => !(u.url === url && u.folderId === folderId));
       } else {
-        return [...prev, { url, folderId }];
+        return [...prev, { url, folderId, folderName }];
       }
     });
   };
@@ -177,7 +178,7 @@ export default function KnowledgeTab() {
   const handleSelectAllUrls = (checked: boolean) => {
     if (checked) {
       const allUrls = scrapedUrls.flatMap((cat) =>
-        cat.urls.map((url) => ({ url, folderId: cat.folderId }))
+        cat.urls.map((url) => ({ url, folderId: cat.folderId, folderName: cat.folderName }))
       );
       setSelectedUrls(allUrls);
     } else {
@@ -551,10 +552,10 @@ export default function KnowledgeTab() {
                       checked={
                         scrapedUrls.length > 0 &&
                         selectedUrls.length ===
-                          scrapedUrls.reduce(
-                            (acc, cat) => acc + cat.urls.length,
-                            0
-                          )
+                        scrapedUrls.reduce(
+                          (acc, cat) => acc + cat.urls.length,
+                          0
+                        )
                       }
                       onCheckedChange={handleSelectAllUrls}
                     />
@@ -585,14 +586,14 @@ export default function KnowledgeTab() {
                                 key={`${category.folderId}-${urlIndex}`}
                                 className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
                                 onClick={() =>
-                                  handleUrlSelection(url, category.folderId)
+                                  handleUrlSelection(url, category.folderId, category.folderName)
                                 }
                               >
                                 <Checkbox
                                   id={`modal-${category.folderId}-${url}`}
                                   checked={isSelected}
                                   onCheckedChange={() =>
-                                    handleUrlSelection(url, category.folderId)
+                                    handleUrlSelection(url, category.folderId, category.folderName)
                                   }
                                 />
                                 <label

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   motion,
   AnimatePresence,
@@ -19,6 +19,7 @@ import {
   Languages,
   Heart,
   MoreHorizontal,
+  CheckCircle2,
 } from "lucide-react";
 
 type Message = {
@@ -32,6 +33,7 @@ type Scenario = {
   icon: React.ReactNode;
   messages: Message[];
   tag: string;
+  chips: string[];
 };
 
 const SCENARIOS: Scenario[] = [
@@ -46,6 +48,7 @@ const SCENARIOS: Scenario[] = [
       { role: "agent", text: "Got it. Return label sent to your inbox!" },
     ],
     tag: "Instant Resolution",
+    chips: ["Automated Returns"],
   },
   {
     id: "security",
@@ -58,10 +61,11 @@ const SCENARIOS: Scenario[] = [
       { role: "agent", text: "Never. Your data stays private." },
     ],
     tag: "Trust & Safety",
+    chips: ["SOC2 Compliant"],
   },
   {
     id: "pricing",
-    color: "purple",
+    color: "indigo",
     icon: <CreditCard className="w-4 h-4" />,
     messages: [
       { role: "user", text: "Do you offer enterprise plans?" },
@@ -70,6 +74,7 @@ const SCENARIOS: Scenario[] = [
       { role: "agent", text: "Booking you a slot for Tuesday!" },
     ],
     tag: "Sales Agent",
+    chips: ["Lead Qualification"],
   },
   {
     id: "shipping",
@@ -82,6 +87,7 @@ const SCENARIOS: Scenario[] = [
       { role: "agent", text: "Updated: Leave at front door." },
     ],
     tag: "Logistics",
+    chips: ["Real-time Tracking"],
   },
   {
     id: "multilingual",
@@ -94,10 +100,11 @@ const SCENARIOS: Scenario[] = [
       { role: "agent", text: "Claro, ¿en qué puedo ayudarte hoy?" },
     ],
     tag: "Multilingual",
+    chips: ["30+ Languages"],
   },
   {
     id: "empathy",
-    color: "rose",
+    color: "teal",
     icon: <Heart className="w-4 h-4" />,
     messages: [
       { role: "user", text: "I'm really frustrated, my bill is wrong again!" },
@@ -112,6 +119,7 @@ const SCENARIOS: Scenario[] = [
       },
     ],
     tag: "Empathy Engine",
+    chips: ["Sentiment Analysis"],
   },
 ];
 
@@ -135,12 +143,8 @@ export function OnboardingAnimation() {
   // Loop Logic
   const [index, setIndex] = useState(0);
 
-  // Dynamic duration calculation: roughly 3s per message pair + transitions
-  // But to keep it simple and consistent, we'll use a fixed longer duration
-  // Or better, let the ChatSequence component verify when it's done.
-  // For now, let's use a safe fixed interval that accommodates 4 messages.
-  // 4 messages * ~2.5s avg = 10s + buffer = 12s.
-  const SCENARIO_DURATION = 14000;
+  // 10 seconds fixed duration per card
+  const SCENARIO_DURATION = 10000;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -154,7 +158,7 @@ export function OnboardingAnimation() {
 
   return (
     <div
-      className="hidden lg:flex flex-col items-center justify-center bg-zinc-950 text-white p-12 relative overflow-hidden h-full w-full perspective-1000"
+      className="hidden lg:flex flex-col items-center justify-center bg-zinc-950 text-white p-12 relative overflow-hidden h-full w-full perspective-1000 gap-12"
       onMouseMove={onMouseMove}
       style={{ perspective: 1000 }}
     >
@@ -169,12 +173,24 @@ export function OnboardingAnimation() {
                 ? "from-blue-950/40 via-sky-950/20 to-zinc-950"
                 : scenario.color === "orange"
                   ? "from-orange-950/40 via-amber-950/20 to-zinc-950"
-                  : scenario.color === "rose"
-                    ? "from-rose-950/40 via-pink-950/20 to-zinc-950"
-                    : "from-purple-950/40 via-indigo-950/20 to-zinc-950"
+                  : scenario.color === "teal"
+                    ? "from-teal-950/40 via-emerald-950/20 to-zinc-950"
+                    : "from-indigo-950/40 via-violet-950/20 to-zinc-950"
           }
         `}
       />
+
+      {/* Main Heading */}
+      <div className="z-20 text-center px-8">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-3xl font-medium tracking-tight text-zinc-100 max-w-[420px] mx-auto"
+        >
+          Make your customers happier and your business more profitable.
+        </motion.h2>
+      </div>
 
       {/* Main Card */}
       <motion.div
@@ -192,9 +208,9 @@ export function OnboardingAnimation() {
                   ? "bg-blue-500/20"
                   : scenario.color === "orange"
                     ? "bg-orange-500/20"
-                    : scenario.color === "rose"
-                      ? "bg-rose-500/20"
-                      : "bg-purple-500/20"
+                    : scenario.color === "teal"
+                      ? "bg-teal-500/20"
+                      : "bg-indigo-500/20"
             }
             `}
           animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
@@ -228,7 +244,7 @@ export function OnboardingAnimation() {
           </div>
 
           {/* Chat Area */}
-          <div className="p-6 flex-1 relative flex flex-col justify-end">
+          <div className="flex-1 relative flex flex-col justify-end">
             <AnimatePresence mode="wait">
               <ChatSequence key={scenario.id} scenario={scenario} />
             </AnimatePresence>
@@ -242,194 +258,85 @@ export function OnboardingAnimation() {
 const ChatSequence = ({ scenario }: { scenario: Scenario }) => {
   return (
     <motion.div
-      className="w-full h-full flex flex-col justify-end space-y-4"
+      className="w-full h-full flex flex-col justify-between"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
-      {scenario.messages.map((msg, i) => (
-        <MessageBubble
-          key={i}
-          message={msg}
-          index={i}
-          scenarioColor={scenario.color}
-        />
-      ))}
+      <div className="p-6 space-y-4">
+        {scenario.messages.map((msg, i) => (
+          <MessageBubble
+            key={i}
+            message={msg}
+            scenarioColor={scenario.color}
+          />
+        ))}
+      </div>
 
-      {/* Tag/Status Badge appears at the end */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: scenario.messages.length * 2.8 + 1,
-          duration: 0.4,
-        }}
-        className="self-center pt-2"
-      >
-        <div
-          className={`
-            flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium border uppercase tracking-wider
-            ${scenario.color === "cyan"
-              ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
-              : scenario.color === "emerald"
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                : scenario.color === "blue"
-                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                  : scenario.color === "orange"
-                    ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
-                    : scenario.color === "rose"
-                      ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                      : "bg-purple-500/10 text-purple-400 border-purple-500/20"
-            }
-            `}
-        >
-          {scenario.icon}
-          {scenario.tag}
+      {/* Chips Area */}
+      <div className="px-6 pb-6 pt-2">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {scenario.chips.map((chip, i) => (
+            <div
+              key={i}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border
+                ${scenario.color === "cyan"
+                  ? "bg-cyan-500/5 text-cyan-300 border-cyan-500/10"
+                  : scenario.color === "emerald"
+                    ? "bg-emerald-500/5 text-emerald-300 border-emerald-500/10"
+                    : scenario.color === "blue"
+                      ? "bg-blue-500/5 text-blue-300 border-blue-500/10"
+                      : scenario.color === "orange"
+                        ? "bg-orange-500/5 text-orange-300 border-orange-500/10"
+                        : scenario.color === "teal"
+                          ? "bg-teal-500/5 text-teal-300 border-teal-500/10"
+                          : "bg-indigo-500/5 text-indigo-300 border-indigo-500/10"
+                }
+              `}
+            >
+              <CheckCircle2 className="w-3 h-3 opacity-70" />
+              {chip}
+            </div>
+          ))}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };
 
 const MessageBubble = ({
   message,
-  index,
   scenarioColor,
 }: {
   message: Message;
-  index: number;
   scenarioColor: string;
 }) => {
-  // Staggered delay logic
-  // Each message pair (User+Agent) takes roughly 5-6 seconds.
-  // We want User -> (pause) -> Agent (typing) -> Agent (msg).
-  // Simple delay formula: index * 2.8s
-  const DELAY = index * 2.8;
-
   const isAgent = message.role === "agent";
 
   return (
-    <>
-      {isAgent && (
-        <TypingIndicator
-          delay={DELAY - 1.2} // Start typing before message appears
-          duration={1.2} // Type for 1.2s
-        />
-      )}
-      <motion.div
-        initial={{ opacity: 0, x: isAgent ? -20 : 20, y: 10 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ delay: DELAY, duration: 0.5, ease: "easeOut" }}
-        className={`flex ${isAgent ? "justify-start" : "justify-end"} w-full`}
-      >
-        <div
-          className={`
+    <div
+      className={`flex ${isAgent ? "justify-start" : "justify-end"} w-full`}
+    >
+      <div
+        className={`
             max-w-[85%] text-[13px] leading-relaxed shadow-lg relative
             ${isAgent
-              ? "bg-zinc-900/60 backdrop-blur-md border border-white/10 text-zinc-300 rounded-2xl rounded-tl-sm px-4 py-3"
-              : "bg-zinc-800/80 backdrop-blur-md border border-white/5 text-zinc-200 rounded-2xl rounded-tr-sm px-4 py-3"
-            }
+            ? "bg-zinc-900/60 backdrop-blur-md border border-white/10 text-zinc-300 rounded-2xl rounded-tl-sm px-4 py-3"
+            : "bg-zinc-800/80 backdrop-blur-md border border-white/5 text-zinc-200 rounded-2xl rounded-tr-sm px-4 py-3"
+          }
         `}
-        >
-          {isAgent && (
-            <div
-              className={`absolute inset-0 bg-gradient-to-br from-${scenarioColor}-500/10 to-transparent pointer-events-none rounded-2xl rounded-tl-sm`}
-            />
-          )}
-          <div className="relative z-10">
-            <TypewriterText
-              text={message.text}
-              delay={DELAY + 0.1}
-              speed={25}
-            />
-          </div>
+      >
+        {isAgent && (
+          <div
+            className={`absolute inset-0 bg-gradient-to-br from-${scenarioColor}-500/10 to-transparent pointer-events-none rounded-2xl rounded-tl-sm`}
+          />
+        )}
+        <div className="relative z-10">
+          <span>{message.text}</span>
         </div>
-      </motion.div>
-    </>
-  );
-};
-
-const TypewriterText = ({
-  text,
-  delay = 0,
-  speed = 30,
-}: {
-  text: string;
-  delay?: number;
-  speed?: number;
-}) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const startTimeout = setTimeout(() => {
-      setStarted(true);
-    }, delay * 1000);
-
-    return () => clearTimeout(startTimeout);
-  }, [delay]);
-
-  useEffect(() => {
-    if (!started) return;
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText(text.substring(0, i + 1));
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, speed);
-
-    return () => clearInterval(interval);
-  }, [started, text, speed]);
-
-  return <span>{displayedText}</span>;
-};
-
-const TypingIndicator = ({
-  delay,
-  duration,
-}: {
-  delay: number;
-  duration: number;
-}) => {
-  const [visible, setVisible] = useState(false);
-  const [removed, setRemoved] = useState(false);
-
-  useEffect(() => {
-    const showTimer = setTimeout(() => setVisible(true), delay * 1000);
-    const hideTimer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(() => setRemoved(true), 300); // Allow exit animation
-    }, (delay + duration) * 1000);
-
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [delay, duration]);
-
-  if (removed) return null;
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="flex justify-start w-full mb-2"
-        >
-          <div className="bg-transparent border border-white/10 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-            <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-            <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" />
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   );
 };
