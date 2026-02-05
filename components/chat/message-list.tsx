@@ -100,7 +100,6 @@ export const MessageList = ({
                   key={message.id ?? index}
                   message={message}
                   isLast={isLastAssistantMessage}
-                  brandColor={brandColor}
                 />
               );
             }
@@ -217,46 +216,35 @@ ToolBadge.displayName = "ToolBadge";
 
 interface MessagePartsProps {
   parts: IChatMessage["parts"];
-  brandColor: string;
   isLast: boolean;
 }
 
-const MessageParts = memo(
-  ({ parts, brandColor, isLast }: MessagePartsProps) => (
+const MessageParts = memo(({ parts, isLast }: MessagePartsProps) => {
+  const hasPendingToolCall =
+    isLast &&
+    parts?.some((part, index) => {
+      const nextParts = parts.slice(index + 1);
+      const hasSubsequentText = nextParts.some(
+        (p) => p.type === "text" && p.text && p.text.length > 0
+      );
+
+      if (part.type?.startsWith("tool-")) {
+        return !hasSubsequentText;
+      }
+
+      if (part.type === "dynamic-tool") {
+        const toolPart = part as { state?: string };
+        const isToolCalling =
+          toolPart.state === "call" || toolPart.state === "partial-call";
+        return isToolCalling && !hasSubsequentText;
+      }
+
+      return false;
+    });
+
+  return (
     <>
       {parts?.map((part, index) => {
-        if (
-          part.type === "tool-collectInformation" ||
-          part.type === "tool-searchKnowledge"
-        ) {
-          const nextParts = parts.slice(index + 1);
-          const hasSubsequentText = nextParts.some(
-            (p) => p.type === "text" && p.text && p.text.length > 0
-          );
-
-          if (isLast && !hasSubsequentText) {
-            return <MessageLoading key={index} style={{ padding: 0 }} />;
-          }
-          return null;
-        }
-
-        // Handle dynamic-tool parts - show loading when tool is being called
-        if (part.type === "dynamic-tool") {
-          const toolPart = part as { state?: string };
-          const isToolCalling = toolPart.state === "call" || toolPart.state === "partial-call";
-
-          const nextParts = parts.slice(index + 1);
-          const hasSubsequentText = nextParts.some(
-            (p) => p.type === "text" && p.text && p.text.length > 0
-          );
-
-          // Show loading if tool is being called and no text follows
-          if (isLast && isToolCalling && !hasSubsequentText) {
-            return <MessageLoading key={index} style={{ padding: 0 }} />;
-          }
-          return null;
-        }
-
         if (part.type === "text") {
           return (
             <div
@@ -272,9 +260,10 @@ const MessageParts = memo(
 
         return null;
       })}
+      {hasPendingToolCall && <MessageLoading style={{ padding: 0 }} />}
     </>
-  )
-);
+  );
+});
 
 MessageParts.displayName = "MessageParts";
 
@@ -316,36 +305,29 @@ LoadingIndicator.displayName = "LoadingIndicator";
 interface AssistantMessageProps {
   message: IChatMessage;
   isLast: boolean;
-  brandColor: string;
 }
 
-const AssistantMessage = memo(
-  ({ message, isLast, brandColor }: AssistantMessageProps) => (
-    <div>
-      <div className="flex justify-start">
-        <div
-          className={clsx(
-            "max-w-[90%] md:max-w-[75%]",
-            getMessageStyle(message, "assistant")
-          )}
-        >
-          <MessageParts
-            parts={message.parts}
-            brandColor={brandColor}
-            isLast={isLast}
-          />
-        </div>
+const AssistantMessage = memo(({ message, isLast }: AssistantMessageProps) => (
+  <div>
+    <div className="flex justify-start">
+      <div
+        className={clsx(
+          "max-w-[90%] md:max-w-[75%]",
+          getMessageStyle(message, "assistant")
+        )}
+      >
+        <MessageParts parts={message.parts} isLast={isLast} />
       </div>
-      {isLast && (
-        <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
-          <p className="text-xs text-muted-foreground">
-            {formatTime(message.metadata?.createdAt ?? "")}
-          </p>
-        </div>
-      )}
     </div>
-  )
-);
+    {isLast && (
+      <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
+        <p className="text-xs text-muted-foreground">
+          {formatTime(message.metadata?.createdAt ?? "")}
+        </p>
+      </div>
+    )}
+  </div>
+));
 
 AssistantMessage.displayName = "AssistantMessage";
 

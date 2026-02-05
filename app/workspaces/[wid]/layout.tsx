@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   Rss,
   Settings2,
-  Code,
   Shield,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
@@ -178,12 +177,6 @@ const navigation = [
     icon: Zap,
   },
   {
-    title: "Integrations",
-    href: "/integrations",
-    icon: Code,
-  },
-
-  {
     title: "Settings",
     href: "/settings",
     icon: Settings2,
@@ -246,7 +239,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         >
           {!isCollapsed && (
             <>
-              <h2 className="font-medium truncate">Magical CX</h2>
+              <h2 className="font-medium truncate">MagicalCX</h2>
               <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
               {/* <img
                 src={"/logos/magicalcx-icon-trans-dark.png"}

@@ -24,6 +24,20 @@ export function handleError(error: Error) {
   toast.error(error.message);
 }
 
+export const copyShareUrl = async (aid: string): Promise<boolean> => {
+  const url = `${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }/share/${aid}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("Share link copied to clipboard");
+    return true;
+  } catch {
+    toast.error("Failed to copy");
+    return false;
+  }
+};
+
 export function formatDate(date?: string) {
   if (!date) return "";
   return format(new Date(date), "dd MMM yyyy");

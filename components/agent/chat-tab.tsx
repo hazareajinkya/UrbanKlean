@@ -32,7 +32,7 @@ export default function ChatTab({ agent }: ChatTabProps) {
                 src={`/chat/${agent.id}?fromPage=${fromPage}`}
                 className="w-[355px] h-[647px] border-0"
                 title={`Chat interface for ${agent.customization.name}`}
-                sandbox="allow-scripts allow-same-origin allow-forms"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
               />
             </div>
           </div>
