@@ -102,7 +102,7 @@ const pricingFaqData = [
 export const PricingFaq = () => {
   return (
     <section className="section-container border-t max-w-4xl w-full mx-auto border-x py-16 md:py-20 bg-muted/30">
-      <div className="max-w-3xl mx-auto px-6">
+      <div className="max-w-3xl mx-auto px-4 md:px-6">
         <div className="text-center mb-12 space-y-4">
           <h2 className="section-heading">Pricing FAQs</h2>
           <p className="section-subheadline">
@@ -115,7 +115,7 @@ export const PricingFaq = () => {
             <AccordionItem
               key={i}
               value={`item-${i}`}
-              className="border border-border bg-background rounded-lg px-6 overflow-hidden transition-all mb-2 last:mb-0 last:border-b"
+              className="border border-border bg-card rounded-lg px-4 md:px-6 overflow-hidden transition-all mb-2 last:mb-0 last:border-b"
             >
               <AccordionTrigger className="text-left text-base md:text-lg text-foreground hover:no-underline py-5 transition-colors cursor-pointer">
                 {item.question}

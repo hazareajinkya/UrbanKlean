@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useScroll } from "framer-motion";
 import { Navbar } from "@/components/landing/navbar";
+import { LifetimeBanner } from "@/components/landing/lifetime-banner";
 import { HeroSection } from "@/components/landing/hero-section";
 import { OldNewWay } from "@/components/landing/old-new-way";
 import { HowItWorks } from "@/components/landing/how-it-works";
@@ -11,10 +12,12 @@ import { WhyChooseUs } from "@/components/landing/why-choose-us";
 import { Footer } from "@/components/landing/footer";
 import { CtaSection } from "@/components/landing/cta-section";
 import { FaqSection } from "@/components/landing/faq-section";
+import { cn } from "@/lib/utils";
 
 export const HomepageClientWrapper = () => {
   const whyRef = useRef(null);
   const ctaRef = useRef(null);
+  const [bannerVisible, setBannerVisible] = useState(false);
 
   const { scrollYProgress: whyRefProgress } = useScroll({
     target: whyRef,
@@ -28,18 +31,31 @@ export const HomepageClientWrapper = () => {
 
   return (
     <>
-      <Navbar whyRefProgress={whyRefProgress} ctaRefProgress={ctaRefProgress} />
-      <HeroSection />
-      <OldNewWay />
-      <FeaturesSection />
-      <div className="bg-background dark" ref={whyRef}>
-        <WhyChooseUs />
+      <div className="fixed top-0 left-0 right-0 z-50 w-full">
+        <LifetimeBanner
+          onVisibilityChange={setBannerVisible}
+          whyRefProgress={whyRefProgress}
+          ctaRefProgress={ctaRefProgress}
+        />
+        <Navbar
+          whyRefProgress={whyRefProgress}
+          ctaRefProgress={ctaRefProgress}
+          inFixedContainer
+        />
       </div>
-      <HowItWorks />
-      <FaqSection />
-      <div className="bg-background dark" ref={ctaRef}>
-        <CtaSection />
-        <Footer />
+      <div className={cn("pt-10", bannerVisible && "pt-20")}>
+        <HeroSection />
+        <OldNewWay />
+        <FeaturesSection />
+        <div className="bg-background dark" ref={whyRef}>
+          <WhyChooseUs />
+        </div>
+        <HowItWorks />
+        <FaqSection />
+        <div className="bg-background dark" ref={ctaRef}>
+          <CtaSection />
+          <Footer />
+        </div>
       </div>
     </>
   );

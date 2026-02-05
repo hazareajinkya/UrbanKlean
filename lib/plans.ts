@@ -30,17 +30,57 @@ export const PLANS = {
       },
     ],
     features: [
-      "Everything in All in One",
-      "AI Revenue Engine (EFRO)",
-      "Automations (refunds, exchanges, cancellations)",
-      "Zero-Repetition Memory",
-      "Workflows",
-      "Deep Commerce Integrations",
-      "Priority Response Model",
-      "Insights Dashboard",
-      "Brand Guardrails",
-      "Unlimited Agents",
-      "API Access",
+      {
+        label: "10,000 messages/month",
+        tooltip: "Includes 10,000 AI messages each month. Add credits anytime.",
+      },
+      {
+        label: "EFRO revenue engine",
+        tooltip: "Turns support into sales with helpful, timely upsells.",
+      },
+      {
+        label: "Unlimited agents",
+        tooltip:
+          "Create unlimited agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Omnichannel inbox",
+        tooltip:
+          "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
+      },
+      {
+        label: "Zero-repeat memory",
+        tooltip: "Remembers past conversations so customers never repeat info.",
+      },
+      {
+        label: "Workflows + actions",
+        tooltip: "Automate refunds, cancellations, bookings, and call APIs.",
+      },
+      {
+        label: "CRM + identity resolution",
+        tooltip: "Auto-built customer profiles merged across channels.",
+      },
+      {
+        label: "Insights + weekly reports",
+        tooltip:
+          "Dashboard and weekly summaries for questions, sentiment, and wins.",
+      },
+      {
+        label: "White-glove onboarding",
+        tooltip: "We help set up, train, and launch your agent fast.",
+      },
+      {
+        label: "Phishing protection",
+        tooltip: "Detects sensitive requests and blocks data leaks.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip: "Website scrape, PDFs, teach mode, and embeddings.",
+      },
     ],
   },
   lifetime: {
@@ -61,18 +101,61 @@ export const PLANS = {
       },
     ],
     features: [
-      "Lifetime Access to MagicalCX",
-      "AI Revenue Engine (EFRO)",
-      "Automations (refunds, exchanges, cancellations)",
-      "Zero-Repetition Memory",
-      "Workflows",
-      "Deep Commerce Integrations",
-      "Priority Response Model",
-      "Insights Dashboard",
-      "Brand Guardrails",
-      "Unlimited Agents",
-      "API Access",
-      "10,000 messages included",
+      {
+        label: "10,000 messages/month",
+        tooltip: "Includes 10,000 AI messages each month. Add credits anytime.",
+      },
+      {
+        label: "Lifetime access",
+        tooltip: "One-time payment for lifetime access to MagicalCX.",
+      },
+      {
+        label: "EFRO revenue engine",
+        tooltip: "Turns support into sales with helpful, timely upsells.",
+      },
+      {
+        label: "Unlimited agents",
+        tooltip:
+          "Create unlimited agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Omnichannel inbox",
+        tooltip:
+          "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
+      },
+      {
+        label: "Zero-repeat memory",
+        tooltip: "Remembers past conversations so customers never repeat info.",
+      },
+      {
+        label: "Workflows + actions",
+        tooltip: "Automate refunds, cancellations, bookings, and call APIs.",
+      },
+      {
+        label: "CRM + identity resolution",
+        tooltip: "Auto-built customer profiles merged across channels.",
+      },
+      {
+        label: "Insights + weekly reports",
+        tooltip:
+          "Dashboard and weekly summaries for questions, sentiment, and wins.",
+      },
+      {
+        label: "White-glove onboarding",
+        tooltip: "We help set up, train, and launch your agent fast.",
+      },
+      {
+        label: "Phishing protection",
+        tooltip: "Detects sensitive requests and blocks data leaks.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip: "Website scrape, PDFs, teach mode, and embeddings.",
+      },
     ],
   },
 } as const;

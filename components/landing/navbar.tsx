@@ -21,9 +21,11 @@ import { useSession } from "next-auth/react";
 export const Navbar = ({
   whyRefProgress,
   ctaRefProgress,
+  inFixedContainer,
 }: {
   whyRefProgress?: MotionValue<number>;
   ctaRefProgress?: MotionValue<number>;
+  inFixedContainer?: boolean;
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -127,9 +129,11 @@ export const Navbar = ({
   return (
     <>
       <nav
-        className={`w-full bg-background/80 backdrop-blur-md border-b fixed top-0 left-0 z-50 transition-colors duration-300 ${
+        className={cn(
+          "w-full bg-background/80 backdrop-blur-md border-b transition-colors duration-300",
+          !inFixedContainer && "fixed top-0 left-0 z-50",
           isInside && "dark"
-        }`}
+        )}
       >
         <div
           className={`section-container py-2 px-4 pr-2 md:px-6 lg:px-4 flex items-center justify-between`}
@@ -240,6 +244,15 @@ export const Navbar = ({
             exit="exit"
             className="fixed inset-0 top-0 z-40 bg-background/98 backdrop-blur-3xl md:hidden flex flex-col pt-24"
           >
+            <button
+              type="button"
+              onClick={handleCloseMenu}
+              aria-label="Close menu"
+              tabIndex={0}
+              className="absolute right-4 top-4 rounded-full p-2 text-foreground transition-colors hover:bg-muted"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </button>
             <div className="flex flex-col px-8 gap-6 w-full max-w-lg mx-auto h-full overflow-y-auto pb-10">
               {navLinks.map((link, i) => {
                 const isActive =

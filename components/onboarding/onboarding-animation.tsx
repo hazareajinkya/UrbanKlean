@@ -188,7 +188,7 @@ export function OnboardingAnimation() {
       />
 
       {/* Main Heading */}
-      <div className="z-20 text-center px-8">
+      {/* <div className="z-20 text-center px-8">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,7 +197,7 @@ export function OnboardingAnimation() {
         >
           Make your customers happier and your business more profitable.
         </motion.h2>
-      </div>
+      </div> */}
 
       {/* Main Card */}
       <motion.div

@@ -30,11 +30,15 @@ export const UrlInputForm = ({
 
   return (
     <div
-      className={`w-full max-w-lg px-4 relative z-10 ${compactOnMobile ? "w-max max-w-none sm:w-full sm:max-w-lg" : ""} ${className}`}
+      className={`w-full max-w-lg px-4 relative z-10 ${
+        compactOnMobile ? "w-max max-w-none sm:w-full sm:max-w-lg" : ""
+      } ${className}`}
     >
       <form onSubmit={onSubmit} className="relative group w-full">
         <div
-          className={`absolute inset-y-0 left-3 items-center pointer-events-none ${compactOnMobile ? "hidden sm:flex" : "flex"}`}
+          className={`absolute inset-y-0 left-3 items-center pointer-events-none ${
+            compactOnMobile ? "hidden sm:flex" : "flex"
+          }`}
         >
           <Globe className="h-5 w-5 text-muted-foreground/50 group-focus-within:text-primary/50 transition-colors" />
         </div>
@@ -42,7 +46,9 @@ export const UrlInputForm = ({
         <input
           type="text"
           placeholder="Enter your website URL"
-          className={`w-full h-14 pl-10 pr-32 rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base ${compactOnMobile ? "hidden sm:block" : ""}`}
+          className={`w-full h-14 pl-10 pr-32 rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base ${
+            compactOnMobile ? "hidden sm:block" : ""
+          }`}
           value={url}
           onChange={(e) => {
             setUrl(e.target.value);
@@ -63,15 +69,17 @@ export const UrlInputForm = ({
             className={`${buttonBaseClassName} w-max sm:hidden`}
             onClick={onCompactClick}
           >
-            Get Started
+            Try Free Demo
             <ArrowRight className="size-4" />
           </button>
         )}
         <button
           type="submit"
-          className={`${buttonBaseClassName} absolute right-1.5 top-1.5 ${compactOnMobile ? "hidden sm:flex" : ""}`}
+          className={`${buttonBaseClassName} absolute right-1.5 top-1.5 ${
+            compactOnMobile ? "hidden sm:flex" : ""
+          }`}
         >
-          Get Started
+          Try Free Demo
           <ArrowRight className="size-4" />
         </button>
       </form>

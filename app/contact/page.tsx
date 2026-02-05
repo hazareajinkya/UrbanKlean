@@ -61,7 +61,7 @@ export default function ContactPage() {
             <div className="bg-gray-900 p-2 rounded-2xl shadow-2xl max-w-full">
               <div className="bg-white rounded-xl overflow-hidden">
                 <iframe
-                  src={`https://www.magicalcx.com/chat/c0e54882-04fc-489e-975b-e2b7edbf2adf`}
+                  src={`https://www.magicalcx.com/chat/5be36366-8f3d-46c3-b0c7-37f67abbc1a9`}
                   className="w-[355px] h-[647px] border-0 max-w-full"
                   title={`Magical CX`}
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"

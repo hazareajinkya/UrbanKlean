@@ -4,17 +4,16 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { Zap, ArrowRight } from "lucide-react";
+import { Check } from "lucide-react";
+import { useDemoModal } from "@/components/landing/demo-modal";
 import { useRouter } from "next/navigation";
 
 export default function SharePage() {
   const params = useParams();
   const id = params.id;
   const router = useRouter();
-  const onTrialStart = () => {
-    router.push(`/pricing`);
-  };
+  const { openDemoModal } = useDemoModal();
+  const onTrialStart = () => router.push(`/pricing`);
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
@@ -23,21 +22,78 @@ export default function SharePage() {
       <main className="flex-grow pt-20 pb-8 sm:pt-24 sm:pb-16 border-x section-container section-content-padding w-full flex flex-col justify-center">
         {/* Mobile: Compact header above iframe */}
         <div className="lg:hidden text-center mb-4 px-2">
-          <h1 className="text-2xl sm:text-3xl tracking-tight mb-2">
-            Try it live
+          <h1 className="text-2xl sm:text-3xl mb-2">
+            Meet your AI customer experience agent
           </h1>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-            Chat with this AI agent built on Magical CX
+            You&apos;re testing a free demo agent trained only on your public
+            website. It&apos;s a preview.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-24 items-center max-w-6xl mx-auto w-full">
           {/* Left Column: Text & CTA - Hidden on mobile, shown on desktop */}
+          <div className="hidden lg:flex flex-col items-start text-left space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-4xl leading-normal">
+                Meet your AI customer experience agent
+              </h1>
+              <p className="text-base sm:text-base text-muted-foreground max-w-xl leading-relaxed">
+                You&apos;re testing a free demo agent trained only on your
+                public website. It&apos;s a preview. The full MagicalCX setup
+                adds your policies + integrations + memory, so it feels human
+                and performs 10x better in real customer conversations.
+              </p>
+            </div>
 
-          {/* Center/Right Column: Mobile Frame */}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-lg rounded-full group"
+                  onClick={onTrialStart}
+                >
+                  Start 14‑Day Trial
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-lg rounded-full"
+                  onClick={openDemoModal}
+                >
+                  Talk to Us
+                </Button>
+              </div>
+              <p className="text-sm mt-4 text-muted-foreground">
+                Enjoy 40+ features of MagicalCX for Free for 14 days
+              </p>
+            </div>
+
+            <div className="flex gap-8 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>14 days free trial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Cancel Anytime</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: iframe */}
           <div className="flex justify-center lg:justify-end w-full">
             <div className="relative">
-              {/* Glow effect - smaller on mobile */}
               <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-60" />
               <div className="relative bg-gray-900 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl shadow-2xl">
                 <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden">
@@ -51,72 +107,59 @@ export default function SharePage() {
               </div>
             </div>
           </div>
-          <div className="hidden lg:flex flex-col items-start text-left space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl tracking-tight">
-                Experience the future of customer support.
-              </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed">
-                You're viewing a live AI agent built with Magical CX. Start your
-                14 day trial and create your own intelligent support experience.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="px-8 py-6 text-lg rounded-full group"
-                onClick={onTrialStart}
-              >
-                <Zap className="h-5 w-5 mr-2" />
-                Start 14 Day Trial
-                <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </div>
-
-            <div className="flex gap-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span>14 day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span>No credit card required</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Mobile: CTA section below iframe */}
         <div className="lg:hidden mt-6 px-2">
-          <div className="bg-muted/50 rounded-2xl p-4 sm:p-6 space-y-4">
-            <div className="text-center space-y-2">
-              <h2 className="text-lg sm:text-xl">Want your own AI agent?</h2>
+          <div className="bg-muted/50 rounded-2xl p-2 sm:p-6 space-y-4">
+            <div className="text-balance text-center space-y-2">
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Start your 14 day trial and create intelligent support
+                You&apos;re testing a free demo agent trained only on your
+                public website. It&apos;s a preview. The full MagicalCX setup
+                adds your policies + integrations + memory, so it feels human
+                and performs 10x better in real customer conversations.
               </p>
             </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col gap-3">
               <Button
                 size="lg"
-                className="px-6 py-5 text-base rounded-full group"
+                className="w-full py-5 text-base rounded-full group"
                 onClick={onTrialStart}
               >
-                <Zap className="h-4 w-4 mr-2" />
-                Start 14 Day Trial
-                <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                Start 14‑Day Trial
               </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full py-5 text-base rounded-full"
+                onClick={openDemoModal}
+              >
+                Talk to Us
+              </Button>
+              <p className="text-xs text-center sm:text-left text-muted-foreground">
+                Enjoy 40+ features of MagicalCX for Free for 14 days
+              </p>
             </div>
 
-            <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-1">
+            <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-1 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                <span>14 day free trial</span>
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>14 days free trial</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                <span>No credit card</span>
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Cancel Anytime</span>
               </div>
             </div>
           </div>
