@@ -30,7 +30,7 @@ export const useKnowledgeActions = () => {
       urls,
     }: {
       wid: string;
-      urls: { folderId: string; url: string }[];
+      urls: { folderId: string; url: string, folderName: string }[];
     }) => {
       await axiosClient.post(`/api/embeddings/${wid}/web/multi`, {
         urls,

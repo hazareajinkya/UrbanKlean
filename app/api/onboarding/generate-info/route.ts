@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { url, email } = onboardingStartSchema.parse(body);
-    console.log(url, email);
+
 
     if (email) {
       const docs = await getDocs(
@@ -33,16 +33,12 @@ export async function POST(req: NextRequest) {
       if (!docs.empty) {
         return errorResponse("This email is already registered.", 409);
       }
+      const ip = getClientIp(req);
+      const { success } = await ratelimit.limit(ip);
+      if (!success) {
+        return errorResponse("Too many requests. Please wait a minute and try again.", 429);
+      }
     }
-    console.log("Rate limiting...");
-    const ip = getClientIp(req);
-    const { success } = await ratelimit.limit(ip);
-
-    console.log("Rate limiting result:", success);
-    if (!success) {
-      return errorResponse("Too many requests. Please wait a minute and try again.", 429);
-    }
-    console.log("Generating onboarding info...");
     const response = await backendClient.post(
       "/onboard/generate-onboarding-info",
       {

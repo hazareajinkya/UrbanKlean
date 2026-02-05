@@ -19,7 +19,7 @@ import {
   cn,
 } from "@/lib/utils";
 import { useOnboardingActions } from "@/lib/hooks/onboarding/use-onboarding-actions";
-import { Loader, PartyPopper, Timer } from "lucide-react";
+import { Loader, PartyPopper, Shield, Timer } from "lucide-react";
 import { OnboardingData } from "@/lib/types/onboarding";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
 import { OnboardingAnimation } from "@/components/onboarding/onboarding-animation";
@@ -165,110 +165,146 @@ function OnboardingContent() {
 
   return (
     <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-      <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white">
-        <div className="max-w-md w-full mx-auto">
+      <div
+        className={cn(
+          "flex min-h-screen flex-col px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white",
+          phase !== "form" && "justify-center"
+        )}
+      >
+        <div
+          className={cn(
+            "max-w-md w-full mx-auto",
+            phase === "form" && "flex flex-1 min-h-0 flex-col"
+          )}
+        >
           {phase === "form" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div>
-                <h1 className="text-3xl font-medium leading-normal text-foreground mb-3 ">
-                  See it work for your business before you pay a penny
-                </h1>
-                <p className="text-muted-foreground text-base ">
-                  We'll create your personalized demo trained on{" "}
-                  <span className="font-medium ">
-                    {getCompanyNameFromDomain(domain)}
-                  </span>
-                  . No credit card needed.
-                </p>
+            <div className="flex flex-1 min-h-0 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex flex-1 flex-col justify-center">
+                <div className="space-y-8">
+                  <div>
+                    <h1 className="text-3xl font-medium leading-normal text-foreground mb-3 ">
+                      See it work for your business before you pay a penny
+                    </h1>
+                    <p className="text-muted-foreground text-base ">
+                      We'll create your personalized demo trained on{" "}
+                      <span className="font-medium ">
+                        {getCompanyNameFromDomain(domain)}
+                      </span>
+                      . No credit card needed.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-sm font-medium">
+                        Work Email
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        onChange={handleEmailChange}
+                        autoFocus
+                        onBlur={() => validateEmail(email)}
+                        className={cn(
+                          "h-11 transition-all",
+                          emailError &&
+                            "border-destructive focus-visible:ring-destructive/20"
+                        )}
+                      />
+                      {emailError && (
+                        <p className="text-destructive text-xs">{emailError}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="domain" className="text-sm font-medium">
+                        Company website
+                      </Label>
+                      <InputGroup className="h-11">
+                        <InputGroupAddon
+                          align="inline-start"
+                          className="bg-muted/30"
+                        >
+                          <span className="text-muted-foreground text-sm">
+                            https://
+                          </span>
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          id="domain"
+                          value={domain}
+                          onChange={handleDomainChange}
+                          onPaste={handleDomainPaste}
+                          onBlur={() => validateDomainInput(domain)}
+                          placeholder="yourcompany.com"
+                          className={cn(domainError && "border-destructive")}
+                        />
+                      </InputGroup>
+                      {domainError && (
+                        <p className="text-destructive text-xs">
+                          {domainError}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full font-medium h-11 text-base shadow-sm hover:shadow-md transition-all"
+                      disabled={startOnboarding.isPending}
+                    >
+                      {startOnboarding.isPending ? (
+                        <>
+                          <Loader className="size-5 animate-spin" />
+                          Initializing...
+                        </>
+                      ) : (
+                        "Build My AI Agent"
+                      )}
+                    </Button>
+                    <div className="text-sm text-muted-foreground">
+                      <ul className="mt-1.5 flex flex-row flex-wrap justify-center gap-x-4 gap-y-1">
+                        <li className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>Custom trained chatbot</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>Shareable demo link</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>No credit card needed</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </form>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Work Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    value={email}
-                    onChange={handleEmailChange}
-                    autoFocus
-                    onBlur={() => validateEmail(email)}
-                    className={cn(
-                      "h-11 transition-all",
-                      emailError &&
-                        "border-destructive focus-visible:ring-destructive/20"
-                    )}
-                  />
-                  {emailError && (
-                    <p className="text-destructive text-xs">{emailError}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="domain" className="text-sm font-medium">
-                    Company website
-                  </Label>
-                  <InputGroup className="h-11">
-                    <InputGroupAddon
-                      align="inline-start"
-                      className="bg-muted/30"
-                    >
-                      <span className="text-muted-foreground text-sm">
-                        https://
-                      </span>
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      id="domain"
-                      value={domain}
-                      onChange={handleDomainChange}
-                      onPaste={handleDomainPaste}
-                      onBlur={() => validateDomainInput(domain)}
-                      placeholder="yourcompany.com"
-                      className={cn(domainError && "border-destructive")}
-                    />
-                  </InputGroup>
-                  {domainError && (
-                    <p className="text-destructive text-xs">{domainError}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full font-medium h-11 text-base shadow-sm hover:shadow-md transition-all"
-                  disabled={startOnboarding.isPending}
-                >
-                  {startOnboarding.isPending ? (
-                    <>
-                      <Loader className="size-5 animate-spin" />
-                      Initializing...
-                    </>
-                  ) : (
-                    // "Continue"
-                    "Build My AI Agent"
-                  )}
-                </Button>
-              </form>
-
-              <p className="text-center text-xs text-muted-foreground">
-                By continuing, you agree to our{" "}
-                <Link
-                  href="/legal/terms"
-                  className="text-foreground hover:underline underline-offset-4 transition-colors"
-                >
-                  Terms
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/legal/privacy"
-                  className="text-foreground hover:underline underline-offset-4 transition-colors"
-                >
-                  Privacy Policy
-                </Link>
-                .
-              </p>
+              <section className="mt-auto border-t border-muted/50 pt-6 space-y-4">
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                  We only use publicly available pages to train your AI agent
+                </p>
+                <p className="text-center text-xs text-muted-foreground">
+                  By continuing, you agree to our{" "}
+                  <Link
+                    href="/legal/terms"
+                    className="font-medium hover:underline underline-offset-4 transition-colors"
+                  >
+                    Terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/legal/privacy"
+                    className="font-medium hover:underline underline-offset-4 transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              </section>
             </div>
           )}
 
@@ -303,7 +339,7 @@ function OnboardingContent() {
                     ? `${onboardingData.companyName}'s AI Agent is Being Created`
                     : "Your AI Agent is Being Created"}
                 </h1>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-muted-foreground leading-8">
                   We're training your AI support agent
                   {onboardingData.companyName && (
                     <>
@@ -324,7 +360,7 @@ function OnboardingContent() {
                       space
                     </>
                   )}
-                  {onboardingData.targetAudience && (
+                  {/* {onboardingData.targetAudience && (
                     <>
                       , optimized to serve{" "}
                       <span className="font-medium text-gray-900">
@@ -334,7 +370,7 @@ function OnboardingContent() {
                         {onboardingData.targetAudience.length > 60 ? "..." : ""}
                       </span>
                     </>
-                  )}
+                  )} */}
                   . You'll receive an email at{" "}
                   <span className="font-medium text-gray-900">{email}</span>{" "}
                   within{" "}
@@ -344,6 +380,15 @@ function OnboardingContent() {
                   .
                 </p>
               </div>
+
+              <p className="text-sm text-muted-foreground leading-6.5">
+                For demo purposes (before payment), your{" "}
+                {onboardingData.companyName}'s AI agent is trained only on a
+                handful of key pages and basic public information from your
+                website, so the answers are intentionally limited for
+                proof‑of‑concept and will be far more robust and accurate once
+                you’re live on the paid platform.
+              </p>
 
               <p className="text-sm text-gray-400">
                 You can safely close this page.

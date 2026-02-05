@@ -3,16 +3,13 @@
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
-import { useDemoModal } from "@/components/landing/demo-modal";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Zap, ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 export default function SharePage() {
   const params = useParams();
   const id = params.id;
-  const { openDemoModal } = useDemoModal();
-
   return (
     <div className="bg-background min-h-screen flex flex-col">
       <Navbar />
@@ -20,10 +17,10 @@ export default function SharePage() {
       <main className="flex-grow pt-20 pb-8 sm:pt-24 sm:pb-16 border-x section-container section-content-padding w-full flex flex-col justify-center">
         {/* Mobile: Compact header above iframe */}
         <div className="lg:hidden text-center mb-4 px-2">
-          <h1 className="text-2xl sm:text-3xl font-medium tracking-tight mb-2">
-            Try it live
+          <h1 className="text-2xl sm:text-3xl font-normal tracking-tight leading-relaxed mb-2">
+            You can build AI Agents like this in 5 minutes
           </h1>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+          <p className="text-sm text-muted-foreground font-normal max-w-xs mx-auto leading-relaxed">
             Chat with this AI agent built on Magical CX
           </p>
         </div>
@@ -32,46 +29,68 @@ export default function SharePage() {
           {/* Left Column: Text & CTA - Hidden on mobile, shown on desktop */}
           <div className="hidden lg:flex flex-col items-start text-left space-y-8">
             <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl font-medium tracking-tight">
-                Experience the future of customer support.
+              <h1 className="text-4xl sm:text-4xl font-normal tracking-tight leading-relaxed">
+                You can build AI Agents like this in 5 minutes
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-lg leading-relaxed">
-                You're viewing a live AI agent built with Magical CX. Want to
+              <p className="text-base sm:text-base text-muted-foreground font-normal max-w-lg leading-relaxed">
+                You're viewing a live AI agent built with MagicalCX. Want to
                 create your own intelligent support experience that converts
                 visitors into customers?
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="px-8 py-6 text-lg rounded-full font-medium group"
-                asChild
-              >
-                <Link href="/pricing">
-                  <Zap className="h-5 w-5 mr-2" />
-                  View Pricing
-                  <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="px-8 py-6 text-lg rounded-full font-medium"
-                onClick={openDemoModal}
-              >
-                Book a Demo
-              </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  size="lg"
+                  className="px-8 py-6 text-lg rounded-full font-medium group"
+                  asChild
+                >
+                  <Link href="/onboarding" className="flex items-center gap-2">
+                    Build My AI Agent
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-lg rounded-full font-medium"
+                  asChild
+                >
+                  <Link href="/pricing">View Pricing</Link>
+                </Button>
+              </div>
+              <p className="text-sm mt-4 text-muted-foreground">
+                Enjoy 40+ features of MagicalCX for Free for 14 days
+              </p>
             </div>
 
             <div className="flex gap-8 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span>No credit card required</span>
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>14 days free trial</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span>Setup in minutes</span>
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>No credit card</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Cancel Anytime</span>
               </div>
             </div>
           </div>
@@ -99,11 +118,9 @@ export default function SharePage() {
         <div className="lg:hidden mt-6 px-2">
           <div className="bg-muted/50 rounded-2xl p-4 sm:p-6 space-y-4">
             <div className="text-center space-y-2">
-              <h2 className="text-lg sm:text-xl font-medium">
-                Want your own AI agent?
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Create intelligent support that converts visitors into customers
+              <p className="text-sm text-muted-foreground font-normal leading-relaxed">
+                Create intelligent AIagents that converts visitors into
+                customers
               </p>
             </div>
 
@@ -113,30 +130,51 @@ export default function SharePage() {
                 className="w-full py-5 text-base rounded-full font-medium group"
                 asChild
               >
-                <Link href="/pricing">
-                  <Zap className="h-4 w-4 mr-2" />
-                  View Pricing
-                  <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                <Link href="/onboarding" className="flex items-center gap-2">
+                  Build My AI Agent
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button
                 variant="outline"
                 size="lg"
                 className="w-full py-5 text-base rounded-full font-medium"
-                onClick={openDemoModal}
+                asChild
               >
-                Book a Demo
+                <Link href="/pricing">View Pricing</Link>
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Enjoy 40+ features of MagicalCX for Free for 14 days
+              </p>
             </div>
 
-            <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-1">
+            <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-1 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                <span>No credit card</span>
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>14 days free trial</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                <span>Setup in minutes</span>
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Cancel Anytime</span>
               </div>
             </div>
           </div>

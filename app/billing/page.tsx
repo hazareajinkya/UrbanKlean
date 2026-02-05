@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Download,
   Loader,
+  Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -41,6 +42,11 @@ import { IUsage } from "@/lib/types/usage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -270,7 +276,7 @@ export default function BillingPage() {
   return (
     <>
       <WorkspacesNavbar />
-      <div className="mt-24 p-4">
+      <div className="mt-24 max-w-7xl mx-auto px-4 pr-2 md:px-3 lg:px-3">
         <div className="max-w-4xl mx-auto">
           <motion.div
             key="billing"
@@ -424,11 +430,25 @@ export default function BillingPage() {
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {planFeatures.map((feature) => (
                     <li
-                      key={feature}
+                      key={feature.label}
                       className="flex items-center gap-3 text-sm text-muted-foreground"
                     >
                       <Check className="w-5 h-5 shrink-0" />
-                      <span>{feature}</span>
+                      <span>{feature.label}</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={feature.tooltip}
+                            className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={6}>
+                          {feature.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
                     </li>
                   ))}
                 </ul>

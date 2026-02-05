@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Loader } from "lucide-react";
+import { Check, Info, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemoModal } from "../landing/demo-modal";
 import { useGeo } from "@/lib/hooks/geo/use-geo";
@@ -17,6 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus } from "lucide-react";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
 import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const PricingContent = () => {
   const searchParams = useSearchParams();
@@ -249,7 +254,7 @@ export const PricingContent = () => {
         id="pricing-plans"
         className="section-content-padding section-container border-x py-24 md:py-32 section-content-padding px-6 w-full"
       >
-        <div className="text-center mb-12 space-y-4 max-w-3xl mx-auto">
+        <div className="text-center mb-12 max-w-3xl mx-auto">
           <h1 className="section-heading">
             Start for Free, Choose your plan later
           </h1>
@@ -352,7 +357,7 @@ export const PricingContent = () => {
         ) : (
           <div className="w-full  bg-card rounded-3xl border shadow-sm overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-              <div className="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
+              <div className="lg:col-span-5 p-6 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
                 <div className="mt-8 mb-6">
                   <h3 className="text-2xl font-medium mb-1">All in One</h3>
                   <p className="text-muted-foreground">Everything included.</p>
@@ -392,27 +397,45 @@ export const PricingContent = () => {
                       Processing
                     </>
                   ) : (
-                    "Start 14 days free trial"
+                    "Get Started for Free"
                   )}
                 </Button>
 
-                <p className="text-xs text-center text-muted-foreground mt-4">
-                  Cancel anytime. No questions asked!
+                <p className="text-sm text-center text-muted-foreground mt-4">
+                  <span className="font-semibold">Cancel anytime.</span> No
+                  questions asked!
                 </p>
               </div>
 
-              <div className="lg:col-span-7 p-8 md:p-12 bg-background/50">
+              <div className="lg:col-span-7 p-4 md:p-6 bg-background/50">
                 <h4 className="text-lg font-medium mb-6">What's included:</h4>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                  {features.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className="mt-1 bg-primary/10 rounded-full p-0.5 shrink-0">
-                        <Check className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <span className="text-sm text-muted-foreground leading-snug">
-                        {feature}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {features.map((feature) => (
+                    <div
+                      key={feature.label}
+                      className="flex items-center gap-3 py-2.5 px-3 group rounded-xl hover:bg-muted/80 transition-colors cursor-default"
+                    >
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-green-800/30 to-green-800/10 border border-green-800/45 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-green-800" />
                       </span>
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-snug">
+                        {feature.label}
+                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={feature.tooltip}
+                            className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={6}>
+                          {feature.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   ))}
                 </div>
@@ -422,10 +445,10 @@ export const PricingContent = () => {
         )}
 
         {/* Lifetime Deal Section - Premium Design */}
-        <div className="mt-20">
-          <div className="text-center mb-8 space-y-2">
-            <h2 className="text-2xl font-medium">Lifetime Deal</h2>
-            <p className="text-muted-foreground">
+        <div id="lifetime" className="mt-20">
+          <div className="text-center mb-8 ">
+            <h2 className="section-heading">Lifetime Deal</h2>
+            <p className="section-subheadline">
               One-time payment. Own MagicalCX forever.
             </p>
           </div>
@@ -642,20 +665,34 @@ export const PricingContent = () => {
                       </h4>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {LIFETIME_PLAN.features.map((feature, idx) => (
+                        {LIFETIME_PLAN.features.map((feature) => (
                           <div
-                            key={idx}
-                            className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-white/[0.03] transition-colors group/item"
+                            key={feature.label}
+                            className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-white/[0.02] transition-colors group/item cursor-default"
                           >
-                            <div className="shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center group-hover/item:border-orange-400/50 transition-colors">
+                            <span className="shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center group-hover/item:border-orange-400/50 transition-colors">
                               <Check
                                 className="w-3 h-3 text-orange-400"
                                 strokeWidth={3}
                               />
-                            </div>
-                            <span className="text-sm text-zinc-400 group-hover/item:text-zinc-300 transition-colors">
-                              {feature}
                             </span>
+                            <span className="text-sm text-zinc-400 group-hover/item:text-zinc-300 transition-colors">
+                              {feature.label}
+                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={feature.tooltip}
+                                  className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-300 transition-colors"
+                                >
+                                  <Info className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" sideOffset={6}>
+                                {feature.tooltip}
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         ))}
                       </div>
@@ -667,7 +704,7 @@ export const PricingContent = () => {
           )}
         </div>
 
-        <div id="extra-credits" className="mt-16">
+        <div id="extra-credits" className="mt-28">
           <div className="text-center mb-8 space-y-2">
             <h2 className="text-2xl font-medium">Need Extra Credits?</h2>
             <p className="text-muted-foreground">
@@ -678,7 +715,7 @@ export const PricingContent = () => {
 
           {isGeoLoading ? (
             <div className="mx-auto w-full">
-              <div className="rounded-2xl border bg-card px-5 py-4 shadow-sm">
+              <div className="rounded-2xl border bg-card px-5 py-6 shadow-sm">
                 <div className="flex w-full flex-col gap-4 md:flex-row items-center md:justify-between">
                   <div className="flex items-start gap-4">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
@@ -703,7 +740,7 @@ export const PricingContent = () => {
             </div>
           ) : (
             <div className="mx-auto w-full ">
-              <div className="rounded-2xl border bg-card px-5 py-4 shadow-sm transition-colors">
+              <div className="rounded-2xl border bg-card px-4 md:px-5 py-6 shadow-sm transition-colors">
                 <div className="flex w-full flex-col gap-4 md:flex-row items-center md:justify-between">
                   <div className="flex items-start gap-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
@@ -793,7 +830,7 @@ export const PricingContent = () => {
                             Adding credits
                           </>
                         ) : (
-                          "Get Add-on"
+                          "Add Credits"
                         )}
                       </Button>
                     </div>
@@ -802,17 +839,6 @@ export const PricingContent = () => {
               </div>
             </div>
           )}
-        </div>
-
-        <div className="text-center mt-16 text-muted-foreground text-sm">
-          Need more than 10k messages?{" "}
-          <button
-            onClick={openDemoModal}
-            className="text-primary underline underline-offset-4 hover:text-primary/80 cursor-pointer"
-          >
-            Book a meeting
-          </button>{" "}
-          with our engineering team.
         </div>
       </div>
       <PricingFaq />

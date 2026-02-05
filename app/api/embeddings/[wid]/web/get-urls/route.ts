@@ -28,7 +28,9 @@ export async function GET(
     const workspace = await workspaceService.fetchWorkspace(wid);
     if (!workspace) return errorResponse("Workspace not found", 404);
     const folders = workspace.folders;
+
     const categorizeUrlsResult = await categorizeUrls(uniqueUrls, folders);
+
     return successResponse(
       {
         url,
@@ -61,19 +63,50 @@ const categorizeUrls = async (
 ) => {
   try {
     const mainContentUrlResult = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-3-flash-preview"),
       schema: categorizeUrlSchema,
-      prompt: `Categorize ALL input URLs (every single one) into 4-5 folders:
-      folders: ${JSON.stringify(folders, null, 2)}
-      Return as "categories" array with {folderId: string, urls: string[]}.
-      Rules: 
-      - Valid JSON only
-      - Each URL once
-      - No duplicate urls
-      - Skip URLs with no valid content (login pages, 404s, external redirects, ads, etc.)
-      - Only include URLs with actual company information
-      Input:
-      ${JSON.stringify(urls, null, 2)}`,
+      prompt: `You are organizing a website's URLs into logical folders for a knowledge base.
+
+        ## Task
+        Categorize each URL into the most appropriate folder based on its path, title, and description.
+
+        ## Existing Folders (prioritize these)
+        ${
+          folders.length > 0
+            ? folders
+                .map((f) => `- ID: "${f.id}" | Name: "${f.name}"`)
+                .join("\n")
+            : "No existing folders."
+        }
+
+        ## Categorization Rules
+        1. **Match existing folders first** - If a URL fits an existing folder, use its folderId
+        2. **Create new folders sparingly** - Only if no existing folder fits, create a new one with folderId: "none"
+        3. **Use clear folder names** - Single or two words (e.g., About, Products, Services, Support, Blog, Careers, Legal, Resources, Pricing)
+        4. **Group similar content** - URLs with similar paths or topics go together
+        5. **Include a Miscellaneous folder** - For URLs that don't fit other categories
+
+        ## URL Filtering
+        EXCLUDE these types of URLs:
+        - Login/authentication pages
+        - 404 or error pages
+        - External redirects or third-party links
+        - Ads, tracking, or utility endpoints
+        - URLs with no meaningful content
+
+        INCLUDE only URLs with actual company/product information.
+
+        ## URLs to Categorize
+        ${JSON.stringify(
+          urls.map((u) => ({
+            url: u.url,
+            ...(u.title && { title: u.title }),
+            ...(u.description && { description: u.description }),
+            ...(u.category && { hint: u.category }),
+          })),
+          null,
+          2
+        )}`,
     });
 
     return mainContentUrlResult.object;
@@ -87,7 +120,8 @@ export const categorizeUrlSchema = z.array(
   z.object({
     folderId: z
       .string()
-      .describe("The folder ID that best matches this group of URLs"),
+      .describe("The folder ID that best matches this group of URLs")
+      .or(z.literal("none")),
     folderName: z
       .string()
       .describe("The folder name that best matches this group of URLs"),

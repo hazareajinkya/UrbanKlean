@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { Star, CreditCard, ShieldCheck } from "lucide-react";
 
 import { normalizeDomain, validateDomain } from "@/lib/utils";
 import { UrlInputForm } from "./url-input-form";
@@ -64,10 +65,10 @@ export const HeroSection = () => {
 
   return (
     <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
-      <div className="flex flex-col items-center text-center mt-8 sm:mt-12 md:mt-18">
-        <h1 className="text-3xl leading-normal md:text-4xl mb-4 px-4 ">
+      <div className="flex flex-col items-center text-center mt-4 sm:mt-6 md:mt-8">
+        <h1 className="text-3xl font-playfair font-light leading-normal md:text-5xl mb-4 px-4 ">
           AI Customer Support that delivers <br className="hidden sm:block" />
-          Faster resolutions and <span className="">Feels human</span>
+          faster resolutions and <span className="">feels human</span>
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
           {/* The world's first & only AI that responds with empathy, never makes
@@ -83,9 +84,12 @@ export const HeroSection = () => {
           {/* AI agents that remember, respond with empathy, speak HumanlyClear™ and
           find revenue opportunities across every channel—web chat, email,
           WhatsApp, Instagram, Messenger. */}
-          AI agents with memory and empathy delivering HumanlyClear™ responses.
+          {/* AI agents with memory and empathy delivering HumanlyClear™ responses.
           MagicalCX AI find revenue opportunities for your business across web
-          chat, email, WhatsApp, Instagram, and Messenger.
+          chat, email, WhatsApp, Instagram, and Messenger. */}
+          AI agents that remember every conversation, respond with empathy, and
+          speak HumanlyClear™ while creating revenue opportunities across web
+          chat, email, WhatsApp, Instagram, and Messenger
         </p>
 
         <div ref={inputRef} className="w-full">
@@ -97,6 +101,22 @@ export const HeroSection = () => {
             onSubmit={handleSubmit}
             className="mt-8 !max-w-lg mx-auto"
           />
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 mt-6 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-medium text-foreground">4.9/5</span>{" "}
+              Customer rating
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CreditCard className="w-4 h-4 text-emerald-500" />
+              No credit card required
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-blue-500" />
+              <span className="font-medium text-foreground">99.9%</span> Uptime
+              SLA
+            </span>
+          </div>
         </div>
       </div>
 
@@ -109,7 +129,9 @@ export const HeroSection = () => {
         tabIndex={-1}
       >
         <iframe
-          src="https://player.mux.com/h701pwXlrvWkXBSD5fq021e43bQzLjUHZ5KKTpjm55ywU?accent-color=%23050505"
+          // src="https://player.mux.com/h701pwXlrvWkXBSD5fq021e43bQzLjUHZ5KKTpjm55ywU?accent-color=%23050505"
+          // src="https://player.mux.com/7oVyNTLKAPKkOemlE1Xs9Z01Btawr00eY9DJlESMbnj9Q?metadata-video-title=MagicalCX+Intro+Video&video-title="
+          src="https://player.mux.com/3x020001rrtgzTCZmbUIeOjunqmpTtvAaARAygoPECdVbA?metadata-video-title=MagicalCX+Intro"
           style={{ width: "100%", border: "none", aspectRatio: "16/9" }}
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
           allowFullScreen
