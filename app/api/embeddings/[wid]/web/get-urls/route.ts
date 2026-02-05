@@ -63,7 +63,7 @@ const categorizeUrls = async (
 ) => {
   try {
     const mainContentUrlResult = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-3-flash-preview"),
       schema: categorizeUrlSchema,
       prompt: `You are organizing a website's URLs into logical folders for a knowledge base.
 
@@ -71,7 +71,13 @@ const categorizeUrls = async (
         Categorize each URL into the most appropriate folder based on its path, title, and description.
 
         ## Existing Folders (prioritize these)
-        ${folders.length > 0 ? folders.map((f) => `- ID: "${f.id}" | Name: "${f.name}"`).join("\n") : "No existing folders."}
+        ${
+          folders.length > 0
+            ? folders
+                .map((f) => `- ID: "${f.id}" | Name: "${f.name}"`)
+                .join("\n")
+            : "No existing folders."
+        }
 
         ## Categorization Rules
         1. **Match existing folders first** - If a URL fits an existing folder, use its folderId
@@ -92,15 +98,15 @@ const categorizeUrls = async (
 
         ## URLs to Categorize
         ${JSON.stringify(
-        urls.map((u) => ({
-          url: u.url,
-          ...(u.title && { title: u.title }),
-          ...(u.description && { description: u.description }),
-          ...(u.category && { hint: u.category }),
-        })),
-        null,
-        2
-      )}`,
+          urls.map((u) => ({
+            url: u.url,
+            ...(u.title && { title: u.title }),
+            ...(u.description && { description: u.description }),
+            ...(u.category && { hint: u.category }),
+          })),
+          null,
+          2
+        )}`,
     });
 
     return mainContentUrlResult.object;
@@ -114,7 +120,8 @@ export const categorizeUrlSchema = z.array(
   z.object({
     folderId: z
       .string()
-      .describe("The folder ID that best matches this group of URLs").or(z.literal("none")),
+      .describe("The folder ID that best matches this group of URLs")
+      .or(z.literal("none")),
     folderName: z
       .string()
       .describe("The folder name that best matches this group of URLs"),
