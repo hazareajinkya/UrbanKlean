@@ -55,7 +55,6 @@ export const PLANS = {
         id: "lifetime_10k",
         billingCycle: "lifetime",
         priceIds: {
-          paddle: null,
           razorpay: null,
           polar: plansConf.lifetime.polarProductId,
         },

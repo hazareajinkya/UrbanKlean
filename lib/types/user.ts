@@ -19,7 +19,6 @@ export interface IUserSubscription {
   customerId?: string;
   planId?: IPlanId;
   tierId?: string;
-  paddlePriceId?: string;
   razorpayPlanId?: string;
   polarSubscriptionId?: string;
   status?: "active" | "canceled" | "past_due" | "paused" | "trialing";

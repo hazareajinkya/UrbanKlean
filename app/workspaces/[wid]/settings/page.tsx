@@ -9,14 +9,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Settings2, Globe, User, CreditCard } from "lucide-react";
+import { Settings2, Globe, User, ListTree } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GeneralTab } from "@/components/workspaces/settings/general-tab";
 import { DomainsTab } from "@/components/workspaces/settings/domains-tab";
 import MembersTab from "@/components/workspaces/settings/members-tab";
-import BillingTab from "@/components/workspaces/settings/billing-tab";
+import UsageTab from "@/components/workspaces/settings/usage-tab";
 
 const sections = [
   {
@@ -30,9 +30,9 @@ const sections = [
     icon: User,
   },
   {
-    id: "billing",
-    label: "Billing",
-    icon: CreditCard,
+    id: "usage",
+    label: "Usage",
+    icon: ListTree,
   },
   {
     id: "domains",
@@ -128,7 +128,7 @@ export default function SettingsPage() {
 
             {activeSection === "members" && <MembersTab />}
 
-            {activeSection === "billing" && <BillingTab wid={wid} />}
+            {activeSection === "usage" && <UsageTab wid={wid} />}
 
             {activeSection === "domains" && (
               <DomainsTab workspace={workspace} wid={wid} />
