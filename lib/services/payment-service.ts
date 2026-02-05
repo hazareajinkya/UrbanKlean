@@ -1,10 +1,6 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../clients/firebase";
 import {
-  PaddleSubscriptionCustomData,
-  PaddleSubscriptionData,
-} from "../clients/paddle";
-import {
   RazorpaySubscriptionData,
   RazorpaySubscriptionCustomData,
   mapRazorpayStatus,
@@ -71,54 +67,6 @@ class PaymentService {
       await this.syncWorkspacesPlan(userEmail, planId);
     } catch (error) {
       console.error(`PaymentCompleted Error checking workspaces:`, error);
-    }
-  }
-
-  async handleSubscriptionCreated(data: PaddleSubscriptionData) {
-    try {
-      console.log("Handling subscription.created:", data);
-
-      const customData =
-        data.custom_data as unknown as PaddleSubscriptionCustomData;
-      const user = await userService.getUser(customData.userEmail);
-      if (!user) throw new Error("User not found");
-
-      const plan = PLANS[customData.planId as keyof typeof PLANS];
-      if (!plan) throw new Error(`Plan ${customData.planId} not found`);
-
-      const tierData = plan.tiers.find((tier) => tier.id === customData.tierId);
-      if (!tierData) throw new Error(`Tier ${customData.tierId} not found`);
-
-      const recurringQuota = tierData.messages;
-
-      const subscription: IUserSubscription = {
-        subscriptionId: data.id,
-        customerId: data.customer_id,
-        planId: customData.planId as IPlanId,
-        tierId: customData.tierId,
-
-        status: data.status,
-        recurringQuota,
-        startedAt: data.started_at,
-        nextPaymentAt: data.next_billed_at,
-        renewsAt: data.next_billed_at,
-      };
-      await userService.updateUser(customData.userEmail, {
-        subscription,
-      });
-
-      await creditService.renewQuota(customData.userEmail, recurringQuota);
-
-      this.onPaymentCompleted(
-        customData.userEmail,
-        customData.planId,
-        "subscription"
-      );
-
-      return { success: true, user };
-    } catch (error) {
-      console.error("Error handling subscription.created:", error);
-      return { success: false, error: error as Error };
     }
   }
 

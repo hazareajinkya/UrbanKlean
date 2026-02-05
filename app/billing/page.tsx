@@ -217,7 +217,6 @@ export default function BillingPage() {
     if (provider === "razorpay" || provider === "polar") {
       setShowCancelDialog(true);
     } else {
-      // For Paddle, cancellation is handled in their portal
       manageSubscription();
     }
   };

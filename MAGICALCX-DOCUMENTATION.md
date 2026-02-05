@@ -634,7 +634,7 @@ Custom Actions allow the AI to take real actions during conversations by calling
 
 - **Web Scraping**: Firecrawl
 - **Email**: Postmark + Resend
-- **Payments**: Paddle, Razorpay, Polar
+- **Payments**: Razorpay, Polar
 - **Analytics**: Vercel Analytics
 - **Rate Limiting**: Upstash Redis
 
