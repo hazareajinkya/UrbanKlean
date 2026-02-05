@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       planId: tierData.priceIds.razorpay,
       totalCount: 12,
       notes,
-      // startAt,
+      startAt,
     });
 
     return successResponse({
