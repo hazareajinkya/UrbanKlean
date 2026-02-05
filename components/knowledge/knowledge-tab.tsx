@@ -7,35 +7,14 @@ import KnowledgeContentList from "@/components/knowledge/knowledge-content-list"
 import ContentDetailPanel, {
   ContentItem,
 } from "@/components/knowledge/content-detail-panel";
+import AddTextModal from "@/components/knowledge/add-text-modal";
+import AddDocumentModal from "@/components/knowledge/add-document-modal";
+import AddWebsiteModal from "@/components/knowledge/add-website-modal";
 import { useFolders } from "@/lib/hooks/folders/use-folders";
 import { useKnowledgeActions } from "@/lib/hooks/knowledge/use-knowledge-actions";
-import {
-  Globe,
-  Loader,
-  Plus,
-  X,
-  Search,
-  UploadCloud,
-  Upload,
-} from "lucide-react";
-import Modal from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
-
-
-interface ScrapedCategory {
-  folderId: string;
-  folderName: string;
-  urls: string[];
-}
-
 export default function KnowledgeTab() {
   const { wid } = useParams() as { wid: string };
   const { data: folders, isLoading } = useFolders(wid);
@@ -43,40 +22,19 @@ export default function KnowledgeTab() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(
     null
   );
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const [isAddDocumentModalOpen, setIsAddDocumentModalOpen] = useState(false);
   const [isAddWebsiteModalOpen, setIsAddWebsiteModalOpen] = useState(false);
   const [websiteModalMode, setWebsiteModalMode] = useState<"add" | "scrape">(
     "scrape"
   );
   const [isAddTextModalOpen, setIsAddTextModalOpen] = useState(false);
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [textContent, setTextContent] = useState("");
-  const [textTitle, setTextTitle] = useState("");
-
-  const [scrapedUrls, setScrapedUrls] = useState<ScrapedCategory[]>([]);
-  const [selectedUrls, setSelectedUrls] = useState<
-    { url: string; folderId: string, folderName: string }[]
-  >([]);
-  const [websiteView, setWebsiteView] = useState<"input" | "list">("input");
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [contentToDelete, setContentToDelete] = useState<ContentItem | null>(
     null
   );
 
-  const {
-    embedAndSavePdf,
-    deletePdf,
-    embedAndSaveWebsite,
-    deleteWebsite,
-    embedAndSaveText,
-    deleteText,
-    deleteTeachKnowledge,
-    scrapeWebsite,
-    crawlWebsites,
-  } = useKnowledgeActions();
+  const { deletePdf, deleteWebsite, deleteText, deleteTeachKnowledge } =
+    useKnowledgeActions();
 
   useEffect(() => {
     if (folders && folders.length > 0 && !selectedFolderId) {
@@ -86,128 +44,6 @@ export default function KnowledgeTab() {
       setSelectedFolderId(miscellaneousFolder?.id || folders[0]?.id || null);
     }
   }, [folders, selectedFolderId]);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === "application/pdf") {
-        setSelectedFile(file);
-      } else {
-        toast.error("Please upload only PDF files");
-      }
-      e.target.value = "";
-    }
-  };
-
-  const handleUploadPdf = async () => {
-    if (selectedFile && selectedFolderId) {
-      await embedAndSavePdf.mutateAsync({
-        wid,
-        folderId: selectedFolderId,
-        file: selectedFile,
-      });
-      setIsAddDocumentModalOpen(false);
-      setSelectedFile(null);
-    }
-  };
-
-  const handleAddWebsite = async () => {
-    if (!websiteUrl.trim() || !selectedFolderId) return;
-    try {
-      new URL(websiteUrl);
-      await embedAndSaveWebsite.mutateAsync({
-        wid,
-        folderId: selectedFolderId,
-        url: websiteUrl,
-      });
-      handleCloseWebsiteModal();
-    } catch {
-      toast.error("Please enter a valid URL");
-    }
-  };
-
-  const handleScrapeWebsite = async () => {
-    if (!websiteUrl.trim()) return;
-    try {
-      new URL(websiteUrl);
-      const categories = await scrapeWebsite.mutateAsync({
-        wid,
-        url: websiteUrl,
-      });
-      if (categories) {
-        setScrapedUrls(categories);
-        const allUrls = categories.flatMap(
-          (cat: { urls: any[]; folderId: any; folderName: string }) =>
-            cat.urls.map((url) => ({ url, folderId: cat.folderId, folderName: cat.folderName }))
-        );
-        setSelectedUrls(allUrls);
-        setWebsiteView("list");
-      }
-    } catch {
-      toast.error("Please enter a valid URL");
-    }
-  };
-
-  const handleAddMultipleUrls = async () => {
-    if (selectedUrls.length === 0) return;
-    console.log({ selectedUrls })
-    try {
-      await crawlWebsites.mutateAsync({
-        wid,
-        urls: selectedUrls,
-      });
-
-      handleCloseWebsiteModal();
-    } catch (error) {
-      console.error("Error adding URLs:", error);
-      toast.error("Failed to add some URLs");
-    }
-  };
-
-  const handleUrlSelection = (url: string, folderId: string, folderName: string) => {
-    setSelectedUrls((prev) => {
-      const exists = prev.some((u) => u.url === url && u.folderId === folderId);
-      if (exists) {
-        return prev.filter((u) => !(u.url === url && u.folderId === folderId));
-      } else {
-        return [...prev, { url, folderId, folderName }];
-      }
-    });
-  };
-
-  const handleSelectAllUrls = (checked: boolean) => {
-    if (checked) {
-      const allUrls = scrapedUrls.flatMap((cat) =>
-        cat.urls.map((url) => ({ url, folderId: cat.folderId, folderName: cat.folderName }))
-      );
-      setSelectedUrls(allUrls);
-    } else {
-      setSelectedUrls([]);
-    }
-  };
-
-  const handleCloseWebsiteModal = () => {
-    setIsAddWebsiteModalOpen(false);
-    setTimeout(() => {
-      setWebsiteUrl("");
-      setScrapedUrls([]);
-      setSelectedUrls([]);
-      setWebsiteView("input");
-    }, 300);
-  };
-
-  const handleAddText = async () => {
-    if (!textContent.trim() || !textTitle.trim() || !selectedFolderId) return;
-    await embedAndSaveText.mutateAsync({
-      wid,
-      folderId: selectedFolderId,
-      content: textContent,
-      title: textTitle,
-    });
-    setIsAddTextModalOpen(false);
-    setTextContent("");
-    setTextTitle("");
-  };
 
   const handleDeleteContent = (content: ContentItem) => {
     setContentToDelete(content);
@@ -318,8 +154,8 @@ export default function KnowledgeTab() {
         </div>
 
         {selectedContent && (
-          <aside className="bg-background overflow-hidden border-l w-[320px] xl:w-[380px] flex-shrink-0 hidden lg:block">
-            <div className="w-full h-full">
+          <aside className="bg-background overflow-hidden border-l w-[320px] xl:w-[380px] flex-shrink-0 hidden lg:block h-full">
+            <div className="w-full h-full flex flex-col">
               <ContentDetailPanel
                 content={selectedContent}
                 onClose={() => setSelectedContent(null)}
@@ -330,396 +166,31 @@ export default function KnowledgeTab() {
         )}
       </div>
 
-      <Modal
-        isOpen={isAddDocumentModalOpen}
-        closeModal={() => {
-          setIsAddDocumentModalOpen(false);
-          setSelectedFile(null);
-        }}
-      >
-        <div className="space-y-6">
-          <div className="flex items-center justify-between pb-1 border-b">
-            <h3 className="text-lg">Add Document</h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setIsAddDocumentModalOpen(false);
-                setSelectedFile(null);
-              }}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div
-              onClick={() => document.getElementById("pdf-upload")?.click()}
-              className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/5 transition-all rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer group"
-            >
-              <div className="p-4 bg-muted/30 rounded-full mb-4 group-hover:scale-110 transition-transform duration-200">
-                <UploadCloud className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-
-              {selectedFile ? (
-                <div className="space-y-1">
-                  <p className="font-medium text-primary text-lg">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <p className="font-medium text-lg">Click to upload PDF</p>
-                  <p className="text-sm text-muted-foreground">
-                    Supported format: .pdf
-                  </p>
-                </div>
-              )}
-
-              <input
-                type="file"
-                accept=".pdf"
-                id="pdf-upload"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddDocumentModalOpen(false);
-                setSelectedFile(null);
-              }}
-              className="rounded-full"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUploadPdf}
-              disabled={!selectedFile || embedAndSavePdf.isPending}
-              className="rounded-full"
-            >
-              {embedAndSavePdf.isPending ? (
-                <Loader className="w-4 h-4 animate-spin " />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              Upload Document
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Add Website Modal */}
-      <Modal
-        isOpen={isAddWebsiteModalOpen}
-        closeModal={handleCloseWebsiteModal}
-      >
-        <div className="space-y-6">
-          {websiteView === "input" && (
-            <>
-              <div className="flex items-center justify-between pb-1 border-b">
-                <h3 className="text-lg">
-                  {websiteModalMode === "add"
-                    ? "Add Single URL"
-                    : "Scrape Website"}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCloseWebsiteModal}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (websiteModalMode === "add") {
-                    handleAddWebsite();
-                  } else {
-                    handleScrapeWebsite();
-                  }
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label>Website URL</Label>
-                  <Input
-                    type="url"
-                    placeholder="https://example.com"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    disabled={
-                      embedAndSaveWebsite.isPending ||
-                      scrapeWebsite.isPending ||
-                      crawlWebsites.isPending
-                    }
-                    required
-                  />
-                </div>
-              </form>
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  onClick={handleCloseWebsiteModal}
-                  variant="outline"
-                  disabled={
-                    embedAndSaveWebsite.isPending ||
-                    scrapeWebsite.isPending ||
-                    crawlWebsites.isPending
-                  }
-                  className="rounded-full"
-                >
-                  Cancel
-                </Button>
-                {websiteModalMode === "add" ? (
-                  <Button
-                    onClick={handleAddWebsite}
-                    disabled={
-                      !websiteUrl.trim() ||
-                      embedAndSaveWebsite.isPending ||
-                      scrapeWebsite.isPending
-                    }
-                    className="rounded-full"
-                  >
-                    {embedAndSaveWebsite.isPending ? (
-                      <Loader className="w-4 h-4 animate-spin " />
-                    ) : (
-                      <Plus className="w-4 h-4 " />
-                    )}
-                    Add URL
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleScrapeWebsite}
-                    disabled={
-                      !websiteUrl.trim() ||
-                      embedAndSaveWebsite.isPending ||
-                      scrapeWebsite.isPending
-                    }
-                    className="rounded-full"
-                  >
-                    {scrapeWebsite.isPending ? (
-                      <Loader className="w-4 h-4 animate-spin " />
-                    ) : (
-                      <Globe className="w-4 h-4 " />
-                    )}
-                    Scrape Website
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-
-          {websiteView === "list" && (
-            <>
-              <div className="flex items-center justify-between pb-1 border-b">
-                <div>
-                  <h3 className="text-lg">Scraped URLs</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Showing results for:{" "}
-                    <span className="font-semibold text-primary">
-                      {websiteUrl}
-                    </span>
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCloseWebsiteModal}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedUrls.length} selected.
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="select-all-modal"
-                      checked={
-                        scrapedUrls.length > 0 &&
-                        selectedUrls.length ===
-                        scrapedUrls.reduce(
-                          (acc, cat) => acc + cat.urls.length,
-                          0
-                        )
-                      }
-                      onCheckedChange={handleSelectAllUrls}
-                    />
-                    <label
-                      htmlFor="select-all-modal"
-                      className="text-sm font-medium"
-                    >
-                      Select All
-                    </label>
-                  </div>
-                </div>
-                <ScrollArea className="h-64">
-                  <div className="space-y-4 pr-4">
-                    {scrapedUrls.map((category) => (
-                      <div key={category.folderId} className="space-y-2">
-                        <h5 className="font-medium text-sm text-muted-foreground sticky top-0 bg-background py-1 z-10 border-b">
-                          {category.folderName}
-                        </h5>
-                        <div className="space-y-1 pl-2">
-                          {category.urls.map((url, urlIndex) => {
-                            const isSelected = selectedUrls.some(
-                              (u) =>
-                                u.url === url &&
-                                u.folderId === category.folderId
-                            );
-                            return (
-                              <div
-                                key={`${category.folderId}-${urlIndex}`}
-                                className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                                onClick={() =>
-                                  handleUrlSelection(url, category.folderId, category.folderName)
-                                }
-                              >
-                                <Checkbox
-                                  id={`modal-${category.folderId}-${url}`}
-                                  checked={isSelected}
-                                  onCheckedChange={() =>
-                                    handleUrlSelection(url, category.folderId, category.folderName)
-                                  }
-                                />
-                                <label
-                                  htmlFor={`modal-${category.folderId}-${url}`}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 truncate cursor-pointer"
-                                  title={url}
-                                >
-                                  {url}
-                                </label>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-              <div className="flex justify-end gap-3">
-                <Button
-                  onClick={() => setWebsiteView("input")}
-                  variant="outline"
-                  disabled={crawlWebsites.isPending}
-                  className="rounded-full"
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleAddMultipleUrls}
-                  disabled={
-                    crawlWebsites.isPending || selectedUrls.length === 0
-                  }
-                  className="rounded-full"
-                >
-                  {crawlWebsites.isPending ? (
-                    <Loader className="w-4 h-4 animate-spin " />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
-                  )}
-                  Add Selected URLs
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
-
-      {/* Add Text Modal */}
-      <Modal
-        isOpen={isAddTextModalOpen}
-        closeModal={() => {
-          setIsAddTextModalOpen(false);
-          setTextContent("");
-          setTextTitle("");
-        }}
-        className="max-h-[75vh] overflow-y-auto bg-white dark:bg-black rounded-2xl p-6 max-w-lg"
-      >
-        <div className="space-y-6">
-          <div className="flex items-center justify-between pb-1 border-b">
-            <h3 className="text-lg">Add Text</h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setIsAddTextModalOpen(false);
-                setTextContent("");
-                setTextTitle("");
-              }}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="text-title">Title</Label>
-              <Input
-                id="text-title"
-                value={textTitle}
-                onChange={(e) => setTextTitle(e.target.value)}
-                placeholder="Enter title..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="text-content">Text Content</Label>
-              <Textarea
-                id="text-content"
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Enter text content..."
-                rows={12}
-                className="min-h-[200px] max-h-[400px]"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddTextModalOpen(false);
-                setTextContent("");
-                setTextTitle("");
-              }}
-              className="rounded-full"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddText}
-              disabled={
-                !textContent.trim() ||
-                !textTitle.trim() ||
-                embedAndSaveText.isPending
-              }
-              className="rounded-full"
-            >
-              {embedAndSaveText.isPending ? (
-                <Loader className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              Add Text
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {isAddDocumentModalOpen && (
+        <AddDocumentModal
+          isOpen={isAddDocumentModalOpen}
+          onClose={() => setIsAddDocumentModalOpen(false)}
+          wid={wid}
+          folderId={selectedFolderId}
+        />
+      )}
+      {isAddWebsiteModalOpen && (
+        <AddWebsiteModal
+          isOpen={isAddWebsiteModalOpen}
+          onClose={() => setIsAddWebsiteModalOpen(false)}
+          wid={wid}
+          folderId={selectedFolderId}
+          mode={websiteModalMode}
+        />
+      )}
+      {isAddTextModalOpen && (
+        <AddTextModal
+          isOpen={isAddTextModalOpen}
+          onClose={() => setIsAddTextModalOpen(false)}
+          wid={wid}
+          folderId={selectedFolderId}
+        />
+      )}
 
       <ConfirmationDialog
         isOpen={deleteModalOpen}

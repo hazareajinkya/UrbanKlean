@@ -270,7 +270,7 @@ export default function BillingPage() {
   return (
     <>
       <WorkspacesNavbar />
-      <div className="mt-24 p-4">
+      <div className="mt-24 p-4 max-w-7xl mx-auto">
         <div className="max-w-4xl mx-auto">
           <motion.div
             key="billing"
