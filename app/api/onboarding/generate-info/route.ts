@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const { url, email } = onboardingStartSchema.parse(body);
 
 
-    if (email) {
+    if (email && email !== "support@magicalcx.com") {
       const docs = await getDocs(
         query(collection(db, "/workspaces"), where("info.email", "==", email))
       );
