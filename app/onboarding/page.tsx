@@ -22,7 +22,7 @@ import { useOnboardingActions } from "@/lib/hooks/onboarding/use-onboarding-acti
 import { Loader, PartyPopper, Shield, Timer } from "lucide-react";
 import { OnboardingData } from "@/lib/types/onboarding";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
-import { OnboardingAnimation } from "@/components/onboarding/onboarding-animation";
+import OnboardingAnimation from "@/components/onboarding/onboarding-animation";
 
 type Phase = "form" | "onboarding" | "success";
 
@@ -210,7 +210,7 @@ function OnboardingContent() {
                         className={cn(
                           "h-11 transition-all",
                           emailError &&
-                            "border-destructive focus-visible:ring-destructive/20"
+                          "border-destructive focus-visible:ring-destructive/20"
                         )}
                       />
                       {emailError && (

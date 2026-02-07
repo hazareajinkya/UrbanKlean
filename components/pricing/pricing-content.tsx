@@ -318,43 +318,6 @@ export const PricingContent = () => {
           </div>
         </div>
 
-        {isGeoLoading ? (
-          <div className="w-full bg-card rounded-3xl border shadow-sm overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-              <div className="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
-                <div className="mt-8 mb-6 space-y-2">
-                  <div className="h-8 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                  <div className="h-5 w-40 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                </div>
-
-                <div className="flex items-end gap-2 mb-2">
-                  <div className="h-16 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                  <div className="h-6 w-20 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-1.5" />
-                  <div className="h-5 w-16 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-1.5 ml-1" />
-                </div>
-
-                <div className="h-4 w-28 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-8" />
-
-                <div className="h-12 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-
-                <div className="h-3 w-48 mx-auto mt-4 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-              </div>
-
-              <div className="lg:col-span-7 p-8 md:p-12 bg-background/50">
-                <div className="h-6 w-36 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-6" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                  {Array.from({ length: 8 }).map((_, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className="mt-1 h-4 w-4 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%] shrink-0" />
-                      <div className="h-4 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
           <div className="w-full  bg-card rounded-3xl border shadow-sm overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               <div className="lg:col-span-5 p-6 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50 relative">
@@ -442,7 +405,6 @@ export const PricingContent = () => {
               </div>
             </div>
           </div>
-        )}
 
         {/* Lifetime Deal Section - Premium Design */}
         <div id="lifetime" className="mt-20">
@@ -453,34 +415,6 @@ export const PricingContent = () => {
             </p>
           </div>
 
-          {isGeoLoading ? (
-            <div className="w-full bg-card rounded-3xl border shadow-sm overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <div className="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-border bg-card/50">
-                  <div className="mt-8 mb-6 space-y-2">
-                    <div className="h-8 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    <div className="h-5 w-40 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                  </div>
-                  <div className="flex items-end gap-2 mb-8">
-                    <div className="h-16 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    <div className="h-6 w-20 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-1.5" />
-                  </div>
-                  <div className="h-12 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                </div>
-                <div className="lg:col-span-7 p-8 md:p-12 bg-background/50">
-                  <div className="h-6 w-36 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mb-6" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                    {Array.from({ length: 6 }).map((_, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <div className="mt-1 h-4 w-4 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-full animate-[shimmer_2s_infinite] bg-[length:200%_100%] shrink-0" />
-                        <div className="h-4 w-full bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
             <div className="relative w-full overflow-hidden group">
               <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 via-amber-500/10 to-orange-500/20 rounded-[40px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
@@ -701,7 +635,6 @@ export const PricingContent = () => {
                 </div>
               </div>
             </div>
-          )}
         </div>
 
         <div id="extra-credits" className="mt-28">
@@ -713,32 +646,6 @@ export const PricingContent = () => {
             </p>
           </div>
 
-          {isGeoLoading ? (
-            <div className="mx-auto w-full">
-              <div className="rounded-2xl border bg-card px-5 py-6 shadow-sm">
-                <div className="flex w-full flex-col gap-4 md:flex-row items-center md:justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    <div className="space-y-2">
-                      <div className="h-5 w-32 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      <div className="h-4 w-48 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      <div className="h-3 w-64 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%] mt-3" />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end w-full md:w-auto">
-                    <div className="h-5 w-40 bg-gradient-to-r from-muted via-muted/50 to-muted rounded-md animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    <div className="flex items-center gap-2">
-                      <div className="h-9 w-9 rounded-md bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      <div className="h-9 w-16 rounded-md bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      <div className="h-9 w-9 rounded-md bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                      <div className="h-9 w-24 rounded-full bg-gradient-to-r from-muted via-muted/50 to-muted animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
             <div className="mx-auto w-full ">
               <div className="rounded-2xl border bg-card px-4 md:px-5 py-6 shadow-sm transition-colors">
                 <div className="flex w-full flex-col gap-4 md:flex-row items-center md:justify-between">
@@ -838,7 +745,6 @@ export const PricingContent = () => {
                 </div>
               </div>
             </div>
-          )}
         </div>
       </div>
       <PricingFaq />
