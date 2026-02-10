@@ -135,13 +135,19 @@ function OnboardingContent() {
             : isEmailValid
               ? "invalid_domain"
               : "invalid_email",
+        workEmail: email,
+        domain: normalizeDomain(domain),
       });
       return;
     }
 
     const normalizedDomain = normalizeDomain(domain);
     const urlString = `https://${normalizedDomain}`;
-    datafastService.trackGoal("onboarding_started", { source: "onboarding" });
+    datafastService.trackGoal("onboarding_started", {
+      source: "onboarding",
+      workEmail: email,
+      domain: normalizedDomain,
+    });
     setUrl(urlString);
     setPhase("onboarding");
   };
@@ -170,6 +176,10 @@ function OnboardingContent() {
       setPhase("success");
     } catch (error) {
       console.error("Error completing onboarding:", error);
+      datafastService.trackGoal("onboarding_failed", {
+        workEmail: email,
+        domain: url.replace(/^https?:\/\//, ""),
+      });
     }
   };
 

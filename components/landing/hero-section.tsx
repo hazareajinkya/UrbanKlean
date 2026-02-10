@@ -49,6 +49,7 @@ export const HeroSection = () => {
       datafastService.trackGoal("onboarding_validation_failed", {
         source,
         reason: "empty_domain",
+        domain: "",
       });
       return;
     }
@@ -59,6 +60,7 @@ export const HeroSection = () => {
       datafastService.trackGoal("onboarding_validation_failed", {
         source,
         reason: "invalid_domain",
+        domain: normalized,
       });
       return;
     }
@@ -66,7 +68,7 @@ export const HeroSection = () => {
     datafastService.trackGoal(
       source === "floating" ? "floating_cta_clicked" : "hero_cta_clicked",
     );
-    datafastService.trackGoal("onboarding_started", { source });
+    datafastService.trackGoal("onboarding_started", { source, domain: normalized });
     setError("");
     setUrl(`https://${normalized}`);
     router.push(`/onboarding?url=${normalized}`);
