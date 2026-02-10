@@ -7,7 +7,7 @@ import { NextRequest } from "next/server";
 import { collection, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "./clients/firebase";
 import { IPerson } from "./types/person";
-import { IAction } from "./types/actions";
+import { IAction, IActionInput } from "./types/actions";
 import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
@@ -216,7 +216,7 @@ export const normalizeDomain = (value: string) => {
 
 export const checkRecentlyActive = (
   lastActivity: string,
-  hour: number
+  hour: number,
 ): boolean => {
   const now = new Date();
   const diffMs = now.getTime() - new Date(lastActivity).getTime();
@@ -229,24 +229,35 @@ export const isMac = (): boolean => {
   return navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 };
 
-export const getCustomTools = (actions: IAction[]): ToolSet => {
-  return actions.reduce((acc, action) => {
+const getInputSchema = (inputs: IActionInput[]) =>
+  inputs.reduce((acc: Record<string, z.ZodTypeAny>, input) => {
+    if (!input.key) return acc;
+    const schema =
+      input.type === "object"
+        ? z.object(getInputSchema(input.children || [])).passthrough()
+        : input.type === "number"
+          ? z.coerce.number()
+          : input.type === "boolean"
+            ? z.coerce.boolean()
+            : input.type === "url"
+              ? z.string().url()
+              : z.string();
+    acc[input.key] = input.required
+      ? schema.describe(input.description || "")
+      : schema.describe(input.description || "").optional();
+    return acc;
+  }, {});
+
+export const getCustomTools = (actions: IAction[]): ToolSet =>
+  actions.reduce((acc, action) => {
     acc[action.slug] = tool({
       name: action.name,
       description: action.description,
-      inputSchema: z.object({
-        ...action.inputs.reduce((acc: Record<string, any>, input) => {
-          acc[input.key] = z.string().describe(input.description || "");
-          return acc;
-        }, {} as Record<string, any>),
-      }),
-      execute: async (params) => {
-        return executeAPIAction(action, params);
-      },
+      inputSchema: z.object(getInputSchema(action.inputs)),
+      execute: async (params) => executeAPIAction(action, params),
     });
     return acc;
   }, {} as ToolSet);
-};
 
 export const generateForwardingEmail = () => {
   const prefix = "magical";
@@ -361,12 +372,12 @@ export const isBlockedCompanyDomain = (domain: string): boolean => {
   const normalized = normalizeDomain(domain).toLowerCase();
   if (!normalized) return false;
   return BLOCKED_COMPANY_DOMAINS.some(
-    (blocked) => normalized === blocked || normalized.endsWith(`.${blocked}`)
+    (blocked) => normalized === blocked || normalized.endsWith(`.${blocked}`),
   );
 };
 
 export const getEmotionIcon = (
-  sentiment: "positive" | "negative" | "neutral"
+  sentiment: "positive" | "negative" | "neutral",
 ) => {
   switch (sentiment) {
     case "positive":

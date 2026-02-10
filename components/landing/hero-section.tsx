@@ -19,6 +19,7 @@ export const HeroSection = () => {
 
   useEffect(() => {
     setMounted(true);
+    router.prefetch("/onboarding");
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting && entry.boundingClientRect.top < 0) {
@@ -38,7 +39,7 @@ export const HeroSection = () => {
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

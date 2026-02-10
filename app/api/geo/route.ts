@@ -9,12 +9,12 @@ export async function GET(req: NextRequest) {
     if (!geo) {
       return successResponse(
         { country: null, isIndia: false },
-        "Geo data not available"
+        "Geo data not available",
       );
     }
 
-    // const isIndia = geo.country === "IN";
-    const isIndia = true;
+    const isIndia = geo.country === "IN";
+    // const isIndia = true;
 
     return successResponse(
       {
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         region: geo.region || null,
         isIndia,
       },
-      "Geo data retrieved successfully"
+      "Geo data retrieved successfully",
     );
   } catch (error: unknown) {
     console.error("Error retrieving geo data:", error);

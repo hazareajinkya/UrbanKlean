@@ -9,6 +9,7 @@ interface CheckoutOptions {
   planId: "all_in_one" | "lifetime";
   tier: number;
   billingCycle?: "monthly" | "annually" | "lifetime";
+  lifetimePrice?: number;
 }
 
 interface CreateCheckoutResponse {
@@ -30,6 +31,7 @@ export const usePolarCheckout = () => {
         planId: options.planId,
         tier: options.tier,
         billingCycle: options.billingCycle,
+        lifetimePrice: options.lifetimePrice,
         userId: user?.id,
         userEmail: user?.email,
       });
@@ -41,6 +43,7 @@ export const usePolarCheckout = () => {
     planId,
     tier,
     billingCycle,
+    lifetimePrice,
   }: CheckoutOptions) => {
     // Check authentication
     if (isLoading) {
@@ -102,6 +105,7 @@ export const usePolarCheckout = () => {
         planId,
         tier,
         billingCycle,
+        lifetimePrice,
       } as any);
 
       // Redirect to Polar checkout

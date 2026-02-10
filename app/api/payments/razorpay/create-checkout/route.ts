@@ -18,13 +18,15 @@ const createSubscriptionSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   userEmail: z.string().email("Invalid email address"),
   billingCycle: z.enum(["monthly", "annually", "lifetime"]).optional(),
+  lifetimePrice: z.number().int().positive().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const validatedData = createSubscriptionSchema.parse(body);
-    const { planId, tier, userId, userEmail, billingCycle } = validatedData;
+    const { planId, tier, userId, userEmail, billingCycle, lifetimePrice } =
+      validatedData;
     console.log("validatedData", validatedData);
 
     const plan = PLANS[planId as keyof typeof PLANS];
@@ -39,7 +41,16 @@ export async function POST(req: NextRequest) {
         return errorResponse("Tier not found for lifetime plan", 400);
       }
 
-      const amountInPaise = tierData.price.inr * 100;
+      const allowedLifetimePrices = [
+        tierData.price.inr,
+        Math.round(tierData.price.inr * 0.7),
+        Math.round(tierData.price.inr * 0.5),
+      ];
+      const lifetimeAmountInr =
+        lifetimePrice && allowedLifetimePrices.includes(lifetimePrice)
+          ? lifetimePrice
+          : tierData.price.inr;
+      const amountInPaise = lifetimeAmountInr * 100;
 
       const notes: RazorpayLifetimePurchaseCustomData = {
         userId,

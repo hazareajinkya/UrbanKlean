@@ -2,6 +2,7 @@ import { Polar } from "@polar-sh/sdk";
 import { CREDIT_ADDON, LIFETIME_PLAN } from "../plans";
 
 let polarInstance: Polar | null = null;
+const discountIdByCodeCache: Record<string, string> = {};
 
 export const getPolarInstance = (): Polar => {
   if (polarInstance) return polarInstance;
@@ -65,7 +66,7 @@ export interface PolarLifetimePurchaseCustomData {
 }
 
 export const mapPolarStatus = (
-  status: PolarSubscriptionData["status"]
+  status: PolarSubscriptionData["status"],
 ): "active" | "canceled" | "past_due" | "paused" | "trialing" => {
   switch (status) {
     case "active":
@@ -87,6 +88,26 @@ export const mapPolarStatus = (
 };
 
 export const polarApi = {
+  async getDiscountIdByCode(args: { code: string }) {
+    const normalizedCode = args.code.trim().toLowerCase();
+    if (!normalizedCode) return null;
+    if (discountIdByCodeCache[normalizedCode]) {
+      return discountIdByCodeCache[normalizedCode];
+    }
+    const polar = getPolarInstance();
+    const pages = await polar.discounts.list({ query: args.code, limit: 100 });
+    for await (const page of pages) {
+      const discount = page.result.items.find(
+        (item) => item.code?.toLowerCase() === normalizedCode
+      );
+      if (discount?.id) {
+        discountIdByCodeCache[normalizedCode] = discount.id;
+        return discount.id;
+      }
+    }
+    return null;
+  },
+
   async createCheckoutSession(arg: {
     productId: string;
     customerEmail?: string;
@@ -200,16 +221,16 @@ export const polarApi = {
 
     if (arg.quantity < 1 || arg.quantity > 50) {
       throw new Error(
-        `Invalid quantity: ${arg.quantity}. Quantity must be between 1 and 50.`
+        `Invalid quantity: ${arg.quantity}. Quantity must be between 1 and 50.`,
       );
     }
 
     const priceAmountCents = Math.round(
-      CREDIT_ADDON.price.usd * 100 * arg.quantity
+      CREDIT_ADDON.price.usd * 100 * arg.quantity,
     );
     if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
       throw new Error(
-        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
       );
     }
 
@@ -246,7 +267,7 @@ export const polarApi = {
         const detail = res?.data?.detail;
         if (detail != null) {
           throw new Error(
-            `Polar checkout creation failed: ${JSON.stringify(detail)}`
+            `Polar checkout creation failed: ${JSON.stringify(detail)}`,
           );
         }
       }
@@ -263,6 +284,7 @@ export const polarApi = {
     customerId?: string;
     successUrl: string;
     metadata: PolarLifetimePurchaseCustomData;
+    discountId?: string;
   }) {
     const polar = getPolarInstance();
 
@@ -270,13 +292,14 @@ export const polarApi = {
     const priceAmountCents = tier.price.usd * 100;
     if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
       throw new Error(
-        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
       );
     }
 
     try {
       const result = await polar.checkouts.create({
         products: [arg.productId],
+        discountId: arg.discountId,
         prices: {
           [arg.productId]: [
             {
@@ -307,7 +330,7 @@ export const polarApi = {
         const detail = res?.data?.detail;
         if (detail != null) {
           throw new Error(
-            `Polar lifetime checkout creation failed: ${JSON.stringify(detail)}`
+            `Polar lifetime checkout creation failed: ${JSON.stringify(detail)}`,
           );
         }
       }

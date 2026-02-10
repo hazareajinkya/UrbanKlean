@@ -11,6 +11,7 @@ interface CheckoutOptions {
   planId: "all_in_one" | "lifetime";
   tier: number;
   billingCycle?: "monthly" | "annually" | "lifetime";
+  lifetimePrice?: number;
 }
 
 interface CreateSubscriptionResponse {
@@ -55,6 +56,7 @@ export const useRazorpayCheckout = () => {
         planId: options.planId,
         tier: options.tier,
         billingCycle: options.billingCycle,
+        lifetimePrice: options.lifetimePrice,
         userId: user?.id,
         userEmail: user?.email,
       });
@@ -66,6 +68,7 @@ export const useRazorpayCheckout = () => {
     planId,
     tier,
     billingCycle,
+    lifetimePrice,
   }: CheckoutOptions) => {
 
     if (isLoading) {
@@ -145,6 +148,7 @@ export const useRazorpayCheckout = () => {
         planId,
         tier,
         billingCycle,
+        lifetimePrice,
       });
 
       const { subscriptionId, orderId, amount, currency } = response;
