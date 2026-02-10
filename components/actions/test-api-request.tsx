@@ -34,6 +34,167 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
     {}
   );
 
+  const getNestedValue = (path: string[]) =>
+    path.reduce(
+      (acc, key) =>
+        acc && typeof acc === "object" && key in acc ? acc[key] : undefined,
+      testInputValues as any
+    );
+
+  const setNestedValue = (path: string[], value: any) => {
+    setTestInputValues((prev) => {
+      const next = { ...prev };
+      let cursor: any = next;
+      path.forEach((key, index) => {
+        if (index === path.length - 1) {
+          cursor[key] = value;
+          return;
+        }
+        cursor[key] =
+          cursor[key] && typeof cursor[key] === "object"
+            ? { ...cursor[key] }
+            : {};
+        cursor = cursor[key];
+      });
+      return next;
+    });
+  };
+
+  const buildPayload = (
+    inputsList: IActionInput[],
+    parentPath: string[] = []
+  ): Record<string, any> =>
+    inputsList.reduce((acc, input) => {
+      if (!input.key) return acc;
+      const path = [...parentPath, input.key];
+      if (input.type === "object") {
+        const nested = buildPayload(input.children || [], path);
+        if (Object.keys(nested).length || input.required) {
+          acc[input.key] = nested;
+        }
+        return acc;
+      }
+      const value = getNestedValue(path);
+      if (value !== undefined && value !== "") acc[input.key] = value;
+      return acc;
+    }, {} as Record<string, any>);
+
+  const getMissingRequiredInputs = (
+    inputsList: IActionInput[],
+    parentPath: string[] = []
+  ): string[] =>
+    inputsList.flatMap((input) => {
+      if (!input.key) return [];
+      const path = [...parentPath, input.key];
+      if (input.type === "object") {
+        const nested = buildPayload(input.children || [], path);
+        const missing = getMissingRequiredInputs(input.children || [], path);
+        if (input.required && !Object.keys(nested).length)
+          return [path.join("."), ...missing];
+        return missing;
+      }
+      const value = getNestedValue(path);
+      return input.required && (value === undefined || value === "")
+        ? [path.join(".")]
+        : [];
+    });
+
+  const renderInputs = (
+    inputsList: IActionInput[],
+    parentPath: string[] = []
+  ) =>
+    inputsList.map((input, index) => {
+      const path = [...parentPath, input.key];
+      const inputKey =
+        input.key && path.join(".")
+          ? path.join(".")
+          : `${parentPath.join(".") || "root"}-${index}`;
+      if (input.type === "object") {
+        return (
+          <div key={inputKey} className="space-y-2">
+            <div className="flex items-center justify-between space-x-2 mb-1.5">
+              <Label className="text-sm gap-1">
+                {input.key}
+                {input.required && <span className="text-red-500">*</span>}
+              </Label>
+              <span className="text-xs text-muted-foreground text-right">
+                {capitalize(input.type)}
+              </span>
+            </div>
+            <div className="border rounded-md bg-muted/30 p-3 space-y-3">
+              <Label className="text-xs font-medium text-muted-foreground">
+                Object variables for {input.key || "object"}
+              </Label>
+              {input.children?.length ? (
+                renderInputs(input.children, path)
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  No object variables added yet.
+                </p>
+              )}
+            </div>
+            {input.description && (
+              <p className="text-xs text-right mt-1 text-muted-foreground">
+                {input.description}
+              </p>
+            )}
+          </div>
+        );
+      }
+      return (
+        <div key={inputKey} className="space-y-1">
+          <div className="flex items-center justify-between space-x-2 mb-1.5">
+            <Label className="text-sm gap-1">
+              {input.key}
+              {input.required && <span className="text-red-500">*</span>}
+            </Label>
+            <span className="text-xs text-muted-foreground text-right">
+              {capitalize(input.type)}
+            </span>
+          </div>
+          {input.type === "boolean" ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={getNestedValue(path) || false}
+                onChange={(e) => setNestedValue(path, e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm">
+                {getNestedValue(path) ? "true" : "false"}
+              </span>
+            </div>
+          ) : (
+            <Input
+              type={
+                input.type === "number"
+                  ? "number"
+                  : input.type === "url"
+                  ? "url"
+                  : "text"
+              }
+              value={getNestedValue(path) || ""}
+              onChange={(e) =>
+                setNestedValue(
+                  path,
+                  input.type === "number"
+                    ? Number(e.target.value)
+                    : e.target.value
+                )
+              }
+              placeholder={`Enter ${input.key}...`}
+              className="mt-1"
+            />
+          )}
+          {input.description && (
+            <p className="text-xs text-right mt-1 text-muted-foreground">
+              {input.description}
+            </p>
+          )}
+        </div>
+      );
+    });
+
   const handleTestRequest = async () => {
     if (!url) {
       setTestResponse({
@@ -45,17 +206,12 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
     }
 
     // Check if all required inputs are provided
-    const missingRequiredInputs = inputs
-      .filter((input) => input.required)
-      .filter(
-        (input) =>
-          !testInputValues[input.key] || testInputValues[input.key] === ""
-      );
+    const missingRequiredInputs = getMissingRequiredInputs(inputs);
 
     if (missingRequiredInputs.length > 0) {
       setTestResponse({
         error: `Required inputs missing: ${missingRequiredInputs
-          .map((input) => input.key)
+          .map((input) => input)
           .join(", ")}`,
         status: 0,
         timestamp: new Date().toISOString(),
@@ -102,20 +258,9 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
       // Prepare query parameters and request body based on inputs
       const queryParams: Record<string, any> = {};
       const requestBody: Record<string, any> = {};
-
-      // Add input values based on request method
-      inputs.forEach((input) => {
-        const value = testInputValues[input.key];
-        if (value !== undefined && value !== "") {
-          if (method === "GET") {
-            // For GET requests, add inputs as query parameters
-            queryParams[input.key] = value;
-          } else {
-            // For POST/PUT/DELETE, add inputs to request body
-            requestBody[input.key] = value;
-          }
-        }
-      });
+      const payload = buildPayload(inputs);
+      if (method === "GET") Object.assign(queryParams, payload);
+      else Object.assign(requestBody, payload);
 
       // Add query parameters for API key in query location
       if (
@@ -166,6 +311,8 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
     }
   };
 
+  const missingRequired = getMissingRequiredInputs(inputs);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -181,105 +328,39 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
       </div>
 
       {/* Input Values Collection */}
-      {inputs.length > 0 && (
+      {inputs.length === 0 ? (
+        <div className="border rounded-md p-4 bg-muted/50 text-center text-sm text-muted-foreground">
+          No parameters required — you can send the request directly.
+        </div>
+      ) : (
         <div className="space-y-3">
           <Label className="text-sm font-medium">
             Test Input Values{" "}
             {method === "GET" ? "(Query Parameters)" : "(Request Body)"}
           </Label>
           <div className="border rounded-md p-4 space-y-3 bg-white">
-            {inputs.map((input) => (
-              <div key={input.key} className="space-y-1 ">
-                <div className="flex items-center justify-between space-x-2 mb-1.5">
-                  <Label className="text-sm gap-1">
-                    {input.key}
-                    {input.required && <span className="text-red-500">*</span>}
-                  </Label>
-
-                  <span className="text-xs text-muted-foreground  text-right">
-                    {capitalize(input.type)}
-                  </span>
-                </div>
-                {input.type === "boolean" ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={testInputValues[input.key] || false}
-                      onChange={(e) =>
-                        setTestInputValues((prev) => ({
-                          ...prev,
-                          [input.key]: e.target.checked,
-                        }))
-                      }
-                      className="rounded"
-                    />
-                    <span className="text-sm">
-                      {testInputValues[input.key] ? "true" : "false"}
-                    </span>
-                  </div>
-                ) : (
-                  <Input
-                    type={
-                      input.type === "number"
-                        ? "number"
-                        : input.type === "url"
-                        ? "url"
-                        : "text"
-                    }
-                    value={testInputValues[input.key] || ""}
-                    onChange={(e) =>
-                      setTestInputValues((prev) => ({
-                        ...prev,
-                        [input.key]:
-                          input.type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value,
-                      }))
-                    }
-                    placeholder={`Enter ${input.key}...`}
-                    className="mt-1"
-                  />
-                )}
-
-                {input.description && (
-                  <p className="text-xs text-right mt-1 text-muted-foreground">
-                    {input.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Send Request Button */}
-          <div className="">
-            <Button
-              onClick={handleTestRequest}
-              variant={"outline"}
-              disabled={
-                isTestingRequest ||
-                !url ||
-                inputs.some(
-                  (input) =>
-                    input.required &&
-                    (!testInputValues[input.key] ||
-                      testInputValues[input.key] === "")
-                )
-              }
-              style={{
-                background: "#ffffff",
-              }}
-              className="w-full gap-2 bg-white"
-            >
-              {isTestingRequest ? (
-                <Loader className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              {isTestingRequest ? "Sending..." : "Send Request"}
-            </Button>
+            {renderInputs(inputs)}
           </div>
         </div>
       )}
+
+      {/* Send Request Button - always visible */}
+      <div className="">
+        <Button
+          onClick={handleTestRequest}
+          variant={"outline"}
+          disabled={isTestingRequest || !url || missingRequired.length > 0}
+          style={{ background: "#ffffff" }}
+          className="w-full gap-2 bg-white"
+        >
+          {isTestingRequest ? (
+            <Loader className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+          {isTestingRequest ? "Sending..." : "Send Request"}
+        </Button>
+      </div>
 
       {testResponse && (
         <div className="border rounded-md p-4 space-y-3 bg-white">

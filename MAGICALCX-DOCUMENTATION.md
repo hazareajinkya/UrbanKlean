@@ -15,8 +15,11 @@
 11. [Team Collaboration](#team-collaboration)
 12. [Technical Architecture](#technical-architecture)
 13. [Pricing Plans](#pricing-plans)
-14. [Use Cases](#use-cases)
-15. [Business Outcomes](#business-outcomes)
+14. [Free Tools](#free-tools)
+15. [Use Cases](#use-cases)
+16. [Business Outcomes](#business-outcomes)
+17. [Getting Started](#getting-started)
+18. [Summary](#summary)
 
 ---
 
@@ -48,7 +51,7 @@ MagicalCX is positioned as "the world's first AI that makes superior customer ex
 - **Automatic onboarding**: Just enter your website URL—MagicalCX scrapes and configures everything
 - **Built-in CRM**: Customer profiles auto-populate from conversations
 - **Multiple agents**: Create specialized agents for sales, support, onboarding, etc.
-- **Weekly reports**: Know exactly what customers are asking, requesting, and feeling
+- **Insights dashboard**: Know what customers are asking, requesting, and feeling
 - **No credit card required**: 14-day free trial with DIY or white-glove setup
 
 ---
@@ -98,7 +101,7 @@ Interactions that feel like your best human agents—clear, empathetic, and cont
 
 ### 2. EFRO™ Engine (Empathy-First Revenue Orchestrator)
 
-A unique revenue engine that decides **if, when, and how** to introduce upgrades, offers, or saves—only when it's fair, timely, and genuinely helpful. EFRO™:
+An empathy-first revenue guidance framework that shapes how agents introduce upgrades, offers, or saves—only when it's fair, timely, and genuinely helpful. EFRO™:
 
 - Understands customer intent in real-time
 - Knows when to step in with suggestions
@@ -154,7 +157,7 @@ MagicalCX includes a **built-in CRM** that auto-populates from conversations—n
 - Sentiment analysis
 - Cross-channel identity resolution
 
-### 7. Business Insights Dashboard
+### 7. Insights Dashboard
 
 Clear, actionable analytics including:
 
@@ -191,14 +194,13 @@ When AI can't or shouldn't handle something:
   - Complex issues
   - Customer request
 
-### 10. Self-Learning Engine
+### 10. Teach Mode + Continuous Improvement
 
-The AI improves with every conversation:
+The AI improves through explicit training and knowledge updates:
 
-- Learns from successful resolutions
-- Adapts to brand voice over time
-- Grows more intelligent and consistent
-- Achieves up to 98% accuracy
+- Teach Mode for conversational training
+- Knowledge updates from web, PDFs, and text
+- Brand voice refinement via agent prompts
 
 ---
 
@@ -206,7 +208,7 @@ The AI improves with every conversation:
 
 ### EFRO™ (Empathy-First Revenue Orchestrator)
 
-EFRO is MagicalCX's built-in revenue engine. It:
+EFRO is MagicalCX's empathy-first revenue engine framework. It:
 
 - Understands customer intent in real-time
 - Knows when to step in with relevant suggestions
@@ -662,69 +664,56 @@ Custom Actions allow the AI to take real actions during conversations by calling
 
 MagicalCX uses usage-based pricing tied to message volume. Prices are shown in both USD and INR.
 
-### Growth Plan
+### All in One Plan
 
-**"Perfect for growing brands getting started with MagicalCX."**
+**"Everything you need to automate your customer support and boost revenue."**
 
-| Messages/Month | USD Price | INR Price  |
-| -------------- | --------- | ---------- |
-| 5,000          | $99/mo    | ₹9,900/mo  |
-| 10,000         | $149/mo   | ₹14,900/mo |
+| Messages/Month | Billing Cycle | USD Price | INR Price    |
+| -------------- | ------------- | --------- | ------------ |
+| 10,000         | Monthly       | $249/mo   | ₹13,999/mo   |
+| 10,000         | Annually      | $199/mo billed annually | ₹9,999/mo billed annually |
 
-**Growth Plan caps at 10,000 messages/month.**
+**Plan highlights**:
 
-**Features included**:
+- 10,000 messages/month
+- Unlimited agents
+- Omnichannel inbox
+- Workflows + actions
+- CRM + identity resolution
+- Insights dashboard (weekly reports listed in plan copy)
+- Knowledge suite (web scrape, PDFs, teach mode)
+- Phishing protection
+- Human handoff + guardrails (escalation tracking)
 
-- 1 AI Agent
-- Omnichannel Inbox
-- Basic Memory
-- Order Tracking
-- Basic FAQs & Policies
-- 1 Workspace
-- Standard Response Model
-- Business Hours Controls
+### Lifetime Deal
 
-### Scale Plan
+**"One-time payment for lifetime access to MagicalCX."**
 
-**"Automation, revenue boosts, and advanced CX for teams that want to move faster."**
+| Messages/Month | Billing Cycle | USD Price | INR Price |
+| -------------- | ------------- | --------- | --------- |
+| 10,000         | Lifetime      | $999      | ₹79,999   |
 
-| Messages/Month | USD Price | INR Price  |
-| -------------- | --------- | ---------- |
-| 5,000          | $169/mo   | ₹16,900/mo |
-| 10,000         | $199/mo   | ₹19,900/mo |
-| 15,000         | $229/mo   | ₹22,900/mo |
-| 20,000         | $259/mo   | ₹25,900/mo |
-| 25,000         | $289/mo   | ₹28,900/mo |
-| 30,000         | $319/mo   | ₹31,900/mo |
+### Message Credits (Add-on)
 
-**Features included** (everything in Growth, plus):
-
-- AI Revenue Engine (EFRO™)
-- Automations (refunds, exchanges, cancellations)
-- Zero-Repetition Memory
-- Workflows
-- Deep Commerce Integrations
-- Priority Response Model
-- Insights Dashboard
-- Brand Guardrails
-- **Unlimited Agents**
-- API Access
-
-### Enterprise Plan
-
-**Custom pricing for 30,000+ messages/month**
-
-Everything in Scale, plus:
-
-- Custom Model Fine-tuning
-- Dedicated Success Manager
-- SSO & Enterprise Security
-- SLA Guarantee
+- **1,000 extra messages**: $15 / ₹999
 
 ### Trial
 
 - **14-day free trial**
 - **No credit card required**
+
+---
+
+## Free Tools
+
+MagicalCX provides free, standalone tools to help teams improve CX outcomes:
+
+- AI vs Human Support ROI Calculator
+- Customer Support Cost Calculator
+- Customer Support & Refund Policy Generator
+- Customer Support Response Grader
+- Customer Support Tone Checker
+- Refund Risk Predictor
 - DIY or guided (white-glove) setup available
 
 ---
@@ -900,5 +889,5 @@ MagicalCX represents the evolution from "I'm just a bot" to "I've got this."
 
 ---
 
-_Last Updated: January 2026_
-_Version: 0.1.0_
+_Last Updated: February 2026_
+_Version: 0.2.0_

@@ -35,33 +35,34 @@ export const UrlInputForm = ({
       } ${className}`}
     >
       <form onSubmit={onSubmit} className="relative group w-full">
-        <div
-          className={`absolute inset-y-0 left-3 items-center pointer-events-none ${
-            compactOnMobile ? "hidden sm:flex" : "flex"
-          }`}
-        >
-          <Globe className="h-5 w-5 text-muted-foreground/50 group-focus-within:text-primary/50 transition-colors" />
+        <div className="relative">
+          <div
+            className={`absolute inset-y-0 left-3 items-center pointer-events-none ${
+              compactOnMobile ? "hidden sm:flex" : "flex"
+            }`}
+          >
+            <Globe className="h-5 w-5 text-muted-foreground/50 group-focus-within:text-primary/50 transition-colors" />
+          </div>
+          <input
+            type="text"
+            placeholder="Enter your website URL"
+            className={`w-full h-14 rounded-lg border bg-white pl-10 pr-4 text-base transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:pr-32 ${
+              compactOnMobile ? "hidden sm:block" : ""
+            }`}
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              if (error) setError("");
+            }}
+            onPaste={(e) => {
+              e.preventDefault();
+              const pastedText = e.clipboardData.getData("text");
+              const normalized = normalizeDomain(pastedText);
+              setUrl(normalized);
+              if (error) setError("");
+            }}
+          />
         </div>
-
-        <input
-          type="text"
-          placeholder="Enter your website URL"
-          className={`w-full h-14 pl-10 pr-32 rounded-lg border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base ${
-            compactOnMobile ? "hidden sm:block" : ""
-          }`}
-          value={url}
-          onChange={(e) => {
-            setUrl(e.target.value);
-            if (error) setError("");
-          }}
-          onPaste={(e) => {
-            e.preventDefault();
-            const pastedText = e.clipboardData.getData("text");
-            const normalized = normalizeDomain(pastedText);
-            setUrl(normalized);
-            if (error) setError("");
-          }}
-        />
 
         {compactOnMobile && (
           <button
@@ -75,7 +76,7 @@ export const UrlInputForm = ({
         )}
         <button
           type="submit"
-          className={`${buttonBaseClassName} absolute right-1.5 top-1.5 ${
+          className={`${buttonBaseClassName} mt-3 w-full justify-center sm:absolute sm:right-1.5 sm:top-1.5 sm:mt-0 sm:w-auto ${
             compactOnMobile ? "hidden sm:flex" : ""
           }`}
         >

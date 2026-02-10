@@ -33,9 +33,10 @@ export type IActionAuthorization = {
 export type IRequestType = "GET" | "POST" | "PUT" | "DELETE";
 export type IActionInput = {
   key: string;
-  type: "string" | "number" | "boolean" | "url";
+  type: "string" | "number" | "boolean" | "url" | "object";
   required: boolean;
   description?: string;
+  children?: IActionInput[];
 };
 
 export type IActionType = "internal" | "user" | "integration";

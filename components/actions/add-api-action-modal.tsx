@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,18 +51,31 @@ interface AddApiActionModalProps {
   editingAction?: IAction | null;
 }
 
+type IUiActionInput = Omit<IActionInput, "children"> & {
+  uiId: string;
+  children?: IUiActionInput[];
+};
+type InputField = "key" | "description" | "type" | "required";
+
 const AddApiActionModal = ({
   isOpen,
   onClose,
   wid,
   editingAction,
 }: AddApiActionModalProps) => {
+  const toUiInputs = (inputs: IActionInput[]): IUiActionInput[] =>
+    inputs.map((input) => ({
+      ...input,
+      uiId: uuidv4(),
+      children: input.children ? toUiInputs(input.children) : [],
+    }));
+
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
     method: string;
     url: string;
-    inputs: IActionInput[];
+    inputs: IUiActionInput[];
     headers: Array<{ key: string; value: string }>;
     authorization: IActionAuthorization;
   }>({
@@ -72,20 +85,13 @@ const AddApiActionModal = ({
     url: editingAction?.apiUrl || "",
     inputs:
       editingAction?.inputs && editingAction.inputs.length > 0
-        ? editingAction.inputs.map((input, index) => ({
-            key: input.key || `param_${index}`,
-            description: input.description || "",
-            type: input.type,
-            required: input.required,
-          }))
-        : [
-            {
-              key: "",
-              description: "",
-              type: "string" as IActionInput["type"],
-              required: false,
-            },
-          ],
+        ? toUiInputs(
+            editingAction.inputs.map((input, index) => ({
+              ...input,
+              key: input.key || `param_${index}`,
+            }))
+          )
+        : [],
     headers: Object.entries(editingAction?.headers || {}).map(
       ([key, value]) => ({
         key,
@@ -100,6 +106,23 @@ const AddApiActionModal = ({
   const { saveAction, updateAction } = useAiActionsActions();
 
   const handleSave = () => {
+    const sanitizeInputs = (inputs: IUiActionInput[]): IActionInput[] =>
+      inputs
+        .filter((param) => param.key?.trim())
+        .map((param) => {
+          const children =
+            param.children && param.children.length
+              ? sanitizeInputs(param.children)
+              : [];
+          return {
+            type: param.type,
+            key: param.key,
+            required: param.required,
+            description: param.description,
+            ...(children.length ? { children } : {}),
+          };
+        });
+
     const actionData: IAction = {
       id: editingAction?.id || uuidv4(),
       wid,
@@ -116,12 +139,7 @@ const AddApiActionModal = ({
         return acc;
       }, {} as Record<string, string>),
       authorization: formData.authorization,
-      inputs: formData.inputs.map((param) => ({
-        type: param.type,
-        key: param.key,
-        required: param.required,
-        description: param.description,
-      })),
+      inputs: sanitizeInputs(formData.inputs),
       createdAt: editingAction?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -149,6 +167,7 @@ const AddApiActionModal = ({
       inputs: [
         ...prev.inputs,
         {
+          uiId: uuidv4(),
           key: "",
           description: "",
           type: "string",
@@ -158,15 +177,87 @@ const AddApiActionModal = ({
     }));
   };
 
-  const updateInput = (
+  const updateInput = (index: number, field: InputField, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      inputs: prev.inputs.map((input, i) =>
+        i === index
+          ? {
+              ...input,
+              [field]: value,
+              children:
+                field === "type" && value !== "object"
+                  ? ([] as IUiActionInput[])
+                  : input.children,
+            }
+          : input
+      ),
+    }));
+  };
+
+  const addNestedInput = (parentIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      inputs: prev.inputs.map((input, i) =>
+        i === parentIndex
+          ? {
+              ...input,
+              children: [
+                ...(input.children || []),
+                {
+                  uiId: uuidv4(),
+                  key: "",
+                  description: "",
+                  type: "string",
+                  required: false,
+                },
+              ],
+            }
+          : input
+      ),
+    }));
+  };
+
+  const updateNestedInput = (
+    parentIndex: number,
     index: number,
-    field: keyof IActionInput,
+    field: InputField,
     value: any
   ) => {
     setFormData((prev) => ({
       ...prev,
       inputs: prev.inputs.map((input, i) =>
-        i === index ? { ...input, [field]: value } : input
+        i === parentIndex
+          ? {
+              ...input,
+              children: (input.children || []).map((child, ci) =>
+                ci === index
+                  ? {
+                      ...child,
+                      [field]: value,
+                      children:
+                        field === "type" && value !== "object"
+                          ? ([] as IUiActionInput[])
+                          : child.children,
+                    }
+                  : child
+              ),
+            }
+          : input
+      ),
+    }));
+  };
+
+  const removeNestedInput = (parentIndex: number, index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      inputs: prev.inputs.map((input, i) =>
+        i === parentIndex
+          ? {
+              ...input,
+              children: (input.children || []).filter((_, ci) => ci !== index),
+            }
+          : input
       ),
     }));
   };
@@ -331,82 +422,217 @@ const AddApiActionModal = ({
 
               <TabsContent value="parameters" className="space-y-4 pt-2 pb-4">
                 <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-center">Required</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {formData.inputs.map((input, index) => (
-                        <TableRow key={index}>
-                          <TableCell>
-                            <Input
-                              value={input.key}
-                              onChange={(e) =>
-                                updateInput(index, "key", e.target.value)
-                              }
-                              placeholder="city"
-                              className="w-full"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={input.description || ""}
-                              onChange={(e) =>
-                                updateInput(
-                                  index,
-                                  "description",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="City of the user"
-                              className="w-full"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={input.type}
-                              onValueChange={(value) =>
-                                updateInput(index, "type", value)
-                              }
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="string">String</SelectItem>
-                                <SelectItem value="number">Number</SelectItem>
-                                <SelectItem value="boolean">Boolean</SelectItem>
-                                <SelectItem value="url">URL</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Switch
-                              checked={input.required}
-                              onCheckedChange={(checked) =>
-                                updateInput(index, "required", checked)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeInput(index)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
+                  {formData.inputs.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground bg-muted/30 rounded-md">
+                      Add Parameter to add inputs if your API needs them.
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Key</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead className="text-center">Required</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {formData.inputs.map((input, index) => (
+                          <Fragment key={input.uiId}>
+                            <TableRow>
+                              <TableCell>
+                                <Input
+                                  value={input.key}
+                                  onChange={(e) =>
+                                    updateInput(index, "key", e.target.value)
+                                  }
+                                  placeholder="city"
+                                  className="w-full"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  value={input.description || ""}
+                                  onChange={(e) =>
+                                    updateInput(
+                                      index,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="City of the user"
+                                  className="w-full"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={input.type}
+                                  onValueChange={(value) =>
+                                    updateInput(index, "type", value)
+                                  }
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="string">String</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="url">URL</SelectItem>
+                                    <SelectItem value="object">
+                                      Object (JSON)
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Switch
+                                  checked={input.required}
+                                  onCheckedChange={(checked) =>
+                                    updateInput(index, "required", checked)
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeInput(index)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                            {input.type === "object" && (
+                              <>
+                                <TableRow>
+                                  <TableCell colSpan={5}>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <span className="font-medium">-&gt;</span>
+                                      <span className="font-medium">
+                                        Nested variables for{" "}
+                                        {input.key || "object"}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                                {(input.children || []).map(
+                                  (child, childIndex) => (
+                                    <TableRow key={child.uiId}>
+                                      <TableCell className="pl-8">
+                                        <Input
+                                          value={child.key}
+                                          onChange={(e) =>
+                                            updateNestedInput(
+                                              index,
+                                              childIndex,
+                                              "key",
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="field"
+                                          className="w-full"
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Input
+                                          value={child.description || ""}
+                                          onChange={(e) =>
+                                            updateNestedInput(
+                                              index,
+                                              childIndex,
+                                              "description",
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="Field description"
+                                          className="w-full"
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Select
+                                          value={child.type}
+                                          onValueChange={(value) =>
+                                            updateNestedInput(
+                                              index,
+                                              childIndex,
+                                              "type",
+                                              value
+                                            )
+                                          }
+                                        >
+                                          <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="string">
+                                              String
+                                            </SelectItem>
+                                            <SelectItem value="number">
+                                              Number
+                                            </SelectItem>
+                                            <SelectItem value="boolean">
+                                              Boolean
+                                            </SelectItem>
+                                            <SelectItem value="url">
+                                              URL
+                                            </SelectItem>
+                                            <SelectItem value="object">
+                                              Object (JSON)
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Switch
+                                          checked={child.required}
+                                          onCheckedChange={(checked) =>
+                                            updateNestedInput(
+                                              index,
+                                              childIndex,
+                                              "required",
+                                              checked
+                                            )
+                                          }
+                                        />
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            removeNestedInput(
+                                              index,
+                                              childIndex
+                                            )
+                                          }
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                )}
+                                <TableRow>
+                                  <TableCell colSpan={5} className="pl-8">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => addNestedInput(index)}
+                                      className="gap-2"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Add Variable
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              </>
+                            )}
+                          </Fragment>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
                 </div>
 
                 <Button variant="outline" onClick={addInput} className="">

@@ -32,16 +32,27 @@ export const PLANS = {
     features: [
       {
         label: "10,000 messages/month",
-        tooltip: "Includes 10,000 AI messages each month. Add credits anytime.",
+        tooltip:
+          "1 message = 1 customer message or 1 AI reply. You get 10,000 per month; we notify you before you hit the limit and you can add credits anytime.",
       },
       {
         label: "EFRO revenue engine",
         tooltip: "Turns support into sales with helpful, timely upsells.",
       },
       {
-        label: "Unlimited agents",
+        label: "Unlimited AI agents",
         tooltip:
-          "Create unlimited agents for sales, support, onboarding, and more.",
+          "Create unlimited AI agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Conversational memory",
+        tooltip:
+          "Remembers past chats, orders, and preferences so customers never repeat themselves.",
+      },
+      {
+        label: "Unlimited AI actions",
+        tooltip:
+          "Run unlimited AI-powered actions across workflows to automate tasks and execute external API calls at scale.",
       },
       {
         label: "Omnichannel inbox",
@@ -49,21 +60,43 @@ export const PLANS = {
           "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
       },
       {
-        label: "Zero-repeat memory",
-        tooltip: "Remembers past conversations so customers never repeat info.",
-      },
-      {
-        label: "Workflows + actions",
-        tooltip: "Automate refunds, cancellations, bookings, and call APIs.",
-      },
-      {
-        label: "CRM + identity resolution",
-        tooltip: "Auto-built customer profiles merged across channels.",
-      },
-      {
-        label: "Insights + weekly reports",
+        label: "Integrations",
         tooltip:
-          "Dashboard and weekly summaries for questions, sentiment, and wins.",
+          "Connect your existing tools and APIs to sync data, automate actions, and keep workflows in one place.",
+      },
+      {
+        label: "Workflows",
+        tooltip:
+          "Define trigger-based automation with step-by-step instructions. Run onboarding, returns, bookings, and custom API actions from natural-language triggers.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip:
+          "Website scrape, PDFs, teach mode, and vector search—train your agent your way.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "CRM",
+        tooltip:
+          "Auto-built customer profiles from every conversation—no manual data entry.",
+      },
+      {
+        label: "Identity resolution",
+        tooltip:
+          "Identifies and merges the same customer across WhatsApp, email, web, and more into one unified profile—no duplicate or fragmented records.",
+      },
+      {
+        label: "Advance analytics",
+        tooltip:
+          "Deep dashboard analytics for trends, sentiment, resolution quality, and performance insights.",
+      },
+      {
+        label: "Weekly Insights Reports",
+        tooltip:
+          "Automated weekly summaries with top questions, feature requests, pain points, and recommendations.",
       },
       {
         label: "White-glove onboarding",
@@ -71,15 +104,18 @@ export const PLANS = {
       },
       {
         label: "Phishing protection",
-        tooltip: "Detects sensitive requests and blocks data leaks.",
+        tooltip:
+          "AI monitors for sensitive data requests, credential attempts, and impersonation—blocks leaks, deflects safely, and never shares protected info.",
       },
       {
-        label: "Human handoff + guardrails",
-        tooltip: "Escalate to humans with full context and brand-safe replies.",
+        label: "Dedicated success manager",
+        tooltip:
+          "A dedicated point of contact for setup, optimization, and ongoing best-practice guidance to get the most from MagicalCX.",
       },
       {
-        label: "Knowledge suite",
-        tooltip: "Website scrape, PDFs, teach mode, and embeddings.",
+        label: "10 team seats",
+        tooltip:
+          "Invite up to 10 team members with Owner, Admin, or Member roles to collaborate on conversations and settings.",
       },
     ],
   },
@@ -103,7 +139,8 @@ export const PLANS = {
     features: [
       {
         label: "10,000 messages/month",
-        tooltip: "Includes 10,000 AI messages each month. Add credits anytime.",
+        tooltip:
+          "1 message = 1 customer message or 1 AI reply. You get 10,000 per month; we notify you before you hit the limit and you can add credits anytime.",
       },
       {
         label: "Lifetime access",
@@ -114,9 +151,19 @@ export const PLANS = {
         tooltip: "Turns support into sales with helpful, timely upsells.",
       },
       {
-        label: "Unlimited agents",
+        label: "Unlimited AI agents",
         tooltip:
-          "Create unlimited agents for sales, support, onboarding, and more.",
+          "Create unlimited AI agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Conversational memory",
+        tooltip:
+          "Remembers past chats, orders, and preferences so customers never repeat themselves.",
+      },
+      {
+        label: "Unlimited AI actions",
+        tooltip:
+          "Run unlimited AI-powered actions across workflows to automate tasks and execute external API calls at scale.",
       },
       {
         label: "Omnichannel inbox",
@@ -124,21 +171,43 @@ export const PLANS = {
           "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
       },
       {
-        label: "Zero-repeat memory",
-        tooltip: "Remembers past conversations so customers never repeat info.",
-      },
-      {
-        label: "Workflows + actions",
-        tooltip: "Automate refunds, cancellations, bookings, and call APIs.",
-      },
-      {
-        label: "CRM + identity resolution",
-        tooltip: "Auto-built customer profiles merged across channels.",
-      },
-      {
-        label: "Insights + weekly reports",
+        label: "Integrations",
         tooltip:
-          "Dashboard and weekly summaries for questions, sentiment, and wins.",
+          "Connect your existing tools and APIs to sync data, automate actions, and keep workflows in one place.",
+      },
+      {
+        label: "Workflows",
+        tooltip:
+          "Define trigger-based automation with step-by-step instructions. Run onboarding, returns, bookings, and custom API actions from natural-language triggers.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip:
+          "Website scrape, PDFs, teach mode, and vector search—train your agent your way.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "CRM",
+        tooltip:
+          "Auto-built customer profiles from every conversation—no manual data entry.",
+      },
+      {
+        label: "Identity resolution",
+        tooltip:
+          "Identifies and merges the same customer across WhatsApp, email, web, and more into one unified profile—no duplicate or fragmented records.",
+      },
+      {
+        label: "Advance analytics",
+        tooltip:
+          "Deep dashboard analytics for trends, sentiment, resolution quality, and performance insights.",
+      },
+      {
+        label: "Weekly Insights Reports",
+        tooltip:
+          "Automated weekly summaries with top questions, feature requests, pain points, and recommendations.",
       },
       {
         label: "White-glove onboarding",
@@ -146,15 +215,18 @@ export const PLANS = {
       },
       {
         label: "Phishing protection",
-        tooltip: "Detects sensitive requests and blocks data leaks.",
+        tooltip:
+          "AI monitors for sensitive data requests, credential attempts, and impersonation—blocks leaks, deflects safely, and never shares protected info.",
       },
       {
-        label: "Human handoff + guardrails",
-        tooltip: "Escalate to humans with full context and brand-safe replies.",
+        label: "Dedicated success manager",
+        tooltip:
+          "A dedicated point of contact for setup, optimization, and ongoing best-practice guidance to get the most from MagicalCX.",
       },
       {
-        label: "Knowledge suite",
-        tooltip: "Website scrape, PDFs, teach mode, and embeddings.",
+        label: "10 team seats",
+        tooltip:
+          "Invite up to 10 team members with Owner, Admin, or Member roles to collaborate on conversations and settings.",
       },
     ],
   },

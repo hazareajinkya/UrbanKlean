@@ -1,9 +1,9 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { IAction } from "../types/actions";
 
 export const executeAPIAction = async (
   action: IAction,
-  params: Record<string, any>
+  params: Record<string, any>,
 ) => {
   // Prepare headers with authorization
   let headers = { ...action.headers };
@@ -43,10 +43,21 @@ export const executeAPIAction = async (
       : {}),
   };
 
+  console.log("requestConfig: ", requestConfig);
+
   try {
     const response = await axios.request(requestConfig);
     return response.data;
   } catch (error) {
+    if (error instanceof AxiosError) {
+      console.error(
+        `Error executing action ${action.name}:`,
+        error.response?.data,
+        error.response?.data.error.details.errors,
+      );
+      throw new Error(`Failed to execute action: ${action.name}`);
+    }
+
     console.error(`Error executing action ${action.name}:`, error);
     throw new Error(`Failed to execute action: ${action.name}`);
   }
