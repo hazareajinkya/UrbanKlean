@@ -32,7 +32,7 @@ export const HeroSection = () => {
       {
         threshold: 0,
         rootMargin: "-20px 0px 0px 0px",
-      }
+      },
     );
 
     if (inputRef.current) {
@@ -81,7 +81,7 @@ export const HeroSection = () => {
     <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
       <div className="flex flex-col items-center text-center mt-4 sm:mt-6 md:mt-8">
         <h1 className="text-3xl font-playfair font-light leading-normal md:text-5xl mb-4 px-4 ">
-          AI Customer Support that delivers <br className="hidden sm:block" />
+          AI Customer Service that delivers <br className="hidden sm:block" />
           faster resolutions and <span className="">feels human</span>
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
@@ -176,7 +176,7 @@ export const HeroSection = () => {
               </motion.div>
             )}
           </AnimatePresence>,
-          document.body
+          document.body,
         )}
     </div>
   );
