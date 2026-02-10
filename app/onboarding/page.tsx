@@ -23,6 +23,7 @@ import { Loader, PartyPopper, Shield, Timer } from "lucide-react";
 import { OnboardingData } from "@/lib/types/onboarding";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
 import OnboardingAnimation from "@/components/onboarding/onboarding-animation";
+import datafastService from "@/lib/services/datafast-service";
 
 type Phase = "form" | "onboarding" | "success";
 
@@ -98,6 +99,9 @@ function OnboardingContent() {
   };
 
   const searchParams = useSearchParams();
+  useEffect(() => {
+    datafastService.trackGoal("onboarding_page_viewed");
+  }, []);
 
   useEffect(() => {
     const urlParam = searchParams.get("url");
@@ -122,17 +126,29 @@ function OnboardingContent() {
     const isEmailValid = validateEmail(email);
     const isDomainValid = validateDomainInput(domain);
 
-    if (!isEmailValid || !isDomainValid) return;
+    if (!isEmailValid || !isDomainValid) {
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source: "onboarding_form",
+        reason:
+          !isEmailValid && !isDomainValid
+            ? "invalid_email_and_domain"
+            : isEmailValid
+              ? "invalid_domain"
+              : "invalid_email",
+      });
+      return;
+    }
 
     const normalizedDomain = normalizeDomain(domain);
     const urlString = `https://${normalizedDomain}`;
-
+    datafastService.trackGoal("onboarding_started", { source: "onboarding" });
     setUrl(urlString);
     setPhase("onboarding");
   };
 
   const handleOnboardingFinish = async (data: OnboardingData) => {
     if (!url) return;
+    datafastService.trackGoal("onboarding_completed");
 
     try {
       const result = await startOnboarding.mutateAsync({

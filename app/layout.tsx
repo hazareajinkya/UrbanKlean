@@ -74,6 +74,14 @@ export default function RootLayout({
         <ClientProvider>{children}</ClientProvider>
         <WidgetScript />
         <Script
+          id="datafast-queue"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.datafast=window.datafast||function(){(window.datafast.q=window.datafast.q||[]).push(arguments)};",
+          }}
+        />
+        <Script
           defer
           data-website-id="dfid_Y7xkducRuPS0Flwujh232"
           data-domain="magicalcx.com"

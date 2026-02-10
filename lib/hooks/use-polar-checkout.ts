@@ -4,6 +4,7 @@ import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
+import datafastService from "@/lib/services/datafast-service";
 
 interface CheckoutOptions {
   planId: "all_in_one" | "lifetime";
@@ -52,6 +53,10 @@ export const usePolarCheckout = () => {
 
     if (!user?.email) {
       const returnUrl = `/pricing?plan=${planId}&tier=${tier}&billingCycle=${billingCycle}`;
+      datafastService.trackGoal("checkout_auth_redirected", {
+        provider: "polar",
+        plan_id: planId,
+      });
       router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
@@ -107,6 +112,10 @@ export const usePolarCheckout = () => {
         billingCycle,
         lifetimePrice,
       } as any);
+      datafastService.trackGoal("checkout_session_created", {
+        provider: "polar",
+        plan_id: planId,
+      });
 
       // Redirect to Polar checkout
       if (checkoutUrl) {
@@ -115,6 +124,10 @@ export const usePolarCheckout = () => {
         throw new Error("No checkout URL received");
       }
     } catch (error) {
+      datafastService.trackGoal("checkout_session_failed", {
+        provider: "polar",
+        plan_id: planId,
+      });
       const errorMessage =
         error instanceof Error
           ? error.message

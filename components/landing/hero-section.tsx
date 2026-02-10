@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Star, CreditCard, ShieldCheck } from "lucide-react";
 
 import { normalizeDomain, validateDomain } from "@/lib/utils";
+import datafastService from "@/lib/services/datafast-service";
 import { UrlInputForm } from "./url-input-form";
 
 export const HeroSection = () => {
@@ -31,7 +32,7 @@ export const HeroSection = () => {
       {
         threshold: 0,
         rootMargin: "-20px 0px 0px 0px",
-      }
+      },
     );
 
     if (inputRef.current) {
@@ -41,24 +42,36 @@ export const HeroSection = () => {
     return () => observer.disconnect();
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent, source: "hero" | "floating") => {
     e.preventDefault();
     if (!url) {
       setError("Please enter a website URL");
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source,
+        reason: "empty_domain",
+      });
       return;
     }
 
     const normalized = normalizeDomain(url);
     if (!validateDomain(normalized)) {
       setError("Please enter a valid domain");
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source,
+        reason: "invalid_domain",
+      });
       return;
     }
 
+    datafastService.trackGoal(
+      source === "floating" ? "floating_cta_clicked" : "hero_cta_clicked",
+    );
+    datafastService.trackGoal("onboarding_started", { source });
     setError("");
     setUrl(`https://${normalized}`);
     router.push(`/onboarding?url=${normalized}`);
   };
-  const handleCompactClick = () => {
+  const handleCompactClick = (_source: "floating") => {
     inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     const inputEl = inputRef.current?.querySelector("input");
     inputEl?.focus();
@@ -68,7 +81,7 @@ export const HeroSection = () => {
     <div className="section-container border-x flex flex-col items-center justify-center w-full pt-20 sm:pt-16 md:pt-24 pb-5 md:pb-10 gap-6 sm:gap-8 md:gap-10">
       <div className="flex flex-col items-center text-center mt-4 sm:mt-6 md:mt-8">
         <h1 className="text-3xl font-playfair font-light leading-normal md:text-5xl mb-4 px-4 ">
-          AI Customer Support that delivers <br className="hidden sm:block" />
+          AI Customer Service that delivers <br className="hidden sm:block" />
           faster resolutions and <span className="">feels human</span>
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground max-w-2xl mx-auto px-4">
@@ -163,7 +176,7 @@ export const HeroSection = () => {
               </motion.div>
             )}
           </AnimatePresence>,
-          document.body
+          document.body,
         )}
     </div>
   );

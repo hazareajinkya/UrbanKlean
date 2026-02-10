@@ -25,6 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import datafastService from "@/lib/services/datafast-service";
 
 const fetchLifetimeSpotsLeft = async (): Promise<number> => {
   const snap = await getDoc(doc(db, "lifetime", "default"));
@@ -77,6 +78,9 @@ export const PricingContent = () => {
   const [activeCheckoutType, setActiveCheckoutType] = useState<
     "subscription" | "lifetime" | null
   >(null);
+  useEffect(() => {
+    datafastService.trackGoal("pricing_viewed");
+  }, []);
 
   const hasActiveSubscription = useMemo(() => {
     const subscriptionStatus = user?.subscription?.status;
@@ -142,6 +146,9 @@ export const PricingContent = () => {
   ]);
 
   const handleCheckout = () => {
+    datafastService.trackGoal("subscription_checkout_started", {
+      billing_cycle: billingCycle,
+    });
     if (process.env.NEXT_PUBLIC_ENV === "production") {
       openDemoModal();
       return;
@@ -273,6 +280,7 @@ export const PricingContent = () => {
         : null;
 
   const handleLifetimeCheckout = () => {
+    datafastService.trackGoal("lifetime_checkout_started");
     if (process.env.NEXT_PUBLIC_ENV === "production") {
       openDemoModal();
       return;
@@ -293,6 +301,13 @@ export const PricingContent = () => {
         lifetimePrice: currentLifetimePriceValue,
       });
     }
+  };
+  const handleBillingCycleChange = (nextCycle: "monthly" | "annually") => {
+    if (nextCycle === billingCycle) return;
+    setBillingCycle(nextCycle);
+    datafastService.trackGoal("billing_cycle_changed", {
+      billing_cycle: nextCycle,
+    });
   };
 
   return (
@@ -321,7 +336,7 @@ export const PricingContent = () => {
         <div className="flex items-center justify-center mb-12">
           <div className="relative flex items-center bg-secondary/40 p-1.5 rounded-full border border-border/50">
             <button
-              onClick={() => setBillingCycle("monthly")}
+              onClick={() => handleBillingCycleChange("monthly")}
               className="cursor-pointer relative px-8 py-2.5 rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             >
               <span
@@ -343,7 +358,7 @@ export const PricingContent = () => {
               )}
             </button>
             <button
-              onClick={() => setBillingCycle("annually")}
+              onClick={() => handleBillingCycleChange("annually")}
               className="cursor-pointer relative px-8 py-2.5 rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/20 flex items-center gap-2"
             >
               <span
