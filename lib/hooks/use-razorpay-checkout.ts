@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import axiosClient from "@/lib/clients/axios-client";
 import type { RazorpayOptions, RazorpayResponse } from "@/lib/types/razorpay";
 import { razorpayconf } from "../utils/conf";
+import datafastService from "@/lib/services/datafast-service";
 
 interface CheckoutOptions {
   planId: "all_in_one" | "lifetime";
@@ -77,6 +78,10 @@ export const useRazorpayCheckout = () => {
 
     if (!user?.email) {
       const returnUrl = `/pricing?plan=${planId}&tier=${tier}&billingCycle=${billingCycle}`;
+      datafastService.trackGoal("checkout_auth_redirected", {
+        provider: "razorpay",
+        plan_id: planId,
+      });
       router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
@@ -150,6 +155,10 @@ export const useRazorpayCheckout = () => {
         billingCycle,
         lifetimePrice,
       });
+      datafastService.trackGoal("checkout_session_created", {
+        provider: "razorpay",
+        plan_id: planId,
+      });
 
       const { subscriptionId, orderId, amount, currency } = response;
 
@@ -205,6 +214,10 @@ export const useRazorpayCheckout = () => {
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
+      datafastService.trackGoal("checkout_session_failed", {
+        provider: "razorpay",
+        plan_id: planId,
+      });
       const errorMessage =
         error instanceof Error
           ? error.message

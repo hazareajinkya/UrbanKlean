@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useScroll } from "framer-motion";
 import { Navbar } from "@/components/landing/navbar";
 import { LifetimeBanner } from "@/components/landing/lifetime-banner";
@@ -13,6 +13,7 @@ import { Footer } from "@/components/landing/footer";
 import { CtaSection } from "@/components/landing/cta-section";
 import { FaqSection } from "@/components/landing/faq-section";
 import { cn } from "@/lib/utils";
+import datafastService from "@/lib/services/datafast-service";
 
 export const HomepageClientWrapper = () => {
   const whyRef = useRef(null);
@@ -28,6 +29,10 @@ export const HomepageClientWrapper = () => {
     target: ctaRef,
     offset: ["start start", "end start"],
   });
+
+  useEffect(() => {
+    datafastService.trackGoal("home_viewed");
+  }, []);
 
   return (
     <>

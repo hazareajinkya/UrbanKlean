@@ -29,6 +29,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import datafastService from "@/lib/services/datafast-service";
 
 export default function AuthPageV2() {
   const { data: session, status } = useSession();
@@ -54,6 +55,10 @@ export default function AuthPageV2() {
   const [sentiment, setSentiment] = useState<
     "neutral" | "frustrated" | "resolved"
   >("neutral");
+
+  useEffect(() => {
+    datafastService.trackGoal("auth_page_viewed");
+  }, []);
 
   useEffect(() => {
     // Timeline of sentiment shifts

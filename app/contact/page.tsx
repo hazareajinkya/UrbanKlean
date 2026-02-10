@@ -4,9 +4,16 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
 import { useDemoModal } from "@/components/landing/demo-modal";
+import datafastService from "@/lib/services/datafast-service";
 
 export default function ContactPage() {
   const { openDemoModal } = useDemoModal();
+  const handleBookDemoClick = () => {
+    datafastService.trackGoal("contact_book_demo_clicked");
+    openDemoModal();
+  };
+  const handleSupportClick = () =>
+    datafastService.trackGoal("contact_support_email_clicked");
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
@@ -29,7 +36,7 @@ export default function ContactPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <Button
-                onClick={openDemoModal}
+                onClick={handleBookDemoClick}
                 size="lg"
                 className="px-8 py-6 text-lg rounded-full w-full sm:w-auto font-medium"
               >
@@ -41,7 +48,12 @@ export default function ContactPage() {
                 className="px-8 py-6 text-lg rounded-full w-full sm:w-auto font-medium"
                 asChild
               >
-                <a href="mailto:support@magicalcx.com">Contact Support</a>
+                <a
+                  href="mailto:support@magicalcx.com"
+                  onClick={handleSupportClick}
+                >
+                  Contact Support
+                </a>
               </Button>
             </div>
 
@@ -49,6 +61,7 @@ export default function ContactPage() {
               Prefer email? Reach us at{" "}
               <a
                 href="mailto:support@magicalcx.com"
+                onClick={handleSupportClick}
                 className="underline hover:text-foreground transition-colors"
               >
                 support@magicalcx.com

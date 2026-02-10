@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Star, CreditCard, ShieldCheck } from "lucide-react";
 
 import { normalizeDomain, validateDomain } from "@/lib/utils";
+import datafastService from "@/lib/services/datafast-service";
 import { UrlInputForm } from "./url-input-form";
 
 export const HeroSection = () => {
@@ -41,24 +42,36 @@ export const HeroSection = () => {
     return () => observer.disconnect();
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent, source: "hero" | "floating") => {
     e.preventDefault();
     if (!url) {
       setError("Please enter a website URL");
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source,
+        reason: "empty_domain",
+      });
       return;
     }
 
     const normalized = normalizeDomain(url);
     if (!validateDomain(normalized)) {
       setError("Please enter a valid domain");
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source,
+        reason: "invalid_domain",
+      });
       return;
     }
 
+    datafastService.trackGoal(
+      source === "floating" ? "floating_cta_clicked" : "hero_cta_clicked",
+    );
+    datafastService.trackGoal("onboarding_started", { source });
     setError("");
     setUrl(`https://${normalized}`);
     router.push(`/onboarding?url=${normalized}`);
   };
-  const handleCompactClick = () => {
+  const handleCompactClick = (_source: "floating") => {
     inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     const inputEl = inputRef.current?.querySelector("input");
     inputEl?.focus();

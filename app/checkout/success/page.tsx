@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader, Loader2 } from "lucide-react";
 import { useCurrentUser, userKey } from "@/lib/hooks/user/use-user";
 import { useQueryClient } from "@tanstack/react-query";
+import datafastService from "@/lib/services/datafast-service";
 
 function CheckoutSuccessContent() {
   const router = useRouter();
@@ -16,6 +17,8 @@ function CheckoutSuccessContent() {
 
   const plan = searchParams.get("plan");
   const tier = searchParams.get("tier");
+  const type = searchParams.get("type");
+  const hasTrackedCheckoutSuccess = useRef(false);
 
   const qc = useQueryClient();
   // Poll for subscription status - webhook will sync it
@@ -78,6 +81,16 @@ function CheckoutSuccessContent() {
       router.push("/workspaces");
     }
   }, [countdown, router]);
+
+  useEffect(() => {
+    if (!hasSubscription || hasTrackedCheckoutSuccess.current) return;
+    hasTrackedCheckoutSuccess.current = true;
+    datafastService.trackGoal("checkout_success_viewed", {
+      plan_id: plan || "unknown",
+      tier: tier || "unknown",
+      checkout_type: type || "subscription",
+    });
+  }, [hasSubscription, plan, tier, type]);
 
   useEffect(() => {
     if (!user?.email) return;

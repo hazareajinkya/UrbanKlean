@@ -16,6 +16,7 @@ import { db } from "@/lib/clients/firebase";
 import { useGeo } from "@/lib/hooks/geo/use-geo";
 import { LIFETIME_PLAN } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import datafastService from "@/lib/services/datafast-service";
 
 const STORAGE_KEY = "magicalcx-lifetime-banner-dismissed";
 const fetchLifetimeSpotsLeft = async (): Promise<number> => {
@@ -105,6 +106,7 @@ export const LifetimeBanner = ({
   }, [hasLoadedDetails, isVisible, onVisibilityChange]);
 
   const handleDismiss = () => {
+    datafastService.trackGoal("lifetime_banner_dismissed");
     sessionStorage.setItem(STORAGE_KEY, "true");
     setIsVisible(false);
     onVisibilityChange?.(false);
@@ -143,6 +145,9 @@ export const LifetimeBanner = ({
                 . No recurring fees{" "}
                 <Link
                   href="/pricing#lifetime"
+                  onClick={() =>
+                    datafastService.trackGoal("lifetime_banner_claim_clicked")
+                  }
                   className="ml-1 inline-block font-medium text-amber-400 underline-offset-2 hover:underline"
                 >
                   Claim yours

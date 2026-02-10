@@ -9,10 +9,10 @@ interface UrlInputFormProps {
   setUrl: (url: string) => void;
   error: string;
   setError: (error: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent, source: "hero" | "floating") => void;
   className?: string; // Allow passing extra classes like for the floating container
   compactOnMobile?: boolean;
-  onCompactClick?: () => void;
+  onCompactClick?: (source: "floating") => void;
 }
 
 export const UrlInputForm = ({
@@ -34,7 +34,10 @@ export const UrlInputForm = ({
         compactOnMobile ? "w-max max-w-none sm:w-full sm:max-w-lg" : ""
       } ${className}`}
     >
-      <form onSubmit={onSubmit} className="relative group w-full">
+      <form
+        onSubmit={(e) => onSubmit(e, compactOnMobile ? "floating" : "hero")}
+        className="relative group w-full"
+      >
         <div className="relative">
           <div
             className={`absolute inset-y-0 left-3 items-center pointer-events-none ${
@@ -68,7 +71,7 @@ export const UrlInputForm = ({
           <button
             type="button"
             className={`${buttonBaseClassName} w-max sm:hidden`}
-            onClick={onCompactClick}
+            onClick={() => onCompactClick?.("floating")}
           >
             Try Free Demo
             <ArrowRight className="size-4" />
