@@ -28,6 +28,8 @@ const footerLinks = {
       { label: "Terms", href: "/legal/terms" },
       { label: "Privacy", href: "/legal/privacy" },
       { label: "Refund policy", href: "/legal/refund" },
+      { label: "LLMs Index", href: "/llms.txt" },
+      { label: "LLMs Full", href: "/llms-full.txt" },
     ],
   },
 };

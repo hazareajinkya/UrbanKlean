@@ -676,14 +676,23 @@ MagicalCX uses usage-based pricing tied to message volume. Prices are shown in b
 **Plan highlights**:
 
 - 10,000 messages/month
-- Unlimited agents
+- EFRO™ revenue engine
+- Unlimited AI agents
+- Conversational memory
+- Unlimited AI actions
 - Omnichannel inbox
-- Workflows + actions
-- CRM + identity resolution
-- Insights dashboard (weekly reports listed in plan copy)
-- Knowledge suite (web scrape, PDFs, teach mode)
+- Integrations
+- Workflows
+- Knowledge suite (website scrape, PDFs, teach mode, vector search)
+- Human handoff + guardrails
+- CRM
+- Identity resolution
+- Advanced analytics dashboard
+- Weekly insights reports
+- White-glove onboarding
 - Phishing protection
-- Human handoff + guardrails (escalation tracking)
+- Dedicated success manager
+- 10 team seats
 
 ### Lifetime Deal
 
@@ -692,6 +701,10 @@ MagicalCX uses usage-based pricing tied to message volume. Prices are shown in b
 | Messages/Month | Billing Cycle | USD Price | INR Price |
 | -------------- | ------------- | --------- | --------- |
 | 10,000         | Lifetime      | $999      | ₹79,999   |
+
+**Includes everything in All in One, plus:**
+
+- Lifetime access (one-time payment, no recurring fees)
 
 ### Message Credits (Add-on)
 
