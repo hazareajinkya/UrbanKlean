@@ -28,7 +28,7 @@ export default function ContactPage() {
                 Let's make magic happen.
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-lg mx-auto lg:mx-0">
-                Ready to transform your customer experience? Book a demo to see
+                Ready to transform your customer service? Book a demo to see
                 how Magical CX can help you sell more, keep more, and spend
                 less.
               </p>

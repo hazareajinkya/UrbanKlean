@@ -46,13 +46,13 @@ const playfair = STIX_Two_Text({
 
 export const metadata: Metadata = {
   metadataBase: coreConf.baseUrl ? new URL(coreConf.baseUrl) : undefined,
-  title: "MagicalCX | Empathy-First AI for magical customer experience",
+  title: "MagicalCX | Empathy-First AI for magical customer service",
   description:
-    "MagicalCX is an empathy-first AI platform that transforms customer experience into a growth engine",
+    "MagicalCX is an empathy-first AI platform that transforms customer service into a growth engine",
   openGraph: {
-    title: "MagicalCX | Empathy-First AI for magical customer experience",
+    title: "MagicalCX | Empathy-First AI for magical customer service",
     description:
-      "MagicalCX is an empathy-first AI platform that transforms customer experience into a growth engine",
+      "MagicalCX is an empathy-first AI platform that transforms customer service into a growth engine",
     url: coreConf.baseUrl,
     type: "website",
   },

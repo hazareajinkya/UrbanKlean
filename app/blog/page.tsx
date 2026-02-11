@@ -1,7 +1,7 @@
 import { blogService } from "@/lib/services/blog-service";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock, Calendar, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { coreConf } from "@/lib/utils/conf";
 import type { BlogWithAuthor } from "@/lib/types/blog";
 
@@ -10,11 +10,11 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Blog | MagicalCX",
   description:
-    "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
+    "Practical guides and insights on empathy-first customer service, AI support automation, and building support systems that scale.",
   openGraph: {
     title: "Blog | MagicalCX",
     description:
-      "Practical guides and insights on empathy-first customer experience, AI support automation, and building support systems that scale.",
+      "Practical guides and insights on empathy-first customer service, AI support automation, and building support systems that scale.",
     url: `${coreConf.baseUrl}/blog`,
   },
   alternates: {
@@ -31,7 +31,7 @@ export default async function BlogListPage() {
       <div className="section-container border-x flex flex-col items-center text-center py-16 sm:py-20 lg:py-24 px-4">
         <h1 className="section-heading">The MagicalCX Blog</h1>
         <p className="section-subheadline">
-          Thoughtful writing on empathy-first customer experience, AI-powered
+          Thoughtful writing on empathy-first customer service, AI-powered
           support, and building better customer relationships.
         </p>
       </div>
@@ -90,8 +90,22 @@ export default async function BlogListPage() {
                     {blog.title}
                   </h2>
 
-                  <div className="mt-auto flex items-center text-sm font-medium text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                    Read Post <ArrowRight className="ml-2 h-4 w-4" />
+                  <div className="mt-auto flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <img
+                        src={blog.author.profilePicture || "/placeholder.svg"}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="rounded-full w-6 h-6 object-cover border border-border shrink-0"
+                      />
+                      <span className="text-sm text-muted-foreground truncate">
+                        {blog.author.name}
+                      </span>
+                    </div>
+                    <span className="flex items-center text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 shrink-0">
+                      Read Post <ArrowRight className="ml-2 h-4 w-4" />
+                    </span>
                   </div>
                 </div>
               </Link>
