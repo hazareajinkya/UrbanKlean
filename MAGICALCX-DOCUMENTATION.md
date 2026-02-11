@@ -25,11 +25,11 @@
 
 ## Product Overview
 
-**MagicalCX** is an AI-powered customer experience platform that enables businesses to deliver instant, empathetic, and scalable customer support. The platform is designed with the tagline:
+**MagicalCX** is an AI-powered customer service platform that enables businesses to deliver instant, empathetic, and scalable customer support. The platform is designed with the tagline:
 
 > "From 'How can I help?' to 'It's already done.'"
 
-MagicalCX is positioned as "the world's first AI that makes superior customer experience simple and scalable, while increasing profits and lowering costs."
+MagicalCX is positioned as "the world's first AI that makes superior customer service simple and scalable, while increasing profits and lowering costs."
 
 ### What MagicalCX Is NOT
 
@@ -676,14 +676,23 @@ MagicalCX uses usage-based pricing tied to message volume. Prices are shown in b
 **Plan highlights**:
 
 - 10,000 messages/month
-- Unlimited agents
+- EFRO™ revenue engine
+- Unlimited AI agents
+- Conversational memory
+- Unlimited AI actions
 - Omnichannel inbox
-- Workflows + actions
-- CRM + identity resolution
-- Insights dashboard (weekly reports listed in plan copy)
-- Knowledge suite (web scrape, PDFs, teach mode)
+- Integrations
+- Workflows
+- Knowledge suite (website scrape, PDFs, teach mode, vector search)
+- Human handoff + guardrails
+- CRM
+- Identity resolution
+- Advanced analytics dashboard
+- Weekly insights reports
+- White-glove onboarding
 - Phishing protection
-- Human handoff + guardrails (escalation tracking)
+- Dedicated success manager
+- 10 team seats
 
 ### Lifetime Deal
 
@@ -692,6 +701,10 @@ MagicalCX uses usage-based pricing tied to message volume. Prices are shown in b
 | Messages/Month | Billing Cycle | USD Price | INR Price |
 | -------------- | ------------- | --------- | --------- |
 | 10,000         | Lifetime      | $999      | ₹79,999   |
+
+**Includes everything in All in One, plus:**
+
+- Lifetime access (one-time payment, no recurring fees)
 
 ### Message Credits (Add-on)
 
@@ -863,7 +876,7 @@ Set up automation for common scenarios:
 
 ## Summary
 
-**MagicalCX** is a next-generation AI customer experience platform that combines:
+**MagicalCX** is a next-generation AI customer service platform that combines:
 
 - **HumanlyClear™** technology for empathetic, human-like conversations
 - **EFRO™** engine for ethical revenue generation
@@ -878,7 +891,7 @@ Set up automation for common scenarios:
 
 The platform is designed for businesses that want to:
 
-- Deliver magical customer experiences at scale
+- Deliver magical customer service at scale
 - Reduce support costs while increasing quality
 - Generate revenue from support interactions
 - Build lasting customer relationships

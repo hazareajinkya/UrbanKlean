@@ -1,4 +1,3 @@
-import Script from "next/script";
 import { coreConf } from "@/lib/utils/conf";
 import { faqSchemaItems } from "@/lib/data/faq-schema-items";
 import { HomepageClientWrapper } from "@/components/landing/homepage-client-wrapper";
@@ -33,7 +32,7 @@ export default function LandingPage() {
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         description:
-          "Empathy-first AI customer experience platform that automates support and drives revenue.",
+          "Empathy-first AI customer service platform that automates support and drives revenue.",
         url: baseUrl,
       },
     ],
@@ -54,18 +53,18 @@ export default function LandingPage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Script
+      <script
         id="home-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(schemaGraph),
+          __html: JSON.stringify(schemaGraph).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="home-faq-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema),
+          __html: JSON.stringify(faqSchema).replace(/</g, "\\u003c"),
         }}
       />
       <HomepageClientWrapper />

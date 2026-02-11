@@ -71,7 +71,7 @@ export const ToneEmpathyContent = () => {
             </p>
 
             <p>
-              The teams winning at customer experience treat tone as seriously
+              The teams winning at customer service treat tone as seriously
               as they treat response time. They define it, measure it, and
               actively improve it across every touchpoint.
             </p>

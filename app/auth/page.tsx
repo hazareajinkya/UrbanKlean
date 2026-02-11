@@ -555,7 +555,7 @@ const SignInForm = () => {
         <p className="text-lg text-muted-foreground leading-relaxed max-w-sm">
           {/* Empathy-first support that actually cares. Sign up to start
           orchestration. */}
-          Start delivering empathy-first customer experience at scale.
+          Start delivering empathy-first customer service at scale.
         </p>
       </div>
 

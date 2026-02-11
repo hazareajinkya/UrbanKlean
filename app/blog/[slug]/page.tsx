@@ -5,7 +5,6 @@ import Link from "next/link";
 import { remark } from "remark";
 import html from "remark-html";
 import remarkGfm from "remark-gfm";
-import Script from "next/script";
 import BlogShareSidebar from "@/components/blog/blog-share-sidebar";
 import type { BlogFaq, BlogWithAuthor } from "@/lib/types/blog";
 import {
@@ -138,7 +137,10 @@ export default async function BlogPage({
       "@type": "Person",
       name: blog.author.name,
       image: blog.author.profilePicture,
-      ...(blog.author.description && { description: blog.author.description }),
+      ...(blog.author.description && {
+        description: blog.author.description,
+      }),
+      ...(blog.author.email && { email: blog.author.email }),
     },
     publisher: {
       "@type": "Organization",
@@ -205,26 +207,29 @@ export default async function BlogPage({
 
   return (
     <div className="section-container border-x min-h-screen">
-      <Script
+      <script
         id="blog-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData),
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
       />
-      <Script
+      <script
         id="breadcrumb-structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbStructuredData),
+          __html: JSON.stringify(breadcrumbStructuredData).replace(
+            /</g,
+            "\\u003c"
+          ),
         }}
       />
       {faqStructuredData ? (
-        <Script
+        <script
           id="faq-structured-data"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(faqStructuredData),
+            __html: JSON.stringify(faqStructuredData).replace(/</g, "\\u003c"),
           }}
         />
       ) : null}
@@ -292,7 +297,7 @@ export default async function BlogPage({
                 className="rounded-full w-12 h-12 object-cover border-2 border-border"
               />
               <div>
-                <p className="font-medium text-foreground">
+                <p className="font-medium text-foreground" id="author-name">
                   {blog.author.name}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -314,6 +319,16 @@ export default async function BlogPage({
                 </div>
               </div>
             </div>
+            {blog.author.description && (
+              <section
+                aria-label="About the author"
+                className="mt-6 p-4 rounded-xl bg-muted/50 border border-border"
+              >
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {blog.author.description}
+                </p>
+              </section>
+            )}
           </div>
         </header>
 

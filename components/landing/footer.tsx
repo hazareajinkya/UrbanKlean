@@ -28,6 +28,8 @@ const footerLinks = {
       { label: "Terms", href: "/legal/terms" },
       { label: "Privacy", href: "/legal/privacy" },
       { label: "Refund policy", href: "/legal/refund" },
+      { label: "LLMs Index", href: "/llms.txt" },
+      { label: "LLMs Full", href: "/llms-full.txt" },
     ],
   },
 };
@@ -98,8 +100,8 @@ export const Footer = () => {
             </div>
 
             <p className="text-sm sm:text-sm text-muted-foreground max-w-sm">
-              {/* Every brand, everywhere, can deliver magical customer experience */}
-              Greater sales, through better customer experience
+              {/* Every brand, everywhere, can deliver magical customer service */}
+              Greater sales, through better customer service
             </p>
           </div>
 

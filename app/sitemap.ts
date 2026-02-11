@@ -59,6 +59,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
     },
     {
+      url: `${baseUrl}/free-tools/customer-support-cost-calculator`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
       url: `${baseUrl}/free-tools/ai-vs-human-support-roi-calculator`,
       lastModified: new Date(),
       priority: 0.7,

@@ -59,7 +59,7 @@ export const SupportPolicyContent = () => {
               expectations that you can consistently meet.
             </p>
             <p>
-              The companies that win on customer experience don't hide behind
+              The companies that win on customer service don't hide behind
               policies—they lean on them. A customer who knows they can get a
               refund within 30 days feels confident buying. An agent who knows
               exactly when to escalate feels confident handling complex issues.
