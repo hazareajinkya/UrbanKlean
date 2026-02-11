@@ -727,6 +727,7 @@ MagicalCX provides free, standalone tools to help teams improve CX outcomes:
 - Customer Support Response Grader
 - Customer Support Tone Checker
 - Refund Risk Predictor
+- AI Text Humanizer: Paste AI-generated text to instantly make it sound 100% human and pass all AI detectors. Supports multiple writing styles (general, academic, blog, formal, informal, friendly, engaging) and includes text cleaning options for hidden unicode, smart quotes, dashes, and whitespace normalization.
 - DIY or guided (white-glove) setup available
 
 ---

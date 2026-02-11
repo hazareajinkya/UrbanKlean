@@ -90,6 +90,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
     },
     {
+      url: `${baseUrl}/free-tools/ai-humanizer`,
+      lastModified: new Date(),
+      priority: 0.7,
+      changeFrequency: "monthly" as const,
+    },
+    {
       url: `${baseUrl}/legal/privacy`,
       lastModified: new Date(),
       priority: 0.5,

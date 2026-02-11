@@ -362,6 +362,7 @@ MagicalCX is an empathy-first AI customer service platform designed to automate 
 - Customer Support Response Grader.
 - Customer Support Tone Checker.
 - Refund Risk Predictor.
+- AI Text Humanizer: paste AI-generated text to instantly make it sound 100% human and pass all AI detectors.
 - Tools hub: ${baseUrl}/free-tools
 
 ## Public resources
