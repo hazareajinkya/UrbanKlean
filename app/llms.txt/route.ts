@@ -50,6 +50,7 @@ Use Cases
 - [Customer Support Response Grader](${baseUrl}/free-tools/customer-support-response-grader)
 - [Policy Generator](${baseUrl}/free-tools/customer-support-and-refund-policy-generator)
 - [Refund Risk Predictor](${baseUrl}/free-tools/refund-risk-predictor)
+- [AI Text Humanizer](${baseUrl}/free-tools/ai-humanizer)
 
 ## Trust & Legal
 - [Privacy Policy](${baseUrl}/legal/privacy)

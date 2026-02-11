@@ -11,6 +11,7 @@ import {
   MessageSquare,
   ShieldAlert,
   Heart,
+  Sparkles,
   ArrowRight,
 } from "lucide-react";
 
@@ -40,6 +41,15 @@ export const metadata: Metadata = {
 };
 
 const TOOLS = [
+  {
+    title: "AI Text Humanizer",
+    description:
+      "Paste AI-generated text to instantly make it sound 100% human and pass all AI detectors.",
+    href: "/free-tools/ai-humanizer",
+    icon: Sparkles,
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+  },
   {
     title: "Support Policy Generator",
     description:
