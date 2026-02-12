@@ -30,7 +30,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
-import { stepCountIs } from "ai";
+import datafastService from "@/lib/services/datafast-service";
 
 type ProcessingStep = {
   id: number;
@@ -175,12 +175,16 @@ export const OnboardingMultiStepForm = ({
           setOnboardingData(result.data.data);
         },
         onError: (error: any) => {
-          const status = error.status;
+          const status = error?.response?.status || error?.status;
+          datafastService.trackGoal("onboarding_generate_info_failed", {
+            url: url || "",
+            workEmail: email || "",
+            reason: error?.response?.data?.message || error?.message || "unknown_error",
+            status: status || 0,
+          });
           if ((status === 409 || status === 429) && onParsedPhaseChange) {
             if (status === 409 && onEmailError) {
-              onEmailError(
-                "You already have an agent. Please check your email for more information."
-              );
+              onEmailError("You already have an agent. Please check your email for more information.");
             }
             onParsedPhaseChange("form");
           } else {
