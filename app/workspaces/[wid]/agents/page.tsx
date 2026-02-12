@@ -69,7 +69,7 @@ export default function AgentsPage() {
             setIsDeleteModalOpen(false);
             setDeletingAgent(undefined);
           },
-        }
+        },
       );
     }
   };
@@ -83,9 +83,9 @@ export default function AgentsPage() {
     <div className="p-4 ">
       <div className="flex gap-4 items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl ">Agents</h1>
+          <h1 className="text-xl ">AI Agents</h1>
           <p className="text-sm text-muted-foreground">
-            Manage your AI agents here.
+            Conversational AI agents for your business.
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
@@ -245,7 +245,7 @@ export default function AgentsPage() {
             Create your first AI agent
           </h3>
           <div className="text-muted-foreground mb-6 max-w-md">
-            To start automating conversations and tasks.
+            Your AI will use your knowledge base and actions to respond 24/7
           </div>
           <Button
             onClick={() => setIsCreateModalOpen(true)}
@@ -304,7 +304,7 @@ const CreateAgentModal = ({
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
       <div className="space-y-6">
         <div className="flex items-center justify-between mb-0">
-          <h3 className="text-lg font-medium">Create New Agent</h3>
+          <h3 className="text-lg font-medium">Create New AI Agent</h3>
           <Button
             variant="ghost"
             size="sm"

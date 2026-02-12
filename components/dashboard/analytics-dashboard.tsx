@@ -113,9 +113,9 @@ export const AnalyticsDashboard = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-medium">Dashboard</h1>
+          <h1 className="text-xl font-medium">AI Overview</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Analytics and insights for your workspace
+            AI analytics and insights for your workspace
           </p>
         </div>
         {displaySummary.lastUpdated && (
