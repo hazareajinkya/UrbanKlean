@@ -19,6 +19,9 @@ import {
   Rss,
   Settings2,
   Shield,
+  Gauge,
+  ChartNoAxesColumnIncreasing,
+  TrendingUp,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -47,7 +50,7 @@ export default function WorkspaceLayout({
   const { user, isLoading: isUserLoading } = useCurrentUser();
   const { data: member, isLoading: isMemberLoading } = useMember(
     wid,
-    userEmail
+    userEmail,
   );
 
   if (status === "loading") {
@@ -148,7 +151,7 @@ const navigation = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: ChartColumnIncreasing,
+    icon: TrendingUp,
   },
 
   {
@@ -157,7 +160,7 @@ const navigation = [
     icon: Book,
   },
   {
-    title: "Agents",
+    title: "AI Agents",
     href: "/agents",
     icon: Waves,
   },
@@ -172,7 +175,7 @@ const navigation = [
     icon: Users,
   },
   {
-    title: "Actions",
+    title: "AI Actions",
     href: "/actions",
     icon: Zap,
   },

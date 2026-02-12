@@ -31,7 +31,7 @@ export default function ActionsPage() {
           setIsDeleteModalOpen(false);
           setDeletingAction(null);
         },
-      }
+      },
     );
   };
 
@@ -39,9 +39,9 @@ export default function ActionsPage() {
     <div className="p-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl ">Actions</h1>
+          <h1 className="text-xl ">AI Actions</h1>
           <p className="text-sm text-muted-foreground">
-            Manage your custom API actions
+            Manage your AI actions and API actions here.
           </p>
         </div>
         <Button

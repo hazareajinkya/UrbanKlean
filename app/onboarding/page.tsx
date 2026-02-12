@@ -174,11 +174,13 @@ function OnboardingContent() {
       }
 
       setPhase("success");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error completing onboarding:", error);
       datafastService.trackGoal("onboarding_failed", {
         workEmail: email,
         domain: url.replace(/^https?:\/\//, ""),
+        reason: error?.response?.data?.message || error?.message || "unknown_error",
+        status: error?.response?.status || error?.status || 0,
       });
     }
   };
