@@ -110,3 +110,4 @@ export const shopifyconf = {
   baseURL: process.env.SHOPIFY_URL,
   accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
 };
+export const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET ?? "";

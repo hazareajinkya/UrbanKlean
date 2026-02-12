@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useState, useMemo } from "react";
 import { Plus, Code, Loader } from "lucide-react";
-import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
+import { useAIActions, useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
-import { useIntegrations } from "@/lib/hooks/integrations/use-integrations";
-import { useGlobalActions } from "@/lib/hooks/actions/use-global-actions";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { AddApiActionModal } from "@/components/actions";
 import { WorkspaceActionCard } from "@/components/actions/workspace-action-card";
@@ -23,18 +21,9 @@ export default function ActionsPage() {
 
   const { actions: workspaceActions, isLoading: isLoadingWorkspaceActions } =
     useAIActions(wid);
-  const { integrations, isLoading: isLoadingIntegrations } =
-    useIntegrations(wid);
 
-  const integrationTypes = useMemo(() => {
-    if (!integrations) return [];
-    return integrations
-      .filter((integration) => integration.status === "active")
-      .map((integration) => integration.type);
-  }, [integrations]);
-
-  const { actions: globalActions, isLoading: isLoadingGlobalActions } =
-    useGlobalActions(integrationTypes);
+  const { globalActions, isLoading: isLoadingGlobalActions } =
+    useGlobalActions();
 
   const { deleteAction, toggleActionStatus, addIntegrationAction } =
     useAiActionsActions();
@@ -78,7 +67,6 @@ export default function ActionsPage() {
 
   const isLoading =
     isLoadingWorkspaceActions ||
-    isLoadingIntegrations ||
     isLoadingGlobalActions;
 
   return (

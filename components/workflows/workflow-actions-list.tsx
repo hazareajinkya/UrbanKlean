@@ -15,7 +15,7 @@ const WorkflowActionsList = ({ instructions }: WorkflowActionsListProps) => {
 
   // Extract action mentions from instructions
   const extractActionMentions = (text: string): string[] => {
-    const mentionRegex = /@(\w+)/g;
+    const mentionRegex = /@([\w-]+)/g;
     const mentions: string[] = [];
     let match;
 

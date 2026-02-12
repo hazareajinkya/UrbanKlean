@@ -36,26 +36,27 @@ export const AvailableActionsPanel = ({
     }
   };
 
-  const workspaceActionKeys = new Set(
+  const installedActionIds = new Set(
     workspaceActions
-      .filter((a) => a.type === "integration")
-      .map((a) => `${a.slug}_${a.integration}`),
+      .map((a) => a.originalId)
+      .filter((id): id is string => !!id)
   );
 
+  const availableActions = actions.filter((action) => !installedActionIds.has(action.id));
+
   const filteredActions = !searchQuery.trim()
-    ? actions
-    : actions.filter(
-        (action) =>
-          action.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          action.description
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          action.slug.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+    ? availableActions
+    : availableActions.filter(
+      (action) =>
+        action.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        action.description
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        action.slug.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
 
   const isActionAdded = (action: IAction) => {
-    const key = `${action.slug}_${action.integration}`;
-    return workspaceActionKeys.has(key);
+    return installedActionIds.has(action.id);
   };
 
   if (isLoading) {
@@ -96,68 +97,76 @@ export const AvailableActionsPanel = ({
         ) : (
           filteredActions.map((action) => {
             const added = isActionAdded(action);
-            const integrationConfig =
-              action.integration !== "none"
-                ? getIntegrationConfig(action.integration)
-                : null;
-            const IntegrationLogo = integrationConfig?.logo;
+            const IntegrationLogo = action.app?.icon;
+
+            // Determine icon and parent name
+            const iconUrl = action.app?.icon;
+            const parentName = action.app?.name || "API";
 
             return (
               <div
                 key={action.id}
-                className={`border rounded-md p-3 transition-all ${
-                  added ? "opacity-60 bg-muted" : "hover:border-primary/20"
-                }`}
+                className={`relative border rounded-xl bg-card text-card-foreground p-4 transition-all ${added ? "opacity-60 bg-muted/50" : "hover:border-primary/50"
+                  }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {IntegrationLogo ? (
-                      <IntegrationLogo className="w-5 h-5" />
-                    ) : (
-                      <img
-                        src="/api-logo.png"
-                        alt="API Logo"
-                        className="w-5 h-5 rounded-sm object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{action.name}</p>
-                        {action.integration !== "none" && (
-                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-sm inline-block mt-1">
-                            {action.integration}
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant={added ? "ghost" : "ghost"}
-                        onClick={() => handleAddAction(action)}
-                        disabled={added || addingActionId === action.id}
-                        className="h-7 px-2 text-xs gap-1.5"
-                      >
-                        {added ? (
-                          <>
-                            <Check className="w-3 h-3" />
-                            Added
-                          </>
-                        ) : addingActionId === action.id ? (
-                          <>
-                            <Loader className="w-3 h-3 animate-spin" />
-                            Adding
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-3 h-3" />
-                            Add
-                          </>
-                        )}
-                      </Button>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      {iconUrl ? (
+                        <img
+                          src={iconUrl}
+                          alt={parentName}
+                          className="w-10 h-10 rounded-lg object-cover bg-background border"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                          <span className="font-bold text-xs">API</span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-base leading-tight mb-1">
+                        {action.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                        {parentName}
+                      </p>
                     </div>
                   </div>
+
+                  <Button
+                    size="sm"
+                    variant={added ? "outline" : "default"}
+                    onClick={() => handleAddAction(action)}
+                    disabled={added || addingActionId === action.id}
+                    className={`h-8 px-3 text-xs gap-1.5 ${added ? "bg-background" : ""}`}
+                  >
+                    {added ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Added
+                      </>
+                    ) : addingActionId === action.id ? (
+                      <>
+                        <Loader className="w-3.5 h-3.5 animate-spin" />
+                        Adding
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5" />
+                        Add
+                      </>
+                    )}
+                  </Button>
                 </div>
+
+                {action.description && (
+                  <div className="mb-0">
+                    <p className="text-sm text-muted-foreground leading-snug line-clamp-2">
+                      {action.description}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })

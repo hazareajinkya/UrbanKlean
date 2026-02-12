@@ -47,6 +47,7 @@ class IntegrationsService {
   }): Promise<void> {
     await deleteDoc(doc(db, `workspaces/${wid}/integrations/${storeId}`));
   }
+
 }
 
 const integrationsService = new IntegrationsService();

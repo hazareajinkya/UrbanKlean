@@ -54,7 +54,7 @@ const WorkflowModal = ({
   const extractToolIds = (instructions: string): string[] => {
     if (!actions) return [];
 
-    const mentionRegex = /@(\w+)/g;
+    const mentionRegex = /@([\w-]+)/g;
     const mentions: string[] = [];
     let match;
 

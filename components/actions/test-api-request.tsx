@@ -10,6 +10,7 @@ import {
 } from "@/lib/types/actions";
 import axios from "axios";
 import { capitalize } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TestApiRequestProps {
   url: string;
@@ -104,18 +105,42 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
       const requestBody: Record<string, any> = {};
 
       // Add input values based on request method
-      inputs.forEach((input) => {
-        const value = testInputValues[input.key];
-        if (value !== undefined && value !== "") {
-          if (method === "GET") {
-            // For GET requests, add inputs as query parameters
-            queryParams[input.key] = value;
+      const buildNestedValues = (
+        inputDefs: IActionInput[],
+        values: Record<string, any>,
+        prefix: string = ""
+      ): Record<string, any> => {
+        const result: Record<string, any> = {};
+        inputDefs.forEach((input) => {
+          const key = prefix ? `${prefix}.${input.key}` : input.key;
+          if (input.type === "object" && input.children && input.children.length > 0) {
+            result[input.key] = buildNestedValues(input.children, values, key);
+          } else if (input.type === "array") {
+            const raw = values[key];
+            if (raw) {
+              try {
+                result[input.key] = JSON.parse(raw);
+              } catch {
+                result[input.key] = raw;
+              }
+            }
           } else {
-            // For POST/PUT/DELETE, add inputs to request body
-            requestBody[input.key] = value;
+            const value = values[key];
+            if (value !== undefined && value !== "") {
+              result[input.key] = value;
+            }
           }
-        }
-      });
+        });
+        return result;
+      };
+
+      const builtValues = buildNestedValues(inputs, testInputValues);
+
+      if (method === "GET") {
+        Object.assign(queryParams, builtValues);
+      } else {
+        Object.assign(requestBody, builtValues);
+      }
 
       // Add query parameters for API key in query location
       if (
@@ -166,6 +191,129 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
     }
   };
 
+  const renderInputFields = (
+    inputDefs: IActionInput[],
+    prefix: string,
+    depth: number = 0
+  ): React.ReactNode => {
+    return inputDefs.map((input) => {
+      const fullKey = prefix ? `${prefix}.${input.key}` : input.key;
+      const paddingLeft = depth * 16;
+
+      if (input.type === "object" && input.children && input.children.length > 0) {
+        return (
+          <div key={fullKey} className="space-y-2" style={{ paddingLeft }}>
+            <div className="flex items-center justify-between mb-1">
+              <Label className="text-sm font-medium gap-1">
+                {input.key}
+                {input.required && <span className="text-red-500">*</span>}
+              </Label>
+              <span className="text-xs text-muted-foreground">Object</span>
+            </div>
+            <div className="border-l-2 border-muted pl-3 space-y-3">
+              {renderInputFields(input.children, fullKey, depth + 1)}
+            </div>
+            {input.description && (
+              <p className="text-xs text-right mt-1 text-muted-foreground">
+                {input.description}
+              </p>
+            )}
+          </div>
+        );
+      }
+
+      if (input.type === "array") {
+        return (
+          <div key={fullKey} className="space-y-1" style={{ paddingLeft }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-sm gap-1">
+                {input.key}
+                {input.required && <span className="text-red-500">*</span>}
+              </Label>
+              <span className="text-xs text-muted-foreground">Array (JSON)</span>
+            </div>
+            <Textarea
+              value={testInputValues[fullKey] || ""}
+              onChange={(e) =>
+                setTestInputValues((prev) => ({
+                  ...prev,
+                  [fullKey]: e.target.value,
+                }))
+              }
+              placeholder={`[{"key": "value"}]`}
+              rows={3}
+              className="mt-1 font-mono text-xs"
+            />
+            {input.description && (
+              <p className="text-xs text-right mt-1 text-muted-foreground">
+                {input.description}
+              </p>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <div key={fullKey} className="space-y-1" style={{ paddingLeft }}>
+          <div className="flex items-center justify-between space-x-2 mb-1.5">
+            <Label className="text-sm gap-1">
+              {input.key}
+              {input.required && <span className="text-red-500">*</span>}
+            </Label>
+            <span className="text-xs text-muted-foreground text-right">
+              {capitalize(input.type)}
+            </span>
+          </div>
+          {input.type === "boolean" ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={testInputValues[fullKey] || false}
+                onChange={(e) =>
+                  setTestInputValues((prev) => ({
+                    ...prev,
+                    [fullKey]: e.target.checked,
+                  }))
+                }
+                className="rounded"
+              />
+              <span className="text-sm">
+                {testInputValues[fullKey] ? "true" : "false"}
+              </span>
+            </div>
+          ) : (
+            <Input
+              type={
+                input.type === "number"
+                  ? "number"
+                  : input.type === "url"
+                    ? "url"
+                    : "text"
+              }
+              value={testInputValues[fullKey] || ""}
+              onChange={(e) =>
+                setTestInputValues((prev) => ({
+                  ...prev,
+                  [fullKey]:
+                    input.type === "number"
+                      ? Number(e.target.value)
+                      : e.target.value,
+                }))
+              }
+              placeholder={`Enter ${input.key}...`}
+              className="mt-1"
+            />
+          )}
+          {input.description && (
+            <p className="text-xs text-right mt-1 text-muted-foreground">
+              {input.description}
+            </p>
+          )}
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -188,66 +336,7 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
             {method === "GET" ? "(Query Parameters)" : "(Request Body)"}
           </Label>
           <div className="border rounded-md p-4 space-y-3 bg-white">
-            {inputs.map((input) => (
-              <div key={input.key} className="space-y-1 ">
-                <div className="flex items-center justify-between space-x-2 mb-1.5">
-                  <Label className="text-sm gap-1">
-                    {input.key}
-                    {input.required && <span className="text-red-500">*</span>}
-                  </Label>
-
-                  <span className="text-xs text-muted-foreground  text-right">
-                    {capitalize(input.type)}
-                  </span>
-                </div>
-                {input.type === "boolean" ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={testInputValues[input.key] || false}
-                      onChange={(e) =>
-                        setTestInputValues((prev) => ({
-                          ...prev,
-                          [input.key]: e.target.checked,
-                        }))
-                      }
-                      className="rounded"
-                    />
-                    <span className="text-sm">
-                      {testInputValues[input.key] ? "true" : "false"}
-                    </span>
-                  </div>
-                ) : (
-                  <Input
-                    type={
-                      input.type === "number"
-                        ? "number"
-                        : input.type === "url"
-                        ? "url"
-                        : "text"
-                    }
-                    value={testInputValues[input.key] || ""}
-                    onChange={(e) =>
-                      setTestInputValues((prev) => ({
-                        ...prev,
-                        [input.key]:
-                          input.type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value,
-                      }))
-                    }
-                    placeholder={`Enter ${input.key}...`}
-                    className="mt-1"
-                  />
-                )}
-
-                {input.description && (
-                  <p className="text-xs text-right mt-1 text-muted-foreground">
-                    {input.description}
-                  </p>
-                )}
-              </div>
-            ))}
+            {renderInputFields(inputs, "")}
           </div>
 
           {/* Send Request Button */}
@@ -286,9 +375,8 @@ const TestApiRequest: React.FC<TestApiRequestProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span
-                className={`inline-block w-2 h-2 rounded-full ${
-                  testResponse.success ? "bg-green-500" : "bg-red-500"
-                }`}
+                className={`inline-block w-2 h-2 rounded-full ${testResponse.success ? "bg-green-500" : "bg-red-500"
+                  }`}
               ></span>
               <span className="text-sm font-medium">
                 {testResponse.status} {testResponse.statusText}

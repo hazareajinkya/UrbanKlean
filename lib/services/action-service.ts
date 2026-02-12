@@ -6,9 +6,12 @@ import {
   updateDoc,
   getDocs,
   collection,
+  query,
+  where,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
-import { IAction } from "../types/actions";
+import axios from "axios";
+import { IAction, IActionAuthorization } from "../types/actions";
 import { db } from "../clients/firebase";
 import { IWorkflow } from "../types/workflow";
 import cacheService from "./cache-service";
@@ -106,6 +109,22 @@ class ActionService {
     invalidateCache({ type: "actions", id: wid });
   }
 
+
+  async getGlobalActions(appSlug?: string) {
+    const actionsRef = collection(db, "actions");
+    const snap = await getDocs(actionsRef);
+    const allActions = snap.docs.map((d) => d.data() as IAction);
+
+    let result = allActions;
+    if (appSlug) {
+      result = allActions.filter(
+        (a) => a.app?.slug === appSlug || a.app?.id === appSlug
+      );
+    }
+
+    return result;
+  }
+
   async addIntegrationAction({
     wid,
     globalAction,
@@ -113,10 +132,10 @@ class ActionService {
     wid: string;
     globalAction: IAction;
   }) {
-    // Create a copy of the global action with new ID and workspace ID
     const workspaceAction: IAction = {
       ...globalAction,
-      id: uuidv4(), // Generate new ID to avoid conflicts
+      id: uuidv4(),
+      originalId: globalAction.id,
       wid,
       status: "active",
       createdAt: new Date().toISOString(),
@@ -128,10 +147,110 @@ class ActionService {
       workspaceAction
     );
 
-    // Invalidate server-side cache via API
     invalidateCache({ type: "actions", id: wid });
 
     return workspaceAction;
+  }
+
+  async encryptActionAuthorization({
+    authorization,
+    existingAuthorization,
+  }: {
+    authorization: IActionAuthorization;
+    existingAuthorization?: IActionAuthorization;
+  }): Promise<IActionAuthorization> {
+    const settingsToEncrypt: Record<string, string> = {};
+
+    if (authorization.type === "api-key" && authorization.apiKey?.value) {
+      const oldValue =
+        existingAuthorization?.type === "api-key"
+          ? existingAuthorization.apiKey?.value
+          : undefined;
+
+      if (!existingAuthorization || authorization.apiKey.value !== oldValue) {
+        settingsToEncrypt["apiKey"] = authorization.apiKey.value;
+      }
+    } else if (
+      authorization.type === "bearer-token" &&
+      authorization.bearerToken?.token
+    ) {
+      const oldValue =
+        existingAuthorization?.type === "bearer-token"
+          ? existingAuthorization.bearerToken?.token
+          : undefined;
+
+      if (
+        !existingAuthorization ||
+        authorization.bearerToken.token !== oldValue
+      ) {
+        settingsToEncrypt["bearerToken"] = authorization.bearerToken.token;
+      }
+    } else if (
+      authorization.type === "basic" &&
+      authorization.basic
+    ) {
+      const oldUsername =
+        existingAuthorization?.type === "basic"
+          ? existingAuthorization.basic?.username
+          : undefined;
+      const oldPassword =
+        existingAuthorization?.type === "basic"
+          ? existingAuthorization.basic?.password
+          : undefined;
+
+      if (
+        authorization.basic.username &&
+        (!existingAuthorization || authorization.basic.username !== oldUsername)
+      ) {
+        settingsToEncrypt["username"] = authorization.basic.username;
+      }
+      if (
+        authorization.basic.password &&
+        (!existingAuthorization || authorization.basic.password !== oldPassword)
+      ) {
+        settingsToEncrypt["password"] = authorization.basic.password;
+      }
+    }
+
+    // Nothing to encrypt — return as-is
+    if (Object.keys(settingsToEncrypt).length === 0) {
+      return authorization;
+    }
+
+    const response = await axios.post("/api/apps/encrypt-settings", {
+      settings: settingsToEncrypt,
+    });
+
+    const encryptedSettings = response.data?.data?.encryptedSettings;
+    if (!encryptedSettings) {
+      return authorization;
+    }
+
+    const updated = { ...authorization };
+
+    if (updated.type === "api-key" && encryptedSettings["apiKey"]) {
+      updated.apiKey = {
+        ...updated.apiKey!,
+        value: encryptedSettings["apiKey"],
+      };
+    }
+
+    if (updated.type === "bearer-token" && encryptedSettings["bearerToken"]) {
+      updated.bearerToken = {
+        ...updated.bearerToken!,
+        token: encryptedSettings["bearerToken"],
+      };
+    }
+
+    if (updated.type === "basic") {
+      updated.basic = {
+        ...updated.basic!,
+        ...(encryptedSettings["username"] && { username: encryptedSettings["username"] }),
+        ...(encryptedSettings["password"] && { password: encryptedSettings["password"] }),
+      };
+    }
+
+    return updated;
   }
 }
 

@@ -100,7 +100,7 @@ const ActionMentions = ({
 
     // Check for @ mention
     const textBeforeCursor = newValue.substring(0, cursorPosition);
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    const mentionMatch = textBeforeCursor.match(/@([\w-]*)$/);
 
     if (mentionMatch && textareaRef.current) {
       const mentionStart = cursorPosition - mentionMatch[0].length;
@@ -214,11 +214,10 @@ const ActionMentions = ({
                   <div
                     key={action.id}
                     onClick={() => insertAction(action)}
-                    className={`flex items-center gap-3 w-full px-2 py-2 rounded-md cursor-pointer transition-colors ${
-                      index === selectedIndex
+                    className={`flex items-center gap-3 w-full px-2 py-2 rounded-md cursor-pointer transition-colors ${index === selectedIndex
                         ? "bg-accent text-accent-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                      }`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-4 h-4 text-primary" />

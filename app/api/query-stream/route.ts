@@ -10,7 +10,6 @@ import actionService from "@/lib/services/action-service";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { IAction } from "@/lib/types/actions";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
-import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
@@ -19,7 +18,8 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { normIp, getCustomTools, getClientIp, latency } from "@/lib/utils";
+import { normIp, getClientIp, latency } from "@/lib/utils";
+import { getCustomTools } from "@/lib/utils/server-actions";
 import workflowService from "@/lib/services/workflow-service";
 
 const ratelimit = new Ratelimit({

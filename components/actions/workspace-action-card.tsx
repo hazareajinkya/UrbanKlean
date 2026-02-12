@@ -18,11 +18,11 @@ export const WorkspaceActionCard = ({
   onDelete,
 }: WorkspaceActionCardProps) => {
   const isUserAction = action.type === "user";
-  const integrationConfig =
-    action.integration !== "none"
-      ? getIntegrationConfig(action.integration)
-      : null;
-  const IntegrationLogo = integrationConfig?.logo;
+  const IntegrationLogo = action.app?.icon;
+
+  // Determine icon and parent name
+  const iconUrl = action.app?.icon;
+  const parentName = action.app?.name || "API";
 
   const handleToggle = (checked: boolean) => {
     onToggleStatus(action.id, checked ? "active" : "inactive");
@@ -33,8 +33,12 @@ export const WorkspaceActionCard = ({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            {IntegrationLogo ? (
-              <IntegrationLogo className="w-10 h-10" />
+            {iconUrl ? (
+              <img
+                src={iconUrl}
+                alt={parentName}
+                className="w-10 h-10 rounded-lg object-cover bg-background border"
+              />
             ) : (
               <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xs">API</span>
@@ -42,11 +46,11 @@ export const WorkspaceActionCard = ({
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-base leading-tight mb-0.5">
+            <h3 className="font-medium text-base leading-tight mb-0.5">
               {action.name}
             </h3>
-            <p className="text-xs text-muted-foreground capitalize">
-              {action.integration !== "none" ? action.integration : "API"}
+            <p className="text-xs text-muted-foreground ">
+              {parentName}
             </p>
           </div>
         </div>
@@ -66,7 +70,7 @@ export const WorkspaceActionCard = ({
         {isUserAction && onEdit && (
           <button
             onClick={() => onEdit(action)}
-            className="text-indigo-600 hover:text-indigo-700 font-medium text-xs transition-colors"
+            className="text-primary hover:text-primary/80 font-medium text-xs transition-colors"
           >
             Edit
           </button>

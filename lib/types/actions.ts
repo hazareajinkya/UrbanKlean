@@ -1,5 +1,12 @@
 import { v4 } from "uuid";
 
+export type IActionApp = {
+  id: string;
+  slug?: string;
+  name: string;
+  icon: string;
+};
+
 export interface IAction {
   id: string;
   wid: string;
@@ -8,8 +15,8 @@ export interface IAction {
   slug: string;
   description: string;
   type: IActionType;
-
-  integration: IActionIntegration;
+  app?: IActionApp;
+  originalId?: string;
   apiUrl: string;
   requestType: IRequestType;
   headers: Record<string, string>;
@@ -20,8 +27,14 @@ export interface IAction {
   updatedAt: string;
 }
 export type IActionIntegration = "shopify" | "none";
+export type IActionParentAuth = {
+  appId: string;
+  appSlug: string;
+  appAuthType: string;
+};
+
 export type IActionAuthorization = {
-  type: "none" | "api-key" | "bearer-token" | "parent";
+  type: "none" | "api-key" | "bearer-token" | "parent-auth" | "basic";
   apiKey?: {
     key: string;
     value: string;
@@ -30,13 +43,19 @@ export type IActionAuthorization = {
   bearerToken?: {
     token: string;
   };
+  basic?: {
+    username: string;
+    password: string;
+  };
+  parentAuth?: IActionParentAuth;
 };
-export type IRequestType = "GET" | "POST" | "PUT" | "DELETE";
+export type IRequestType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type IActionInput = {
   key: string;
-  type: "string" | "number" | "boolean" | "url";
+  type: "string" | "number" | "boolean" | "url" | "object" | "array";
   required: boolean;
   description?: string;
+  children?: IActionInput[];
 };
 
 export type IActionType = "internal" | "user" | "integration";
@@ -55,7 +74,6 @@ export const generateDefaultAction = (
 ): IAction => {
   return {
     id: v4(),
-    integration: "none",
     status: "active",
     wid,
     name,

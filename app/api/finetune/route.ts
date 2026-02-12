@@ -4,7 +4,7 @@ import workflowService from "@/lib/services/workflow-service";
 import { generateText, stepCountIs, tool, ToolSet } from "ai";
 import { z } from "zod";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
-import { executeAPIAction } from "@/lib/utils/api-actions-utils";
+import { getCustomTools } from "@/lib/utils/server-actions";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IAction } from "@/lib/types/actions";
 import { errorResponse, successResponse } from "@/lib/types/api-response";
@@ -46,21 +46,4 @@ export async function POST(req: Request) {
   }
 }
 
-const getCustomTools = (actions: IAction[]): ToolSet => {
-  return actions.reduce((acc, action) => {
-    acc[action.slug] = tool({
-      name: action.name,
-      description: action.description,
-      inputSchema: z.object({
-        ...action.inputs.reduce((acc: Record<string, any>, input) => {
-          acc[input.key] = z.string().describe(input.description || "");
-          return acc;
-        }, {} as Record<string, any>),
-      }),
-      execute: async (params) => {
-        return executeAPIAction(action, params);
-      },
-    });
-    return acc;
-  }, {} as ToolSet);
-};
+
