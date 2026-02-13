@@ -58,7 +58,7 @@ export type IActionInput = {
   children?: IActionInput[];
 };
 
-export type IActionType = "internal" | "user" | "integration";
+export type IActionType = "internal" | "user" | "integration" | "app-action";
 
 export const generateDefaultAction = (
   wid: string,
@@ -70,7 +70,7 @@ export const generateDefaultAction = (
   authorization: IActionAuthorization,
   requestType: IRequestType,
   headers: Record<string, string>,
-  inputs: IActionInput[]
+  inputs: IActionInput[],
 ): IAction => {
   return {
     id: v4(),

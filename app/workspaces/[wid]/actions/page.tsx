@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { useState, useMemo } from "react";
 import { Plus, Code, Loader } from "lucide-react";
-import { useAIActions, useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
+import {
+  useAIActions,
+  useGlobalActions,
+} from "@/lib/hooks/actions/use-ai-actions";
+import { useInstalledApps } from "@/lib/hooks/apps/use-apps";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { AddApiActionModal } from "@/components/actions";
@@ -24,6 +28,8 @@ export default function ActionsPage() {
 
   const { globalActions, isLoading: isLoadingGlobalActions } =
     useGlobalActions();
+
+  const { installedApps } = useInstalledApps(wid);
 
   const { deleteAction, toggleActionStatus, addIntegrationAction } =
     useAiActionsActions();
@@ -65,9 +71,7 @@ export default function ActionsPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const isLoading =
-    isLoadingWorkspaceActions ||
-    isLoadingGlobalActions;
+  const isLoading = isLoadingWorkspaceActions || isLoadingGlobalActions;
 
   return (
     <div className="p-4 h-[calc(100vh-4rem)] flex flex-col">
@@ -128,6 +132,7 @@ export default function ActionsPage() {
             <AvailableActionsPanel
               actions={globalActions}
               workspaceActions={workspaceActions}
+              installedApps={installedApps}
               isLoading={isLoadingGlobalActions}
               onAddAction={handleAddIntegrationAction}
             />

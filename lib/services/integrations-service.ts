@@ -1,4 +1,10 @@
-import { collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  setDoc,
+} from "firebase/firestore";
 import { IIntegration, IntegrationType } from "../types/integration";
 import { db } from "../clients/firebase";
 
@@ -31,8 +37,8 @@ class IntegrationsService {
     };
 
     await setDoc(
-      doc(db, `workspaces/${wid}/integrations/${integrationId}`),
-      integration
+      doc(db, `workspaces/${wid}/apps/${integrationId}`),
+      integration,
     );
 
     return integration;
@@ -45,9 +51,8 @@ class IntegrationsService {
     wid: string;
     storeId: string;
   }): Promise<void> {
-    await deleteDoc(doc(db, `workspaces/${wid}/integrations/${storeId}`));
+    await deleteDoc(doc(db, `workspaces/${wid}/apps/${storeId}`));
   }
-
 }
 
 const integrationsService = new IntegrationsService();

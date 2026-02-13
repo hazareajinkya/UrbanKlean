@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 
 import { Plus, Search, Check } from "lucide-react";
 import { IAction } from "@/lib/types/actions";
+import { IInstalledApp } from "@/lib/types/app";
 import { getIntegrationConfig } from "@/lib/data/integration-configs";
 import { Loader } from "lucide-react";
 
 interface AvailableActionsPanelProps {
   actions: IAction[] | undefined;
   workspaceActions: IAction[] | undefined;
+  installedApps?: IInstalledApp[];
   isLoading?: boolean;
   onAddAction: (action: IAction) => void | Promise<void>;
 }
@@ -19,6 +21,7 @@ interface AvailableActionsPanelProps {
 export const AvailableActionsPanel = ({
   actions = [],
   workspaceActions = [],
+  installedApps,
   isLoading = false,
   onAddAction,
 }: AvailableActionsPanelProps) => {
@@ -39,21 +42,31 @@ export const AvailableActionsPanel = ({
   const installedActionIds = new Set(
     workspaceActions
       .map((a) => a.originalId)
-      .filter((id): id is string => !!id)
+      .filter((id): id is string => !!id),
   );
 
-  const availableActions = actions.filter((action) => !installedActionIds.has(action.id));
+  const installedAppIds = new Set(
+    (installedApps ?? [])
+      .filter((a) => a.status === "connected")
+      .map((a) => a.appId),
+  );
+
+  const availableActions = actions.filter((action) => {
+    if (installedActionIds.has(action.id)) return false;
+    if (!action.app?.id) return true;
+    return installedAppIds.has(action.app.id);
+  });
 
   const filteredActions = !searchQuery.trim()
     ? availableActions
     : availableActions.filter(
-      (action) =>
-        action.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        action.description
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        action.slug.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+        (action) =>
+          action.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          action.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          action.slug.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
 
   const isActionAdded = (action: IAction) => {
     return installedActionIds.has(action.id);
@@ -106,8 +119,9 @@ export const AvailableActionsPanel = ({
             return (
               <div
                 key={action.id}
-                className={`relative border rounded-xl bg-card text-card-foreground p-4 transition-all ${added ? "opacity-60 bg-muted/50" : "hover:border-primary/50"
-                  }`}
+                className={`relative border rounded-xl bg-card text-card-foreground p-4 transition-all ${
+                  added ? "opacity-60 bg-muted/50" : "hover:border-primary/50"
+                }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3">

@@ -29,7 +29,7 @@ class AppService {
       appsRef,
       where("slug", "==", slug.trim()),
       where("status", "==", "published"),
-      limit(1)
+      limit(1),
     );
     const snap = await getDocs(q);
     if (snap.empty) return null;
@@ -48,7 +48,7 @@ class AppService {
   };
 
   getInstalledApps = async (wid: string): Promise<IInstalledApp[]> => {
-    const collectionRef = collection(db, `workspaces/${wid}/integrations`);
+    const collectionRef = collection(db, `workspaces/${wid}/apps`);
     const snap = await getDocs(collectionRef);
     return snap.docs.map((d) => d.data() as IInstalledApp);
   };
@@ -60,9 +60,8 @@ class AppService {
     wid: string;
     appId: string;
   }): Promise<void> => {
-    await deleteDoc(doc(db, `workspaces/${wid}/integrations/${appId}`));
+    await deleteDoc(doc(db, `workspaces/${wid}/apps/${appId}`));
   };
-
 
   connectApp = async ({
     slug,
@@ -75,11 +74,10 @@ class AppService {
   }): Promise<ConnectAppResponse> => {
     const response = await apiClient.post<{ data: ConnectAppResponse }>(
       `/api/apps/${slug}/connect`,
-      { workspaceId, callbackRedirectUrl }
+      { workspaceId, callbackRedirectUrl },
     );
     return response.data.data || response.data;
   };
-
 
   installApp = async ({
     slug,
@@ -92,7 +90,7 @@ class AppService {
   }): Promise<InstallAppResponse> => {
     const response = await apiClient.post<{ data: InstallAppResponse }>(
       `/api/apps/${slug}/install`,
-      { workspaceId, credentials }
+      { workspaceId, credentials },
     );
     return response.data.data || response.data;
   };
@@ -100,4 +98,3 @@ class AppService {
 
 const appService = new AppService();
 export default appService;
-

@@ -6,25 +6,25 @@ import { IInstalledApp } from "../types/app";
 import { decrypt } from "./encryption";
 
 const getParentAuthHeaders = async (
-  action: IAction
+  action: IAction,
 ): Promise<Record<string, string>> => {
   const parentAuth = action.authorization.parentAuth;
   if (!parentAuth) return {};
 
   const integrationsRef = collection(
     db,
-    `workspaces/${action.wid}/integrations`
+    `workspaces/${action.wid}/integrations`,
   );
   const q = query(
     integrationsRef,
     where("appSlug", "==", parentAuth.appSlug),
-    limit(1)
+    limit(1),
   );
   const snap = await getDocs(q);
 
   if (snap.empty) {
     console.error(
-      `[parent-auth] No installed app found for slug: ${parentAuth.appSlug}`
+      `[parent-auth] No installed app found for slug: ${parentAuth.appSlug}`,
     );
     return {};
   }
@@ -34,8 +34,8 @@ const getParentAuthHeaders = async (
 
   switch (installedApp.authType) {
     case "oauth2":
-      if (installedApp.tokens?.accessToken) {
-        headers.Authorization = `Bearer ${decrypt(installedApp.tokens.accessToken)}`;
+      if (installedApp.credentials?.accessToken) {
+        headers.Authorization = `Bearer ${decrypt(installedApp.credentials.accessToken)}`;
       }
       break;
     case "bearerToken":
@@ -44,8 +44,17 @@ const getParentAuthHeaders = async (
       }
       break;
     case "apiKey":
-      if (installedApp.credentials?.key && installedApp.credentials?.value) {
-        headers[installedApp.credentials.key] = decrypt(installedApp.credentials.value);
+      if (
+        installedApp.credentials?.keyName &&
+        installedApp.credentials?.keyValue
+      ) {
+        const prefix = installedApp.credentials?.valuePrefix
+          ? decrypt(installedApp.credentials.valuePrefix)
+          : "";
+
+        headers[decrypt(installedApp.credentials.keyName)] = prefix
+          ? `${prefix} ${decrypt(installedApp.credentials.keyValue)}`
+          : decrypt(installedApp.credentials.keyValue);
       }
       break;
     case "basic":
@@ -56,28 +65,34 @@ const getParentAuthHeaders = async (
         const username = decrypt(installedApp.credentials.username);
         const password = decrypt(installedApp.credentials.password);
         headers.Authorization = `Basic ${Buffer.from(
-          `${username}:${password}`
+          `${username}:${password}`,
         ).toString("base64")}`;
       }
       break;
     default:
       console.warn(
-        `[parent-auth] Unsupported authType: ${installedApp.authType}`
+        `[parent-auth] Unsupported authType: ${installedApp.authType}`,
       );
   }
 
-  console.log("[parent-auth] resolved headers for authType:", installedApp.authType);
+  console.log(
+    "[parent-auth] resolved headers for authType:",
+    installedApp.authType,
+  );
   return headers;
 };
 
 export const executeAPIAction = async (
   action: IAction,
-  params: Record<string, any>
+  params: Record<string, any>,
 ) => {
   // Prepare headers with authorization
   let headers: Record<string, string> = { ...action.headers };
 
-  console.log("[executeAPIAction] authorization:", JSON.stringify(action.authorization));
+  console.log(
+    "[executeAPIAction] authorization:",
+    JSON.stringify(action.authorization),
+  );
 
   if (action.authorization.type === "api-key" && action.authorization.apiKey) {
     if (action.authorization.apiKey.location === "header") {
@@ -136,7 +151,10 @@ export const executeAPIAction = async (
     const response = await axios.request(requestConfig);
     return response.data;
   } catch (error) {
-    console.error(`Error executing action ${action.name}:`, JSON.stringify(error));
+    console.error(
+      `Error executing action ${action.name}:`,
+      JSON.stringify(error),
+    );
     throw new Error(`Failed to execute action: ${action.name}`);
   }
 };

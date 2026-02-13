@@ -21,7 +21,7 @@ class ActionService {
   // Fetches all actions (with caching), applies filters in memory if needed
   async getActions(
     wid: string,
-    filters?: { ids?: string[]; type?: IAction["type"] }
+    filters?: { ids?: string[]; type?: IAction["type"] },
   ) {
     // Try cache first (always cache ALL actions for workspace)
     let actions = await cacheService.getActions(wid);
@@ -84,6 +84,23 @@ class ActionService {
     invalidateCache({ type: "actions", id: wid });
   }
 
+  async deleteActionsByAppId({ wid, appId }: { wid: string; appId: string }) {
+    const actions = await this.getActions(wid);
+    const matching = actions?.filter((a) => a.app?.id === appId) ?? [];
+
+    await Promise.all(
+      matching.map((a) =>
+        deleteDoc(doc(db, `workspaces/${wid}/actions/${a.id}`)),
+      ),
+    );
+
+    if (matching.length > 0) {
+      invalidateCache({ type: "actions", id: wid });
+    }
+
+    return matching.length;
+  }
+
   async getActionsForWorflows(wid: string, workflows: IWorkflow[]) {
     const actionIds = new Set(workflows.flatMap((w) => w.toolIds ?? []));
     // Short-circuit: no workflows or no toolIds means no actions
@@ -109,7 +126,6 @@ class ActionService {
     invalidateCache({ type: "actions", id: wid });
   }
 
-
   async getGlobalActions(appSlug?: string) {
     const actionsRef = collection(db, "actions");
     const snap = await getDocs(actionsRef);
@@ -118,7 +134,7 @@ class ActionService {
     let result = allActions;
     if (appSlug) {
       result = allActions.filter(
-        (a) => a.app?.slug === appSlug || a.app?.id === appSlug
+        (a) => a.app?.slug === appSlug || a.app?.id === appSlug,
       );
     }
 
@@ -144,7 +160,7 @@ class ActionService {
 
     await setDoc(
       doc(db, `workspaces/${wid}/actions/${workspaceAction.id}`),
-      workspaceAction
+      workspaceAction,
     );
 
     invalidateCache({ type: "actions", id: wid });
@@ -185,10 +201,7 @@ class ActionService {
       ) {
         settingsToEncrypt["bearerToken"] = authorization.bearerToken.token;
       }
-    } else if (
-      authorization.type === "basic" &&
-      authorization.basic
-    ) {
+    } else if (authorization.type === "basic" && authorization.basic) {
       const oldUsername =
         existingAuthorization?.type === "basic"
           ? existingAuthorization.basic?.username
@@ -245,8 +258,12 @@ class ActionService {
     if (updated.type === "basic") {
       updated.basic = {
         ...updated.basic!,
-        ...(encryptedSettings["username"] && { username: encryptedSettings["username"] }),
-        ...(encryptedSettings["password"] && { password: encryptedSettings["password"] }),
+        ...(encryptedSettings["username"] && {
+          username: encryptedSettings["username"],
+        }),
+        ...(encryptedSettings["password"] && {
+          password: encryptedSettings["password"],
+        }),
       };
     }
 
