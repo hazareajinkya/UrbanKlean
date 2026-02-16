@@ -11,6 +11,7 @@ import { FeaturesSection } from "@/components/landing/features-section";
 import { WhyChooseUs } from "@/components/landing/why-choose-us";
 import { Footer } from "@/components/landing/footer";
 import { CtaSection } from "@/components/landing/cta-section";
+import { AskAiSection } from "@/components/landing/ask-ai-section";
 import { FaqSection } from "@/components/landing/faq-section";
 import { cn } from "@/lib/utils";
 import datafastService from "@/lib/services/datafast-service";
@@ -59,6 +60,7 @@ export const HomepageClientWrapper = () => {
         <FaqSection />
         <div className="bg-background dark" ref={ctaRef}>
           <CtaSection />
+          <AskAiSection />
           <Footer />
         </div>
       </div>
