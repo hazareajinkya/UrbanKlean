@@ -81,14 +81,7 @@ export const useAiActionsActions = () => {
       qc.setQueryData<IAction[]>(actionsKey(wid), (old) => {
         if (!old) return [globalAction];
 
-        if (
-          old.some(
-            (a) =>
-              a.slug === globalAction.slug &&
-              a.integration === globalAction.integration,
-          )
-        )
-          return old;
+        if (old.some((a) => a.slug === globalAction.slug)) return old;
 
         return [
           ...old,

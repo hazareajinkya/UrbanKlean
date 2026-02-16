@@ -3,6 +3,7 @@ import actionService from "@/lib/services/action-service";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IApp } from "@/lib/types/app";
 import { toast } from "sonner";
+import { handleError } from "@/lib/utils";
 
 export const publishedAppsKey = () => ["published-apps"];
 export const installedAppsKey = (wid: string) => ["installed-apps", wid];
@@ -44,6 +45,7 @@ export const useUninstallApp = (wid: string) => {
       queryClient.invalidateQueries({ queryKey: installedAppsKey(wid) });
       queryClient.invalidateQueries({ queryKey: ["actions", wid] });
     },
+    onError: handleError,
   });
 };
 
@@ -91,8 +93,6 @@ export const useConnectApp = (wid: string) => {
         }
       }
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to connect app");
-    },
+    onError: handleError,
   });
 };

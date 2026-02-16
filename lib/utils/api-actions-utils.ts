@@ -11,10 +11,7 @@ const getParentAuthHeaders = async (
   const parentAuth = action.authorization.parentAuth;
   if (!parentAuth) return {};
 
-  const integrationsRef = collection(
-    db,
-    `workspaces/${action.wid}/integrations`,
-  );
+  const integrationsRef = collection(db, `workspaces/${action.wid}/apps`);
   const q = query(
     integrationsRef,
     where("appSlug", "==", parentAuth.appSlug),
