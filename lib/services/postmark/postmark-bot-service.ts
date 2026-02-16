@@ -15,7 +15,6 @@ import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
 import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
@@ -23,6 +22,7 @@ import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -32,7 +32,7 @@ class PostmarkBotService {
     postmarkMsg: IPostmarkMessage,
     email: string,
     personEmail: string,
-    channel: IChannelProvider // userId: string, // waMsg: IWAMessage,
+    channel: IChannelProvider, // userId: string, // waMsg: IWAMessage,
   ) {
     try {
       const aid = await channelService.resolveAgent(email, channel);
@@ -67,7 +67,7 @@ class PostmarkBotService {
 
       const actions = await actionService.getActionsForWorflows(
         agent.wid,
-        workflows
+        workflows,
       );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({
@@ -107,7 +107,7 @@ class PostmarkBotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -164,7 +164,7 @@ class PostmarkBotService {
       agent.id,
       email,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleService.updatePastSessionIds({

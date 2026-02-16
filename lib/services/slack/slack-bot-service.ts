@@ -4,7 +4,12 @@ import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import { defaultAImessage, defaultToolMessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
+import {
+  defaultAImessage,
+  defaultToolMessage,
+  defaultUserMessage,
+  IChatMessage,
+} from "@/lib/types/session";
 import { ISlackMessage } from "@/lib/types/slack-api";
 import { IAgent } from "@/lib/types/agent";
 import { IExternalIds } from "@/lib/types/person";
@@ -14,9 +19,9 @@ import channelService from "../channel-service";
 import { IChannelProvider } from "@/lib/types/channel";
 import slackService from "./slack-service";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
 import peopleServiceV2 from "../people-service-v2";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class SlackBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -26,7 +31,7 @@ class SlackBotService {
     slackMsg: ISlackMessage,
     teamId: string,
     userId: string,
-    channel: "slack"
+    channel: "slack",
   ) {
     try {
       const aid = await channelService.resolveAgent(teamId, channel);
@@ -38,7 +43,13 @@ class SlackBotService {
 
       // Parallel fetch: session, workflows, slackHistory
       const [session, workflows, slackHistory] = await Promise.all([
-        this.getOrCreateSession({ userId, channelId: slackMsg.channel, agent, channel, teamId }),
+        this.getOrCreateSession({
+          userId,
+          channelId: slackMsg.channel,
+          agent,
+          channel,
+          teamId,
+        }),
         workflowService.getWorkflows(agent.id),
         slackService.getLastMentionedMessages(slackMsg.channel, teamId, 10),
       ]);
@@ -47,12 +58,20 @@ class SlackBotService {
       const userMsg = defaultUserMessage(query, slackMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const actions = await actionService.getActionsForWorflows(
+        agent.wid,
+        workflows,
+      );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({ agent, workflows, channel });
       const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [
-        { id: v4(), role: "system", metadata: { createdAt: new Date().toISOString() }, parts: [{ type: "text", text: `PersonID: ${session.personId}` }] },
+        {
+          id: v4(),
+          role: "system",
+          metadata: { createdAt: new Date().toISOString() },
+          parts: [{ type: "text", text: `PersonID: ${session.personId}` }],
+        },
         ...session.messages,
         userMsg,
       ];
@@ -88,7 +107,7 @@ class SlackBotService {
 
       console.log(
         "result: ",
-        result.steps.map((step) => step.toolCalls)
+        result.steps.map((step) => step.toolCalls),
       );
       // console.log(
       //   "result toolResults: ",
@@ -175,7 +194,7 @@ class SlackBotService {
       agent.id,
       sessionId,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleService.updatePastSessionIds({

@@ -4,7 +4,11 @@ import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import { defaultAImessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
+import {
+  defaultAImessage,
+  defaultUserMessage,
+  IChatMessage,
+} from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
@@ -13,11 +17,12 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
+
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
 import instaService from "./insta-service";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -58,7 +63,10 @@ class InstaBotService {
       const userMsg = defaultUserMessage(query, instaMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const actions = await actionService.getActionsForWorflows(
+        agent.wid,
+        workflows,
+      );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({ agent, workflows, channel });
       const customTools = getCustomTools(actions);
@@ -94,7 +102,7 @@ class InstaBotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -124,7 +132,7 @@ class InstaBotService {
   }) {
     let session = await chatService.getSessionByProviderId(
       instaUserId,
-      agent.id
+      agent.id,
     );
     if (session) return session;
 
@@ -162,7 +170,7 @@ class InstaBotService {
       agent.id,
       instaUserId,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleServiceV2.updatePastSessionIds({
