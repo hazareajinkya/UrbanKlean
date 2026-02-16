@@ -3,18 +3,16 @@
  * TEMPORARY: Remove this page after review approval.
  * URL: /review-access?token=SOME_SECRET_TOKEN — auto-logs into test workspace.
  */
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Loader, XCircle } from "lucide-react";
 import axiosClient from "@/lib/clients/axios-client";
 
-export default function ReviewAccessPage() {
+const ReviewAccessContent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "error" | "signing-in">(
-    "loading"
-  );
+  const [status, setStatus] = useState<"loading" | "error" | "signing-in">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -75,5 +73,19 @@ export default function ReviewAccessPage() {
         </p>
       </div>
     </div>
+  );
+};
+
+export default function ReviewAccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+          <Loader className="h-8 w-8 animate-spin text-zinc-400" aria-hidden />
+        </div>
+      }
+    >
+      <ReviewAccessContent />
+    </Suspense>
   );
 }
