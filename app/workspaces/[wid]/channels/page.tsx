@@ -57,7 +57,6 @@ const ChannelsPage = () => {
     const scopes = [
       "instagram_business_basic",
       "instagram_business_manage_messages",
-      "instagram_business_manage_comments",
     ].join(",");
     console.log("scopes: ", scopes);
 
@@ -278,7 +277,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
 
   // Get currently assigned agent
   const assignedAgent = agents?.find(
-    (agent) => agent.id === channel.assignedAgentId
+    (agent) => agent.id === channel.assignedAgentId,
   );
 
   const handleAssignAgent = (agentId: string) => {
