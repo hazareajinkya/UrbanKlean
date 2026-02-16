@@ -44,6 +44,11 @@ export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET ?? "";
 export const RAZORPAY_WEBHOOK_SECRET =
   process.env.RAZORPAY_WEBHOOK_SECRET ?? "";
 
+export const coreConf = {
+  isProd: process.env.NEXT_PUBLIC_ENV === "production",
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
+};
+
 // API Configs
 export const waconf = {
   version: "v24.0",
@@ -53,12 +58,7 @@ export const waconf = {
   baseURL: FACEBOOK_GRAPH_API_BASE,
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
-  redirectUri: WA_REDIRECT_URI,
-};
-
-export const coreConf = {
-  isProd: process.env.NEXT_PUBLIC_ENV === "production",
-  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
+  redirectUri: `${coreConf.baseUrl}/api/oauth/whatsapp`,
 };
 
 export const instaconf = {
@@ -68,7 +68,7 @@ export const instaconf = {
   baseURL: INSTAGRAM_GRAPH_API_BASE,
   appId: INSTAGRAM_APP_ID,
   appSecret: INSTAGRAM_APP_SECRET,
-  redirectUri: INSTAGRAM_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/instagram`,
 };
 
 export const fbconf = {
@@ -78,7 +78,7 @@ export const fbconf = {
   baseURL: FACEBOOK_GRAPH_API_BASE,
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
-  redirectUri: FB_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/facebook`,
 };
 
 export const slackconf = {
@@ -86,7 +86,7 @@ export const slackconf = {
   clientId: SLACK_CLIENT_ID,
   clientSecret: SLACK_CLIENT_SECRET,
   signingSecret: SLACK_SIGNING_SECRET,
-  redirectUri: SLACK_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/slack`,
   webhookVerifyToken: SLACK_WEBHOOK_VERIFY_TOKEN,
   baseURL: SLACK_API_BASE,
 };
