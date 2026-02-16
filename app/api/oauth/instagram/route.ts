@@ -157,8 +157,13 @@ export async function GET(req: NextRequest) {
     await channelService.addChannel(wid, channel);
 
     return NextResponse.redirect(successUrl);
-  } catch (error) {
+  } catch (error: unknown) {
+    const msg =
+      error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: unknown; status?: number } }).response
+        : null;
     console.error("Error during Instagram OAuth:", error);
+    if (msg) console.error("Response:", msg.status, msg.data);
     return NextResponse.redirect(errorUrl);
   }
 }
