@@ -16,7 +16,7 @@ export const POST = async (req: Request) => {
       sid?: string;
     } = await req.json();
 
-    const model = google("gemini-2.5-flash");
+    const model = google("gemini-3-flash-preview");
 
     const prompt = `
     You can learn user rules and preferences.

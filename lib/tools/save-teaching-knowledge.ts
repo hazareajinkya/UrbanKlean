@@ -26,7 +26,7 @@ export const saveTeachKnowledge = (wid: string) =>
         const folderResult = await identifyFolderForContent(
           wid,
           content,
-          title
+          title,
         );
 
         const teachId = v4();
@@ -36,7 +36,7 @@ export const saveTeachKnowledge = (wid: string) =>
             wid,
             folderResult.folderId,
             teachId,
-            description
+            description,
           );
 
         // Save the teach knowledge
@@ -47,7 +47,7 @@ export const saveTeachKnowledge = (wid: string) =>
           title,
           description,
           points,
-          chunkSize
+          chunkSize,
         );
 
         latency.end();
@@ -65,10 +65,10 @@ export const saveTeachKnowledge = (wid: string) =>
     },
   });
 
-const identifyFolderForContent = async (
+export const identifyFolderForContent = async (
   wid: string,
   content: string,
-  context?: string
+  context?: string,
 ) => {
   const folders = await folderService.getFolders(wid);
 
@@ -86,7 +86,7 @@ const identifyFolderForContent = async (
     name: f.name,
   }));
 
-  const model = google("gemini-2.5-flash");
+  const model = google("gemini-3-flash-preview");
 
   const result = await generateObject({
     model,
