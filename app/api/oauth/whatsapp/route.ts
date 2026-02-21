@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
       validatedParams.phone_number_id,
       "whatsapp",
       credentials,
-      metadata
+      metadata,
     );
 
     await channelService.addChannel(validatedParams.wid, channel);
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         phoneNumber: phoneInfo.display_phone_number,
         name: phoneInfo.name,
       },
-      "WhatsApp channel connected successfully"
+      "WhatsApp channel connected successfully",
     );
   } catch (error: any) {
     console.error("Error during WhatsApp OAuth:", error);
@@ -96,14 +96,14 @@ export async function POST(req: NextRequest) {
         `Validation error: ${error.issues
           .map((e: z.ZodIssue) => e.message)
           .join(", ")}`,
-        400
+        400,
       );
     }
     return errorResponse(
       error?.response?.data?.error?.message ||
         error?.message ||
         "Failed to connect WhatsApp channel",
-      error?.response?.status || 500
+      error?.response?.status || 500,
     );
   }
 }
@@ -141,7 +141,7 @@ export async function DELETE(req: NextRequest) {
     console.error("Error during WhatsApp channel disconnect:", error);
     return errorResponse(
       error?.message || "Failed to disconnect WhatsApp channel",
-      error?.response?.status || 500
+      error?.response?.status || 500,
     );
   }
 }

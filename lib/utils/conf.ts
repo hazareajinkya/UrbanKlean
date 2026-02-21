@@ -16,12 +16,12 @@ export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
 export const FB_APP_ID = process.env.NEXT_PUBLIC_FB_APP_ID ?? "";
 export const FB_APP_SECRET = process.env.FB_APP_SECRET ?? "";
 export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
+export const FB_CONFIG_ID = process.env.NEXT_PUBLIC_FB_CONFIG_ID ?? "";
 
 // Instagram Configuration
 export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
-export const INSTAGRAM_APP_SECRET =
-  process.env.INSTAGRAM_APP_SECRET ?? "";
+export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
 export const INSTAGRAM_REDIRECT_URI =
   process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ??
   "http://localhost:3000/api/oauth/instagram";
@@ -58,7 +58,7 @@ export const waconf = {
   baseURL: FACEBOOK_GRAPH_API_BASE,
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
-  redirectUri: `${coreConf.baseUrl}/api/oauth/whatsapp`,
+  redirectUri: `https://www.magicalcx.com/api/oauth/whatsapp`,
 };
 
 export const instaconf = {
@@ -79,6 +79,7 @@ export const fbconf = {
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
   redirectUri: `${coreConf.baseUrl}/api/oauth/facebook`,
+  configId: FB_CONFIG_ID,
 };
 
 export const slackconf = {
