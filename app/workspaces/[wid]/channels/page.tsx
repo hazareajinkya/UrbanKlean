@@ -68,8 +68,7 @@ const ChannelsPage = () => {
   };
 
   const handleConnectFB = () => {
-    // const configId = "793606190090300";
-    const configId = "1771474206880747";
+    const configId = fbconf.configId;
     const url = `https://www.facebook.com/${fbconf.version}/dialog/oauth?client_id=${fbconf.appId}&config_id=${configId}&redirect_uri=${fbconf.redirectUri}&response_type=code&state=${wid}`;
     window.open(url, "_blank");
   };
