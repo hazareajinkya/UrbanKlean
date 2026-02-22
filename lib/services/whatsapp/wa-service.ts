@@ -31,7 +31,7 @@ class WaService {
         text: { body: text },
       };
       console.log(
-        `Sending WhatsApp message with phoneId: ${phoneId}, to: ${to}`
+        `Sending WhatsApp message with phoneId: ${phoneId}, to: ${to}`,
       );
       const response = await waClient.post(`/${phoneId}/messages`, payload, {
         headers: {
@@ -47,7 +47,7 @@ class WaService {
         const errorData = error.response.data;
         console.error(
           "Error response data:",
-          JSON.stringify(errorData, null, 2)
+          JSON.stringify(errorData, null, 2),
         );
         console.error("Error response status:", error.response.status);
 
@@ -58,11 +58,11 @@ class WaService {
             "Recipient phone number not in allowed list";
           console.warn(
             `WhatsApp API restriction: ${errorMessage}. ` +
-              `In development/test mode, you can only send messages to phone numbers added to the allowed recipient list in Meta Business Manager.`
+              `In development/test mode, you can only send messages to phone numbers added to the allowed recipient list in Meta Business Manager.`,
           );
           // Don't throw for this specific error - it's a configuration issue, not a code bug
           throw new Error(
-            `WhatsApp API: ${errorMessage}. Please add the recipient phone number to the allowed list in Meta Business Manager.`
+            `WhatsApp API: ${errorMessage}. Please add the recipient phone number to the allowed list in Meta Business Manager.`,
           );
         }
       }
@@ -90,7 +90,7 @@ class WaService {
         },
       });
       console.log(
-        `Message template sent with ID: ${response.data.messages[0].id}`
+        `Message template sent with ID: ${response.data.messages[0].id}`,
       );
     } catch (error) {
       console.error("Error sending template message:", error);
@@ -177,7 +177,7 @@ class WaService {
         const downloadUrl = await storageService.uploadB(
           path,
           mediaDownload.data,
-          metadata
+          metadata,
         );
 
         console.log("downloadUrl: ", downloadUrl);
@@ -254,9 +254,9 @@ class WaService {
         grant_type: "authorization_code",
       };
 
-      if (waconf.redirectUri) {
-        tokenPayload.redirect_uri = waconf.redirectUri;
-      }
+      // if (waconf.redirectUri) {
+      //   tokenPayload.redirect_uri = waconf.redirectUri;
+      // }
 
       const tokenResponse = await waClient.post(
         `/oauth/access_token`,
@@ -265,7 +265,7 @@ class WaService {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return tokenResponse.data as {
@@ -326,7 +326,7 @@ class WaService {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
       console.log("Successfully subscribed to WhatsApp webhook");
     } catch (error: any) {
@@ -351,7 +351,7 @@ class WaService {
     } catch (error) {
       console.warn(
         "Warning: Could not unsubscribe from WhatsApp webhook:",
-        error
+        error,
       );
       throw error;
     }
