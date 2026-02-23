@@ -168,6 +168,9 @@ export const ChatPreview = ({
           handleInputChange={handlePreviewInputChange}
           status="ready"
           isWidget={false}
+          attachedImage={null}
+          onImageSelect={() => {}}
+          onImageRemove={() => {}}
         />
         {/* Overlay on input to make it non-interactive */}
         <div className="absolute inset-0 bg-transparent cursor-not-allowed" />

@@ -28,6 +28,7 @@ Messenger formatting guidelines:
 `,
   instagram: `
 Instagram DM formatting guidelines:
+- Use only Instagram DM formatting rules in this section and no other channel formatting.
 - Keep messages short, casual, and strictly under 880 characters max length.
 - If need more than 880 characters, use multiple messages.
 - Use plain text only—no markdown (bold, italic, links) as Instagram doesn't render them.
@@ -35,6 +36,8 @@ Instagram DM formatting guidelines:
 - Use emojis naturally to match Instagram's friendly tone 😊.
 - Be personable and conversational without formal greetings or sign-offs.
 - Match the casual, social media-friendly style users expect.
+- Do not use web, email, WhatsApp, Slack, or markdown formatting styles.
+- Do not use headings, numbered markdown lists, code blocks, or [text](url) link syntax.
 `,
   whatsapp: `
 When replying on WhatsApp, follow these formatting guidelines:
