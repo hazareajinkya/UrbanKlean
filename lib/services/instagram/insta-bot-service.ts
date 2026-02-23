@@ -4,7 +4,11 @@ import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import { defaultAImessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
+import {
+  defaultAImessage,
+  defaultUserMessage,
+  IChatMessage,
+} from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IInstaMessage } from "@/lib/types/insta-api";
@@ -22,6 +26,31 @@ import workflowService from "../workflow-service";
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
+  MAX_MESSAGE_CHARS = 880;
+
+  splitMessage(text: string) {
+    const cleanText = text.trim();
+    if (!cleanText) return [];
+    if (cleanText.length <= this.MAX_MESSAGE_CHARS) return [cleanText];
+
+    const chunks: string[] = [];
+    let start = 0;
+    while (start < cleanText.length) {
+      let end = Math.min(start + this.MAX_MESSAGE_CHARS, cleanText.length);
+      if (end < cleanText.length) {
+        const lastSpaceIndex = cleanText.lastIndexOf(" ", end);
+        if (lastSpaceIndex > start + Math.floor(this.MAX_MESSAGE_CHARS * 0.6)) {
+          end = lastSpaceIndex;
+        }
+      }
+      const chunk = cleanText.slice(start, end).trim();
+      if (chunk) chunks.push(chunk);
+      start = end;
+      while (cleanText[start] === " ") start += 1;
+    }
+
+    return chunks;
+  }
 
   async generateResponse({
     instaMsg,
@@ -58,7 +87,10 @@ class InstaBotService {
       const userMsg = defaultUserMessage(query, instaMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const actions = await actionService.getActionsForWorflows(
+        agent.wid,
+        workflows,
+      );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({ agent, workflows, channel });
       const customTools = getCustomTools(actions);
@@ -94,7 +126,7 @@ class InstaBotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -104,7 +136,8 @@ class InstaBotService {
       await usageService.addUsage(agent.ownerId, usage);
 
       console.log("ai response: ", result.text);
-      return { success: true, message: result.text };
+      const messageChunks = this.splitMessage(result.text);
+      return { success: true, message: result.text, messages: messageChunks };
     } catch (error) {
       console.log("error: ", error);
       return { success: false, message: this.ERROR_MESSAGE };
@@ -124,7 +157,7 @@ class InstaBotService {
   }) {
     let session = await chatService.getSessionByProviderId(
       instaUserId,
-      agent.id
+      agent.id,
     );
     if (session) return session;
 
@@ -162,7 +195,7 @@ class InstaBotService {
       agent.id,
       instaUserId,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleServiceV2.updatePastSessionIds({

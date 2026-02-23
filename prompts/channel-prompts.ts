@@ -28,7 +28,8 @@ Messenger formatting guidelines:
 `,
   instagram: `
 Instagram DM formatting guidelines:
-- Keep messages short, casual, and under 880 characters maximum length.
+- Keep messages short, casual, and strictly under 880 characters max length.
+- If need more than 880 characters, use multiple messages.
 - Use plain text only—no markdown (bold, italic, links) as Instagram doesn't render them.
 - Break long responses into shorter paragraphs with line breaks.
 - Use emojis naturally to match Instagram's friendly tone 😊.
