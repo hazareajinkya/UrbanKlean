@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
-import waParser from "@/lib/services/whatsapp/wa-webhook-parser";
-import { IWAContact } from "@/lib/types/wa-api";
-import { IWAMessage } from "@/lib/types/wa-api";
-import waService from "@/lib/services/whatsapp/wa-service";
-import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import instaParser from "@/lib/services/instagram/insta-webhook-parser";
 import instaService from "@/lib/services/instagram/insta-service";
 import { INSTA_ID } from "@/lib/utils/conf";
 import instaBotService from "@/lib/services/instagram/insta-bot-service";
 import channelService from "@/lib/services/channel-service";
+import { AxiosError } from "axios";
 
 // Function to send a text message
 export const maxDuration = 60;
@@ -39,28 +35,51 @@ export async function POST(req: Request) {
       );
     }
 
-    const {
-      success,
-      message: ans,
-      messages,
-    } = await instaBotService.generateResponse({
-      instaMsg: msg,
-      instaUserId: msg.from,
-      channel: "instagram",
-      agentId: channel.assignedAgentId,
-      accessToken: channel.credentials.access_token,
-    });
+    const accessToken = channel.credentials.access_token;
+    instaService
+      .sendSenderAction({
+        to: msg.from,
+        accessToken,
+        action: "typing_on",
+      })
+      .catch((error) =>
+        console.warn("Failed to send instagram typing_on:", error),
+      );
 
-    if (success) {
-      const chunks = messages?.length ? messages : [ans ?? "placeholder"];
-      for (const text of chunks) {
-        await instaService.sendTextMessage({
-          to: msg.from,
-          text,
-          instaUserId: channel.metadata.id,
-          accessToken: channel.credentials.access_token,
-        });
+    try {
+      const {
+        success,
+        message: ans,
+        messages,
+      } = await instaBotService.generateResponse({
+        instaMsg: msg,
+        instaUserId: msg.from,
+        channel: "instagram",
+        agentId: channel.assignedAgentId,
+        accessToken,
+      });
+
+      if (success) {
+        const chunks = messages?.length ? messages : [ans ?? "placeholder"];
+        for (const text of chunks) {
+          await instaService.sendTextMessage({
+            to: msg.from,
+            text,
+            instaUserId: channel.metadata.id,
+            accessToken,
+          });
+        }
       }
+    } finally {
+      instaService
+        .sendSenderAction({
+          to: msg.from,
+          accessToken,
+          action: "typing_off",
+        })
+        .catch((error) =>
+          console.warn("Failed to send instagram typing_off:", error),
+        );
     }
 
     return NextResponse.json(
@@ -69,6 +88,9 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Error processing Instagram webhook:", error);
+    if (error instanceof AxiosError) {
+      console.error("Axios error:", error.response?.data);
+    }
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 200 },
