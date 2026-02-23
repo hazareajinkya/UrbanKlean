@@ -12,7 +12,7 @@ import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
-import axiosClient from "./clients/axios-client";
+import { axiosClient } from "./clients/axios-client";
 import axios from "axios";
 
 export function cn(...inputs: ClassValue[]) {

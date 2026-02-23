@@ -20,7 +20,7 @@ import {
 import { IPlanId } from "../types/user";
 import userService from "./user-service";
 import agentService from "./agent-service";
-import axiosClient, { backendClient } from "../clients/axios-client";
+import { axiosClient } from "../clients/axios-client";
 import { deleteCollection } from "../utils";
 import memberService from "./member-service";
 import { IAgent } from "../types/agent";
@@ -318,10 +318,10 @@ class WorkspaceService {
   }
 
   async initWorkspaceTraining({ wid, url }: { wid: string; url: string }) {
-    const { data } = await backendClient.post(
-      `/workspaces/${wid}/init-training`,
-      { url },
-    );
+    const { data } = await axiosClient.post("/api/workspace/init-training", {
+      wid,
+      url,
+    });
     if (!data?.success) {
       throw new Error(data?.error?.message || "Failed to init training");
     }

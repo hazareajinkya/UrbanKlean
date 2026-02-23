@@ -17,7 +17,7 @@ import { db } from "../clients/firebase";
 import { generateDefaultFolder, IFolder } from "../types/folder";
 import { deleteCollection } from "../utils";
 import agentService from "./agent-service";
-import axiosClient from "../clients/axios-client";
+import { axiosClient } from "../clients/axios-client";
 
 class FolderService {
   async createFolder(wid: string, name: string) {

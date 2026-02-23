@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "../user/use-user";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import { toast } from "sonner";
 import { IUserSubscription } from "@/lib/types/user";
 import { userKey } from "../user/use-user";

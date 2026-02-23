@@ -77,7 +77,7 @@ export default function WorkspacesPage() {
             setIsDeleteModalOpen(false);
             setDeletingWorkspace(undefined);
           },
-        }
+        },
       );
     }
   };
@@ -427,7 +427,7 @@ const CreateWorkspaceModal = ({
           if (url) initWorkspaceTraining.mutate({ wid: workspace.id, url });
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -499,7 +499,7 @@ const CreateWorkspaceModal = ({
                     placeholder="yourcompany.com"
                     className={cn(
                       "text-base",
-                      domainError && "border-destructive"
+                      domainError && "border-destructive",
                     )}
                   />
                 </InputGroup>
