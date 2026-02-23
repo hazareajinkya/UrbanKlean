@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
 import { INSTAGRAM_OAUTH_API_BASE, instaconf } from "@/lib/utils/conf";
 import channelService from "@/lib/services/channel-service";
@@ -55,12 +55,6 @@ export async function GET(req: NextRequest) {
     }
 
     // Step 2: Exchange the Code For a Token
-    const tokenFormData = new FormData();
-    tokenFormData.append("client_id", instaconf.appId);
-    tokenFormData.append("client_secret", instaconf.appSecret);
-    tokenFormData.append("grant_type", "authorization_code");
-    tokenFormData.append("redirect_uri", instaconf.redirectUri);
-    tokenFormData.append("code", validatedParams.code);
     const body = new URLSearchParams({
       client_id: instaconf.appId,
       client_secret: instaconf.appSecret,
@@ -92,7 +86,7 @@ export async function GET(req: NextRequest) {
 
     // Step 3: Get a long-lived access token
     const longLivedTokenResponse = await axios.get(
-      `${instaconf.baseURL}/${instaconf.version}/access_token`,
+      `${instaconf.baseURL}/access_token`,
       {
         params: {
           grant_type: "ig_exchange_token",

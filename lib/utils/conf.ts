@@ -22,9 +22,6 @@ export const FB_CONFIG_ID = process.env.NEXT_PUBLIC_FB_CONFIG_ID ?? "";
 export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
 export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
-export const INSTAGRAM_REDIRECT_URI =
-  process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ??
-  "http://localhost:3000/api/oauth/instagram";
 
 // Slack OAuth Configuration
 export const SLACK_APP_ID = process.env.NEXT_PUBLIC_SLACK_APP_ID ?? "";
