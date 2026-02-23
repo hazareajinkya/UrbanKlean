@@ -1,3 +1,5 @@
+import axios, { AxiosError } from "axios";
+import storageService from "../storage-service";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import agentService from "../agent-service";
 import { convertToModelMessages, generateText, stepCountIs } from "ai";
@@ -7,6 +9,7 @@ import chatService from "../chat-service";
 import {
   defaultAImessage,
   defaultUserMessage,
+  defaultUserImageMessage,
   IChatMessage,
 } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
@@ -27,6 +30,29 @@ class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
   MAX_MESSAGE_CHARS = 880;
+
+  async mirrorImageToStorage(args: {
+    imageUrl: string;
+    agentId: string;
+    sessionId: string;
+    messageId: string;
+  }) {
+    const response = await axios.get<ArrayBuffer>(args.imageUrl, {
+      responseType: "arraybuffer",
+    });
+    const mediaType =
+      (response.headers["content-type"] as string | undefined)
+        ?.split(";")[0]
+        ?.trim() || "image/jpeg";
+    const ext = mediaType.split("/")[1] || "jpg";
+    const storagePath = `agents/${args.agentId}/sessions/${args.sessionId}/${args.messageId}.${ext}`;
+    const { downloadURL } = await storageService.uploadBuffer(
+      response.data,
+      storagePath,
+      mediaType,
+    );
+    return { url: downloadURL, mediaType };
+  }
 
   splitMessage(text: string) {
     const cleanText = text.trim();
@@ -83,8 +109,18 @@ class InstaBotService {
         return { success: false, message: "Insufficient credits" };
       }
 
-      const query = instaMsg.text ?? "";
-      const userMsg = defaultUserMessage(query, instaMsg.id);
+      let userMsg;
+      if (instaMsg.type === "image" && instaMsg.imageUrl) {
+        const { url, mediaType } = await this.mirrorImageToStorage({
+          imageUrl: instaMsg.imageUrl,
+          agentId: agent.id,
+          sessionId: session.id,
+          messageId: instaMsg.id,
+        });
+        userMsg = defaultUserImageMessage(url, mediaType, instaMsg.id);
+      } else {
+        userMsg = defaultUserMessage(instaMsg.text ?? "", instaMsg.id);
+      }
       chatService.saveMessage(agent.id, session.id, userMsg);
 
       const actions = await actionService.getActionsForWorflows(
@@ -140,6 +176,9 @@ class InstaBotService {
       return { success: true, message: result.text, messages: messageChunks };
     } catch (error) {
       console.log("error: ", error);
+      if (error instanceof AxiosError) {
+        console.log("error response: ", error.response?.data);
+      }
       return { success: false, message: this.ERROR_MESSAGE };
     }
   }

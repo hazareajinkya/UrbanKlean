@@ -67,13 +67,13 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
 
   const history = useHistoryStore((state) => state.history);
   const subscribeToHistory = useHistoryStore(
-    (state) => state.subscribeToSessions
+    (state) => state.subscribeToSessions,
   );
   const unsubscribeHistory = useHistoryStore(
-    (state) => state.unsubscribeFromSessions
+    (state) => state.unsubscribeFromSessions,
   );
   const fetchAndAddSessionToHistory = useHistoryStore(
-    (state) => state.fetchAndAddSessionToHistory
+    (state) => state.fetchAndAddSessionToHistory,
   );
   const loadingSessionIds = useHistoryStore((state) => state.loadingSessionIds);
 
@@ -84,7 +84,7 @@ export default function ChatHistoryTab({ agent }: ChatHistoryTabProps) {
 
   const currentSession = useMemo(
     () => (sessionId ? history?.find((s) => s.id === sessionId) : undefined),
-    [history, sessionId]
+    [history, sessionId],
   );
   const handleSetSession = (session: ISession) => setSessionId(session.id);
   const handleSetSessionId = (id: string) => setSessionId(id);
@@ -152,7 +152,7 @@ const assistantMessageStyle = (message: UIMessage) =>
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
       ? "rounded-t-2xl rounded-br-2xl "
-      : "rounded-2xl"
+      : "rounded-2xl",
   );
 
 const userMessageStyle = (message: UIMessage) =>
@@ -161,7 +161,7 @@ const userMessageStyle = (message: UIMessage) =>
     message.parts.some((part) => part.type === "text") &&
       message.parts.length <= 50
       ? "rounded-t-2xl rounded-bl-2xl"
-      : "rounded-2xl"
+      : "rounded-2xl",
   );
 
 const SessionList = ({
@@ -187,16 +187,16 @@ const SessionList = ({
       channel === "web"
         ? "Visitor"
         : channel === "messenger"
-        ? "FB"
-        : channel === "instagram"
-        ? "IG"
-        : channel === "email"
-        ? "Email"
-        : channel === "slack"
-        ? "SL"
-        : channel === "whatsapp"
-        ? "WA"
-        : "API";
+          ? "FB"
+          : channel === "instagram"
+            ? "IG"
+            : channel === "email"
+              ? "Email"
+              : channel === "slack"
+                ? "SL"
+                : channel === "whatsapp"
+                  ? "WA"
+                  : "API";
     return `${type}-${session.id.split("-")[0]}`;
   };
   return (
@@ -399,7 +399,7 @@ const HistoryMessageList = ({
                     message.role === "user" && userMessageStyle(message),
                     message.role === "assistant" && [
                       assistantMessageStyle(message),
-                    ]
+                    ],
                   )}
                   style={{
                     backgroundColor: message.role === "user" ? brandColor : "",
@@ -512,7 +512,7 @@ const HistoryMessageList = ({
                               ),
                             }}
                           >
-                            {part.type === "text" ? part.text ?? "" : ""}
+                            {part.type === "text" ? (part.text ?? "") : ""}
                           </Streamdown>
                         </div>
                       ))}

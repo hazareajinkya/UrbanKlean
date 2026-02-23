@@ -38,7 +38,7 @@ export const MessageList = ({
   const brandColor = agent.customization.primaryColor;
   const fontColor = useMemo(
     () => getContrastingColor(brandColor),
-    [brandColor]
+    [brandColor],
   );
 
   const scrollToLastMessageStart = () => {
@@ -66,7 +66,7 @@ export const MessageList = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => setShowScrollButton(!entry.isIntersecting),
-      { root: containerRef.current, threshold: 0 }
+      { root: containerRef.current, threshold: 0 },
     );
 
     observer.observe(target);
@@ -174,7 +174,7 @@ const ToolBadge = memo(
     <div
       className={clsx(
         "inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out",
-        isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
+        isCalling ? "px-0 py-0" : "px-3 py-1.5 border",
       )}
       style={{
         backgroundColor: isCalling ? "transparent" : `${brandColor}10`,
@@ -209,7 +209,7 @@ const ToolBadge = memo(
         </div>
       )}
     </div>
-  )
+  ),
 );
 
 ToolBadge.displayName = "ToolBadge";
@@ -225,7 +225,7 @@ const MessageParts = memo(({ parts, isLast }: MessagePartsProps) => {
     parts?.some((part, index) => {
       const nextParts = parts.slice(index + 1);
       const hasSubsequentText = nextParts.some(
-        (p) => p.type === "text" && p.text && p.text.length > 0
+        (p) => p.type === "text" && p.text && p.text.length > 0,
       );
 
       if (part.type?.startsWith("tool-")) {
@@ -291,8 +291,8 @@ const LoadingIndicator = memo(() => (
             role: "assistant",
             parts: [{ type: "text", text: "" }],
           } as UIMessage,
-          "assistant"
-        )
+          "assistant",
+        ),
       )}
     >
       <MessageLoading />
@@ -313,7 +313,7 @@ const AssistantMessage = memo(({ message, isLast }: AssistantMessageProps) => (
       <div
         className={clsx(
           "max-w-[90%] md:max-w-[75%]",
-          getMessageStyle(message, "assistant")
+          getMessageStyle(message, "assistant"),
         )}
       >
         <MessageParts parts={message.parts} isLast={isLast} />
@@ -343,19 +343,20 @@ const UserMessage = memo(
       <div
         className={clsx(
           "max-w-[90%] md:max-w-[75%]",
-          getMessageStyle(message, "user")
+          getMessageStyle(message, "user"),
         )}
-        style={{
-          backgroundColor: brandColor,
-          color: fontColor,
-        }}
+        style={{ backgroundColor: brandColor, color: fontColor }}
       >
-        <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
-          {message.parts.map((part) => part.type === "text" && part.text)}
-        </p>
+        {message.parts.map((part, i) => {
+          if (part.type === "text")
+            return <p key={i} className="text-sm md:text-base whitespace-pre-wrap leading-loose">{part.text}</p>;
+          if (part.type === "file" && part.mediaType?.startsWith("image/"))
+            return <img key={i} src={part.url} alt="image" className="rounded-lg max-w-full max-h-60 object-contain" />;
+          return null;
+        })}
       </div>
     </div>
-  )
+  ),
 );
 
 UserMessage.displayName = "UserMessage";

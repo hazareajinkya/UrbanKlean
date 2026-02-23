@@ -9,13 +9,11 @@ export const RESEND_API_BASE = "https://api.resend.com";
 // WhatsApp Configuration
 export const WA_WINDOW_EXPIRATION_HOURS = 24;
 export const WA_PHONE_ID = "859793977226436";
-export const WA_REDIRECT_URI = process.env.NEXT_PUBLIC_WA_REDIRECT_URI ?? "";
 
 // Facebook Configuration
 export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
 export const FB_APP_ID = process.env.NEXT_PUBLIC_FB_APP_ID ?? "";
 export const FB_APP_SECRET = process.env.FB_APP_SECRET ?? "";
-export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
 export const FB_CONFIG_ID = process.env.NEXT_PUBLIC_FB_CONFIG_ID ?? "";
 
 // Instagram Configuration

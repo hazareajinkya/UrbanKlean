@@ -10,6 +10,7 @@ export interface IInstaMessage {
   to: string;
   timestamp: string;
   text?: string;
+  imageUrl?: string;
   type: "text" | "reaction" | "image";
   status?: "sent" | "delivered" | "read" | "failed";
 }

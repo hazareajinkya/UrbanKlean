@@ -164,11 +164,7 @@ const navigation = [
     href: "/agents",
     icon: Waves,
   },
-  {
-    title: "Channels",
-    href: "/channels",
-    icon: Rss,
-  },
+
   {
     title: "Customers",
     href: "/customers",
@@ -178,6 +174,11 @@ const navigation = [
     title: "AI Actions",
     href: "/actions",
     icon: Zap,
+  },
+  {
+    title: "Channels",
+    href: "/channels",
+    icon: Rss,
   },
   {
     title: "Settings",
