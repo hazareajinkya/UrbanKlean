@@ -20,11 +20,15 @@ export async function POST(req: NextRequest) {
     const { url, email } = onboardingStartSchema.parse(body);
     let rateLimitKey: string | null = null;
 
-    if (
-      email &&
-      email !== "support@magicalcx.com" &&
-      email !== "suryajayaraman@thestagetwo.com"
-    ) {
+    const WHITELISTED_EMAILS = [
+      "support@magicalcx.com",
+      "sakthiyapriyamba13@gmail.com",
+      "akil@thestagetwo.com",
+      "suryajayaraman@thestagetwo.com",
+      "karthikcharles.411@gmail.com",
+    ];
+
+    if (email && !WHITELISTED_EMAILS.includes(email)) {
       const docs = await getDocs(
         query(collection(db, "/workspaces"), where("info.email", "==", email)),
       );
