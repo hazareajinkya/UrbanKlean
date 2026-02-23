@@ -65,6 +65,14 @@ export const useWorkspaceActions = () => {
     onError: handleError,
   });
 
+  const initWorkspaceTraining = useMutation({
+    mutationFn: workspaceService.initWorkspaceTraining,
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   return {
     createWorkspace,
     updateWorkspace,
@@ -72,5 +80,6 @@ export const useWorkspaceActions = () => {
     removeWorkspaceDomain,
     deleteWorkspace,
     generateWorkspaceInfo,
+    initWorkspaceTraining,
   };
 };

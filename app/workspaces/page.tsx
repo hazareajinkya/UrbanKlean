@@ -331,7 +331,7 @@ const CreateWorkspaceModal = ({
     Partial<OnboardingData> | undefined
   >(undefined);
 
-  const { createWorkspace } = useWorkspaceActions();
+  const { createWorkspace, initWorkspaceTraining } = useWorkspaceActions();
   const { generateOnboardingInfo, uploadLogo } = useOnboardingActions();
 
   const validateDomainInput = (value: string): boolean => {
@@ -423,7 +423,8 @@ const CreateWorkspaceModal = ({
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (workspace) => {
+          if (url) initWorkspaceTraining.mutate({ wid: workspace.id, url });
           handleClose();
         },
       }
