@@ -524,3 +524,21 @@ export const HubspotLogo = ({ className }: { className?: string }) => {
     </svg>
   );
 };
+
+const LOGO_DEV_PUBLIC_KEY = "pk_aBTJEYkASOKM0uO3FsWzUg";
+
+export const CompanyLogo = ({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) => {
+  return (
+    <img
+      src={`https://img.logo.dev/name/${name}?token=${LOGO_DEV_PUBLIC_KEY}`}
+      alt="Company logo"
+      className={className}
+    />
+  );
+};
