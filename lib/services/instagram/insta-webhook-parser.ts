@@ -1,49 +1,42 @@
-import { IWAMessage } from "@/lib/types/wa-api";
 import { IInstaMessage } from "@/lib/types/insta-api";
 
-class InstaWebhookParser {
-  parseTextMessage(body: any): IInstaMessage {
-    const data = body.entry[0].messaging[0];
+// Returns null for messages that should be silently ignored
+const parseMessage = (body: any): IInstaMessage | null => {
+  const data = body?.entry?.[0]?.messaging?.[0];
+  if (!data?.message) return null;
 
-    const msg: IInstaMessage = {
-      id: data.message.mid,
-      from: data.sender.id,
-      to: data.recipient.id,
-      timestamp: data.timestamp,
-      text: data.message.text,
-      type: "text",
-    };
+  const { message, sender, recipient, timestamp } = data;
 
-    return msg;
+  // Ignore echo (our own sent messages), deleted, and unsupported messages
+  if (message.is_echo || message.is_deleted || message.is_unsupported) return null;
+
+  const base = {
+    id: message.mid,
+    from: sender.id,
+    to: recipient.id,
+    timestamp,
+  };
+
+  const attachment = message.attachments?.[0];
+
+  if (attachment) {
+    // Ephemeral (view-once) has no payload — Meta policy: do not store
+    if (attachment.type === "ephemeral") return null;
+
+    // Only handle direct image attachments for now; URL is self-authenticated (signature in query params)
+    if (attachment.type === "image" && attachment.payload?.url) {
+      return { ...base, type: "image", imageUrl: attachment.payload.url };
+    }
+
+    // video, audio, file, share, story_mention, ig_reel — not yet supported, ignore silently
+    return null;
   }
 
-  // async parseImageMessage(body: any): Promise<{
-  //   msg: IInstaMessage;
-  // }> {
-  //   const msg = body.entry[0].changes[0].value.messages[0];
-  //   const waContact = body.entry[0].changes[0].value.contacts[0];
+  // Only process if there's actual text
+  if (!message.text) return null;
 
-  //   const contact = {
-  //     waId: waContact.wa_id,
-  //     name: waContact.profile.name,
-  //     phone: waContact.wa_id,
-  //   };
+  return { ...base, type: "text", text: message.text };
+};
 
-  //   const mediaId = msg.image.id;
-
-  //   console.log("mediaId: ", mediaId);
-
-  //   const media = await waService.retrieveWAMedia(contact.waId, mediaId);
-
-  //   msg.image.url = media.downloadUrl;
-  //   msg.image.storageRef = media.storageRef;
-
-  //   return {
-  //     contact,
-  //     msg,
-  //   };
-  // }
-}
-
-const instaParser = new InstaWebhookParser();
+const instaParser = { parseMessage };
 export default instaParser;

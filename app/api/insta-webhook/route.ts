@@ -14,9 +14,10 @@ export async function POST(req: Request) {
     console.log("POST request received");
 
     const body = await req.json();
-    const msg = instaParser.parseTextMessage(body);
+    const msg = instaParser.parseMessage(body);
 
-    if (msg.from === INSTA_ID) {
+    // Null = echo, deleted, unsupported, ephemeral — always 200 to Meta
+    if (!msg || msg.from === INSTA_ID) {
       return NextResponse.json(
         { message: "Webhook received and processed successfully" },
         { status: 200 },
@@ -69,6 +70,14 @@ export async function POST(req: Request) {
             accessToken,
           });
         }
+      } else if (msg.type === "image") {
+        // Model doesn't support vision or failed to process the image
+        await instaService.sendTextMessage({
+          to: msg.from,
+          text: "Sorry, I'm unable to process images at the moment.",
+          instaUserId: channel.metadata.id,
+          accessToken,
+        });
       }
     } finally {
       instaService

@@ -89,7 +89,7 @@ export const generateDefaultSession = (
   channel: IChannelProvider,
   pid?: string,
   id?: string,
-  fromPage?: string
+  fromPage?: string,
 ): ISession => {
   return {
     id: id ?? v4(),
@@ -152,6 +152,17 @@ export const defaultUserMessage = (msg: string, id?: string): IChatMessage => {
   };
 };
 
+export const defaultUserImageMessage = (
+  imageUrl: string,
+  mediaType: string,
+  id?: string,
+): IChatMessage => ({
+  id: id ?? v4(),
+  role: "user",
+  metadata: { createdAt: new Date().toISOString() },
+  parts: [{ type: "file", mediaType, url: imageUrl }],
+});
+
 export const defaultDataMessage = (data: any, id?: string): IChatMessage => {
   return {
     id: id ?? v4(),
@@ -170,7 +181,7 @@ export const defaultDataMessage = (data: any, id?: string): IChatMessage => {
 
 export const generateDefaultTeachSession = (
   wid: string,
-  id?: string
+  id?: string,
 ): ITraingSession => {
   return {
     id: id ?? v4(),
