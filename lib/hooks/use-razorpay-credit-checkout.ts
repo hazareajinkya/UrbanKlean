@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useCurrentUser } from "./user/use-user";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import type {
   RazorpayOptions,
   RazorpayResponse,

@@ -1,6 +1,5 @@
 import { storage } from "@/lib/clients/firebase";
-import { waClient } from "@/lib/clients/axios-client";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient, waClient } from "@/lib/clients/axios-client";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import storageService from "../storage-service";
 import axios from "axios";

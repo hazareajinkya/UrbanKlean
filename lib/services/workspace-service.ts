@@ -20,7 +20,7 @@ import {
 import { IPlanId } from "../types/user";
 import userService from "./user-service";
 import agentService from "./agent-service";
-import axiosClient from "../clients/axios-client";
+import { axiosClient } from "../clients/axios-client";
 import { deleteCollection } from "../utils";
 import memberService from "./member-service";
 import { IAgent } from "../types/agent";
@@ -54,7 +54,7 @@ class WorkspaceService {
     if (!ownerId) return;
     const q = query(
       collection(db, "workspaces"),
-      where("ownerId", "==", ownerId)
+      where("ownerId", "==", ownerId),
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) return;
@@ -64,8 +64,8 @@ class WorkspaceService {
         updateDoc(doc(db, `workspaces/${docSnap.id}`), {
           planId,
           updatedAt,
-        })
-      )
+        }),
+      ),
     );
   }
 
@@ -130,7 +130,7 @@ class WorkspaceService {
 
     if (updates.name) {
       const members = await getDocs(
-        query(collection(db, `workspaces/${wid}/members`))
+        query(collection(db, `workspaces/${wid}/members`)),
       );
 
       for (const memberDoc of members.docs) {
@@ -141,7 +141,7 @@ class WorkspaceService {
           const userData = user;
           const workspaces = userData.workspaces || [];
           const updatedWorkspaces = workspaces.map((ws: any) =>
-            ws.id === wid ? { ...ws, name: updates.name } : ws
+            ws.id === wid ? { ...ws, name: updates.name } : ws,
           );
 
           await userService.updateUser(memberEmail, {
@@ -179,7 +179,7 @@ class WorkspaceService {
         const members = await memberService.fetchMembers(wid);
         if (members?.length) {
           const promises = members.map((member) =>
-            memberService.removeMember({ wid, email: member.email })
+            memberService.removeMember({ wid, email: member.email }),
           );
           await Promise.all(promises);
         }
@@ -193,7 +193,7 @@ class WorkspaceService {
         const agents = await agentService.fetchAgents(wid);
         if (agents?.length) {
           const promises = agents.map((agent: IAgent) =>
-            agentService.deleteAgent({ aid: agent.id! })
+            agentService.deleteAgent({ aid: agent.id! }),
           );
           await Promise.all(promises);
         }
@@ -217,7 +217,7 @@ class WorkspaceService {
       try {
         // Delete workspace teach sessions
         await deleteDoc(
-          doc(db, `workspaces/${wid}/knowledge/teach/sessions/${wid}`)
+          doc(db, `workspaces/${wid}/knowledge/teach/sessions/${wid}`),
         );
       } catch (error) {
         console.error(` Failed to delete teaching session:`, error);
@@ -254,13 +254,13 @@ class WorkspaceService {
             `workspaces/${wid}/folders/${folder.id}/teach`,
           ];
           await Promise.all(
-            folderSubcollections.map((path) => deleteCollection(path))
+            folderSubcollections.map((path) => deleteCollection(path)),
           );
         }
       } catch (error) {
         console.error(
           `[WorkspaceService] Failed to delete folder subcollections:`,
-          error
+          error,
         );
       }
 
@@ -287,7 +287,7 @@ class WorkspaceService {
     } catch (error: any) {
       console.error(
         `[WorkspaceService] Failed to delete workspace ${wid}:`,
-        error
+        error,
       );
       throw new Error(`Failed to delete workspace: ${error?.message || error}`);
     }
@@ -297,7 +297,7 @@ class WorkspaceService {
     wid: string,
     userEmail: string,
     role: "owner" | "admin" | "member" = "member",
-    status: "invite" | "accepted" | "default" = "default"
+    status: "invite" | "accepted" | "default" = "default",
   ) {
     const data = {
       status: status,
@@ -315,6 +315,21 @@ class WorkspaceService {
       url,
     });
     return data;
+  }
+
+  async initWorkspaceTraining({ wid, url }: { wid: string; url: string }) {
+    const { data } = await axiosClient.post("/api/workspace/init-training", {
+      wid,
+      url,
+    });
+    if (!data?.success) {
+      throw new Error(data?.error?.message || "Failed to init training");
+    }
+    return data.data as {
+      mainUrls: string[];
+      mappedUrlsCount: number;
+      trainingUrlsCount: number;
+    };
   }
 }
 

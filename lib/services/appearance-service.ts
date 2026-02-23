@@ -1,5 +1,5 @@
 import storageService from "./storage-service";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import agentService from "./agent-service";
 import { IAgent } from "@/lib/types/agent";
 

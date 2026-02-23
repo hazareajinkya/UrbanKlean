@@ -3,7 +3,7 @@ import { useCurrentUser } from "./user/use-user";
 import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import datafastService from "@/lib/services/datafast-service";
 
 interface CheckoutOptions {

@@ -35,7 +35,7 @@ import { v4 } from "uuid";
 import { embeddingConfig } from "../constants";
 import { chunkPdfContent, chunkText } from "./chunker-service";
 import storageService from "./storage-service";
-import axiosClient from "../clients/axios-client";
+import { axiosClient } from "../clients/axios-client";
 
 class KnowledgeService {
   async scrapeWebsite(wid: string, url: string) {

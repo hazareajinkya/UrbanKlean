@@ -77,7 +77,7 @@ export default function WorkspacesPage() {
             setIsDeleteModalOpen(false);
             setDeletingWorkspace(undefined);
           },
-        }
+        },
       );
     }
   };
@@ -331,7 +331,7 @@ const CreateWorkspaceModal = ({
     Partial<OnboardingData> | undefined
   >(undefined);
 
-  const { createWorkspace } = useWorkspaceActions();
+  const { createWorkspace, initWorkspaceTraining } = useWorkspaceActions();
   const { generateOnboardingInfo, uploadLogo } = useOnboardingActions();
 
   const validateDomainInput = (value: string): boolean => {
@@ -423,10 +423,11 @@ const CreateWorkspaceModal = ({
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (workspace) => {
+          if (url) initWorkspaceTraining.mutate({ wid: workspace.id, url });
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -498,7 +499,7 @@ const CreateWorkspaceModal = ({
                     placeholder="yourcompany.com"
                     className={cn(
                       "text-base",
-                      domainError && "border-destructive"
+                      domainError && "border-destructive",
                     )}
                   />
                 </InputGroup>
