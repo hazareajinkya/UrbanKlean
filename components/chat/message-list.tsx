@@ -340,18 +340,37 @@ interface UserMessageProps {
 const UserMessage = memo(
   ({ message, brandColor, fontColor }: UserMessageProps) => (
     <div className="flex justify-end">
-      <div
-        className={clsx(
-          "max-w-[90%] md:max-w-[75%]",
-          getMessageStyle(message, "user"),
-        )}
-        style={{ backgroundColor: brandColor, color: fontColor }}
-      >
+      <div className="max-w-[90%] md:max-w-[75%] space-y-1">
         {message.parts.map((part, i) => {
           if (part.type === "text")
-            return <p key={i} className="text-sm md:text-base whitespace-pre-wrap leading-loose">{part.text}</p>;
+            return (
+              <div
+                key={i}
+                className={clsx(
+                  getMessageStyle(message, "user"),
+                  "w-fit ml-auto",
+                )}
+                style={{ backgroundColor: brandColor, color: fontColor }}
+              >
+                <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
+                  {part.text}
+                </p>
+              </div>
+            );
           if (part.type === "file" && part.mediaType?.startsWith("image/"))
-            return <img key={i} src={part.url} alt="image" className="rounded-lg max-w-full max-h-60 object-contain" />;
+            return (
+              <div
+                key={i}
+                className="w-fit ml-auto rounded-2xl border border-border bg-background p-0.5"
+                style={{ backgroundColor: brandColor, color: fontColor }}
+              >
+                <img
+                  src={part.url}
+                  alt="Uploaded image"
+                  className="rounded-xl max-w-full max-h-60 object-contain"
+                />
+              </div>
+            );
           return null;
         })}
       </div>

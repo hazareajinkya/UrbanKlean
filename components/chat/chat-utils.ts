@@ -2,6 +2,7 @@ import { useAgent } from "@/lib/hooks/agent/use-agent";
 import chatService from "@/lib/services/chat-service";
 import peopleService from "@/lib/services/people-service";
 import peopleServiceV2 from "@/lib/services/people-service-v2";
+import storageService from "@/lib/services/storage-service";
 import { IAgent } from "@/lib/types/agent";
 import { IPerson } from "@/lib/types/person";
 import { IChatMessage, ISession } from "@/lib/types/session";
@@ -155,18 +156,20 @@ export const convertToMyModelMessages = (
 
   for (const message of messages) {
     if (message.role === "user") {
-      const textParts =
-        message.parts
-          ?.filter((part) => part.type === "text")
-          .map((part) => (part.type === "text" ? part.text : ""))
-          .join("") || "";
+      const content: Array<
+        | { type: "text"; text: string }
+        | { type: "image"; image: string; mimeType?: string }
+      > = [];
 
-      if (textParts) {
-        result.push({
-          role: "user",
-          content: [{ type: "text", text: textParts }],
-        });
+      for (const part of message.parts || []) {
+        if (part.type === "text" && part.text) {
+          content.push({ type: "text", text: part.text });
+        } else if (part.type === "file" && part.mediaType?.startsWith("image/")) {
+          content.push({ type: "image", image: part.url, mimeType: part.mediaType });
+        }
       }
+
+      if (content.length > 0) result.push({ role: "user", content });
     } else if (message.role === "system") {
       const textParts =
         message.parts
@@ -246,4 +249,20 @@ export const convertToMyModelMessages = (
   }
 
   return result;
+};
+
+export const uploadChatImageFilePart = async (args: {
+  aid: string;
+  sessionId: string;
+  file: File;
+}) => {
+  const { aid, sessionId, file } = args;
+  const ext = file.type.split("/")[1] || "jpg";
+  const storagePath = `agents/${aid}/sessions/${sessionId}/${Date.now()}.${ext}`;
+  const { downloadURL } = await storageService.uploadFile(
+    file,
+    storagePath,
+    file.name,
+  );
+  return { type: "file" as const, mediaType: file.type, url: downloadURL };
 };

@@ -6,10 +6,16 @@ export const models = [
   { value: "gpt-4o", label: "GPT-4o", provider: "openai" },
   { value: "gpt-4o-mini", label: "GPT-4o Mini", provider: "openai" },
   {
+    value: "gemini-3.1-pro-preview",
+    label: "Gemini 3.1 Pro Preview",
+    provider: "google",
+  },
+  {
     value: "gemini-3-pro-preview",
     label: "Gemini 3 Pro Preview",
     provider: "google",
   },
+
   {
     value: "gemini-3-flash-preview",
     label: "Gemini 3 Flash Preview",

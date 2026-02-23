@@ -385,26 +385,23 @@ const HistoryMessageList = ({
           </div>
 
           {/* Chat Messages */}
-          <div className="p-4 pb-8 space-y-4 prose-p:my-0 flex-1 overflow-y-auto">
+          <div className="p-4 pb-8 space-y-4  flex-1 overflow-y-auto">
             {currentSession.messages.map((message, index) => (
               <div
                 key={message.id + index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={clsx(
+                  "flex flex-col",
+                  message.role === "user" ? "items-end" : "items-start",
+                )}
               >
                 <div
                   className={clsx(
                     "max-w-[90%] md:max-w-[75%] leading-7",
-                    message.role === "user" && userMessageStyle(message),
                     message.role === "assistant" && [
                       assistantMessageStyle(message),
                     ],
+                    message.role === "user" && "space-y-2",
                   )}
-                  style={{
-                    backgroundColor: message.role === "user" ? brandColor : "",
-                    color: message.role === "user" ? fontColor : "",
-                  }}
                 >
                   {message.role === "assistant" ? (
                     message.parts?.map((part, partIndex) => {
@@ -453,7 +450,7 @@ const HistoryMessageList = ({
                         return (
                           <div key={partIndex}>
                             <div
-                              className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
+                              className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose prose-p:mt-0 prose-p:last:mb-0"
                               key={partIndex}
                             >
                               <Streamdown
@@ -491,29 +488,60 @@ const HistoryMessageList = ({
                       }
                     })
                   ) : message.role === "user" ? (
-                    <div
-                      className="text-sm prose prose-sm md:prose-sm max-w-none leading-loose "
-                      style={{ color: fontColor }}
-                    >
+                    <div className="space-y-2">
                       {message.parts?.map((part, partIndex) => (
-                        <div key={partIndex} className="">
-                          <Streamdown
-                            components={{
-                              a: ({ href, children }) => (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-medium  transition-colors underline underline-offset-2"
-                                  style={{ color: fontColor }}
-                                >
-                                  {children}
-                                </a>
-                              ),
-                            }}
-                          >
-                            {part.type === "text" ? (part.text ?? "") : ""}
-                          </Streamdown>
+                        <div key={partIndex}>
+                          {part.type === "text" ? (
+                            <div
+                              className={clsx(
+                                userMessageStyle(message),
+                                "w-fit ml-auto text-sm prose prose-sm md:prose-sm max-w-none leading-loose prose-p:mt-0 prose-p:last:mb-0",
+                              )}
+                              style={{
+                                backgroundColor: brandColor,
+                                color: fontColor,
+                              }}
+                            >
+                              <Streamdown
+                                components={{
+                                  a: ({ href, children }) => (
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium transition-colors underline underline-offset-2"
+                                      style={{ color: fontColor }}
+                                    >
+                                      {children}
+                                    </a>
+                                  ),
+                                }}
+                              >
+                                {part.text ?? ""}
+                              </Streamdown>
+                            </div>
+                          ) : part.type === "file" &&
+                            part.mediaType?.startsWith("image/") ? (
+                            <div
+                              className="w-fit ml-auto rounded-2xl border border-border bg-background p-0.5"
+                              style={{
+                                backgroundColor: brandColor,
+                                color: fontColor,
+                              }}
+                            >
+                              <a
+                                href={part.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <img
+                                  src={part.url}
+                                  alt="Attachment"
+                                  className="rounded-xl max-w-full max-h-40 object-contain"
+                                />
+                              </a>
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -521,6 +549,11 @@ const HistoryMessageList = ({
                     <></>
                   )}
                 </div>
+                {message.metadata?.createdAt && (
+                  <p className="pt-2 text-[11px] text-muted-foreground">
+                    {formatDateTime(message.metadata.createdAt)}
+                  </p>
+                )}
               </div>
             ))}
 

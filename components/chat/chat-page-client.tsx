@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { DefaultChatTransport, ToolUIPart, UIMessage } from "ai";
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
@@ -15,6 +15,7 @@ import {
   chatInitKey,
   getGreetingMsg,
   getLocalDeviceId,
+  uploadChatImageFilePart,
   useChatInit,
 } from "@/components/chat/chat-utils";
 import {
@@ -39,6 +40,8 @@ export default function ChatPageClient({
   fromPageValue?: string;
 }) {
   const [input, setInput] = useState("");
+  const [attachedImage, setAttachedImage] = useState<{ file: File; previewUrl: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const lastToolRef = useRef<string | null>(null);
   const pendingStarterRef = useRef<string | null>(null);
   const isWidget = widget === "true";
@@ -113,13 +116,46 @@ export default function ChatPageClient({
   const canSendStarter =
     isWidget && status === "ready" && !messagesLoading && !!sessionId;
 
+  const handleImageSelect = useCallback((file: File) => {
+    setAttachedImage((prev) => {
+      if (prev) URL.revokeObjectURL(prev.previewUrl);
+      return { file, previewUrl: URL.createObjectURL(file) };
+    });
+  }, []);
+
+  const handleImageRemove = useCallback(() => {
+    setAttachedImage((prev) => {
+      if (prev) URL.revokeObjectURL(prev.previewUrl);
+      return null;
+    });
+  }, []);
+
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || !aid || !agent) return;
-    sendMessage({
-      text: input,
-      metadata: { createdAt: new Date().toISOString() },
-    });
+    if ((!input.trim() && !attachedImage) || !aid || !agent) return;
+
+    if (attachedImage) {
+      setIsUploading(true);
+      try {
+        const filePart = await uploadChatImageFilePart({
+          aid,
+          sessionId,
+          file: attachedImage.file,
+        });
+        if (input.trim()) {
+          sendMessage({ text: input, files: [filePart], metadata: { createdAt: new Date().toISOString() } });
+        } else {
+          sendMessage({ files: [filePart], metadata: { createdAt: new Date().toISOString() } });
+        }
+        URL.revokeObjectURL(attachedImage.previewUrl);
+        setAttachedImage(null);
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      sendMessage({ text: input, metadata: { createdAt: new Date().toISOString() } });
+    }
+
     setInput("");
   };
 
@@ -209,6 +245,10 @@ export default function ChatPageClient({
         handleInputChange={(e) => setInput(e.target.value)}
         status={status}
         isWidget={isWidget}
+        isUploading={isUploading}
+        attachedImage={attachedImage}
+        onImageSelect={handleImageSelect}
+        onImageRemove={handleImageRemove}
       />
     </div>
   );
