@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AiSummaryFooter } from "@/components/landing/ai-summary-footer";
+import { companyAddress } from "@/lib/utils/conf";
 
 const footerLinks = {
   product: {
@@ -28,8 +29,6 @@ const footerLinks = {
       { label: "Terms", href: "/legal/terms" },
       { label: "Privacy", href: "/legal/privacy" },
       { label: "Refund policy", href: "/legal/refund" },
-      { label: "LLMs Index", href: "/llms.txt" },
-      { label: "LLMs Full", href: "/llms-full.txt" },
     ],
   },
 };
@@ -90,7 +89,7 @@ export const Footer = () => {
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
           {/* Logo and Description */}
-          <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 mb-4 sm:mb-0">
+          <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 mb-4 sm:mb-0 flex flex-col">
             <div className="flex items-center gap-2 mb-0">
               <img
                 src="/logos/magicalcx-full-trans-light.png"
@@ -100,9 +99,16 @@ export const Footer = () => {
             </div>
 
             <p className="text-sm sm:text-sm text-muted-foreground max-w-sm">
-              {/* Every brand, everywhere, can deliver magical customer service */}
               Greater sales, through better customer service
             </p>
+            <div className="mt-auto pt-4">
+              <address className="text-sm text-muted-foreground not-italic leading-relaxed">
+                {companyAddress.line1}
+                <br />
+                {companyAddress.city}, {companyAddress.region}{" "}
+                {companyAddress.zip}
+              </address>
+            </div>
           </div>
 
           {/* Dynamic Link Columns */}

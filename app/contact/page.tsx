@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/footer";
 import { Button } from "@/components/ui/button";
 import { useDemoModal } from "@/components/landing/demo-modal";
 import datafastService from "@/lib/services/datafast-service";
+import { companyAddress } from "@/lib/utils/conf";
 
 export default function ContactPage() {
   const { openDemoModal } = useDemoModal();
@@ -67,6 +68,14 @@ export default function ContactPage() {
                 support@magicalcx.com
               </a>
             </p>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Company location</p>
+              <address className="mt-1 text-sm text-muted-foreground not-italic leading-relaxed">
+                {companyAddress.line1}
+                <br />
+                {companyAddress.city}, {companyAddress.region} {companyAddress.zip}
+              </address>
+            </div>
           </div>
 
           {/* Right Column: Mobile Frame */}

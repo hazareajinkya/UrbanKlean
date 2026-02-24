@@ -7,7 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAgent } from "@/lib/types/agent";
-import { Loader, Upload, Building, Plus, X, GripVertical, Sparkles } from "lucide-react";
+import {
+  Loader,
+  Upload,
+  Building,
+  Plus,
+  X,
+  GripVertical,
+  Sparkles,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { getwid } from "@/lib/utils";
 import { toast } from "sonner";
@@ -23,30 +31,30 @@ const MAX_STARTER_MESSAGES = 5;
 export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const [name, setName] = useState(agent.customization.name);
   const [greetingMessage, setGreetingMessage] = useState(
-    agent.customization.greetingMessage
+    agent.customization.greetingMessage,
   );
   const [primaryColor, setPrimaryColor] = useState(
-    agent.customization.primaryColor
+    agent.customization.primaryColor,
   );
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-
 
   // Drag state for reordering
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   // Starter messages state
   const [starterMessagesEnabled, setStarterMessagesEnabled] = useState(
-    agent.customization.starterMessagesEnabled ?? false
+    agent.customization.starterMessagesEnabled ?? false,
   );
   const [starterMessages, setStarterMessages] = useState<string[]>(
-    agent.customization.starterMessages ?? []
+    agent.customization.starterMessages ?? [],
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wid = getwid();
-  const { saveAppearance, generateStarters, isSaving } = useAppearanceActions(agent);
+  const { saveAppearance, generateStarters, isSaving } =
+    useAppearanceActions(agent);
 
   const handleSave = async () => {
     try {
@@ -72,8 +80,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
-
-
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,13 +128,12 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     setDragIndex(null);
   };
 
-
   const handleGenerateStarters = async () => {
     generateStarters.mutate(undefined, {
       onSuccess: (starters: string[]) => {
         if (Array.isArray(starters)) {
           const sortedStarters = starters.sort(
-            (a: string, b: string) => a.length - b.length
+            (a: string, b: string) => a.length - b.length,
           );
           setStarterMessages(sortedStarters);
           setStarterMessagesEnabled(true);
@@ -168,9 +173,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                 className="rounded-full"
                 disabled={isSaving}
               >
-                {isSaving ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : null}
+                {isSaving ? <Loader className="w-4 h-4 animate-spin" /> : null}
                 Save
               </Button>
             </div>
@@ -302,17 +305,19 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     }
                     onDragEnd={handleDragEnd}
                     className={`flex items-center gap-3 p-2 rounded-lg transition-all group
-                      ${dragIndex === index
-                        ? "bg-primary/10 border-2 border-dashed border-primary/40"
-                        : "bg-muted/30 hover:bg-muted/50"
+                      ${
+                        dragIndex === index
+                          ? "bg-primary/10 border-2 border-dashed border-primary/40"
+                          : "bg-muted/30 hover:bg-muted/50"
                       } ${!starterMessagesEnabled ? "opacity-50" : ""}`}
                   >
                     {/* Drag handle */}
                     <div
-                      className={`text-muted-foreground p-1 ${starterMessagesEnabled
-                        ? "cursor-grab active:cursor-grabbing hover:text-foreground"
-                        : "cursor-not-allowed opacity-50"
-                        }`}
+                      className={`text-muted-foreground p-1 ${
+                        starterMessagesEnabled
+                          ? "cursor-grab active:cursor-grabbing hover:text-foreground"
+                          : "cursor-not-allowed opacity-50"
+                      }`}
                       title={
                         starterMessagesEnabled ? "Drag to reorder" : "Disabled"
                       }
@@ -337,10 +342,11 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                       size="icon"
                       disabled={!starterMessagesEnabled}
                       onClick={() => handleRemoveStarterMessage(index)}
-                      className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${starterMessagesEnabled
-                        ? "opacity-0 group-hover:opacity-100"
-                        : "opacity-0 cursor-not-allowed"
-                        }`}
+                      className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${
+                        starterMessagesEnabled
+                          ? "opacity-0 group-hover:opacity-100"
+                          : "opacity-0 cursor-not-allowed"
+                      }`}
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -376,7 +382,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
       {/* Preview Card */}
       <Card className="h-max">
         <CardHeader>
-          <CardTitle>Live Preview</CardTitle>
+          <CardTitle>Demo Preview</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-2">
           <ChatPreview
