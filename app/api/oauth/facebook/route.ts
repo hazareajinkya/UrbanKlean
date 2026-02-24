@@ -27,11 +27,11 @@ export async function GET(req: NextRequest) {
 
   const errorUrl = new URL(
     `${finishedUrl}?error=Missing authorization code`,
-    req.nextUrl.origin
+    req.nextUrl.origin,
   );
   const successUrl = new URL(
     `${finishedUrl}?facebook=success`,
-    req.nextUrl.origin
+    req.nextUrl.origin,
   );
   successUrl.protocol = getProtocol(req);
   errorUrl.protocol = getProtocol(req);
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     if (validatedParams.error) {
       console.error(
-        `Facebook OAuth Error: ${validatedParams.error_reason} - ${validatedParams.error_description}`
+        `Facebook OAuth Error: ${validatedParams.error_reason} - ${validatedParams.error_description}`,
       );
       return NextResponse.redirect(errorUrl);
     }
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
           client_secret: fbconf.appSecret,
           code: validatedParams.code,
         },
-      }
+      },
     );
 
     const { access_token, token_type, expires_in } = tokenResponse.data;
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
           input_token: access_token,
           access_token: appAccessToken,
         },
-      }
+      },
     );
 
     const { data: tokenData } = debugResponse.data;
@@ -104,13 +104,14 @@ export async function GET(req: NextRequest) {
 
     if (!pages || pages.length === 0) {
       throw new Error(
-        "No Facebook pages found. Please ensure the System User has access to at least one page."
+        "No Facebook pages found. Please ensure the System User has access to at least one page.",
       );
     }
 
     const selectedPage = pages[0];
     const pageId = selectedPage.id;
     const pageAccessToken = selectedPage.access_token;
+    console.log({ pages });
 
     if (!pageId || !pageAccessToken) {
       throw new Error("Failed to get page ID or access token");
@@ -136,7 +137,7 @@ export async function GET(req: NextRequest) {
         const uploadResult = await storageService.uploadBuffer(
           buffer,
           fileName,
-          contentType
+          contentType,
         );
         profile_pic = uploadResult.downloadURL;
       } catch (e) {
@@ -148,12 +149,11 @@ export async function GET(req: NextRequest) {
     const credentials = {
       access_token: access_token, // System User token (for getting pages)
       page_access_token: pageAccessToken, // Page Access Token (for Messenger API)
-      token_type,
-      expires_in,
+      ...(token_type !== undefined && { token_type }),
+      ...(expires_in !== undefined && { expires_in }),
     };
 
     // Store page info in metadata, including the Page ID
-    // Use data from /me/accounts response (no need for additional API call)
     const metadata = {
       id: pageId,
       name: selectedPage.name,
@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
       pageId, // Use pageId as providerAccountId instead of user_id
       "messenger",
       credentials,
-      metadata
+      metadata,
     );
 
     await channelService.addChannel(wid, channel);
@@ -199,7 +199,7 @@ export async function DELETE(req: NextRequest) {
     if (!wid || !channelId) {
       return NextResponse.json(
         { error: "Missing wid or channelId parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -217,7 +217,7 @@ export async function DELETE(req: NextRequest) {
     if (!pageAccessToken || !pageId) {
       return NextResponse.json(
         { error: "No page access token or page ID found for channel" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -237,13 +237,13 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Successfully unsubscribed from Facebook webhook" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error during Facebook webhook unsubscribe:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
