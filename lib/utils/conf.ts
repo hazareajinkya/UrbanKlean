@@ -44,6 +44,13 @@ export const coreConf = {
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
 };
 
+export const companyAddress = {
+  line1: "8 The Green STE D",
+  city: "Dover",
+  region: "County of Kent, Delaware",
+  zip: "19901",
+};
+
 // API Configs
 export const waconf = {
   version: "v24.0",
