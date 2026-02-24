@@ -26,7 +26,7 @@ class MessengerService {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
+        },
       );
 
       console.log(`Message sent with ID: ${response.data.message_id}`);
@@ -57,7 +57,7 @@ class MessengerService {
           params: {
             access_token: accessToken,
           },
-        }
+        },
       );
       console.log("response.data: ", response.data);
       return response.data;
@@ -66,7 +66,7 @@ class MessengerService {
 
       console.log(
         "Error subscribing to webhook:",
-        JSON.stringify(error, null, 2)
+        JSON.stringify(error, null, 2),
       );
       throw error;
     }
@@ -80,16 +80,26 @@ class MessengerService {
     accessToken: string;
   }) {
     try {
+      const tokenResponse = await axios.get(
+        `${fbconf.baseURL}/${fbconf.version}/oauth/access_token`,
+        {
+          params: {
+            client_id: fbconf.appId,
+            client_secret: fbconf.appSecret,
+            grant_type: "client_credentials",
+          },
+        },
+      );
+      const appAccessToken = tokenResponse.data.access_token;
+
       const response = await messengerClient.delete(
         `/${pageId}/subscribed_apps`,
         {
           params: {
-            access_token: accessToken,
-            subscribed_fields: "messages",
+            access_token: appAccessToken,
           },
-        }
+        },
       );
-      console.log("response.data: ", response.data);
       return response.data;
     } catch (error: any) {
       console.log("error: ", error.response?.data);
@@ -180,7 +190,7 @@ class MessengerService {
     } catch (error: any) {
       console.log(
         "error getting user profile: ",
-        JSON.stringify(error.response?.data, null, 2)
+        JSON.stringify(error.response?.data, null, 2),
       );
       throw error;
     }
