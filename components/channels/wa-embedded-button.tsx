@@ -75,8 +75,8 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
         window.FB.init({
           appId,
           cookie: true,
-          xfbml: false,
-          version: "v25.0",
+          xfbml: true,
+          version: "v23.0",
         });
         setIsFbReady(true);
       }

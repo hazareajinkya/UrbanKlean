@@ -53,7 +53,7 @@ export const companyAddress = {
 
 // API Configs
 export const waconf = {
-  version: "v24.0",
+  version: "v23.0",
   phoneID: WA_PHONE_ID,
   accessToken: process.env.WA_ACCESS_TOKEN,
   expirationWindow: WA_WINDOW_EXPIRATION_HOURS,
