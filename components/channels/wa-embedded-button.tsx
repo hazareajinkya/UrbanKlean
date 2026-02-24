@@ -164,6 +164,11 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
           response_type: "code",
           override_default_response_type: true,
           auth_type: "rerequest",
+          extras: {
+            sessionInfoVersion: 3,
+            featureType: "whatsapp_business_app_onboard",
+            setup: {},
+          },
         },
       );
     } catch (error) {
