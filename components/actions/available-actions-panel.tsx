@@ -167,7 +167,7 @@ export const AvailableActionsPanel = ({
                           <img
                             src={iconUrl}
                             alt={parentName}
-                            className="w-10 h-10 rounded-lg object-cover bg-background border"
+                            className="w-10 h-10 rounded-lg object-contain bg-background border"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
@@ -176,7 +176,7 @@ export const AvailableActionsPanel = ({
                         )}
                       </div>
                       <div>
-                        <h3 className="text-base leading-tight mb-1">
+                        <h3 className="text-sm leading-tight mb-1">
                           {action.name}
                         </h3>
                         <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
