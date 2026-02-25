@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
         });
         const buffer = response.data;
         const contentType = response.headers["content-type"] || "image/jpeg";
-        const fileName = `channels/${wid}/facebook/${user_id}.jpg`;
+        const fileName = `workspaces/${wid}/channels/messenger/${user_id}.jpg`;
 
         const uploadResult = await storageService.uploadBuffer(
           buffer,

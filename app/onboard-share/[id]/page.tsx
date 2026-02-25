@@ -33,7 +33,7 @@ export default function SharePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-24 items-center max-w-6xl mx-auto w-full">
           {/* Left Column: Text & CTA - Hidden on mobile, shown on desktop */}
-          <div className="hidden lg:flex flex-col items-start text-left space-y-8">
+          <div className="hidden lg:flex flex-col  items-start text-left space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-4xl leading-normal">
                 Meet your AI customer experience agent
@@ -49,37 +49,35 @@ export default function SharePage() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
-                  size="lg"
-                  className="px-8 py-6 text-lg rounded-full group"
+                  variant="outline"
+                  className="rounded-full group bg-muted"
                   onClick={onTrialStart}
+                  size={"lg"}
                 >
                   Start 14‑Day Trial
                 </Button>
                 <Button
                   variant="outline"
-                  size="lg"
-                  className="px-8 py-6 text-lg rounded-full"
+                  size={"lg"}
+                  className="rounded-full bg-muted"
                   onClick={openDemoModal}
                 >
-                  Talk to Us
+                  Book Demo
                 </Button>
               </div>
-              <p className="text-sm mt-4 text-muted-foreground">
-                Enjoy 40+ features of MagicalCX for Free for 14 days
-              </p>
             </div>
 
-            <div className="flex gap-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
+            <div className="flex gap-6 text-sm text-muted-foreground flex-wrap lg:flex-nowrap">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
                   <Check
                     className="w-3 h-3 text-emerald-600"
                     strokeWidth={2.5}
                   />
                 </span>
-                <span>14 days free trial</span>
+                <span>Done For You Setup</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
                   <Check
                     className="w-3 h-3 text-emerald-600"
@@ -88,12 +86,22 @@ export default function SharePage() {
                 </span>
                 <span>Cancel Anytime</span>
               </div>
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <span className="shrink-0 w-5 h-5 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-3 h-3 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Turn chats into revenue</span>
+              </div>
             </div>
           </div>
 
           {/* Right Column: iframe */}
           <div className="flex justify-center lg:justify-end w-full">
             <div className="relative">
+              <HandDrawnArrow />
               <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-60" />
               <div className="relative bg-gray-900 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl shadow-2xl">
                 <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden">
@@ -135,11 +143,8 @@ export default function SharePage() {
                 className="w-full py-5 text-base rounded-full"
                 onClick={openDemoModal}
               >
-                Talk to Us
+                Book Demo
               </Button>
-              <p className="text-xs text-center sm:text-left text-muted-foreground">
-                Enjoy 40+ features of MagicalCX for Free for 14 days
-              </p>
             </div>
 
             <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-1 flex-wrap">
@@ -150,7 +155,7 @@ export default function SharePage() {
                     strokeWidth={2.5}
                   />
                 </span>
-                <span>14 days free trial</span>
+                <span>Done For You Setup</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
@@ -160,6 +165,15 @@ export default function SharePage() {
                   />
                 </span>
                 <span>Cancel Anytime</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="shrink-0 w-4 h-4 rounded-full border border-emerald-500/70 bg-emerald-500/20 shadow-sm flex items-center justify-center">
+                  <Check
+                    className="w-2 h-2 text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </span>
+                <span>Turn chats into revenue</span>
               </div>
             </div>
           </div>
@@ -172,3 +186,50 @@ export default function SharePage() {
     </div>
   );
 }
+
+const HandDrawnArrow = () => (
+  <div className="hidden lg:block absolute -left-48 top-20 z-10">
+    <svg
+      width="180"
+      height="120"
+      viewBox="0 0 180 120"
+      fill="none"
+      className="overflow-visible text-muted-foreground"
+    >
+      {/* Hand-drawn curved arrow path */}
+      <path
+        d="M10 20C30 15, 50 25, 70 35C90 45, 110 55, 130 60C145 64, 155 62, 160 60"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ filter: "url(#rough)" }}
+      />
+      {/* Arrow head */}
+      <path
+        d="M155 52L165 60L152 68"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Rough filter for hand-drawn effect */}
+      <defs>
+        <filter id="rough">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.05"
+            numOctaves="2"
+            result="noise"
+          />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+        </filter>
+      </defs>
+    </svg>
+    <div className="absolute -top-2 left-0 bg-muted text-muted-foreground px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm transform -rotate-6 whitespace-nowrap border">
+      Try for Free
+    </div>
+  </div>
+);

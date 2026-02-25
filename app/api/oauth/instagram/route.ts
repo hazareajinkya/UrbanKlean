@@ -20,7 +20,7 @@ const instagramAuthSchema = z.object({
 const logAxiosStageError = (
   stage: string,
   error: unknown,
-  context: Record<string, unknown> = {}
+  context: Record<string, unknown> = {},
 ) => {
   if (!axios.isAxiosError(error)) return;
   const responseData = error.response?.data as
@@ -62,11 +62,11 @@ export async function GET(req: NextRequest) {
   const finishedUrl = `/workspaces/${wid}/channels`;
   const errorUrl = new URL(
     `${finishedUrl}?error=Missing authorization code`,
-    req.nextUrl.origin
+    req.nextUrl.origin,
   );
   const successUrl = new URL(
     `${finishedUrl}?instagram=success`,
-    req.nextUrl.origin
+    req.nextUrl.origin,
   );
   errorUrl.protocol = getProtocol(req);
   successUrl.protocol = getProtocol(req);
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
     try {
       tokenResponse = await axios.post(
         `${INSTAGRAM_OAUTH_API_BASE}/oauth/access_token`,
-        formData
+        formData,
       );
     } catch (error) {
       logAxiosStageError("code_exchange", error, logContext);
@@ -133,13 +133,16 @@ export async function GET(req: NextRequest) {
     // Step 3: Get a long-lived access token
     let longLivedTokenResponse;
     try {
-      longLivedTokenResponse = await axios.get(`${instaconf.baseURL}/access_token`, {
-        params: {
-          grant_type: "ig_exchange_token",
-          client_secret: instaconf.appSecret,
-          access_token: accessToken,
+      longLivedTokenResponse = await axios.get(
+        `${instaconf.baseURL}/access_token`,
+        {
+          params: {
+            grant_type: "ig_exchange_token",
+            client_secret: instaconf.appSecret,
+            access_token: accessToken,
+          },
         },
-      });
+      );
     } catch (error) {
       logAxiosStageError("long_lived_exchange", error, logContext);
       throw error;
@@ -170,12 +173,12 @@ export async function GET(req: NextRequest) {
         });
         const buffer = response.data;
         const contentType = response.headers["content-type"] || "image/jpeg";
-        const fileName = `channels/${wid}/instagram/${userId ?? "profile"}.jpg`;
+        const fileName = `workspaces/${wid}/channels/instagram/${userId ?? "profile"}.jpg`;
 
         const uploadResult = await storageService.uploadBuffer(
           buffer,
           fileName,
-          contentType
+          contentType,
         );
         data.profile_picture_url = uploadResult.downloadURL;
       } catch (e) {
@@ -194,7 +197,7 @@ export async function GET(req: NextRequest) {
       userId ?? metadata.id,
       "instagram",
       credentials,
-      metadata
+      metadata,
     );
 
     await channelService.addChannel(wid, channel);
@@ -219,7 +222,7 @@ export async function DELETE(req: NextRequest) {
     if (!wid || !channelId) {
       return NextResponse.json(
         { error: "Missing wid or channelId parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -235,7 +238,7 @@ export async function DELETE(req: NextRequest) {
     if (!accessToken) {
       return NextResponse.json(
         { error: "No access token found for channel" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -250,13 +253,13 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Successfully unsubscribed from Instagram webhook" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error during Instagram webhook unsubscribe:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
