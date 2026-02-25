@@ -79,11 +79,12 @@ const getParentAuthHeaders = async (
   return headers;
 };
 
+const METHODS_WITH_BODY: string[] = ["POST", "PUT", "PATCH", "DELETE"];
+
 export const executeAPIAction = async (
   action: IAction,
   params: Record<string, any>,
 ) => {
-  // Prepare headers with authorization
   let headers: Record<string, string> = { ...action.headers };
 
   console.log(
@@ -117,8 +118,23 @@ export const executeAPIAction = async (
 
   console.log("[executeAPIAction] final headers:", JSON.stringify(headers));
 
-  // Prepare query parameters
-  let queryParams: Record<string, any> = {};
+  let finalUrl = action.apiUrl;
+  const urlParamMatches = action.apiUrl.match(/\{([\w-]+)\}/g) || [];
+  const usedParamKeys = new Set<string>();
+
+  for (const match of urlParamMatches) {
+    const key = match.slice(1, -1);
+    if (params[key] !== undefined) {
+      finalUrl = finalUrl.replace(
+        match,
+        encodeURIComponent(String(params[key])),
+      );
+      usedParamKeys.add(key);
+    }
+  }
+
+  const queryParams: Record<string, any> = {};
+
   if (
     action.authorization.type === "api-key" &&
     action.authorization.apiKey?.location === "query"
@@ -127,22 +143,47 @@ export const executeAPIAction = async (
       action.authorization.apiKey.value;
   }
 
-  // For integration actions, automatically include wid in params
-  const actionParams =
-    action.type === "integration" ? { ...params, wid: action.wid } : params;
+  if (action.query) {
+    for (const q of action.query) {
+      if (!usedParamKeys.has(q.key) && params[q.key] !== undefined) {
+        queryParams[q.key] = params[q.key];
+      }
+    }
+  }
 
-  // Add input parameters based on request type1
-  const requestConfig = {
-    url: action.apiUrl,
+  const bodyData: Record<string, any> = {};
+
+  if (action.body && METHODS_WITH_BODY.includes(action.requestType)) {
+    for (const b of action.body) {
+      if (params[b.key] !== undefined) {
+        bodyData[b.key] = params[b.key];
+      }
+    }
+  }
+
+  if (action.type === "integration") {
+    if (action.requestType === "GET") {
+      queryParams["wid"] = action.wid;
+    } else {
+      bodyData["wid"] = action.wid;
+    }
+  }
+
+  const requestConfig: Record<string, any> = {
+    url: finalUrl,
     method: action.requestType,
     headers,
-    ...(action.requestType === "GET"
-      ? { params: { ...actionParams, ...queryParams } }
-      : {}),
-    ...(action.requestType !== "GET"
-      ? { data: actionParams, params: queryParams }
-      : {}),
+    params: queryParams,
   };
+
+  if (METHODS_WITH_BODY.includes(action.requestType)) {
+    requestConfig.data = bodyData;
+  }
+
+  console.log(
+    "[executeAPIAction] requestConfig:",
+    JSON.stringify(requestConfig),
+  );
 
   try {
     const response = await axios.request(requestConfig);

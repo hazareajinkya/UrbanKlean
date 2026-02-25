@@ -17,6 +17,15 @@ import { IWorkflow } from "../types/workflow";
 import cacheService from "./cache-service";
 import { invalidateCache } from "../utils/cache-utils";
 
+const sanitizeForFirestore = (
+  data: Record<string, any>,
+): Record<string, any> => {
+  const cleaned = { ...data };
+  if (cleaned.query === undefined) cleaned.query = [];
+  if (cleaned.body === undefined) cleaned.body = [];
+  return JSON.parse(JSON.stringify(cleaned));
+};
+
 class ActionService {
   // Fetches all actions (with caching), applies filters in memory if needed
   async getActions(
@@ -55,7 +64,10 @@ class ActionService {
   }
 
   async saveAction({ wid, action }: { wid: string; action: IAction }) {
-    await setDoc(doc(db, `workspaces/${wid}/actions/${action.id}`), action);
+    await setDoc(
+      doc(db, `workspaces/${wid}/actions/${action.id}`),
+      sanitizeForFirestore(action),
+    );
 
     // Invalidate server-side cache via API
     invalidateCache({ type: "actions", id: wid });
@@ -68,10 +80,13 @@ class ActionService {
     wid: string;
     updates: Partial<IAction>;
   }) {
-    await updateDoc(doc(db, `workspaces/${wid}/actions/${updates.id}`), {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    });
+    await updateDoc(
+      doc(db, `workspaces/${wid}/actions/${updates.id}`),
+      sanitizeForFirestore({
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
 
     // Invalidate server-side cache via API
     invalidateCache({ type: "actions", id: wid });
@@ -160,7 +175,7 @@ class ActionService {
 
     await setDoc(
       doc(db, `workspaces/${wid}/actions/${workspaceAction.id}`),
-      workspaceAction,
+      sanitizeForFirestore(workspaceAction),
     );
 
     invalidateCache({ type: "actions", id: wid });

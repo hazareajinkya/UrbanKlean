@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import axios from "axios";
 import actionService from "@/lib/services/action-service";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -32,21 +31,11 @@ import {
   IActionAuthorization,
 } from "@/lib/types/actions";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
-import {
-  Plus,
-  Trash2,
-  X,
-  RefreshCw,
-  Settings,
-  Loader,
-  TestTube,
-  EyeOff,
-  Play,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowRight, Plus, Trash2, X, Loader, Play } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import TestApiRequest from "./test-api-request";
+
+type InputTarget = "query" | "body";
 
 interface AddApiActionModalProps {
   isOpen: boolean;
@@ -55,128 +44,35 @@ interface AddApiActionModalProps {
   editingAction?: IAction | null;
 }
 
-interface InputRowProps {
-  input: IActionInput;
-  depth: number;
-  onUpdate: (field: keyof IActionInput, value: any) => void;
-  onRemove: () => void;
-  onAddChild: (path: number[]) => void;
-  onUpdateChild: (path: number[], childIndex: number, field: keyof IActionInput, value: any) => void;
-  onRemoveChild: (path: number[], childIndex: number) => void;
-}
+const normalizeInput = (
+  input: IActionInput,
+  fallbackKey: string,
+): IActionInput => ({
+  key: input.key || fallbackKey,
+  description: input.description || "",
+  type: input.type,
+  required: input.required,
+  children: input.children?.map((child, i) =>
+    normalizeInput(child, `field_${i}`),
+  ),
+});
 
-const InputRow: React.FC<InputRowProps> = ({
-  input,
-  depth,
-  onUpdate,
-  onRemove,
-  onAddChild,
-  onUpdateChild,
-  onRemoveChild,
-}) => {
-  const [expanded, setExpanded] = useState(true);
-  const hasChildren = input.type === "object" || input.type === "array";
-  const paddingLeft = depth * 24;
-
-  return (
-    <>
-      <TableRow>
-        <TableCell>
-          <div className="flex items-center gap-1" style={{ paddingLeft }}>
-            {hasChildren && (
-              <button
-                type="button"
-                onClick={() => setExpanded(!expanded)}
-                className="p-0.5 hover:bg-muted rounded"
-              >
-                {expanded ? (
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                )}
-              </button>
-            )}
-            <Input
-              value={input.key}
-              onChange={(e) => onUpdate("key", e.target.value)}
-              placeholder={depth === 0 ? "city" : "child_key"}
-              className="w-full"
-            />
-          </div>
-        </TableCell>
-        <TableCell>
-          <Input
-            value={input.description || ""}
-            onChange={(e) => onUpdate("description", e.target.value)}
-            placeholder="Description"
-            className="w-full"
-          />
-        </TableCell>
-        <TableCell>
-          <Select
-            value={input.type}
-            onValueChange={(value) => onUpdate("type", value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="string">String</SelectItem>
-              <SelectItem value="number">Number</SelectItem>
-              <SelectItem value="boolean">Boolean</SelectItem>
-              <SelectItem value="url">URL</SelectItem>
-              <SelectItem value="object">Object</SelectItem>
-              <SelectItem value="array">Array</SelectItem>
-            </SelectContent>
-          </Select>
-        </TableCell>
-        <TableCell className="text-center">
-          <Switch
-            checked={input.required}
-            onCheckedChange={(checked) => onUpdate("required", checked)}
-          />
-        </TableCell>
-        <TableCell className="text-center">
-          <div className="flex items-center justify-center gap-1">
-            {hasChildren && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onAddChild([])}
-                title="Add child parameter"
-              >
-                <Plus className="w-3 h-3" />
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRemove}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-      {hasChildren && expanded && input.children?.map((child, childIndex) => (
-        <InputRow
-          key={childIndex}
-          input={child}
-          depth={depth + 1}
-          onUpdate={(field, value) => onUpdateChild([], childIndex, field, value)}
-          onRemove={() => onRemoveChild([], childIndex)}
-          onAddChild={(path) => onAddChild([childIndex, ...path])}
-          onUpdateChild={(path, grandChildIndex, field, value) =>
-            onUpdateChild([childIndex, ...path], grandChildIndex, field, value)
-          }
-          onRemoveChild={(path, grandChildIndex) =>
-            onRemoveChild([childIndex, ...path], grandChildIndex)
-          }
-        />
-      ))}
-    </>
-  );
+const mapInputForSave = (input: IActionInput): IActionInput => {
+  const result: IActionInput = {
+    type: input.type,
+    key: input.key,
+    required: input.required,
+    description: input.description,
+  };
+  if ((input.type === "object" || input.type === "array") && input.children) {
+    result.children = input.children
+      .filter((child) => child.key.trim() !== "")
+      .map(mapInputForSave);
+  }
+  return result;
 };
+
+const METHODS_WITH_BODY: IRequestType[] = ["POST", "PUT", "PATCH", "DELETE"];
 
 const AddApiActionModal = ({
   isOpen,
@@ -189,7 +85,8 @@ const AddApiActionModal = ({
     description: string;
     method: string;
     url: string;
-    inputs: IActionInput[];
+    query: IActionInput[];
+    body: IActionInput[];
     headers: Array<{ key: string; value: string }>;
     authorization: IActionAuthorization;
   }>({
@@ -197,28 +94,23 @@ const AddApiActionModal = ({
     description: editingAction?.description || "",
     method: editingAction?.requestType || "GET",
     url: editingAction?.apiUrl || "",
-    inputs:
-      editingAction?.inputs && editingAction.inputs.length > 0
-        ? editingAction.inputs.map((input, index) => ({
-          key: input.key || `param_${index}`,
-          description: input.description || "",
-          type: input.type,
-          required: input.required,
-          children: input.children,
-        }))
-        : [
-          {
-            key: "",
-            description: "",
-            type: "string" as IActionInput["type"],
-            required: false,
-          },
-        ],
+    query:
+      editingAction?.query && editingAction.query.length > 0
+        ? editingAction.query.map((input, index) =>
+            normalizeInput(input, `param_${index}`),
+          )
+        : [],
+    body:
+      editingAction?.body && editingAction.body.length > 0
+        ? editingAction.body.map((input, index) =>
+            normalizeInput(input, `field_${index}`),
+          )
+        : [],
     headers: Object.entries(editingAction?.headers || {}).map(
       ([key, value]) => ({
         key,
         value,
-      })
+      }),
     ),
     authorization: editingAction?.authorization || { type: "none" },
   });
@@ -226,6 +118,51 @@ const AddApiActionModal = ({
   const [activeTab, setActiveTab] = useState("parameters");
   const [showTestPanel, setShowTestPanel] = useState(false);
   const { saveAction, updateAction } = useAiActionsActions();
+
+  const showBodyTab = METHODS_WITH_BODY.includes(
+    formData.method as IRequestType,
+  );
+
+  // Auto-extract {param} variables from URL and sync into query params
+  useEffect(() => {
+    const urlValue = formData.url;
+    if (!urlValue) return;
+
+    const templateVarRegex = /\{([\w-]+)\}/g;
+    const extractedKeys: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = templateVarRegex.exec(urlValue)) !== null) {
+      extractedKeys.push(match[1]);
+    }
+
+    if (extractedKeys.length === 0) return;
+
+    setFormData((prev) => {
+      const existingKeys = new Set(prev.query.map((q) => q.key));
+      const newParams: IActionInput[] = extractedKeys
+        .filter((key) => !existingKeys.has(key))
+        .map((key) => ({
+          key,
+          description: "",
+          type: "string" as const,
+          required: true,
+        }));
+
+      if (newParams.length === 0) return prev;
+
+      return {
+        ...prev,
+        query: [...prev.query, ...newParams],
+      };
+    });
+  }, [formData.url]);
+
+  // If method changes to one without body, switch away from body tab
+  useEffect(() => {
+    if (!showBodyTab && activeTab === "body") {
+      setActiveTab("parameters");
+    }
+  }, [showBodyTab, activeTab]);
 
   const handleSave = async () => {
     let authorization = { ...formData.authorization };
@@ -239,6 +176,13 @@ const AddApiActionModal = ({
       return;
     }
 
+    const sanitizedQuery = formData.query
+      .filter((param) => param.key.trim() !== "")
+      .map(mapInputForSave);
+    const sanitizedBody = formData.body
+      .filter((param) => param.key.trim() !== "")
+      .map(mapInputForSave);
+
     const actionData: IAction = {
       id: editingAction?.id || uuidv4(),
       wid,
@@ -248,14 +192,18 @@ const AddApiActionModal = ({
       description: formData.description,
       type: "user",
       requestType: formData.method as IRequestType,
-      headers: formData.headers.reduce((acc, header) => {
-        if (header.key && header.value) {
-          acc[header.key] = header.value;
-        }
-        return acc;
-      }, {} as Record<string, string>),
+      headers: formData.headers.reduce(
+        (acc, header) => {
+          if (header.key && header.value) {
+            acc[header.key] = header.value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
       authorization: authorization,
-      inputs: formData.inputs.map((param) => mapInputForSave(param)),
+      query: sanitizedQuery.length > 0 ? sanitizedQuery : undefined,
+      body: sanitizedBody.length > 0 ? sanitizedBody : undefined,
       createdAt: editingAction?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: "active",
@@ -266,36 +214,23 @@ const AddApiActionModal = ({
         { wid, updates: actionData },
         {
           onSuccess: () => onClose(),
-        }
+        },
       );
     } else {
       saveAction.mutate(
         { wid, action: actionData },
         {
           onSuccess: () => onClose(),
-        }
+        },
       );
     }
   };
 
-  const mapInputForSave = (input: IActionInput): IActionInput => {
-    const result: IActionInput = {
-      type: input.type,
-      key: input.key,
-      required: input.required,
-      description: input.description,
-    };
-    if ((input.type === "object" || input.type === "array") && input.children) {
-      result.children = input.children.map(mapInputForSave);
-    }
-    return result;
-  };
-
-  const addInput = () => {
+  const handleAddInput = (target: InputTarget) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: [
-        ...prev.inputs,
+      [target]: [
+        ...prev[target],
         {
           key: "",
           description: "",
@@ -306,91 +241,127 @@ const AddApiActionModal = ({
     }));
   };
 
-  const updateInput = (
+  const handleUpdateInput = (
+    target: InputTarget,
     index: number,
     field: keyof IActionInput,
-    value: any
-  ) => {
-    setFormData((prev) => {
-      const newInputs = [...prev.inputs];
-      const updated = { ...newInputs[index], [field]: value };
-      // When switching to object/array, initialize children if empty
-      if (field === "type" && (value === "object" || value === "array") && !updated.children) {
-        updated.children = [];
-      }
-      // When switching away from object/array, remove children
-      if (field === "type" && value !== "object" && value !== "array") {
-        delete updated.children;
-      }
-      newInputs[index] = updated;
-      return { ...prev, inputs: newInputs };
-    });
-  };
-
-  const removeInput = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      inputs: prev.inputs.filter((_, i) => i !== index),
-    }));
-  };
-
-  // --- Nested children helpers ---
-  const updateNestedChildren = (
-    inputs: IActionInput[],
-    path: number[],
-    updater: (children: IActionInput[]) => IActionInput[]
-  ): IActionInput[] => {
-    if (path.length === 0) return updater(inputs);
-    const [head, ...rest] = path;
-    return inputs.map((input, i) => {
-      if (i !== head) return input;
-      return {
-        ...input,
-        children: updateNestedChildren(input.children || [], rest, updater),
-      };
-    });
-  };
-
-  const addChildInput = (parentPath: number[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      inputs: updateNestedChildren(prev.inputs, parentPath, (children) => [
-        ...children,
-        { key: "", description: "", type: "string" as IActionInput["type"], required: false },
-      ]),
-    }));
-  };
-
-  const updateChildInput = (
-    parentPath: number[],
-    childIndex: number,
-    field: keyof IActionInput,
-    value: any
+    value: IActionInput[keyof IActionInput],
   ) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: updateNestedChildren(prev.inputs, parentPath, (children) =>
-        children.map((child, i) => {
-          if (i !== childIndex) return child;
-          const updated = { ...child, [field]: value };
-          if (field === "type" && (value === "object" || value === "array") && !updated.children) {
-            updated.children = [];
+      [target]: prev[target].map((input, inputIndex) => {
+        if (inputIndex !== index) return input;
+
+        if (field === "type") {
+          const nextType = value as IActionInput["type"];
+          if (nextType === "object" || nextType === "array") {
+            return {
+              ...input,
+              type: nextType,
+              children: input.children || [],
+            };
           }
-          if (field === "type" && value !== "object" && value !== "array") {
-            delete updated.children;
-          }
-          return updated;
-        })
-      ),
+
+          return {
+            ...input,
+            type: nextType,
+            children: undefined,
+          };
+        }
+
+        return { ...input, [field]: value };
+      }),
     }));
   };
 
-  const removeChildInput = (parentPath: number[], childIndex: number) => {
+  const handleRemoveInput = (target: InputTarget, index: number) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: updateNestedChildren(prev.inputs, parentPath, (children) =>
-        children.filter((_, i) => i !== childIndex)
-      ),
+      [target]: prev[target].filter((_, inputIndex) => inputIndex !== index),
+    }));
+  };
+
+  const handleAddObjectVariable = (target: InputTarget, inputIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [target]: prev[target].map((input, currentIndex) => {
+        if (currentIndex !== inputIndex) return input;
+        return {
+          ...input,
+          children: [
+            ...(input.children || []),
+            {
+              key: "",
+              description: "",
+              type: "string",
+              required: false,
+            },
+          ],
+        };
+      }),
+    }));
+  };
+
+  const handleUpdateObjectVariable = (args: {
+    target: InputTarget;
+    inputIndex: number;
+    variableIndex: number;
+    field: keyof IActionInput;
+    value: IActionInput[keyof IActionInput];
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      [args.target]: prev[args.target].map((input, currentInputIndex) => {
+        if (currentInputIndex !== args.inputIndex) return input;
+
+        return {
+          ...input,
+          children: (input.children || []).map(
+            (variable, currentVariableIndex) => {
+              if (currentVariableIndex !== args.variableIndex) return variable;
+              if (args.field === "type") {
+                const nextType = args.value as IActionInput["type"];
+                if (nextType === "object" || nextType === "array") {
+                  return {
+                    ...variable,
+                    type: nextType,
+                    children: variable.children || [],
+                  };
+                }
+
+                return {
+                  ...variable,
+                  type: nextType,
+                  children: undefined,
+                };
+              }
+
+              return { ...variable, [args.field]: args.value };
+            },
+          ),
+        };
+      }),
+    }));
+  };
+
+  const handleRemoveObjectVariable = (args: {
+    target: InputTarget;
+    inputIndex: number;
+    variableIndex: number;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      [args.target]: prev[args.target].map((input, currentInputIndex) => {
+        if (currentInputIndex !== args.inputIndex) return input;
+
+        return {
+          ...input,
+          children: (input.children || []).filter(
+            (_, currentVariableIndex) =>
+              currentVariableIndex !== args.variableIndex,
+          ),
+        };
+      }),
     }));
   };
 
@@ -410,12 +381,12 @@ const AddApiActionModal = ({
   const updateHeader = (
     index: number,
     field: "key" | "value",
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => ({
       ...prev,
       headers: prev.headers.map((header, i) =>
-        i === index ? { ...header, [field]: value } : header
+        i === index ? { ...header, [field]: value } : header,
       ),
     }));
   };
@@ -427,16 +398,286 @@ const AddApiActionModal = ({
     }));
   };
 
+  const renderInputTable = (config: {
+    target: InputTarget;
+    tabValue: string;
+    items: IActionInput[];
+    emptyMessage: string;
+    addButtonLabel: string;
+    keyPlaceholder: string;
+  }) => (
+    <TabsContent value={config.tabValue} className="space-y-4 pt-2 pb-4">
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Key</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-center">Required</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {config.items.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
+                  {config.emptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              config.items.map((input, index) => (
+                <Fragment key={index}>
+                  <TableRow>
+                    <TableCell>
+                      <Input
+                        value={input.key}
+                        onChange={(event) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "key",
+                            event.target.value,
+                          )
+                        }
+                        placeholder={config.keyPlaceholder}
+                        className="w-full"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={input.description || ""}
+                        onChange={(event) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "description",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Description"
+                        className="w-full"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={input.type}
+                        onValueChange={(value) =>
+                          handleUpdateInput(config.target, index, "type", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">String</SelectItem>
+                          <SelectItem value="number">Number</SelectItem>
+                          <SelectItem value="boolean">Boolean</SelectItem>
+                          <SelectItem value="url">URL</SelectItem>
+                          <SelectItem value="object">Object (JSON)</SelectItem>
+                          <SelectItem value="array">Array (JSON)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={input.required}
+                        onCheckedChange={(checked) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "required",
+                            checked,
+                          )
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveInput(config.target, index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+
+                  {input.type === "object" || input.type === "array" ? (
+                    <>
+                      <TableRow className="bg-muted/20">
+                        <TableCell className="pl-4 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <ArrowRight className="size-3" />
+                            Nested variables for{" "}
+                            <span className="font-medium text-foreground">
+                              {input.key ||
+                                (input.type === "array" ? "array" : "object")}
+                            </span>
+                          </span>
+                        </TableCell>
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                      </TableRow>
+
+                      {(input.children || []).map(
+                        (
+                          objectVariable: IActionInput,
+                          variableIndex: number,
+                        ) => (
+                          <TableRow
+                            key={`${index}-${variableIndex}`}
+                            className="bg-muted/10"
+                          >
+                            <TableCell className="pl-8">
+                              <Input
+                                value={objectVariable.key}
+                                onChange={(event) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "key",
+                                    value: event.target.value,
+                                  })
+                                }
+                                placeholder="field"
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={objectVariable.description || ""}
+                                onChange={(event) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "description",
+                                    value: event.target.value,
+                                  })
+                                }
+                                placeholder="Field description"
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={objectVariable.type}
+                                onValueChange={(value) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "type",
+                                    value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">String</SelectItem>
+                                  <SelectItem value="number">Number</SelectItem>
+                                  <SelectItem value="boolean">
+                                    Boolean
+                                  </SelectItem>
+                                  <SelectItem value="url">URL</SelectItem>
+                                  <SelectItem value="object">
+                                    Object (JSON)
+                                  </SelectItem>
+                                  <SelectItem value="array">
+                                    Array (JSON)
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={objectVariable.required}
+                                onCheckedChange={(checked) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "required",
+                                    value: checked,
+                                  })
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                  })
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ),
+                      )}
+
+                      <TableRow className="bg-muted/10">
+                        <TableCell className="pl-8">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleAddObjectVariable(config.target, index)
+                            }
+                            className="gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Variable
+                          </Button>
+                        </TableCell>
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                      </TableRow>
+                    </>
+                  ) : null}
+                </Fragment>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Button variant="outline" onClick={() => handleAddInput(config.target)}>
+        <Plus className="w-4 h-4" />
+        {config.addButtonLabel}
+      </Button>
+    </TabsContent>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       closeModal={onClose}
-      className={`${showTestPanel ? "max-w-6xl" : "max-w-3xl"
-        } bg-white dark:bg-gray-900 rounded-xl p-6 transition-all duration-300`}
+      className={`${
+        showTestPanel ? "max-w-6xl" : "max-w-3xl"
+      } bg-white dark:bg-gray-900 rounded-xl p-6 transition-all duration-300`}
     >
       <div
-        className={`grid grid-cols-1 ${showTestPanel ? "lg:grid-cols-[2fr_1fr]" : "lg:grid-cols-1"
-          } gap-6 h-[75vh]`}
+        className={`grid grid-cols-1 ${
+          showTestPanel ? "lg:grid-cols-[2fr_1fr]" : "lg:grid-cols-1"
+        } gap-6 h-[75vh]`}
       >
         {/* Left Panel - Form */}
         <div className="flex flex-col min-h-0">
@@ -528,6 +769,14 @@ const AddApiActionModal = ({
                   >
                     Parameters
                   </TabsTrigger>
+                  {showBodyTab && (
+                    <TabsTrigger
+                      value="body"
+                      className="border-b-2 border-transparent data-[state=active]:border-primary "
+                    >
+                      Body
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger
                     value="authorization"
                     className="border-b-2 border-transparent data-[state=active]:border-primary "
@@ -543,44 +792,24 @@ const AddApiActionModal = ({
                 </TabsList>
               </div>
 
-              <TabsContent value="parameters" className="space-y-4 pt-2 pb-4">
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Key</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-center">Required</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {formData.inputs.map((input, index) => (
-                        <InputRow
-                          key={index}
-                          input={input}
-                          depth={0}
-                          onUpdate={(field, value) => updateInput(index, field, value)}
-                          onRemove={() => removeInput(index)}
-                          onAddChild={(path) => addChildInput([index, ...path])}
-                          onUpdateChild={(path, childIndex, field, value) =>
-                            updateChildInput([index, ...path], childIndex, field, value)
-                          }
-                          onRemoveChild={(path, childIndex) =>
-                            removeChildInput([index, ...path], childIndex)
-                          }
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+              {renderInputTable({
+                target: "query",
+                tabValue: "parameters",
+                items: formData.query,
+                emptyMessage: "No query parameters defined yet.",
+                addButtonLabel: "Add Parameter",
+                keyPlaceholder: "city",
+              })}
 
-                <Button variant="outline" onClick={addInput} className="">
-                  <Plus className="w-4 h-4" />
-                  Add Parameter
-                </Button>
-              </TabsContent>
+              {showBodyTab &&
+                renderInputTable({
+                  target: "body",
+                  tabValue: "body",
+                  items: formData.body,
+                  emptyMessage: "No body fields defined yet.",
+                  addButtonLabel: "Add Body Field",
+                  keyPlaceholder: "field_name",
+                })}
 
               <TabsContent
                 value="authorization"
@@ -815,7 +1044,8 @@ const AddApiActionModal = ({
             <TestApiRequest
               url={formData.url}
               method={formData.method as IRequestType}
-              inputs={formData.inputs}
+              query={formData.query}
+              body={formData.body}
               headers={formData.headers}
               authorization={formData.authorization}
               onClose={() => setShowTestPanel(false)}

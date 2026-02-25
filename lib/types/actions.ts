@@ -21,7 +21,8 @@ export interface IAction {
   requestType: IRequestType;
   headers: Record<string, string>;
   authorization: IActionAuthorization;
-  inputs: IActionInput[];
+  query?: IActionInput[];
+  body?: IActionInput[];
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -70,7 +71,8 @@ export const generateDefaultAction = (
   authorization: IActionAuthorization,
   requestType: IRequestType,
   headers: Record<string, string>,
-  inputs: IActionInput[],
+  query?: IActionInput[],
+  body?: IActionInput[],
 ): IAction => {
   return {
     id: v4(),
@@ -84,7 +86,8 @@ export const generateDefaultAction = (
     apiUrl,
     description,
     headers,
-    inputs,
+    query,
+    body,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
