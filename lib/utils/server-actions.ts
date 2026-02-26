@@ -1,48 +1,7 @@
-import { decrypt } from "@/lib/utils/encryption";
-import axios from "axios";
 import { IAction, IActionInput } from "../types/actions";
-import { executeAPIAction as originalExecuteAPIAction } from "./api-actions-utils";
 import { tool, ToolSet } from "ai";
 import z from "zod";
-
-export const executeAPIAction = async (
-  action: IAction,
-  params: Record<string, any>,
-) => {
-  const decryptedAction = { ...action };
-
-  console.log("decryptedAction :", decryptedAction);
-
-  if (decryptedAction.authorization) {
-    if (
-      decryptedAction.authorization.type === "api-key" &&
-      decryptedAction.authorization.apiKey
-    ) {
-      decryptedAction.authorization.apiKey = {
-        ...decryptedAction.authorization.apiKey,
-        value: decrypt(decryptedAction.authorization.apiKey.value),
-      };
-    } else if (
-      decryptedAction.authorization.type === "bearer-token" &&
-      decryptedAction.authorization.bearerToken
-    ) {
-      decryptedAction.authorization.bearerToken = {
-        ...decryptedAction.authorization.bearerToken,
-        token: decrypt(decryptedAction.authorization.bearerToken.token),
-      };
-    } else if (
-      decryptedAction.authorization.type === "basic" &&
-      decryptedAction.authorization.basic
-    ) {
-      decryptedAction.authorization.basic = {
-        ...decryptedAction.authorization.basic,
-        username: decrypt(decryptedAction.authorization.basic.username),
-        password: decrypt(decryptedAction.authorization.basic.password),
-      };
-    }
-  }
-  return originalExecuteAPIAction(decryptedAction, params);
-};
+import { backendClient } from "../clients/axios-client";
 
 const inputToZodSchema = (input: IActionInput): z.ZodTypeAny => {
   let schema: z.ZodTypeAny;
@@ -112,7 +71,18 @@ export const getCustomTools = (actions: IAction[]): ToolSet => {
         ),
       }),
       execute: async (params) => {
-        return executeAPIAction(action, params);
+        // return executeAPIAction(action, params);
+        try {
+          const response = await backendClient.post("/actions/execute", {
+            aid: action.id,
+            wid: action.wid,
+            params,
+          });
+          return response.data;
+        } catch (error) {
+          console.log("error :", JSON.stringify(error));
+          return error;
+        }
       },
     });
     return acc;
