@@ -132,7 +132,7 @@ export default function ActionsPage() {
           </div>
         )}
       </div>
-      <div className="w-[340px] flex-shrink-0 border rounded-lg p-4 bg-background">
+      <div className="w-[340px] flex-shrink-0 border rounded-lg p-4 bg-card">
         <AvailableActionsPanel
           actions={globalActions}
           workspaceActions={workspaceActions}

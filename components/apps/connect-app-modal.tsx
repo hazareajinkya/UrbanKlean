@@ -134,7 +134,7 @@ export default function ConnectAppModal({
     <Modal
       isOpen={isOpen}
       closeModal={handleClose}
-      className="max-w-md bg-white dark:bg-black rounded-2xl pb-4 pt-6"
+      className="max-w-sm bg-card rounded-2xl pb-4 pt-6"
     >
       <div className="overflow-hidden">
         <div className="flex flex-col items-center gap-4 px-4">

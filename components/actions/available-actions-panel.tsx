@@ -87,13 +87,15 @@ export const AvailableActionsPanel = ({
       .filter((id): id is string => !!id),
   );
 
-  const installedAppIds = new Set(
+  const installedAppSlugs = new Set(
     (installedApps ?? [])
       .filter((a) => a.status === "connected")
-      .map((a) => a.appId),
+      .map((a) => a.appSlug),
   );
 
-  const availableActions = actions;
+  const availableActions = actions.filter(
+    (action) => !action.app?.slug || !installedAppSlugs.has(action.app.slug),
+  );
 
   const filteredActions = !searchQuery.trim()
     ? availableActions
@@ -121,7 +123,7 @@ export const AvailableActionsPanel = ({
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4">
-        <h2 className="text-lg font-medium mb-2">Available Actions</h2>
+        <h2 className="text- font-medium mb-2">Available Actions</h2>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -129,7 +131,7 @@ export const AvailableActionsPanel = ({
             placeholder="Search actions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-muted"
           />
         </div>
       </div>
@@ -156,50 +158,42 @@ export const AvailableActionsPanel = ({
               return (
                 <div
                   key={action.id}
-                  className={`relative border rounded-xl bg-card text-card-foreground p-4 transition-all ${
-                    added ? "opacity-60 bg-muted/50" : "hover:border-primary/50"
+                  onClick={() =>
+                    !added &&
+                    addingActionId !== action.id &&
+                    handleAddAction(action)
+                  }
+                  className={`flex items-center justify-between gap-2 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all ${
+                    added
+                      ? "opacity-60"
+                      : "hover:border-primary/50 cursor-pointer"
                   }`}
                 >
-                  <div className="flex items-start justify-between ">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        {iconUrl ? (
-                          <img
-                            src={iconUrl}
-                            alt={parentName}
-                            className="w-10 h-10 rounded-lg object-contain bg-background border"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                            <span className="font-bold text-xs">API</span>
-                          </div>
-                        )}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {iconUrl ? (
+                      <img
+                        src={iconUrl}
+                        alt={parentName}
+                        className="w-6 h-6 rounded object-contain bg-background border flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center text-primary flex-shrink-0">
+                        <span className="font-bold text-[10px]">API</span>
                       </div>
-                      <div>
-                        <h3 className="text-sm leading-tight mb-1">
-                          {action.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-                          {parentName}
-                        </p>
-                      </div>
-                    </div>
+                    )}
+                    <span className="text-sm truncate">{action.name}</span>
+                  </div>
 
-                    <Button
-                      size="sm"
-                      variant={added ? "outline" : "default"}
-                      onClick={() => handleAddAction(action)}
-                      disabled={added || addingActionId === action.id}
-                      className={`text-xs ${added ? "bg-background" : ""}`}
-                    >
-                      {added ? (
-                        <>Added</>
-                      ) : addingActionId === action.id ? (
-                        <>Adding</>
-                      ) : (
-                        <>Add</>
-                      )}
-                    </Button>
+                  <div
+                    className={`flex items-center justify-center h-7 w-7 rounded-full transition-colors flex-shrink-0 ${added ? "opacity-50" : ""}`}
+                  >
+                    {added ? (
+                      <Check className="h-4 w-4 text-muted-foreground" />
+                    ) : addingActionId === action.id ? (
+                      <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </div>
                 </div>
               );
