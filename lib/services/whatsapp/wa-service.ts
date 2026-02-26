@@ -355,6 +355,64 @@ class WaService {
       throw error;
     }
   }
+
+  async checkRegistrationStatus({
+    phoneId,
+    accessToken,
+  }: {
+    phoneId: string;
+    accessToken: string;
+  }) {
+    try {
+      const fields = "status";
+      const response = await waClient.get(`/${phoneId}?fields=${fields}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const { status } = response.data;
+
+      if (status === "CONNECTED") {
+        console.log("Whatsapp is registered");
+        return false;
+      }
+      console.log("Whatsapp is not registered");
+      return true;
+    } catch (error: any) {
+      console.error("Error checking registration status:", error);
+      throw error;
+    }
+  }
+
+  async registerPhoneNumber({
+    phoneId,
+    pin,
+    accessToken,
+  }: {
+    phoneId: string;
+    pin: string;
+    accessToken: string;
+  }) {
+    try {
+      await waClient.post(
+        `/${phoneId}/register`,
+        {
+          messaging_product: "whatsapp",
+          pin,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      console.log("Successfully registered WhatsApp phone number");
+    } catch (error: any) {
+      console.log("Could not register WhatsApp phone number:", error);
+      throw error;
+    }
+  }
 }
 
 const waService = new WaService();
