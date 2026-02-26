@@ -7,6 +7,8 @@ import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import { errorResponse, successResponse } from "@/lib/types/api-response";
 import waService from "@/lib/services/whatsapp/wa-service";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/clients/firebase";
 
 const whatsappAuthSchema = z.object({
   wid: z.string().min(1, "Workspace ID is required"),
@@ -62,6 +64,24 @@ export async function POST(req: NextRequest) {
       wabaId: validatedParams.waba_id,
       accessToken: access_token,
     });
+
+    const needsRegistration = await waService.checkRegistrationStatus({
+      phoneId: validatedParams.phone_number_id,
+      accessToken: access_token,
+    });
+
+    if (needsRegistration) {
+      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      await setDoc(doc(db, `whatsapp/${validatedParams.phone_number_id}`), {
+        pin,
+      });
+      credentials.pin = pin;
+      await waService.registerPhoneNumber({
+        phoneId: validatedParams.phone_number_id,
+        pin,
+        accessToken: access_token,
+      });
+    }
 
     const metadata = {
       phone_number_id: validatedParams.phone_number_id,
