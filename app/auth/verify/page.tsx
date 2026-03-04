@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader } from "lucide-react";
-import { toast } from "sonner";
 import { useAuthActions } from "@/lib/hooks/auth/use-auth-actions";
 
 export default function VerifyEmail() {
   const router = useRouter();
   const { verifyEmailLink } = useAuthActions();
+  const hasVerified = useRef(false);
 
   useEffect(() => {
+    if (hasVerified.current) return;
+    hasVerified.current = true;
     verifyEmailLink.mutate();
   }, []);
 
