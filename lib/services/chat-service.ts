@@ -26,6 +26,7 @@ import {
 } from "../../components/chat/chat-utils";
 import peopleService from "./people-service";
 import { Geo } from "@vercel/functions";
+import { stripUndefined } from "../utils";
 
 class ChatService {
   async createSession(
@@ -46,7 +47,7 @@ class ChatService {
       fromPage,
     );
 
-    if (geo) session.geo = geo;
+    if (geo) session.geo = stripUndefined(geo);
     if (personId) {
       session.personId = personId;
       if (geo) {
@@ -293,13 +294,16 @@ export const cleanMessageForSaving = (message: IChatMessage) => {
   cleaned.parts = cleaned.parts
     .map((part) => {
       if (part.type?.startsWith("data-"))
-        return { ...part, type: "data-data" } as { type: "data-data"; id?: string; data: any };
+        return { ...part, type: "data-data" } as {
+          type: "data-data";
+          id?: string;
+          data: any;
+        };
       return part;
     })
-    .filter((p) => (p as any).type && ((p as any).type !== "text" || (p as any).text)) as UIMessagePart<
-    { type: "data"; data: any },
-    UITools
-  >[];
+    .filter(
+      (p) => (p as any).type && ((p as any).type !== "text" || (p as any).text),
+    ) as UIMessagePart<{ type: "data"; data: any }, UITools>[];
   if (!cleaned.parts.length) {
     const { parts: _, ...rest } = cleaned;
     return rest as IChatMessage;
