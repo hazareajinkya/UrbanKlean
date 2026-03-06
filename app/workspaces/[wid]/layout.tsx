@@ -287,7 +287,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 `}
                 title={isCollapsed ? item.title : undefined}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className={`flex items-center gap-3 min-w-0 flex-1 ${isCollapsed ? "justify-center" : ""}`}
+                >
                   <item.icon
                     className={`h-4 w-4 shrink-0 ${isCollapsed ? "h-4.5 w-4.5" : ""
                       }`}

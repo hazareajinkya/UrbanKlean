@@ -52,8 +52,12 @@ export default function AppsPage() {
       );
     }
 
-    return filtered;
-  }, [apps, searchQuery]);
+    return [...filtered].sort((a, b) => {
+      const aInstalled = installedSlugs.has(a.slug);
+      const bInstalled = installedSlugs.has(b.slug);
+      return aInstalled === bInstalled ? 0 : aInstalled ? -1 : 1;
+    });
+  }, [apps, searchQuery, installedSlugs]);
 
   const handleConnect = (app: IApp) => {
     setSelectedApp(app);
@@ -118,7 +122,7 @@ export default function AppsPage() {
         )}
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredApps.map((app) => {
               const isInstalled = installedSlugs.has(app.slug);
               const installedApp = installedApps?.find(

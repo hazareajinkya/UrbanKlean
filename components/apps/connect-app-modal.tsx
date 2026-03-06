@@ -3,17 +3,11 @@
 import { useState, useMemo } from "react";
 import { IApp } from "@/lib/types/app";
 import { useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Loader,
-  ExternalLink,
-  ArrowLeftRight,
-  CheckCircle2,
-  PlayCircle,
-} from "lucide-react";
+import { Loader, X } from "lucide-react";
 import Modal from "../ui/modal";
+import { motion } from "framer-motion";
 
 interface ConnectAppModalProps {
   app: IApp | null;
@@ -134,50 +128,104 @@ export default function ConnectAppModal({
     <Modal
       isOpen={isOpen}
       closeModal={handleClose}
-      className="max-w-sm bg-card rounded-2xl pb-4 pt-6"
+      className="max-w-md rounded-2xl overflow-hidden p-0 bg-gradient-to-t from-gray-200 via-gray-100 to-white dark:from-gray-800 dark:via-gray-900 dark:to-black"
     >
-      <div className="overflow-hidden">
-        <div className="flex flex-col items-center gap-4 px-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border bg-background flex items-center justify-center shadow-sm p-2">
+      <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 z-50 p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground"
+        >
+          <X className="w-5 h-5" />
+          <span className="sr-only">Close</span>
+        </button>
+        {/* Content */}
+        <div className="relative pt-10 pb-8">
+          {/* Icons Row */}
+          <div className="flex items-center justify-center mb-8 mt-2">
+            {/* MagicalCX Logo */}
+            <div className="w-16 h-16 rounded-lg border bg-card flex items-center justify-center p-0.5 z-10 relative shadow-sm">
               <img
-                src="/logos/magicalcx-icon-trans-dark.png"
+                src="/logos/magicalcx-appicon-dark.png"
                 alt="MagicalCX"
-                className="w-10 h-10 object-contain "
+                className="w-full h-full object-cover rounded-md"
               />
             </div>
 
-            <ArrowLeftRight className="w-5 h-5 text-muted-foreground" />
-            <div className="w-12 h-12 rounded-xl overflow-hidden border bg-background flex items-center justify-center shadow-sm">
+            {/* Connection Animation */}
+            <div className="relative w-16 flex flex-col items-center justify-center gap-3 -mx-2">
+              {/* Top line (Right to Left) */}
+              <div className="w-full h-[3px] bg-secondary/60 relative overflow-hidden">
+                <motion.div
+                  className="absolute inset-y-0 w-1/2 bg-gradient-to-l from-transparent via-foreground to-transparent"
+                  initial={{ right: "-50%" }}
+                  animate={{ right: "100%" }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeIn",
+                  }}
+                />
+              </div>
+
+              {/* Bottom line (Left to Right) */}
+              <div className="w-full h-[3px] bg-secondary/60 relative overflow-hidden">
+                <motion.div
+                  className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-foreground to-transparent"
+                  initial={{ left: "-50%" }}
+                  animate={{ left: "100%" }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeIn",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* App Logo */}
+            <div className="w-16 h-16 bg-card flex border rounded-lg items-center justify-center p-0.5 z-10 relative shadow-sm">
               {app.logoUrl ? (
                 <img
                   src={app.logoUrl}
                   alt={app.name}
-                  className="w-10 h-10 object-contain"
+                  className="w-full h-full object-cover rounded-md"
                 />
               ) : (
-                <span className="text-lg font-medium text-muted-foreground">
-                  {app.name.charAt(0)}
-                </span>
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <span className="text-2xl font-semibold text-muted-foreground">
+                    {app.name.charAt(0)}
+                  </span>
+                </div>
               )}
             </div>
           </div>
 
-          <h2 className="text-lg font-medium text-center">
-            Connect to {app.name}
+          {/* Title */}
+          <h2 className="text-xl max-w-sm mx-auto font-semibold text-center px-6 mb-2 tracking-normal">
+            MagicalCX wants to connect to your {app.name}
           </h2>
-          {app.description && (
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
+
+          {/* Description */}
+          {isOAuth ? (
+            <div className="text-center px-6">
+              <p className="text-muted-foreground text-sm">
+                Taking you to {app.name}
+              </p>
+              <p className="text-muted-foreground text-sm mt-1">
+                Please authenticate to continue
+              </p>
+            </div>
+          ) : app.description ? (
+            <p className="text-sm text-muted-foreground text-center px-6 max-w-sm mx-auto">
               {app.description}
             </p>
-          )}
-        </div>
+          ) : null}
 
-        <div className="space-y-5 my-4 px-4">
+          {/* Form Fields */}
           {fields.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-4 mt-6 px-6">
               {fields.map((field) => (
-                <div key={field.key} className="flex flex-col ">
+                <div key={field.key} className="flex flex-col">
                   <label
                     htmlFor={field.key}
                     className="text-sm font-medium leading-none mb-2"
@@ -202,50 +250,31 @@ export default function ConnectAppModal({
             </div>
           )}
 
-          {isOAuth && (
-            <p className="text-sm text-muted-foreground">
-              You will be redirected to {app.name} to authorize access.
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-row items-center gap-2 sm:justify-between w-full border-t border-border pt-4 px-4">
-          <div>
-            {/* {app.documentationUrl && (
-              <a href={app.documentationUrl} target="_blank">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 text-muted-foreground hover:text-foreground text-xs"
-                >
-                  <PlayCircle className="w-3.5 h-3.5" />
-                  How it works
-                </Button>
-              </a>
-            )} */}
-          </div>
-
-          <div className="flex items-center gap-2">
+          {/* Action Button */}
+          <div className="mt-8 px-6">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClose}
-              disabled={isConnecting}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
+              size="lg"
               onClick={handleSubmit}
               disabled={isConnecting || (fields.length > 0 && !isFormValid)}
+              className="w-full bg-foreground hover:bg-foreground/90 text-background rounded-xl h-12 text-base font-medium"
             >
               {isConnecting ? (
-                <>
-                  <Loader className="w-4 h-4 animate-spin" />
-                  Connecting
-                </>
+                <span className="flex items-center gap-1">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  />
+                </span>
               ) : (
-                "Connect"
+                `Connect ${app.name}`
               )}
             </Button>
           </div>

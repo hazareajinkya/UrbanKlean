@@ -32,30 +32,27 @@ export const WorkspaceActionCard = ({
     <div className="relative border rounded-xl bg-card text-card-foreground p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
+          <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-muted flex items-center justify-center shrink-0 border p-0.5">
             {iconUrl ? (
               <img
                 src={iconUrl}
                 alt={parentName}
-                className="w-10 h-10 rounded-lg object-cover bg-background border"
+                className="w-full h-full object-contain rounded-md"
               />
             ) : (
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">API</span>
-              </div>
+              <span className="text-xs font-bold text-primary">API</span>
             )}
           </div>
           <div>
             <h3 className="font-medium text-base leading-tight mb-0.5">
               {action.name}
             </h3>
-            <p className="text-xs text-muted-foreground ">
-              {parentName}
-            </p>
+            <p className="text-xs text-muted-foreground ">{parentName}</p>
           </div>
         </div>
         <Switch
           checked={action.status === "active"}
+          className="mt-2"
           onCheckedChange={handleToggle}
         />
       </div>
