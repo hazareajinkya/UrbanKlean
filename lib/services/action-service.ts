@@ -141,6 +141,12 @@ class ActionService {
     invalidateCache({ type: "actions", id: wid });
   }
 
+  async getGlobalAction(actionId: string) {
+    const snap = await getDoc(doc(db, `actions/${actionId}`));
+    if (!snap.exists()) return null;
+    return snap.data() as IAction;
+  }
+
   async getGlobalActions(appSlug?: string) {
     const actionsRef = collection(db, "actions");
     const snap = await getDocs(actionsRef);

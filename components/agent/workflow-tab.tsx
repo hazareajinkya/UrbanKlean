@@ -25,10 +25,10 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<IWorkflow | null>(
-    null
+    null,
   );
   const [deletingWorkflow, setDeletingWorkflow] = useState<IWorkflow | null>(
-    null
+    null,
   );
   const [formData, setFormData] = useState({
     name: "",
@@ -36,7 +36,7 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
     instructions: "",
   });
 
-  const { workflows, isLoading: workflowsLoading } = useWorkflows(agent.id);
+  const { workflows, isLoading: workflowsLoading } = useWorkflows(agent.wid);
   const { createWorkflow, updateWorkflow, deleteWorkflow } =
     useWorkflowActions();
 
@@ -54,7 +54,7 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
       // Update existing workflow
       updateWorkflow.mutate(
         {
-          aid: agent.id,
+          wid: agent.wid,
           workflowId: editingWorkflow.id,
           updates: {
             name: formData.name,
@@ -68,26 +68,26 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
           onSuccess: () => {
             handleCloseModal();
           },
-        }
+        },
       );
     } else {
       // Create new workflow
-      const workflow = generateDefaultWorkflow(
-        agent.wid,
-        agent.id,
-        formData.name,
-        formData.trigger,
-        formData.instructions,
-        toolIds
-      );
+      const workflow = generateDefaultWorkflow({
+        wid: agent.wid,
+        type: "user",
+        name: formData.name,
+        trigger: formData.trigger,
+        instructions: formData.instructions,
+        toolIds,
+      });
 
       createWorkflow.mutate(
-        { aid: agent.id, workflow },
+        { wid: agent.wid, workflow },
         {
           onSuccess: () => {
             handleCloseModal();
           },
-        }
+        },
       );
     }
   };
@@ -116,16 +116,21 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
   const confirmDeleteWorkflow = () => {
     if (deletingWorkflow) {
       deleteWorkflow.mutate(
-        { aid: agent.id, workflowId: deletingWorkflow.id },
+        { wid: agent.wid, workflowId: deletingWorkflow.id },
         {
           onSuccess: () => {
             setIsDeleteModalOpen(false);
             setDeletingWorkflow(null);
           },
-        }
+        },
       );
     }
   };
+
+  // Filter workflows that belong to this agent (via aids array)
+  const agentWorkflows = workflows?.filter(
+    (w) => w.aids.length === 0 || w.aids.includes(agent.id),
+  );
 
   return (
     <div className="space-y-6 p-4">
@@ -168,9 +173,9 @@ export default function WorkflowTab({ agent }: WorkflowTabProps) {
               </Card>
             ))}
           </div>
-        ) : workflows && workflows.length > 0 ? (
+        ) : agentWorkflows && agentWorkflows.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workflows.map((workflow) => (
+            {agentWorkflows.map((workflow) => (
               <WorkflowCard
                 key={workflow.id}
                 workflow={workflow}

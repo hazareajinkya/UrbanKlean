@@ -93,9 +93,12 @@ export const AvailableActionsPanel = ({
       .map((a) => a.appSlug),
   );
 
-  const availableActions = actions.filter(
-    (action) => !action.app?.slug || !installedAppSlugs.has(action.app.slug),
-  );
+  // Bug: This code have bug it not showing the actions that are in the installed apps
+  // const availableActions = actions.filter(
+  //   (action) => !action.app?.slug || !installedAppSlugs.has(action.app.slug),
+  // );
+
+  const availableActions = actions;
 
   const filteredActions = !searchQuery.trim()
     ? availableActions

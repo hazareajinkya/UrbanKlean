@@ -21,6 +21,7 @@ import {
   Code,
   Shield,
   LayoutGrid,
+  Network,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -46,7 +47,7 @@ export default function WorkspaceLayout({
   const userEmail = session?.user?.email ?? "";
   const { data: member, isLoading: isMemberLoading } = useMember(
     wid,
-    userEmail
+    userEmail,
   );
 
   if (status === "loading") {
@@ -153,6 +154,11 @@ const navigation = [
     title: "Customers",
     href: "/customers",
     icon: Users,
+  },
+  {
+    title: "Workflows",
+    href: "/workflows",
+    icon: Network,
   },
   {
     title: "Actions",
@@ -279,9 +285,10 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 className={`
                   flex items-center rounded-lg text-sm font-medium gap-3 px-3 py-2
                   transition-colors duration-200 hover:bg-accent hover:text-primary
-                  ${isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-neutral-600 -foreground hover:text-primary"
+                  ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-neutral-600 -foreground hover:text-primary"
                   }
                   ${isCollapsed ? "justify-center" : ""}
                 `}
@@ -291,8 +298,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                   className={`flex items-center gap-3 min-w-0 flex-1 ${isCollapsed ? "justify-center" : ""}`}
                 >
                   <item.icon
-                    className={`h-4 w-4 shrink-0 ${isCollapsed ? "h-4.5 w-4.5" : ""
-                      }`}
+                    className={`h-4 w-4 shrink-0 ${
+                      isCollapsed ? "h-4.5 w-4.5" : ""
+                    }`}
                   />
                   {!isCollapsed && (
                     <span className="line-clamp-1 overflow-hidden truncate">
@@ -344,8 +352,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         `}
         >
           <div
-            className={`flex items-center gap-3 ${!isCollapsed && "flex-1"
-              } min-w-0 cursor-pointer`}
+            className={`flex items-center gap-3 ${
+              !isCollapsed && "flex-1"
+            } min-w-0 cursor-pointer`}
             onClick={handleModalOpen}
           >
             <Avatar className="h-8 w-8 ring-2 ring-border shrink-0">
