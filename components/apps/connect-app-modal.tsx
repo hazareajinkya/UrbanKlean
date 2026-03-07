@@ -13,8 +13,12 @@ interface ConnectAppModalProps {
   app: IApp | null;
   isOpen: boolean;
   onClose: () => void;
-  onConnect: (settings: Record<string, any>) => Promise<void>;
+  onConnect: (
+    settings: Record<string, any>,
+    customRedirectUrl?: string,
+  ) => Promise<void>;
   isConnecting?: boolean;
+  customRedirectUrl?: string;
 }
 
 export default function ConnectAppModal({
@@ -23,6 +27,7 @@ export default function ConnectAppModal({
   onClose,
   onConnect,
   isConnecting,
+  customRedirectUrl,
 }: ConnectAppModalProps) {
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const { globalActions } = useGlobalActions(app?.slug);
@@ -109,10 +114,10 @@ export default function ConnectAppModal({
   const handleSubmit = async () => {
     if (!app) return;
     if (app.authType === "oauth2") {
-      await onConnect({});
+      await onConnect({}, customRedirectUrl);
       return;
     }
-    await onConnect(formValues);
+    await onConnect(formValues, customRedirectUrl);
   };
 
   const handleClose = () => {

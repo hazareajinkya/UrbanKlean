@@ -51,7 +51,7 @@ class PostmarkBotService {
           channel,
           name: postmarkMsg.fromName,
         }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -65,7 +65,7 @@ class PostmarkBotService {
       const userMsg = defaultUserMessage(query, postmarkMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );

@@ -51,7 +51,7 @@ class InstaBotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ instaUserId, agent, channel, accessToken }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -63,7 +63,7 @@ class InstaBotService {
       const userMsg = defaultUserMessage(query, instaMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );

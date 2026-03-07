@@ -35,12 +35,13 @@ export const AvailableActionsPanel = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [addingActionId, setAddingActionId] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState<IApp | null>(null);
+  const [actionPendingInstall, setActionPendingInstall] =
+    useState<IAction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const connectMutation = useConnectApp(wid);
 
   const handleAddAction = async (action: IAction) => {
-    // Check if the action belongs to an app that is not yet installed
     if (action.app?.slug) {
       const isAppInstalled = (installedApps ?? []).some(
         (a) => a.appSlug === action.app?.slug && a.status === "connected",
@@ -49,6 +50,7 @@ export const AvailableActionsPanel = ({
       if (!isAppInstalled) {
         const appToConnect = apps.find((a) => a.slug === action.app?.slug);
         if (appToConnect) {
+          setActionPendingInstall(action);
           setSelectedApp(appToConnect);
           setIsModalOpen(true);
           return;
@@ -59,6 +61,7 @@ export const AvailableActionsPanel = ({
     setAddingActionId(action.id);
     try {
       await onAddAction(action);
+      setActionPendingInstall(null);
     } catch (error) {
       console.error("Failed to add action:", error);
     } finally {
@@ -66,15 +69,27 @@ export const AvailableActionsPanel = ({
     }
   };
 
-  const handleModalConnect = async (settings: Record<string, any>) => {
+  const handleModalConnect = async (
+    settings: Record<string, any>,
+    customRedirectUrl?: string,
+  ) => {
     if (!selectedApp) return;
     connectMutation.mutate(
-      { app: selectedApp, settings },
+      { app: selectedApp, settings, customRedirectUrl },
       {
         onSuccess: (data) => {
           if (!data?.redirected) {
             setIsModalOpen(false);
             setSelectedApp(null);
+
+            if (actionPendingInstall) {
+              const action = actionPendingInstall;
+              setActionPendingInstall(null);
+              setAddingActionId(action.id);
+              Promise.resolve(onAddAction(action))
+                .catch((err) => console.error("Failed to add action:", err))
+                .finally(() => setAddingActionId(null));
+            }
           }
         },
       },
@@ -211,9 +226,15 @@ export const AvailableActionsPanel = ({
         onClose={() => {
           setIsModalOpen(false);
           setSelectedApp(null);
+          setActionPendingInstall(null);
         }}
         onConnect={handleModalConnect}
         isConnecting={connectMutation.isPending}
+        customRedirectUrl={
+          actionPendingInstall
+            ? `${window.location.origin}${window.location.pathname}?postInstallAction=add_action&actionId=${actionPendingInstall.id}`
+            : undefined
+        }
       />
     </div>
   );

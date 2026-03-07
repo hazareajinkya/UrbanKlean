@@ -56,32 +56,26 @@ export async function POST(req: Request) {
 
     latency.start();
 
-    // First batch: rate limit + agent + workflows (parallel with granular timing)
+    // First batch: rate limit + agent (parallel with granular timing)
     const batch1Start = performance.now();
-    const [rateLimitResult, agent, workflows] = await Promise.all([
+    const [rateLimitResult, agent] = await Promise.all([
       ratelimit.limit(ip).then((r) => {
         console.log(
-          `  ├─ rateLimit: ${(performance.now() - batch1Start).toFixed(0)}ms`
+          `  ├─ rateLimit: ${(performance.now() - batch1Start).toFixed(0)}ms`,
         );
         return r;
       }),
       agentService.fetchAgent(aid).then((a) => {
         console.log(
-          `  ├─ agent: ${(performance.now() - batch1Start).toFixed(0)}ms`
+          `  ├─ agent: ${(performance.now() - batch1Start).toFixed(0)}ms`,
         );
         return a;
-      }),
-      workflowService.getWorkflows(aid).then((w) => {
-        console.log(
-          `  ├─ workflows: ${(performance.now() - batch1Start).toFixed(0)}ms`
-        );
-        return w;
       }),
     ]);
     console.log(
       `[query-stream] Batch 1 total: ${(
         performance.now() - batch1Start
-      ).toFixed(0)}ms`
+      ).toFixed(0)}ms`,
     );
 
     if (!rateLimitResult.success) {
@@ -91,6 +85,13 @@ export async function POST(req: Request) {
 
     // Second batch: all agent-dependent calls (parallel with granular timing)
     const batch2Start = performance.now();
+
+    // Fetch workflows first (depends on agent.wid)
+    const workflows = await workflowService.getWorkflows(agent.wid, aid);
+    console.log(
+      `  ├─ workflows: ${(performance.now() - batch2Start).toFixed(0)}ms`,
+    );
+
     const systemPrompt = getSystemPrompt({
       agent,
       workflows,
@@ -98,10 +99,11 @@ export async function POST(req: Request) {
       personId,
       geo,
     });
+
     const [creditInfo, , actions] = await Promise.all([
       creditService.getCredit(agent.ownerId).then((c) => {
         console.log(
-          `  ├─ credit: ${(performance.now() - batch2Start).toFixed(0)}ms`
+          `  ├─ credit: ${(performance.now() - batch2Start).toFixed(0)}ms`,
         );
         return c;
       }),
@@ -113,17 +115,17 @@ export async function POST(req: Request) {
           personId,
           deviceId,
           fromPage,
-          geo
+          geo,
         )
         .then((s) => {
           console.log(
-            `  ├─ session: ${(performance.now() - batch2Start).toFixed(0)}ms`
+            `  ├─ session: ${(performance.now() - batch2Start).toFixed(0)}ms`,
           );
           return s;
         }),
-      actionService.getActionsForWorflows(agent.wid, workflows).then((a) => {
+      actionService.getActionsForWorkflows(agent.wid, workflows).then((a) => {
         console.log(
-          `  ├─ actions: ${(performance.now() - batch2Start).toFixed(0)}ms`
+          `  ├─ actions: ${(performance.now() - batch2Start).toFixed(0)}ms`,
         );
         return a;
       }),
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
     console.log(
       `[query-stream] Batch 2 total: ${(
         performance.now() - batch2Start
-      ).toFixed(0)}ms\n`
+      ).toFixed(0)}ms\n`,
     );
 
     if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -194,7 +196,7 @@ export async function POST(req: Request) {
           agent.wid,
           agent.id,
           sessionId,
-          "chat_response"
+          "chat_response",
         );
         usage.amount = -creditCosts.query;
         usage.metadata = {

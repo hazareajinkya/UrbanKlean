@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { IWorkflow } from "@/lib/types/workflow";
 import { useAgents } from "@/lib/hooks/agent/use-agent";
+import { useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
 import { useParams } from "next/navigation";
 
 interface WorkspaceWorkflowCardProps {
@@ -46,6 +47,7 @@ export const WorkspaceWorkflowCard = ({
 }: WorkspaceWorkflowCardProps) => {
   const { wid } = useParams() as { wid: string };
   const { agents } = useAgents(wid);
+  const { globalActions } = useGlobalActions();
   const [agentPopoverOpen, setAgentPopoverOpen] = useState(false);
   const [updatingAgentId, setUpdatingAgentId] = useState<string | null>(null);
 
@@ -74,6 +76,17 @@ export const WorkspaceWorkflowCard = ({
   const assignedAgents =
     agents?.filter((a) => workflow.aids?.includes(a.id)) ?? [];
   const isIntegration = workflow.type != "user";
+
+  const workflowActions =
+    globalActions?.filter((a) => workflow.toolIds.includes(a.id)) || [];
+
+  const uniqueAppsMap = new Map();
+  workflowActions.forEach((action) => {
+    if (action.app?.slug && !uniqueAppsMap.has(action.app.slug)) {
+      uniqueAppsMap.set(action.app.slug, action.app);
+    }
+  });
+  const uniqueApps = Array.from(uniqueAppsMap.values());
 
   return (
     <div className="group relative flex flex-col p-5 bg-card hover:bg-muted/30 border rounded-xl transition-all duration-200 hover:shadow-sm">
@@ -124,17 +137,46 @@ export const WorkspaceWorkflowCard = ({
       <div className="flex-1 min-h-[16px]" />
 
       <div className="mt-auto flex items-center justify-between pt-4 border-t">
-        <div className="flex items-center gap-3">
-          {workflow.toolIds.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium">
-              <Wrench className="w-3.5 h-3.5" />
-              {workflow.toolIds.length} action
-              {workflow.toolIds.length !== 1 && "s"}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            {workflow.toolIds.length > 0 && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <Wrench className="w-3.5 h-3.5" />
+                {workflow.toolIds.length} action
+                {workflow.toolIds.length !== 1 && "s"}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              {isIntegration ? "• Integration" : "• Custom"}
             </span>
-          )}
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            {isIntegration ? "Integration" : "Custom"}
-          </span>
+          </div>
+
+          <div className="flex items-center">
+            {uniqueApps.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {uniqueApps.slice(0, 5).map((app, i) => (
+                  <Avatar
+                    key={app.slug + i}
+                    className="w-5 h-5 rounded-md border text-[10px] bg-white"
+                  >
+                    <AvatarImage
+                      src={app.icon}
+                      alt={app.name || "App"}
+                      className="object-cover p-px"
+                    />
+                    <AvatarFallback className="rounded-md">
+                      {app.name ? app.name.charAt(0) : "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {uniqueApps.length > 5 && (
+                  <div className="w-5 h-5 rounded-md border bg-muted flex items-center justify-center text-[8px] text-muted-foreground font-medium">
+                    +{uniqueApps.length - 5}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-1">

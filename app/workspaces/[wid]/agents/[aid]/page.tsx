@@ -104,7 +104,7 @@ export default function AgentPage() {
                 "flex items-center gap-2 px-3.5 py-2 g-secondary text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary",
                 tab === tabItem.id
                   ? "text-primary "
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <tabItem.icon className="w-4 h-4" />

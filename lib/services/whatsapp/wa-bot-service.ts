@@ -49,7 +49,7 @@ class WABotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ agent, channel, waPhoneId, name }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -61,7 +61,7 @@ class WABotService {
       const userMsg = defaultUserMessage(query, waMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );

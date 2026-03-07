@@ -31,6 +31,14 @@ export function WorkflowPreviewModal({
     .map((toolId) => globalActions.find((a) => a.id === toolId))
     .filter((a): a is IAction => !!a);
 
+  const uniqueAppsMap = new Map();
+  workflowTools.forEach((tool) => {
+    if (tool.app?.slug && !uniqueAppsMap.has(tool.app.slug)) {
+      uniqueAppsMap.set(tool.app.slug, tool.app);
+    }
+  });
+  const uniqueApps = Array.from(uniqueAppsMap.values());
+
   return (
     <Modal
       isOpen={isOpen}
@@ -66,6 +74,36 @@ export function WorkflowPreviewModal({
             </div>
           </ScrollArea>
         </div>
+
+        {uniqueApps.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground">
+              Integrated Apps
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {uniqueApps.map((app) => (
+                <div
+                  key={app.slug}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-md border"
+                >
+                  {app.icon && (
+                    <div className="relative w-4 h-4 rounded-sm overflow-hidden flex-shrink-0 bg-white">
+                      <Image
+                        src={app.icon}
+                        alt={app.name || "App"}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
+                  <span className="text-sm font-normal text-foreground">
+                    {app.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Actions Section */}
         <div className="space-y-2">

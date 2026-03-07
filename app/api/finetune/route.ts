@@ -11,16 +11,36 @@ import { errorResponse, successResponse } from "@/lib/types/api-response";
 
 export async function POST(req: Request) {
   try {
-    const { aid, question, reasoning, suggestion }: { aid: string; question: string; reasoning?: string; suggestion?: string } = await req.json();
+    const {
+      aid,
+      question,
+      reasoning,
+      suggestion,
+    }: {
+      aid: string;
+      question: string;
+      reasoning?: string;
+      suggestion?: string;
+    } = await req.json();
 
     const agent = await agentService.fetchAgent(aid);
     if (!agent) return errorResponse("Agent not found", 404);
 
-    const workflows = await workflowService.getWorkflows(aid);
+    const workflows = await workflowService.getWorkflows(agent.wid, aid);
     const model = getModel(agent);
-    const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+    const actions = await actionService.getActionsForWorkflows(
+      agent.wid,
+      workflows,
+    );
     const customTools = getCustomTools(actions);
-    const systemPrompt = getSystemPrompt({ agent, workflows, channel: "web", isFinetuning: true, reasoning, suggestion });
+    const systemPrompt = getSystemPrompt({
+      agent,
+      workflows,
+      channel: "web",
+      isFinetuning: true,
+      reasoning,
+      suggestion,
+    });
 
     const tools = {
       ...customTools,
@@ -45,5 +65,3 @@ export async function POST(req: Request) {
     return errorResponse(error.message || "Error processing request", 500);
   }
 }
-
-

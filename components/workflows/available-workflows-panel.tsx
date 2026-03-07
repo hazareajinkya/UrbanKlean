@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Check, Loader } from "lucide-react";
 import { IWorkflow } from "@/lib/types/workflow";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  useAIActions,
-  useGlobalActions,
-} from "@/lib/hooks/actions/use-ai-actions";
+import { useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
 import {
   useInstalledApps,
   usePublishedApps,
@@ -16,7 +13,7 @@ import {
 } from "@/lib/hooks/apps/use-apps";
 import { IApp } from "@/lib/types/app";
 import ConnectAppModal from "@/components/apps/connect-app-modal";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { WorkflowPreviewModal } from "@/components/workflows/workflow-preview-modal";
 
 interface AvailableWorkflowsPanelProps {
@@ -33,6 +30,10 @@ export const AvailableWorkflowsPanel = ({
   onAddWorkflow,
 }: AvailableWorkflowsPanelProps) => {
   const { wid } = useParams() as { wid: string };
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const postInstallHandled = useRef(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [addingWorkflowId, setAddingWorkflowId] = useState<string | null>(null);
 
@@ -43,6 +44,7 @@ export const AvailableWorkflowsPanel = ({
   const [selectedApp, setSelectedApp] = useState<IApp | null>(null);
   const [workflowPendingInstall, setWorkflowPendingInstall] =
     useState<IWorkflow | null>(null);
+  const [pendingAppsToConnect, setPendingAppsToConnect] = useState<IApp[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { globalActions } = useGlobalActions();
@@ -50,8 +52,8 @@ export const AvailableWorkflowsPanel = ({
   const { apps } = usePublishedApps();
   const connectMutation = useConnectApp(wid);
 
-  const getFirstUninstalledAppId = (workflow: IWorkflow) => {
-    if (!globalActions) return null;
+  const getMissingAppSlugs = (workflow: IWorkflow): string[] => {
+    if (!globalActions) return [];
 
     const requiredActionIds = new Set(workflow.toolIds);
     const requiredGlobalActions = globalActions.filter((a) =>
@@ -70,23 +72,28 @@ export const AvailableWorkflowsPanel = ({
         .map((a) => a.appSlug),
     );
 
+    const missingSlugs: string[] = [];
     for (const appSlug of requiredAppIds) {
       if (!connectedAppSlugs.has(appSlug)) {
-        return appSlug;
+        missingSlugs.push(appSlug);
       }
     }
 
-    return null;
+    return missingSlugs;
   };
 
   const processWorkflowInstallation = async (workflow: IWorkflow) => {
-    const missingAppSlug = getFirstUninstalledAppId(workflow);
+    const missingAppSlugs = getMissingAppSlugs(workflow);
 
-    if (missingAppSlug) {
-      const appToConnect = apps?.find((a) => a.slug === missingAppSlug);
-      if (appToConnect) {
+    if (missingAppSlugs.length > 0) {
+      const appsToConnect = (apps || []).filter((a) =>
+        missingAppSlugs.includes(a.slug),
+      );
+
+      if (appsToConnect.length > 0) {
         setWorkflowPendingInstall(workflow);
-        setSelectedApp(appToConnect);
+        setSelectedApp(appsToConnect[0]);
+        setPendingAppsToConnect(appsToConnect.slice(1));
         setIsModalOpen(true);
         return;
       }
@@ -103,21 +110,34 @@ export const AvailableWorkflowsPanel = ({
     }
   };
 
-  const handleModalConnect = async (settings: Record<string, any>) => {
+  const handleModalConnect = async (
+    settings: Record<string, any>,
+    customRedirectUrl?: string,
+  ) => {
     if (!selectedApp) return;
 
     connectMutation.mutate(
-      { app: selectedApp, settings },
+      { app: selectedApp, settings, customRedirectUrl },
       {
         onSuccess: (data) => {
           if (!data?.redirected) {
+            if (pendingAppsToConnect.length > 0) {
+              const nextApp = pendingAppsToConnect[0];
+              setSelectedApp(nextApp);
+              setPendingAppsToConnect((prev) => prev.slice(1));
+              return;
+            }
+
             setIsModalOpen(false);
             setSelectedApp(null);
 
             if (workflowPendingInstall) {
-              setTimeout(() => {
-                processWorkflowInstallation(workflowPendingInstall);
-              }, 500);
+              const workflow = workflowPendingInstall;
+              setWorkflowPendingInstall(null);
+              setAddingWorkflowId(workflow.id);
+              Promise.resolve(onAddWorkflow(workflow))
+                .catch((err) => console.error("Failed to add workflow:", err))
+                .finally(() => setAddingWorkflowId(null));
             }
           }
         },
@@ -135,6 +155,39 @@ export const AvailableWorkflowsPanel = ({
       setPreviewWorkflow(null);
     }
   };
+
+  useEffect(() => {
+    if (postInstallHandled.current) return;
+
+    const postInstallAction = searchParams.get("postInstallAction");
+    const workflowId = searchParams.get("workflowId");
+    const connectStatus = searchParams.get("connectStatus");
+
+    if (
+      postInstallAction === "add_workflow" &&
+      workflowId &&
+      connectStatus === "connected" &&
+      globalWorkflows &&
+      globalWorkflows.length > 0
+    ) {
+      postInstallHandled.current = true;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("postInstallAction");
+      url.searchParams.delete("workflowId");
+      url.searchParams.delete("connectStatus");
+      url.searchParams.delete("appSlug");
+      url.searchParams.delete("workspaceId");
+      router.replace(url.pathname + url.search, { scroll: false });
+
+      const workflow = globalWorkflows.find((w) => w.id === workflowId);
+      if (workflow) {
+        processWorkflowInstallation(workflow).catch((err) =>
+          console.error("Failed to process workflow installation:", err),
+        );
+      }
+    }
+  }, [searchParams, globalWorkflows]);
 
   const installedWorkflowIds = new Set(
     workspaceWorkflows
@@ -201,19 +254,17 @@ export const AvailableWorkflowsPanel = ({
                   onClick={() =>
                     !added && !isProcessing && handleAddWorkflowClick(workflow)
                   }
-                  className={`flex items-center justify-between gap-2 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all ${
+                  className={`flex justify-between items-center gap-4 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all ${
                     added
                       ? "opacity-60"
                       : "hover:border-primary/50 cursor-pointer"
                   }`}
                 >
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium truncate">
-                      {workflow.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground truncate">
+                    <p className="text-sm  truncate">{workflow.name}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">
                       {workflow.trigger}
-                    </span>
+                    </p>
                   </div>
 
                   <div
@@ -240,10 +291,16 @@ export const AvailableWorkflowsPanel = ({
         onClose={() => {
           setIsModalOpen(false);
           setSelectedApp(null);
+          setPendingAppsToConnect([]);
           setWorkflowPendingInstall(null);
         }}
         onConnect={handleModalConnect}
         isConnecting={connectMutation.isPending}
+        customRedirectUrl={
+          workflowPendingInstall
+            ? `${window.location.origin}${window.location.pathname}?postInstallAction=add_workflow&workflowId=${workflowPendingInstall.id}`
+            : undefined
+        }
       />
 
       <WorkflowPreviewModal

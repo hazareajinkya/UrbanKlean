@@ -56,12 +56,16 @@ export const useConnectApp = (wid: string) => {
     mutationFn: async ({
       app,
       settings,
+      customRedirectUrl,
     }: {
       app: IApp;
       settings: Record<string, any>;
+      customRedirectUrl?: string;
     }) => {
       if (app.authType === "oauth2") {
-        const callbackRedirectUrl = `${window.location.origin}/workspaces/${wid}/apps`;
+        const callbackRedirectUrl =
+          customRedirectUrl ||
+          `${window.location.origin}/workspaces/${wid}/apps`;
         const result = await appService.connectApp({
           slug: app.slug,
           workspaceId: wid,

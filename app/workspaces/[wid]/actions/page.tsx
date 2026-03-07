@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Plus, Code, Loader } from "lucide-react";
+import { toast } from "sonner";
 import {
   useAIActions,
   useGlobalActions,
@@ -18,6 +19,9 @@ import { IAction } from "@/lib/types/actions";
 
 export default function ActionsPage() {
   const { wid } = useParams() as { wid: string };
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const postInstallHandled = useRef(false);
   const [isAddActionModalOpen, setIsAddActionModalOpen] = useState(false);
   const [editingAction, setEditingAction] = useState<IAction | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -59,6 +63,43 @@ export default function ActionsPage() {
   const handleAddIntegrationAction = async (action: IAction) => {
     await addIntegrationAction.mutateAsync({ wid, globalAction: action });
   };
+
+  useEffect(() => {
+    if (postInstallHandled.current) return;
+
+    const postInstallAction = searchParams.get("postInstallAction");
+    const actionId = searchParams.get("actionId");
+    const connectStatus = searchParams.get("connectStatus");
+
+    if (
+      postInstallAction === "add_action" &&
+      actionId &&
+      connectStatus === "connected" &&
+      globalActions &&
+      !isLoadingGlobalActions
+    ) {
+      postInstallHandled.current = true;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("postInstallAction");
+      url.searchParams.delete("actionId");
+      url.searchParams.delete("connectStatus");
+      url.searchParams.delete("appSlug");
+      url.searchParams.delete("workspaceId");
+      router.replace(url.pathname + url.search, { scroll: false });
+
+      const action = globalActions.find((a) => a.id === actionId);
+      if (action) {
+        handleAddIntegrationAction(action)
+          .then(() =>
+            toast.success(`Action "${action.name}" added successfully`),
+          )
+          .catch(() =>
+            toast.error("Failed to add action after app installation"),
+          );
+      }
+    }
+  }, [searchParams, globalActions, isLoadingGlobalActions]);
 
   const handleEditAction = (action: IAction) => {
     if (action.type === "user") {

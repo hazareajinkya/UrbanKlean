@@ -50,7 +50,7 @@ class SlackBotService {
           channel,
           teamId,
         }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
         slackService.getLastMentionedMessages(slackMsg.channel, teamId, 10),
       ]);
 
@@ -58,7 +58,7 @@ class SlackBotService {
       const userMsg = defaultUserMessage(query, slackMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );

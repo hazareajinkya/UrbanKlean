@@ -8,7 +8,7 @@ export interface IWorkflow {
   name: string;
   trigger: string;
   instructions: string;
-  appID?: string | null;
+  appIds?: string[];
   originalId?: string;
   referenceId?: string | null;
   toolIds: string[];

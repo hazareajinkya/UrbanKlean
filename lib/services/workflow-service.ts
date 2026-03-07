@@ -27,7 +27,6 @@ class WorkflowService {
       workflow,
     );
 
-    // Invalidate server-side cache via API
     invalidateCache({ type: "workflows", id: wid });
   }
 
@@ -45,7 +44,6 @@ class WorkflowService {
       updatedAt: new Date().toISOString(),
     });
 
-    // Invalidate server-side cache via API
     invalidateCache({ type: "workflows", id: wid });
   }
 
@@ -55,20 +53,20 @@ class WorkflowService {
     return docSnap.data() as IWorkflow;
   }
 
-  async getWorkflows(wid: string) {
-    // Try cache first
-    const cached = await cacheService.getWorkflows(wid);
-    if (cached) return cached;
+  async getWorkflows(wid: string, aid?: string) {
+    let workflows = await cacheService.getWorkflows(wid);
 
-    // Cache miss - fetch from Firestore
-    const docRef = collection(db, `workspaces/${wid}/workflows`);
-    const docSnap = await getDocs(docRef);
-    const workflows = docSnap.docs.map((doc) => doc.data() as IWorkflow);
+    if (!workflows) {
+      const colRef = collection(db, `workspaces/${wid}/workflows`);
+      const snap = await getDocs(colRef);
+      workflows = snap.docs.map((doc) => doc.data() as IWorkflow);
 
-    // Store in cache (fire and forget)
-    cacheService.setWorkflows(wid, workflows);
+      cacheService.setWorkflows(wid, workflows);
+    }
 
-    return workflows;
+    return workflows.filter(
+      (w) => w.isActive && (!aid || (w.aids ?? []).includes(aid)),
+    );
   }
 
   async deleteWorkflow({
@@ -97,10 +95,8 @@ class WorkflowService {
     wid: string;
     globalWorkflow: IWorkflow;
   }) {
-    // Get current workspace actions to check what's already installed
     const workspaceActions = (await actionService.getActions(wid)) ?? [];
 
-    // Build a map of originalId -> workspace action id for quick lookup
     const originalIdToWorkspaceId = new Map<string, string>();
     workspaceActions.forEach((a) => {
       if (a.originalId) {
@@ -108,18 +104,15 @@ class WorkflowService {
       }
     });
 
-    // For each toolId in the global workflow, ensure the action is installed
     const mappedToolIds: string[] = [];
 
     for (const toolId of globalWorkflow.toolIds) {
-      // Check if already installed
       const existingId = originalIdToWorkspaceId.get(toolId);
       if (existingId) {
         mappedToolIds.push(existingId);
         continue;
       }
 
-      // Not installed — fetch the global action and install it
       try {
         const globalAction = await actionService.getGlobalAction(toolId);
         if (globalAction) {
@@ -137,7 +130,6 @@ class WorkflowService {
       }
     }
 
-    // Create workspace workflow with mapped toolIds
     const workspaceWorkflow: IWorkflow = {
       ...globalWorkflow,
       id: uuidv4(),

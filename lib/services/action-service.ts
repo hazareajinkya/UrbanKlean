@@ -116,7 +116,7 @@ class ActionService {
     return matching.length;
   }
 
-  async getActionsForWorflows(wid: string, workflows: IWorkflow[]) {
+  async getActionsForWorkflows(wid: string, workflows: IWorkflow[]) {
     const actionIds = new Set(workflows.flatMap((w) => w.toolIds ?? []));
     // Short-circuit: no workflows or no toolIds means no actions
     if (actionIds.size === 0) return [];

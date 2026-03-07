@@ -47,7 +47,7 @@ class MessengerBotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ messengerUserId, agent, channel }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -59,7 +59,7 @@ class MessengerBotService {
       const userMsg = defaultUserMessage(query, msg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );
