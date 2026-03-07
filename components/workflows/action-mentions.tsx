@@ -46,19 +46,29 @@ const ActionMentions = ({
   const wid = getwid();
   const { actions, isLoading } = useAIActions(wid);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Filter actions based on search
   const filteredActions =
     actions?.filter(
       (action) =>
         action.name.toLowerCase().includes(mentionState.search.toLowerCase()) ||
-        action.slug.toLowerCase().includes(mentionState.search.toLowerCase())
+        action.slug.toLowerCase().includes(mentionState.search.toLowerCase()),
     ) || [];
 
   // Reset selected index when search changes
   useEffect(() => {
     setSelectedIndex(0);
   }, [mentionState.search]);
+
+  useEffect(() => {
+    if (mentionState.isOpen && itemsRef.current[selectedIndex]) {
+      itemsRef.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
+  }, [selectedIndex, mentionState.isOpen]);
 
   // Calculate cursor position for popover placement
   const getCursorPosition = (textarea: HTMLTextAreaElement, offset: number) => {
@@ -133,7 +143,7 @@ const ActionMentions = ({
         mentionState.mentionStart + action.slug.length + 1;
       textareaRef.current?.setSelectionRange(
         newCursorPosition,
-        newCursorPosition
+        newCursorPosition,
       );
       textareaRef.current?.focus();
     }, 0);
@@ -146,13 +156,13 @@ const ActionMentions = ({
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < filteredActions.length - 1 ? prev + 1 : 0
+          prev < filteredActions.length - 1 ? prev + 1 : 0,
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredActions.length - 1
+          prev > 0 ? prev - 1 : filteredActions.length - 1,
         );
         break;
       case "Enter":
@@ -199,7 +209,7 @@ const ActionMentions = ({
           align="start"
           side="bottom"
         >
-          <ScrollArea className="max-h-64">
+          <ScrollArea className="max-h-64 overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-sm text-muted-foreground">
                 Loading actions...
@@ -213,11 +223,15 @@ const ActionMentions = ({
                 {filteredActions.map((action, index) => (
                   <div
                     key={action.id}
+                    ref={(el) => {
+                      itemsRef.current[index] = el;
+                    }}
                     onClick={() => insertAction(action)}
-                    className={`flex items-center gap-3 w-full px-2 py-2 rounded-md cursor-pointer transition-colors ${index === selectedIndex
+                    className={`flex items-center gap-3 w-full px-2 py-2 rounded-md cursor-pointer transition-colors ${
+                      index === selectedIndex
                         ? "bg-accent text-accent-foreground"
                         : "hover:bg-accent hover:text-accent-foreground"
-                      }`}
+                    }`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-4 h-4 text-primary" />
