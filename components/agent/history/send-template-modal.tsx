@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader } from "lucide-react";
+import { Loader, X } from "lucide-react";
 import { IWaTemplate } from "@/lib/types/wa-api";
 
 interface SendTemplateModalProps {
@@ -126,7 +126,15 @@ const SendTemplateModal = ({
       closeModal={onClose}
       className="w-full max-w-4xl bg-background border border-border shadow-lg rounded-xl p-0 overflow-hidden min-h-[50vh] "
     >
-      <div className=" grid grid-cols-1 md:grid-cols-2">
+      <div className=" grid grid-cols-1 md:grid-cols-2 relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 top-4 z-50 h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80 md:right-4 md:top-4"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
         <div className="w-full  p-6 flex flex-col max-h-[85vh] min-h-[50vh] overflow-y-auto custom-scrollbar">
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
             <div className="flex flex-col space-y-1.5 text-center sm:text-left">

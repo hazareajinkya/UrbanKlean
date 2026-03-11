@@ -33,9 +33,10 @@ import {
 import Link from "next/link";
 import { useIdenticalPersons } from "@/lib/hooks/people/use-people";
 import { getwid } from "@/lib/utils";
-import { Users, Send } from "lucide-react";
+import { Users } from "lucide-react";
 import SendTemplateModal from "./send-template-modal";
 import { Button } from "@/components/ui/button";
+import { WAIcon } from "@/lib/logos";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -99,8 +100,6 @@ export const InfoSidebar = ({
   const { data: identicalPersons = [], isLoading: isLoadingIdenticalPersons } =
     useIdenticalPersons(wid, currentSession?.personId || "");
 
-  const [isSendTemplateModalOpen, setIsSendTemplateModalOpen] = useState(false);
-
   if (!currentSession?.personId && !currentSession?.geo) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground px-6">
@@ -153,7 +152,7 @@ export const InfoSidebar = ({
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Header */}
-      <div className="border-b h-14 flex items-center jutify-center px-5 bg-muted">
+      <div className="border-b h-14 flex items-center justify-between px-5 bg-muted w-full">
         <p className="text-sm text-foreground">{person?.name || "Unknown"}</p>
       </div>
 
@@ -181,22 +180,6 @@ export const InfoSidebar = ({
                 <FromPageLink fromPage={currentSession.fromPage} />
               )}
             </div>
-
-            {currentSession.channel === "whatsapp" &&
-              person?.phones?.[0]?.value && (
-                <div className="mt-4 pt-4 border-t border-border/30">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-center gap-2 text-xs font-medium hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all duration-200"
-                    onClick={() => setIsSendTemplateModalOpen(true)}
-                    aria-label="Send WhatsApp template message"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    Send Template
-                  </Button>
-                </div>
-              )}
           </div>
         )}
 
@@ -446,17 +429,6 @@ export const InfoSidebar = ({
             Added {formatDate(person.createdAt)}
           </span>
         </div>
-      )}
-
-      {currentSession?.channel === "whatsapp" && person?.phones?.[0]?.value && (
-        <SendTemplateModal
-          wid={wid}
-          to={person.phones[0].value}
-          aid={currentSession?.aid}
-          sessionId={currentSession?.id}
-          isOpen={isSendTemplateModalOpen}
-          onClose={() => setIsSendTemplateModalOpen(false)}
-        />
       )}
     </div>
   );

@@ -41,8 +41,9 @@ import {
   FileText,
   EyeIcon,
   MessageSquareIcon,
-  ToolCase,
+  Briefcase,
   Cog,
+  Send,
 } from "lucide-react";
 import { InstagramIcon, MessengerIcon, SlackLogo, WAIcon } from "@/lib/logos";
 import { Button } from "../ui/button";
@@ -56,6 +57,7 @@ import {
 } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ChatSummary } from "./history/chat-summary";
+import SendTemplateModal from "./history/send-template-modal";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -247,7 +249,7 @@ const SessionList = ({
                 onClick={() => setcurrentSession(session)}
               >
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-medium text-foreground mb-0.5 truncate ">
+                  <h4 className="text-sm font-medium text-foreground mb-0.5 truncate">
                     {person
                       ? person.name
                         ? person.name
@@ -352,6 +354,7 @@ const HistoryMessageList = ({
     scrollToBottom();
   }, [currentSession?.messages]);
 
+  const [isSendTemplateModalOpen, setIsSendTemplateModalOpen] = useState(false);
   const persons = useHistoryStore((state) => state.persons);
   return (
     <div className="h-full flex flex-col">
@@ -368,24 +371,39 @@ const HistoryMessageList = ({
                 {formatDate(currentSession.updatedAt)}
               </p>
             </div>
-            {(currentSession.personId || currentSession.geo) && (
-              <Button
-                variant={"ghost"}
-                size={"icon"}
-                onClick={() => onCollapsedChange(!isCollapsed)}
-                className="transition-all text-muted-foreground hover:text-primary pr-0 w-min flex-shrink-0"
-              >
-                {isCollapsed ? (
-                  <PanelRightOpen className="size-4.5" />
-                ) : (
-                  <PanelRightClose className="size-4.5" />
+            <div className="flex gap-2 items-center">
+              {currentSession.channel === "whatsapp" &&
+                persons[currentSession.personId ?? ""]?.phones?.[0]?.value && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-center gap-1.5 text-xs transition-all duration-200"
+                    onClick={() => setIsSendTemplateModalOpen(true)}
+                    aria-label="Send WhatsApp template message"
+                  >
+                    <WAIcon className="w-3.5 h-3.5" />
+                    Send Template
+                  </Button>
                 )}
-              </Button>
-            )}
+              {(currentSession.personId || currentSession.geo) && (
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  onClick={() => onCollapsedChange(!isCollapsed)}
+                  className="transition-all text-muted-foreground hover:text-primary pr-0 w-min flex-shrink-0"
+                >
+                  {isCollapsed ? (
+                    <PanelRightOpen className="size-4.5" />
+                  ) : (
+                    <PanelRightClose className="size-4.5" />
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Chat Messages */}
-          <div className="p-4 pb-8 space-y-4  flex-1 overflow-y-auto">
+          <div className="p-4 pb-8 space-y-4 flex-1 overflow-y-auto">
             {currentSession.messages.map((message, index) => (
               <div
                 key={message.id + index}
@@ -449,10 +467,7 @@ const HistoryMessageList = ({
                       if (part.type === "text") {
                         return (
                           <div key={partIndex}>
-                            <div
-                              className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose prose-p:mt-0 prose-p:last:mb-0"
-                              key={partIndex}
-                            >
+                            <div className="text-sm md:text-sm prose prose-sm md:prose-sm max-w-none leading-loose prose-p:mt-0 prose-p:last:mb-0">
                               <Streamdown
                                 components={{
                                   a: ({ href, children }) => (
@@ -545,12 +560,10 @@ const HistoryMessageList = ({
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <></>
-                  )}
+                  ) : null}
                 </div>
                 {message.metadata?.createdAt && (
-                  <p className="pt-2 text-[11px] text-muted-foreground">
+                  <p className="pt-2 text-[11px] text-muted-foreground font-medium">
                     {formatDateTime(message.metadata.createdAt)}
                   </p>
                 )}
@@ -565,6 +578,22 @@ const HistoryMessageList = ({
 
             <div ref={messagesEndRef} />
           </div>
+
+          {currentSession.channel === "whatsapp" &&
+            persons[currentSession.personId ?? ""]?.phones?.[0]?.value && (
+              <SendTemplateModal
+                wid={currentSession.wid}
+                to={persons[currentSession.personId ?? ""].phones![0].value}
+                aid={currentSession.aid}
+                sessionId={currentSession.id}
+                isOpen={isSendTemplateModalOpen}
+                onClose={() => setIsSendTemplateModalOpen(false)}
+              />
+            )}
+
+          {currentSession.chatSummary && (
+            <ChatSummary summary={currentSession.chatSummary} />
+          )}
         </>
       )}
 

@@ -183,7 +183,7 @@ const TemplateList = ({ wid, templates }: TemplateListProps) => {
         {templates.map((template) => (
           <Card
             key={template.id}
-            className="flex flex-col overflow-hidden hover:shadow-md transition-all duration-200 border-border group relative"
+            className="flex flex-col overflow-hidden hover:shadow-md transition-all duration-200 border-border group relative gap-0 p-0"
           >
             <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
               <DropdownMenu>
@@ -222,7 +222,7 @@ const TemplateList = ({ wid, templates }: TemplateListProps) => {
               </DropdownMenu>
             </div>
 
-            <div className="p-5 flex-grow flex flex-col min-h-0">
+            <div className="p-4 flex-grow flex flex-col min-h-0">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="space-y-1.5 min-w-0 pr-8">
                   <h3 className="font-medium text-lg truncate leading-tight">
@@ -252,7 +252,7 @@ const TemplateList = ({ wid, templates }: TemplateListProps) => {
               </div>
             </div>
 
-            <div className="px-5 py-3 border-t border-border/50 bg-muted/20 flex items-center justify-between">
+            <div className="p-4 border-t border-border/50 bg-muted/20 flex items-center justify-between">
               {getStatusBadge(template.status)}
 
               {template.status === "REJECTED" && template.rejected_reason && (

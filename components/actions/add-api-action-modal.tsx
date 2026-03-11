@@ -89,14 +89,14 @@ const AddApiActionModal = ({
             editingAction.inputs.map((input, index) => ({
               ...input,
               key: input.key || `param_${index}`,
-            }))
+            })),
           )
         : [],
     headers: Object.entries(editingAction?.headers || {}).map(
       ([key, value]) => ({
         key,
         value,
-      })
+      }),
     ),
     authorization: editingAction?.authorization || { type: "none" },
   });
@@ -132,12 +132,15 @@ const AddApiActionModal = ({
       description: formData.description,
       type: "user",
       requestType: formData.method as IRequestType,
-      headers: formData.headers.reduce((acc, header) => {
-        if (header.key && header.value) {
-          acc[header.key] = header.value;
-        }
-        return acc;
-      }, {} as Record<string, string>),
+      headers: formData.headers.reduce(
+        (acc, header) => {
+          if (header.key && header.value) {
+            acc[header.key] = header.value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
       authorization: formData.authorization,
       inputs: sanitizeInputs(formData.inputs),
       createdAt: editingAction?.createdAt || new Date().toISOString(),
@@ -149,14 +152,14 @@ const AddApiActionModal = ({
         { wid, updates: actionData },
         {
           onSuccess: () => onClose(),
-        }
+        },
       );
     } else {
       saveAction.mutate(
         { wid, action: actionData },
         {
           onSuccess: () => onClose(),
-        }
+        },
       );
     }
   };
@@ -190,7 +193,7 @@ const AddApiActionModal = ({
                   ? ([] as IUiActionInput[])
                   : input.children,
             }
-          : input
+          : input,
       ),
     }));
   };
@@ -213,7 +216,7 @@ const AddApiActionModal = ({
                 },
               ],
             }
-          : input
+          : input,
       ),
     }));
   };
@@ -222,7 +225,7 @@ const AddApiActionModal = ({
     parentIndex: number,
     index: number,
     field: InputField,
-    value: any
+    value: any,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -240,10 +243,10 @@ const AddApiActionModal = ({
                           ? ([] as IUiActionInput[])
                           : child.children,
                     }
-                  : child
+                  : child,
               ),
             }
-          : input
+          : input,
       ),
     }));
   };
@@ -257,7 +260,7 @@ const AddApiActionModal = ({
               ...input,
               children: (input.children || []).filter((_, ci) => ci !== index),
             }
-          : input
+          : input,
       ),
     }));
   };
@@ -285,12 +288,12 @@ const AddApiActionModal = ({
   const updateHeader = (
     index: number,
     field: "key" | "value",
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => ({
       ...prev,
       headers: prev.headers.map((header, i) =>
-        i === index ? { ...header, [field]: value } : header
+        i === index ? { ...header, [field]: value } : header,
       ),
     }));
   };
@@ -313,7 +316,7 @@ const AddApiActionModal = ({
       <div
         className={`grid grid-cols-1 ${
           showTestPanel ? "lg:grid-cols-[2fr_1fr]" : "lg:grid-cols-1"
-        } gap-6 h-[75vh]`}
+        } gap-6 h-[75vh] w-full`}
       >
         {/* Left Panel - Form */}
         <div className="flex flex-col min-h-0">
@@ -433,7 +436,9 @@ const AddApiActionModal = ({
                           <TableHead>Key</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead>Type</TableHead>
-                          <TableHead className="text-center">Required</TableHead>
+                          <TableHead className="text-center">
+                            Required
+                          </TableHead>
                           <TableHead className="text-center">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -458,7 +463,7 @@ const AddApiActionModal = ({
                                     updateInput(
                                       index,
                                       "description",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   placeholder="City of the user"
@@ -476,9 +481,15 @@ const AddApiActionModal = ({
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="string">String</SelectItem>
-                                    <SelectItem value="number">Number</SelectItem>
-                                    <SelectItem value="boolean">Boolean</SelectItem>
+                                    <SelectItem value="string">
+                                      String
+                                    </SelectItem>
+                                    <SelectItem value="number">
+                                      Number
+                                    </SelectItem>
+                                    <SelectItem value="boolean">
+                                      Boolean
+                                    </SelectItem>
                                     <SelectItem value="url">URL</SelectItem>
                                     <SelectItem value="object">
                                       Object (JSON)
@@ -528,7 +539,7 @@ const AddApiActionModal = ({
                                               index,
                                               childIndex,
                                               "key",
-                                              e.target.value
+                                              e.target.value,
                                             )
                                           }
                                           placeholder="field"
@@ -543,7 +554,7 @@ const AddApiActionModal = ({
                                               index,
                                               childIndex,
                                               "description",
-                                              e.target.value
+                                              e.target.value,
                                             )
                                           }
                                           placeholder="Field description"
@@ -558,7 +569,7 @@ const AddApiActionModal = ({
                                               index,
                                               childIndex,
                                               "type",
-                                              value
+                                              value,
                                             )
                                           }
                                         >
@@ -592,7 +603,7 @@ const AddApiActionModal = ({
                                               index,
                                               childIndex,
                                               "required",
-                                              checked
+                                              checked,
                                             )
                                           }
                                         />
@@ -602,17 +613,14 @@ const AddApiActionModal = ({
                                           variant="outline"
                                           size="sm"
                                           onClick={() =>
-                                            removeNestedInput(
-                                              index,
-                                              childIndex
-                                            )
+                                            removeNestedInput(index, childIndex)
                                           }
                                         >
                                           <Trash2 className="w-4 h-4" />
                                         </Button>
                                       </TableCell>
                                     </TableRow>
-                                  )
+                                  ),
                                 )}
                                 <TableRow>
                                   <TableCell colSpan={5} className="pl-8">
