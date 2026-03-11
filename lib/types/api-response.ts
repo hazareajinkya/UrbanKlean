@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z, ZodSchema } from "zod";
 
 // Standard response format for success
 export function successResponse<T>(data: T, message: string = "Success") {
@@ -36,4 +37,17 @@ export function serverErrorResponse(error: any) {
     },
     { status: 500 }
   );
+}
+
+export async function validateBody<T>(req: NextRequest, schema: ZodSchema<T>): Promise<T> {
+  try {
+    const body = await req.json();
+    return schema.parse(body);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      const message = (error as any).errors.map((e: any) => e.message).join(", ");
+      throw new Error(`Validation Error: ${message}`);
+    }
+    throw new Error("Invalid request body");
+  }
 }

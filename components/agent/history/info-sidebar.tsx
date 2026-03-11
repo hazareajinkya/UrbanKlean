@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ISession } from "@/lib/types/session";
 import { formatDate, fromSlug } from "@/lib/utils";
 import {
@@ -33,6 +34,9 @@ import Link from "next/link";
 import { useIdenticalPersons } from "@/lib/hooks/people/use-people";
 import { getwid } from "@/lib/utils";
 import { Users } from "lucide-react";
+import SendTemplateModal from "./send-template-modal";
+import { Button } from "@/components/ui/button";
+import { WAIcon } from "@/lib/logos";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -148,7 +152,7 @@ export const InfoSidebar = ({
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Header */}
-      <div className="border-b h-14 flex items-center jutify-center px-5 bg-muted">
+      <div className="border-b h-14 flex items-center justify-between px-5 bg-muted w-full">
         <p className="text-sm text-foreground">{person?.name || "Unknown"}</p>
       </div>
 
@@ -227,7 +231,7 @@ export const InfoSidebar = ({
                   identicalPerson.emails?.[0]?.value ||
                   `Person-${identicalPerson.id.slice(0, 8)}`;
                 const identicalPersonSessions = sessions.filter(
-                  (s) => s.personId === identicalPerson.id
+                  (s) => s.personId === identicalPerson.id,
                 );
                 const hasIdenticalSessions = identicalPersonSessions.length > 0;
 
@@ -385,8 +389,8 @@ export const InfoSidebar = ({
                       isCurrentSession
                         ? "bg-primary/5 text-primary cursor-default"
                         : session || isLoading
-                        ? "hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
-                        : "text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+                          ? "hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                          : "text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
                     }`}
                   >
                     {isLoading ? (

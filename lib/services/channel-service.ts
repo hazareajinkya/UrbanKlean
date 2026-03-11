@@ -33,7 +33,7 @@ class ChannelService {
 
   async getChannel(wid: string, channelId: string) {
     const channel = await getDoc(
-      doc(db, `workspaces/${wid}/channels/${channelId}`)
+      doc(db, `workspaces/${wid}/channels/${channelId}`),
     );
     if (!channel.exists()) return null;
     return channel.data() as IChannel;
@@ -65,7 +65,7 @@ class ChannelService {
     const q = query(
       collectionGroup(db, "channels"),
       where("metadata.id", "==", providerAccountId),
-      where("provider", "==", provider)
+      where("provider", "==", provider),
     );
     const snaps = await getDocs(q);
     const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
@@ -76,7 +76,7 @@ class ChannelService {
   async getChannelDirectly(channelId: string) {
     const q = query(
       collectionGroup(db, "channels"),
-      where("id", "==", channelId)
+      where("id", "==", channelId),
     );
     const snaps = await getDocs(q);
     const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
@@ -88,7 +88,7 @@ class ChannelService {
     const q = query(
       collectionGroup(db, "channels"),
       where("metadata.id", "==", pageId),
-      where("provider", "==", provider)
+      where("provider", "==", provider),
     );
     const snaps = await getDocs(q);
     const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
@@ -100,7 +100,7 @@ class ChannelService {
     const q = query(
       collectionGroup(db, "channels"),
       where("metadata.phone_number_id", "==", phoneNumberId),
-      where("provider", "==", "whatsapp")
+      where("provider", "==", "whatsapp"),
     );
     const snaps = await getDocs(q);
     const channels = snaps.docs.map((doc) => doc.data()) as IChannel[];
@@ -108,10 +108,27 @@ class ChannelService {
     return channels[0];
   }
 
+  async getChannelByWabaId(wabaId: string) {
+    const q = query(
+      collectionGroup(db, "channels"),
+      where("metadata.waba_id", "==", wabaId),
+      where("provider", "==", "whatsapp"),
+    );
+    const snaps = await getDocs(q);
+    if (snaps.docs.length === 0) return null;
+
+    const snap = snaps.docs[0];
+    const channel = snap.data() as IChannel;
+
+    const wid = snap.ref.parent.parent?.id;
+
+    return { channel, wid: wid as string };
+  }
+
   async unassignAgentFromChannel(
     wid: string,
     channelId: string,
-    agentId: string
+    agentId: string,
   ) {
     await updateDoc(doc(db, `workspaces/${wid}/channels/${channelId}`), {
       assignedAgentId: "",
