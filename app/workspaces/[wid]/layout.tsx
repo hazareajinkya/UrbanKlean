@@ -22,6 +22,7 @@ import {
   Gauge,
   ChartNoAxesColumnIncreasing,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -34,6 +35,7 @@ import { useMember } from "@/lib/hooks/members/use-members";
 import { GeminiLogo } from "@/lib/logos";
 import { isWorkspacePlanActive } from "@/lib/utils/plan-utils";
 import { toast } from "sonner";
+import { useChannels } from "@/hooks/channels/use-channels";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -199,12 +201,25 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
+  const { data: channels } = useChannels(wid);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined")
       return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
     return false;
   });
   const [isModalOpen, setIsModelOpen] = useState(false);
+
+  const hasWhatsapp =
+    channels?.some((channel) => channel.provider === "whatsapp") ?? false;
+
+  const dynamicNavigation = [...navigation];
+  if (hasWhatsapp) {
+    dynamicNavigation.splice(6, 0, {
+      title: "WA Templates",
+      href: "/wa-templates",
+      icon: MessageSquare,
+    });
+  }
 
   const handleSignOut = () => {
     router.push("/auth");
@@ -274,10 +289,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         </Button>
       </div>
 
-      {/* Navigation */}
       <div className="flex-1 px-3 py-4">
         <nav className={`${isCollapsed ? "space-y-2" : "space-y-1"}`}>
-          {navigation.map((item) => {
+          {dynamicNavigation.map((item) => {
             const href = `/workspaces/${wid}${item.href}`;
             const isActive = pathname.includes(href);
 

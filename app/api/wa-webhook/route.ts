@@ -5,7 +5,6 @@ import { IWAMessage } from "@/lib/types/wa-api";
 import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import channelService from "@/lib/services/channel-service";
-
 // Function to send a text message
 export const maxDuration = 60;
 
@@ -22,20 +21,19 @@ export async function POST(req: Request) {
       console.error("phone_number_id not found in webhook");
       return NextResponse.json(
         { error: "phone_number_id not found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    const channel = await channelService.getChannelByPhoneNumberId(
-      phoneNumberId
-    );
+    const channel =
+      await channelService.getChannelByPhoneNumberId(phoneNumberId);
 
     if (!channel) {
       console.log(
-        `Unable to find channel for phone_number_id ${phoneNumberId}`
+        `Unable to find channel for phone_number_id ${phoneNumberId}`,
       );
       return NextResponse.json(
         { message: "Channel not found" },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -44,15 +42,14 @@ export async function POST(req: Request) {
 
     if (!agentId) {
       console.log(
-        `No agent assigned to channel for phone_number_id ${phoneNumberId}`
+        `No agent assigned to channel for phone_number_id ${phoneNumberId}`,
       );
       return NextResponse.json(
         { message: "No agent assigned to channel" },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
-    //Is WA Message
     if (value.messages) {
       const msgType = body.entry[0].changes[0].value.messages[0].type;
 
@@ -102,12 +99,12 @@ export async function POST(req: Request) {
         } catch (error: any) {
           if (
             error.message?.includes(
-              "Recipient phone number not in allowed list"
+              "Recipient phone number not in allowed list",
             )
           ) {
             console.warn(
               `Cannot send message to ${parsed.contact.waId}: ${error.message}. ` +
-                `This is expected in development/test mode. Add the number to the allowed recipient list in Meta Business Manager.`
+                `This is expected in development/test mode. Add the number to the allowed recipient list in Meta Business Manager.`,
             );
           } else {
             throw error;
@@ -115,7 +112,6 @@ export async function POST(req: Request) {
         }
       }
     }
-    //Status update
     else if (value.statuses) {
       const status = value.statuses[0].status;
       const msgId = value.statuses[0].id;
@@ -128,16 +124,59 @@ export async function POST(req: Request) {
         console.error("WhatsApp status error: ", value.statuses[0].errors);
       }
     }
+    else if (
+      body.entry[0].changes[0].field === "message_template_status_update"
+    ) {
+      const change = body.entry[0].changes[0].value;
+      const {
+        event,
+        message_template_id,
+        message_template_name,
+        message_template_language,
+        reason,
+      } = change;
+
+      console.log(
+        `Template status update: ${message_template_name} -> ${event}`,
+      );
+
+      const wabaId = body.entry[0].id;
+      const channelInfo = await channelService.getChannelByWabaId(wabaId);
+
+      if (channelInfo && channelInfo.wid) {
+        const statusMap: Record<string, string> = {
+          APPROVED: "APPROVED",
+          REJECTED: "REJECTED",
+          PENDING_DELETION: "PENDING_DELETION",
+        };
+
+        const newStatus = statusMap[event] || event;
+
+        await waService.updateTemplateStatus({
+          wid: channelInfo.wid,
+          templateId: message_template_id,
+          status: newStatus,
+          rejectedReason: reason,
+        });
+        console.log(
+          `Updated template ${message_template_name} status to ${newStatus} for workspace ${channelInfo.wid}`,
+        );
+      } else {
+        console.log(
+          `Could not find workspace for WABA ID ${wabaId} to update template status`,
+        );
+      }
+    }
 
     return NextResponse.json(
       { message: "Webhook received and message resent successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error processing WhatsApp webhook:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

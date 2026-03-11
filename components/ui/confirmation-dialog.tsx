@@ -42,7 +42,7 @@ export const ConfirmationDialog = ({
 
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size={size}>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center justify-between mb-0">
           <h3 className={`text-lg font-medium ${titleColor}`}>{title}</h3>
           <Button

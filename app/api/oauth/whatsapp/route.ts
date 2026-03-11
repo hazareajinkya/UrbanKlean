@@ -9,7 +9,6 @@ import { errorResponse, successResponse } from "@/lib/types/api-response";
 import waService from "@/lib/services/whatsapp/wa-service";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/clients/firebase";
-
 const whatsappAuthSchema = z.object({
   wid: z.string().min(1, "Workspace ID is required"),
   phone_number_id: z.string().min(1, "Phone number ID is required"),
@@ -101,6 +100,26 @@ export async function POST(req: NextRequest) {
 
     await channelService.addChannel(validatedParams.wid, channel);
 
+    try {
+      const templates = await waService.getMetaTemplates({
+        wabaId: validatedParams.waba_id,
+        accessToken: access_token,
+      });
+      await waService.saveTemplatesBatch({
+        wid: validatedParams.wid,
+        wabaId: validatedParams.waba_id,
+        templates,
+      });
+      console.log(
+        `Successfully synced ${templates.length} templates for WABA ID: ${validatedParams.waba_id}`,
+      );
+    } catch (templateError) {
+      console.error(
+        "Failed to sync templates during connection, but continuing:",
+        templateError,
+      );
+    }
+
     return successResponse(
       {
         channelId: channel.id,
@@ -156,6 +175,19 @@ export async function DELETE(req: NextRequest) {
     });
 
     await channelService.deleteChannel(wid, channelId);
+
+    try {
+      await waService.deleteAllTemplates({ wid, wabaId });
+      console.log(
+        `Successfully cleaned up templates for workspace: ${wid}, wabaId: ${wabaId}`,
+      );
+    } catch (cleanupError) {
+      console.error(
+        "Failed to clean up local templates, they may be orphaned:",
+        cleanupError,
+      );
+    }
+
     return successResponse(null, "Successfully disconnected WhatsApp channel");
   } catch (error: any) {
     console.error("Error during WhatsApp channel disconnect:", error);

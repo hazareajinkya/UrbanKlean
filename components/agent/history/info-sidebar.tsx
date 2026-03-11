@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ISession } from "@/lib/types/session";
 import { formatDate, fromSlug } from "@/lib/utils";
 import {
@@ -32,7 +33,9 @@ import {
 import Link from "next/link";
 import { useIdenticalPersons } from "@/lib/hooks/people/use-people";
 import { getwid } from "@/lib/utils";
-import { Users } from "lucide-react";
+import { Users, Send } from "lucide-react";
+import SendTemplateModal from "./send-template-modal";
+import { Button } from "@/components/ui/button";
 
 interface InfoSidebarProps {
   currentSession?: ISession;
@@ -95,6 +98,8 @@ export const InfoSidebar = ({
   const wid = typeof window !== "undefined" ? getwid() : "";
   const { data: identicalPersons = [], isLoading: isLoadingIdenticalPersons } =
     useIdenticalPersons(wid, currentSession?.personId || "");
+
+  const [isSendTemplateModalOpen, setIsSendTemplateModalOpen] = useState(false);
 
   if (!currentSession?.personId && !currentSession?.geo) {
     return (
@@ -176,6 +181,22 @@ export const InfoSidebar = ({
                 <FromPageLink fromPage={currentSession.fromPage} />
               )}
             </div>
+
+            {currentSession.channel === "whatsapp" &&
+              person?.phones?.[0]?.value && (
+                <div className="mt-4 pt-4 border-t border-border/30">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-center gap-2 text-xs font-medium hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all duration-200"
+                    onClick={() => setIsSendTemplateModalOpen(true)}
+                    aria-label="Send WhatsApp template message"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Send Template
+                  </Button>
+                </div>
+              )}
           </div>
         )}
 
@@ -227,7 +248,7 @@ export const InfoSidebar = ({
                   identicalPerson.emails?.[0]?.value ||
                   `Person-${identicalPerson.id.slice(0, 8)}`;
                 const identicalPersonSessions = sessions.filter(
-                  (s) => s.personId === identicalPerson.id
+                  (s) => s.personId === identicalPerson.id,
                 );
                 const hasIdenticalSessions = identicalPersonSessions.length > 0;
 
@@ -385,8 +406,8 @@ export const InfoSidebar = ({
                       isCurrentSession
                         ? "bg-primary/5 text-primary cursor-default"
                         : session || isLoading
-                        ? "hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
-                        : "text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
+                          ? "hover:bg-secondary text-muted-foreground hover:text-foreground cursor-pointer"
+                          : "text-muted-foreground/50 hover:text-muted-foreground cursor-pointer"
                     }`}
                   >
                     {isLoading ? (
@@ -425,6 +446,17 @@ export const InfoSidebar = ({
             Added {formatDate(person.createdAt)}
           </span>
         </div>
+      )}
+
+      {currentSession?.channel === "whatsapp" && person?.phones?.[0]?.value && (
+        <SendTemplateModal
+          wid={wid}
+          to={person.phones[0].value}
+          aid={currentSession?.aid}
+          sessionId={currentSession?.id}
+          isOpen={isSendTemplateModalOpen}
+          onClose={() => setIsSendTemplateModalOpen(false)}
+        />
       )}
     </div>
   );
