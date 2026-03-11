@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
           parts: [
             {
               type: "text",
-              text: `*${templateName}*\n\n${previewText}`,
+              text: `${previewText} \n\n* Send from WA template - ${templateName}*`,
             },
           ],
         });
