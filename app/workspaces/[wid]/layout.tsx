@@ -32,7 +32,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
 import { useMember } from "@/lib/hooks/members/use-members";
-import { GeminiLogo } from "@/lib/logos";
+import { GeminiLogo, WAOutlineIcon } from "@/lib/logos";
 import { isWorkspacePlanActive } from "@/lib/utils/plan-utils";
 import { toast } from "sonner";
 import { useChannels } from "@/hooks/channels/use-channels";
@@ -217,7 +217,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     dynamicNavigation.splice(6, 0, {
       title: "WA Templates",
       href: "/wa-templates",
-      icon: MessageSquare,
+      icon: WAOutlineIcon as any,
     });
   }
 

@@ -16,6 +16,8 @@ import {
   Filter,
   MoreHorizontal,
   Calendar,
+  Globe,
+  MessageCircleCode,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IPerson } from "@/lib/types/person";
@@ -36,6 +38,18 @@ import { getInitials, cn, fromSlug, formatDate } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import IdenticalPersonsList from "@/components/customers/identical-persons-list";
+import {
+  EmailIcon,
+  InstagramIcon,
+  MessengerIcon,
+  SlackLogo,
+  WAIcon,
+} from "@/lib/logos";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function CustomersPage() {
   const { wid } = useParams() as { wid: string };
@@ -57,7 +71,7 @@ export default function CustomersPage() {
           loadMore();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
 
     if (observerTarget.current) {
@@ -100,6 +114,73 @@ export default function CustomersPage() {
       p.company?.toLowerCase().includes(q)
     );
   });
+  const ChannelIcon = ({
+    provider,
+    className,
+  }: {
+    provider: string;
+    className?: string;
+  }) => {
+    switch (provider) {
+      case "whatsapp":
+        return <WAIcon className={className} />;
+      case "instagram":
+        return <InstagramIcon className={className} />;
+      case "messenger":
+        return <MessengerIcon className={className} />;
+      case "slack":
+        return <SlackLogo className={className} />;
+      case "email":
+        return <EmailIcon className={className} />;
+      case "web":
+        return <Globe className={cn("text-blue-500", className)} />;
+      default:
+        return <Globe className={cn("text-muted-foreground", className)} />;
+    }
+  };
+
+  const ChannelAvatarStack = ({ person }: { person: IPerson }) => {
+    const providers = Array.from(
+      new Set(
+        (person.externalIds || []).map((e) => e.provider).filter(Boolean),
+      ),
+    );
+
+    const maxVisible = 4;
+    const displayProviders = providers.slice(0, maxVisible);
+    const overflowCount = providers.length - displayProviders.length;
+
+    return (
+      <div className="flex items-center -space-x-2.5">
+        {displayProviders.map((provider) => (
+          <Tooltip key={provider}>
+            <TooltipTrigger asChild>
+              <div className="h-7 w-7 rounded-full bg-muted border-2 border-background flex items-center justify-center p-0.5 shadow-sm transition-transform hover:z-10 hover:scale-110">
+                <ChannelIcon provider={provider} className="w-full h-full" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <span className="text-xs capitalize">{provider}</span>
+            </TooltipContent>
+          </Tooltip>
+        ))}
+
+        {overflowCount > 0 && (
+          <div className="h-7 w-7 rounded-full bg-secondary border-2 border-background flex items-center justify-center shadow-sm z-0">
+            <span className="text-[10px] font-medium text-secondary-foreground">
+              +{overflowCount}
+            </span>
+          </div>
+        )}
+
+        {providers.length === 0 && (
+          <div className="h-7 w-7 rounded-full bg-muted/20 border-2 border-dashed border-muted flex items-center justify-center">
+            <MessageCircleCode className="w-3 h-3 text-muted-foreground/30" />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
@@ -177,6 +258,7 @@ export default function CustomersPage() {
                   <TableHeader className="bg-secondary sticky top-0 z-10 border-b">
                     <TableRow className="hover:bg-transparent border-b w-full">
                       <TableHead className="w-[300px] pl-6">Name</TableHead>
+                      <TableHead className="w-[130px]"></TableHead>
                       <TableHead className="w-[200px]">Contact</TableHead>
                       <TableHead className="w-[200px]">Company</TableHead>
                       <TableHead className="w-[200px]">Tags</TableHead>
@@ -191,7 +273,7 @@ export default function CustomersPage() {
                         key={person.id}
                         className={cn(
                           "cursor-pointer transition-colors hover:bg-muted/80",
-                          selectedPerson?.id === person.id && "bg-muted"
+                          selectedPerson?.id === person.id && "bg-muted",
                         )}
                         onClick={() => handleSelect(person)}
                       >
@@ -217,6 +299,10 @@ export default function CustomersPage() {
                               )}
                             </div>
                           </div>
+                        </TableCell>
+                        <TableCell className="pl-6 py-3">
+                          {" "}
+                          <ChannelAvatarStack person={person} />
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
@@ -324,7 +410,7 @@ export default function CustomersPage() {
               "border-l bg-card transition-all duration-300 ease-in-out flex flex-col overflow-hidden shadow-xl z-20",
               isDetailPanelOpen
                 ? "w-[450px] translate-x-0"
-                : "w-0 translate-x-[20px] opacity-0"
+                : "w-0 translate-x-[20px] opacity-0",
             )}
           >
             <div className="w-[450px] h-full">
@@ -358,7 +444,7 @@ const getEngagementStatus = (person: IPerson): string => {
   if (conversationCount === 1 && person.createdAt) {
     const daysSinceCreated = Math.floor(
       (Date.now() - new Date(person.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
     if (daysSinceCreated <= 7) {
       return "New";
