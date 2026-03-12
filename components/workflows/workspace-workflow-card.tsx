@@ -89,7 +89,7 @@ export const WorkspaceWorkflowCard = ({
   const uniqueApps = Array.from(uniqueAppsMap.values());
 
   return (
-    <div className="group relative flex flex-col p-5 bg-card hover:bg-muted/30 border rounded-xl transition-all duration-200 hover:shadow-sm">
+    <div className="group relative flex flex-col p-5 bg-card border rounded-xl transition-all duration-200 hover:shadow-lg">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1.5 flex-1 min-w-0">
           <h3 className="font-medium text-base leading-tight truncate">

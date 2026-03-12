@@ -169,7 +169,7 @@ export default function WorkflowsPage() {
         ) : (
           <div className="flex-1 flex gap-6 min-h-0">
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pb-10">
                 {workspaceWorkflows && workspaceWorkflows.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {workspaceWorkflows.map((workflow) => (
