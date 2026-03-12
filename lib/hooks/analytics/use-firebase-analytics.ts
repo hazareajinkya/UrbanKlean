@@ -22,9 +22,26 @@ export const useFirebaseAnalytics = () => {
     }
   }, [session]);
 
+  const excludedPaths = [
+    "/workspaces",
+    "/widget-test",
+    "/api",
+    "/chat",
+    "/share",
+    "/billing",
+    "/onboard-share",
+    "/checkout",
+    "/auth",
+  ];
+
   useEffect(() => {
     if (!pathname) return;
-    if (pathname.startsWith("/workspaces")) return;
+
+    const shouldNotLoad = excludedPaths.some((path) =>
+      pathname.startsWith(path),
+    );
+
+    if (shouldNotLoad) return;
 
     const url = `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ""}`;
 
