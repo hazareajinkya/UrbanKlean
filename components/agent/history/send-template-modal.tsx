@@ -126,7 +126,7 @@ const SendTemplateModal = ({
       closeModal={onClose}
       className="w-full max-w-4xl bg-background border border-border shadow-lg rounded-xl p-0 overflow-hidden min-h-[50vh] "
     >
-      <div className=" grid grid-cols-1 md:grid-cols-2 relative">
+      <div className=" grid grid-cols-1 md:grid-cols-2 relative w-full">
         <Button
           variant="ghost"
           size="icon"

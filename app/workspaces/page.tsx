@@ -455,7 +455,7 @@ const CreateWorkspaceModal = ({
       className="relative max-w-xl bg-white dark:bg-black rounded-2xl p-4 max-h-[90vh] flex flex-col"
       clickOutsideToClose={false}
     >
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 w-full">
         {phase === "url-input" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-start justify-between">

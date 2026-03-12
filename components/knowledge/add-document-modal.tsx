@@ -50,7 +50,7 @@ export default function AddDocumentModal({
 
   return (
     <Modal isOpen={isOpen} closeModal={handleClose}>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="flex items-center justify-between pb-1 border-b">
           <h3 className="text-lg">Add Document</h3>
           <Button

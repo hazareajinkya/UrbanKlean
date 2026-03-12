@@ -246,86 +246,90 @@ export const AiHumanizer = () => {
           <Modal
             isOpen={isSettingsOpen}
             closeModal={() => setIsSettingsOpen(false)}
-            className="max-w-xl bg-card border border-border rounded-2xl p-6 relative"
+            className="max-w-xl bg-card border border-border rounded-2xl p-6 "
           >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4 h-8 w-8 rounded-lg"
-              onClick={() => setIsSettingsOpen(false)}
-              aria-label="Close settings"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-foreground pr-10">
-                  Text Cleaning Options
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Select which cleaning operations to apply when humanizing
-                  text.
-                </p>
-              </div>
-              <div className="grid gap-3">
-                {[
-                  [
-                    "removeHiddenUnicode",
-                    "Remove Hidden Unicode",
-                    "Removes invisible characters (zero-width spaces, soft hyphens, etc.)",
-                  ],
-                  [
-                    "transformSmartQuotes",
-                    "Transform Smart Quotes",
-                    "Converts smart quotes to plain quotes.",
-                  ],
-                  [
-                    "normalizeDash",
-                    "Normalize Em-dash & En-dash",
-                    "Converts long dashes to regular hyphens.",
-                  ],
-                  [
-                    "normalizeEllipsis",
-                    "Normalize Ellipsis",
-                    "Converts ellipsis to three dots.",
-                  ],
-                  [
-                    "keyboardCharactersOnly",
-                    "Keyboard Characters Only",
-                    "Removes unusual symbols not on standard keyboards.",
-                  ],
-                  [
-                    "removePersistentWhitespace",
-                    "Remove Persistent Whitespace",
-                    "Removes extra spaces and excessive line breaks.",
-                  ],
-                  [
-                    "preserveHeadings",
-                    "Preserve Headings",
-                    "Do not humanize headings/titles in super-lite mode.",
-                  ],
-                ].map(([key, title, desc]) => {
-                  const settingKey = key as keyof HumanizeSettings;
-                  return (
-                    <label
-                      key={key}
-                      className="flex items-start justify-between gap-4 rounded-xl border p-3"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{title}</p>
-                        <p className="text-xs text-muted-foreground">{desc}</p>
-                      </div>
-                      <Switch
-                        checked={settings[settingKey]}
-                        onCheckedChange={(checked) =>
-                          handleSettingChange(settingKey, checked)
-                        }
-                        aria-label={title}
-                      />
-                    </label>
-                  );
-                })}
+            <div className="relative w-full">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-4 top-4 h-8 w-8 rounded-lg"
+                onClick={() => setIsSettingsOpen(false)}
+                aria-label="Close settings"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-foreground pr-10">
+                    Text Cleaning Options
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Select which cleaning operations to apply when humanizing
+                    text.
+                  </p>
+                </div>
+                <div className="grid gap-3">
+                  {[
+                    [
+                      "removeHiddenUnicode",
+                      "Remove Hidden Unicode",
+                      "Removes invisible characters (zero-width spaces, soft hyphens, etc.)",
+                    ],
+                    [
+                      "transformSmartQuotes",
+                      "Transform Smart Quotes",
+                      "Converts smart quotes to plain quotes.",
+                    ],
+                    [
+                      "normalizeDash",
+                      "Normalize Em-dash & En-dash",
+                      "Converts long dashes to regular hyphens.",
+                    ],
+                    [
+                      "normalizeEllipsis",
+                      "Normalize Ellipsis",
+                      "Converts ellipsis to three dots.",
+                    ],
+                    [
+                      "keyboardCharactersOnly",
+                      "Keyboard Characters Only",
+                      "Removes unusual symbols not on standard keyboards.",
+                    ],
+                    [
+                      "removePersistentWhitespace",
+                      "Remove Persistent Whitespace",
+                      "Removes extra spaces and excessive line breaks.",
+                    ],
+                    [
+                      "preserveHeadings",
+                      "Preserve Headings",
+                      "Do not humanize headings/titles in super-lite mode.",
+                    ],
+                  ].map(([key, title, desc]) => {
+                    const settingKey = key as keyof HumanizeSettings;
+                    return (
+                      <label
+                        key={key}
+                        className="flex items-start justify-between gap-4 rounded-xl border p-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {desc}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={settings[settingKey]}
+                          onCheckedChange={(checked) =>
+                            handleSettingChange(settingKey, checked)
+                          }
+                          aria-label={title}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </Modal>

@@ -50,7 +50,7 @@ export default function AddTextModal({
       closeModal={handleClose}
       className="max-h-[75vh] overflow-y-auto bg-white dark:bg-black rounded-2xl p-6 max-w-lg"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="flex items-center justify-between pb-1 border-b">
           <h3 className="text-lg">Add Text</h3>
           <Button

@@ -44,7 +44,7 @@ export default function AddWebsiteModal({
 
   const totalUrlsCount = scrapedUrls.reduce(
     (acc, cat) => acc + cat.urls.length,
-    0
+    0,
   );
   const isAllSelected =
     scrapedUrls.length > 0 && selectedUrls.length === totalUrlsCount;
@@ -84,8 +84,8 @@ export default function AddWebsiteModal({
               url,
               folderId: cat.folderId,
               folderName: cat.folderName,
-            }))
-          )
+            })),
+          ),
         );
         setView("list");
       }
@@ -97,7 +97,7 @@ export default function AddWebsiteModal({
   const handleUrlSelection = (
     url: string,
     folderId: string,
-    folderName: string
+    folderName: string,
   ) => {
     setSelectedUrls((prev) => {
       const exists = prev.some((u) => u.url === url && u.folderId === folderId);
@@ -115,9 +115,9 @@ export default function AddWebsiteModal({
               url,
               folderId: cat.folderId,
               folderName: cat.folderName,
-            }))
+            })),
           )
-        : []
+        : [],
     );
   };
 
@@ -138,7 +138,7 @@ export default function AddWebsiteModal({
 
   return (
     <Modal isOpen={isOpen} closeModal={handleClose}>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         {view === "input" && (
           <>
             <div className="flex items-center justify-between pb-1 border-b">
@@ -264,7 +264,7 @@ export default function AddWebsiteModal({
                         {category.urls.map((url, urlIndex) => {
                           const isSelected = selectedUrls.some(
                             (u) =>
-                              u.url === url && u.folderId === category.folderId
+                              u.url === url && u.folderId === category.folderId,
                           );
                           return (
                             <div
@@ -274,7 +274,7 @@ export default function AddWebsiteModal({
                                 handleUrlSelection(
                                   url,
                                   category.folderId,
-                                  category.folderName
+                                  category.folderName,
                                 )
                               }
                             >
@@ -285,7 +285,7 @@ export default function AddWebsiteModal({
                                   handleUrlSelection(
                                     url,
                                     category.folderId,
-                                    category.folderName
+                                    category.folderName,
                                   )
                                 }
                               />

@@ -485,7 +485,7 @@ const EmailChannelSettingsModal = ({
       closeModal={onClose}
       className="max-w-md bg-background rounded-xl p-6 shadow-xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold">Email settings</h2>
           <p className="text-sm text-muted-foreground">{channelName}</p>
