@@ -60,7 +60,10 @@ class AppService {
     wid: string;
     appId: string;
   }): Promise<void> => {
-    await deleteDoc(doc(db, `workspaces/${wid}/apps/${appId}`));
+    await apiClient.post<{ data: ConnectAppResponse }>(
+      `/api/apps/${appId}/disconnect`,
+      { workspaceId: wid },
+    );
   };
 
   connectApp = async ({
