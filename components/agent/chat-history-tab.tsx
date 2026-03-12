@@ -590,15 +590,10 @@ const HistoryMessageList = ({
                 onClose={() => setIsSendTemplateModalOpen(false)}
               />
             )}
-
           {currentSession.chatSummary && (
             <ChatSummary summary={currentSession.chatSummary} />
           )}
         </>
-      )}
-
-      {currentSession?.chatSummary && (
-        <ChatSummary summary={currentSession.chatSummary} />
       )}
     </div>
   );
