@@ -22,6 +22,7 @@ import {
   Shield,
   LayoutGrid,
   Network,
+  ListTree,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -158,7 +159,7 @@ const navigation = [
   {
     title: "Workflows",
     href: "/workflows",
-    icon: Network,
+    icon: ListTree,
   },
   {
     title: "Actions",

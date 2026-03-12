@@ -92,6 +92,7 @@ export async function POST(req: Request) {
       `  ├─ workflows: ${(performance.now() - batch2Start).toFixed(0)}ms`,
     );
 
+    console.log("workflows: ", workflows);
     const systemPrompt = getSystemPrompt({
       agent,
       workflows,

@@ -182,18 +182,25 @@ export const WorkspaceWorkflowCard = ({
         <div className="flex items-center gap-1">
           <div className="flex -space-x-2">
             {assignedAgents.slice(0, 3).map((agent) => (
-              <Avatar
+              <div
                 key={agent.id}
-                className="w-6 h-6 border-2 border-background"
+                className="overflow-hidden h-6 w-6 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0 border-2 border-background"
+                style={{
+                  backgroundColor: agent.customization.primaryColor,
+                }}
               >
-                <AvatarImage
-                  src={agent.customization.botIcon}
-                  alt={agent.customization.name}
-                />
-                <AvatarFallback className="text-[10px]">
-                  {agent.customization.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+                {agent.customization.botIcon ? (
+                  <img
+                    src={agent.customization.botIcon}
+                    alt={agent.customization.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[8px]">
+                    {agent.customization.name.charAt(0)}
+                  </span>
+                )}
+              </div>
             ))}
             {assignedAgents.length > 3 && (
               <div className="w-6 h-6 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-medium">
@@ -218,29 +225,38 @@ export const WorkspaceWorkflowCard = ({
                 <Users className="w-3.5 h-3.5" />
                 Assign Agents
               </p>
-              <div className="mt-1 max-h-40 overflow-y-auto">
+              <div className="mt-1 max-h-40 overflow-y-auto cursor-pointer">
                 {agents && agents.length > 0 ? (
                   agents.map((agent) => (
                     <button
                       key={agent.id}
                       onClick={() => handleToggleAgent(agent.id)}
                       disabled={updatingAgentId === agent.id}
-                      className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors outline-none hover:bg-muted ${
+                      className={`flex cursor-pointer items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors outline-none hover:bg-muted ${
                         updatingAgentId === agent.id
                           ? "opacity-50 cursor-not-allowed"
                           : ""
                       }`}
                       aria-pressed={isAgentAssigned(agent.id)}
                     >
-                      <Avatar className="w-5 h-5 border shadow-sm">
-                        <AvatarImage
-                          src={agent.customization.botIcon}
-                          alt={agent.customization.name}
-                        />
-                        <AvatarFallback className="text-[8px]">
-                          {agent.customization.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div
+                        className="overflow-hidden h-5 w-5 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0"
+                        style={{
+                          backgroundColor: agent.customization.primaryColor,
+                        }}
+                      >
+                        {agent.customization.botIcon ? (
+                          <img
+                            src={agent.customization.botIcon}
+                            alt={agent.customization.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[8px]">
+                            {agent.customization.name.charAt(0)}
+                          </span>
+                        )}
+                      </div>
                       <span className="flex-1 text-left truncate font-medium">
                         {agent.customization.name}
                       </span>
