@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { IWorkflow } from "@/lib/types/workflow";
 import { IAction } from "@/lib/types/actions";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Loader2 } from "lucide-react";
+import { Wrench, Loader2, X } from "lucide-react";
 import React from "react";
 import Image from "next/image";
 
@@ -45,6 +45,17 @@ export function WorkflowPreviewModal({
       closeModal={!isProcessing ? onClose : () => {}}
       className="w-full max-w-2xl bg-background border shadow-lg rounded-xl relative p-0 overflow-hidden"
     >
+      <div className="absolute right-4 top-4 z-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          disabled={isProcessing}
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
       <div className="flex flex-col gap-2 p-6 pb-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
