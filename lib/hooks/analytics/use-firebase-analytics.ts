@@ -27,9 +27,7 @@ export const useFirebaseAnalytics = () => {
     "/widget-test",
     "/api",
     "/chat",
-    "/share",
     "/billing",
-    "/onboard-share",
     "/checkout",
     "/auth",
   ];
