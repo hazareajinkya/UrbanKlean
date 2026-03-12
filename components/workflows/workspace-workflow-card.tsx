@@ -24,6 +24,7 @@ import {
   Users,
   MoreVertical,
   Loader2,
+  X,
 } from "lucide-react";
 import { IWorkflow } from "@/lib/types/workflow";
 import { useAgents } from "@/lib/hooks/agent/use-agent";
@@ -263,7 +264,7 @@ export const WorkspaceWorkflowCard = ({
                       {updatingAgentId === agent.id ? (
                         <Loader2 className="w-4 h-4 text-primary animate-spin" />
                       ) : isAgentAssigned(agent.id) ? (
-                        <Check className="w-4 h-4 text-primary" />
+                        <X className="w-4 h-4 text-primary" />
                       ) : null}
                     </button>
                   ))
