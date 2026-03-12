@@ -24,6 +24,7 @@ export const useFirebaseAnalytics = () => {
 
   useEffect(() => {
     if (!pathname) return;
+    if (pathname.startsWith("/workspaces")) return;
 
     const url = `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ""}`;
 
