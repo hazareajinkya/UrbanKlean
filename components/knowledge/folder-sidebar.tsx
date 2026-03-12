@@ -47,7 +47,7 @@ export default function FolderSidebar({
           setIsCreateModalOpen(false);
           setNewFolderName("");
         },
-      }
+      },
     );
   };
 
@@ -61,7 +61,7 @@ export default function FolderSidebar({
           setFolderToEdit(null);
           setEditFolderName("");
         },
-      }
+      },
     );
   };
 
@@ -77,7 +77,7 @@ export default function FolderSidebar({
             onSelectFolder(null);
           }
         },
-      }
+      },
     );
   };
 
@@ -147,7 +147,7 @@ export default function FolderSidebar({
                     "group relative flex items-center justify-between px-4 py-3.5 border-b text-sm transition-all cursor-pointer hover:bg-card/70 ",
                     selectedFolderId === folder.id
                       ? "bg-card border-l-2 border-l-primary border-b-muted"
-                      : "border-l-2 border-l-transparent"
+                      : "border-l-2 border-l-transparent",
                   )}
                   onClick={() => onSelectFolder(folder.id)}
                 >
@@ -157,7 +157,7 @@ export default function FolderSidebar({
                         "w-4 h-4 shrink-0",
                         selectedFolderId === folder.id
                           ? "text-primary fill-primary/20"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )}
                     />
                     <span
@@ -165,7 +165,7 @@ export default function FolderSidebar({
                         "font-medium line-clamp-1",
                         selectedFolderId === folder.id
                           ? "text-foreground"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       {folder.name}
@@ -174,7 +174,7 @@ export default function FolderSidebar({
                   <div
                     className={clsx(
                       "opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity",
-                      folder.name !== "Miscellaneous" ? "" : "hidden"
+                      folder.name !== "Miscellaneous" ? "" : "hidden",
                     )}
                   >
                     <button
@@ -225,7 +225,7 @@ export default function FolderSidebar({
           setNewFolderName("");
         }}
       >
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           <div className="flex items-center justify-between pb-1 border-b">
             <h3 className="text-lg">Create Folder</h3>
             <Button
@@ -293,7 +293,7 @@ export default function FolderSidebar({
           setEditFolderName("");
         }}
       >
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           <div className="flex items-center justify-between pb-1 border-b">
             <h3 className="text-lg">Edit Folder</h3>
             <Button

@@ -140,7 +140,7 @@ const TestMessageDialog = ({
       closeModal={onClose}
       className="w-full max-w-[425px] bg-background border border-border shadow-lg rounded-xl p-6"
     >
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="flex flex-col space-y-1.5 text-center sm:text-left">
           <h2 className="font-medium text-foreground/90 text-xl">
             Send Test Template

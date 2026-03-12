@@ -72,7 +72,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
       const result = await storageService.uploadFile(
         file,
         storageRef,
-        file.name
+        file.name,
       );
       return result.downloadURL;
     },
@@ -243,7 +243,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
           setIsGenerating(false);
           setIsWebsiteDialogOpen(false);
         },
-      }
+      },
     );
   };
 
@@ -259,7 +259,7 @@ export function GeneralTab({ workspace, wid }: GeneralTabProps) {
           setIsDeleteModalOpen(false);
           router.push("/workspaces");
         },
-      }
+      },
     );
   };
 
@@ -704,7 +704,7 @@ const AIGenerateModal = ({
 }: AIGenerateModalProps) => {
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="flex items-start justify-between ">
           <div>
             <h3 className="text-lg ">Generate Profile with AI</h3>
@@ -817,7 +817,7 @@ const AIGenerateModal = ({
                 <InputGroup
                   className={cn(
                     isUrlInvalid &&
-                      "border-destructive focus-within:ring-destructive"
+                      "border-destructive focus-within:ring-destructive",
                   )}
                 >
                   <InputGroupAddon>

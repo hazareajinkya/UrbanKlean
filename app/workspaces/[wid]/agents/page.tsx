@@ -302,7 +302,7 @@ const CreateAgentModal = ({
 }: CreateAgentModalProps) => {
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="flex items-center justify-between mb-0">
           <h3 className="text-lg font-medium">Create New AI Agent</h3>
           <Button

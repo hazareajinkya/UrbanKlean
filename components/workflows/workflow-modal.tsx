@@ -81,7 +81,7 @@ const WorkflowModal = ({
       w-full
       className={`max-w-2xl bg-white dark:bg-gray-900 rounded-xl p-6 transition-all duration-300`}
     >
-      <div className="space-y-6 ">
+      <div className="space-y-6 w-full ">
         <div className="flex items-center justify-between pb-1 border-b">
           <h3 className="text-lg font-medium flex items-center gap-2">
             {isEditing ? "Edit Workflow" : "Create New Workflow"}
