@@ -29,7 +29,7 @@ export const WorkspaceActionCard = ({
   };
 
   return (
-    <div className="relative border rounded-xl bg-card text-card-foreground p-4">
+    <div className="relative border rounded-xl bg-card text-card-foreground p-4  transition-all duration-200 hover:shadow-lg">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-muted flex items-center justify-center shrink-0 border p-0.5">

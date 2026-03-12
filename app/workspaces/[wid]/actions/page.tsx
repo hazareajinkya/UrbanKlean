@@ -120,7 +120,7 @@ export default function ActionsPage() {
       <div className="w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-medium">Actions</h1>
+            <h1 className="text-xl">Actions</h1>
             <p className="text-sm text-muted-foreground">
               Manage your workspace actions and add integration actions
             </p>
@@ -144,7 +144,7 @@ export default function ActionsPage() {
         ) : (
           <div className="flex-1 flex gap-6 min-h-0">
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pb-10">
                 {workspaceActions && workspaceActions.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {workspaceActions.map((action) => (

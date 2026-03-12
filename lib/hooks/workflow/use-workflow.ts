@@ -14,7 +14,7 @@ export const useWorkflows = (wid: string) => {
   const query = useQuery({
     queryKey: workflowsKey(wid),
     queryFn: () =>
-      workflowService.getWorkflows(wid).then((workflows) => {
+      workflowService.getAllWorkflows(wid).then((workflows) => {
         workflows.map((workflow) =>
           qc.setQueryData(workflowKey(wid, workflow.id), workflow),
         );

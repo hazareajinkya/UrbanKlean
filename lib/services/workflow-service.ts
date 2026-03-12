@@ -68,6 +68,18 @@ class WorkflowService {
       (w) => w.isActive && (!aid || (w.aids ?? []).includes(aid)),
     );
   }
+  async getAllWorkflows(wid: string) {
+    let workflows = await cacheService.getWorkflows(wid);
+
+    if (!workflows) {
+      const colRef = collection(db, `workspaces/${wid}/workflows`);
+      const snap = await getDocs(colRef);
+      workflows = snap.docs.map((doc) => doc.data() as IWorkflow);
+
+      cacheService.setWorkflows(wid, workflows);
+    }
+    return workflows;
+  }
 
   async deleteWorkflow({
     wid,

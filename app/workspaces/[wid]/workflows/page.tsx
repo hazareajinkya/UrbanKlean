@@ -145,7 +145,7 @@ export default function WorkflowsPage() {
       <div className="w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-medium">Workflows</h1>
+            <h1 className="text-xl ">Workflows</h1>
             <p className="text-sm text-muted-foreground">
               Manage your workspace workflows and add integration workflows
             </p>
