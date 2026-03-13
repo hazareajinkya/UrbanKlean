@@ -3,6 +3,14 @@
 import { Switch } from "@/components/ui/switch";
 import { IAction } from "@/lib/types/actions";
 import { getIntegrationConfig } from "@/lib/data/integration-configs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2, MoreVertical } from "lucide-react";
 
 interface WorkspaceActionCardProps {
   action: IAction;
@@ -30,8 +38,8 @@ export const WorkspaceActionCard = ({
 
   return (
     <div className="relative border rounded-xl bg-card text-card-foreground p-4  transition-all duration-200 hover:shadow-lg">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-3">
+      <div className="flex items-start justify-between mb-3 gap-4">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-muted flex items-center justify-center shrink-0 border p-0.5">
             {iconUrl ? (
               <img
@@ -43,43 +51,56 @@ export const WorkspaceActionCard = ({
               <span className="text-xs font-bold text-primary">API</span>
             )}
           </div>
-          <div>
-            <h3 className="font-medium text-base leading-tight mb-0.5">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-base leading-tight mb-0.5 truncate">
               {action.name}
             </h3>
-            <p className="text-xs text-muted-foreground ">{parentName}</p>
+            <p className="text-xs text-muted-foreground truncate">{parentName}</p>
           </div>
         </div>
-        <Switch
-          checked={action.status === "active"}
-          className="mt-2"
-          onCheckedChange={handleToggle}
-        />
+        
+        <div className="flex items-center gap-1.5 shrink-0 -mt-1 -mr-1">
+          <Switch
+            checked={action.status === "active"}
+            onCheckedChange={handleToggle}
+            aria-label="Toggle action status"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                aria-label="Action Options"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {isUserAction && onEdit && (
+                <DropdownMenuItem onClick={() => onEdit(action)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Action
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem
+                  onClick={() => onDelete(action)}
+                  className="text-red-500 hover:text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2 leading-none" />
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="mb-4">
         <p className="text-sm text-muted-foreground leading-snug line-clamp-2">
           {action.description}
         </p>
-      </div>
-
-      <div className="flex items-center justify-end gap-3">
-        {isUserAction && onEdit && (
-          <button
-            onClick={() => onEdit(action)}
-            className="text-primary hover:text-primary/80 font-medium text-xs transition-colors"
-          >
-            Edit
-          </button>
-        )}
-        {onDelete && (
-          <button
-            onClick={() => onDelete(action)}
-            className="text-red-500 hover:text-red-600 font-medium text-xs transition-colors"
-          >
-            Delete
-          </button>
-        )}
       </div>
     </div>
   );
