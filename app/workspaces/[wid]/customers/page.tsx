@@ -300,8 +300,7 @@ export default function CustomersPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="pl-6 py-3">
-                          {" "}
+                        <TableCell className="">
                           <ChannelAvatarStack person={person} />
                         </TableCell>
                         <TableCell>
