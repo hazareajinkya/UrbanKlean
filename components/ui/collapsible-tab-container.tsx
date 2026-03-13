@@ -37,7 +37,7 @@ export function CollapsibleTabContainer({
       <div className="flex-1 flex flex-col min-w-0 h-full pr-4">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="text-xl">{title}</h1>
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
           <div className="flex items-center gap-2">
