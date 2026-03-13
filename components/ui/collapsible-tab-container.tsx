@@ -68,11 +68,11 @@ export function CollapsibleTabContainer({
       <AnimatePresence initial={false}>
         {isLibraryOpen && (
           <motion.div
-            initial={{ width: 0, opacity: 0, x: 20 }}
-            animate={{ width: 340, opacity: 1, x: 0 }}
-            exit={{ width: 0, opacity: 0, x: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="flex-shrink-0 border rounded-xl bg-card/50 backdrop-blur-sm h-full overflow-hidden shadow-sm ml-4"
+            initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+            animate={{ width: 340, opacity: 1, marginLeft: 16 }}
+            exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex-shrink-0 border rounded-xl bg-card/50 backdrop-blur-sm h-full overflow-hidden shadow-sm"
           >
             <div className="w-[340px] p-4 h-full">{sidebarContent}</div>
           </motion.div>
