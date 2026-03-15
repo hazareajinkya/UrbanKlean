@@ -28,6 +28,7 @@ import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
+import { CreditIndicator } from "@/components/workspaces/credit-indicator";
 import { useHotkeys } from "react-hotkeys-hook";
 import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
@@ -132,18 +133,21 @@ export default function WorkspaceLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
+        <header className="bg-card flex h-12 shrink-0 items-center border-b border-border px-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden"
+            className="lg:hidden mr-2"
           >
             <Menu className="h-4 w-4" />
           </Button>
-          <h1 className="text- font-mdium">{workspace?.name || "Workspace"}</h1>
+          <h1 className="text-sm font-medium">{workspace?.name || "Workspace"}</h1>
+          <div className="ml-auto flex items-center pr-2">
+            <CreditIndicator />
+          </div>
         </header>
-        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto w-full">{children}</div>
       </div>
     </div>
   );
