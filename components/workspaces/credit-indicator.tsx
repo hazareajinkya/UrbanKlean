@@ -2,8 +2,6 @@
 
 import React from "react";
 import { AlertTriangle } from "lucide-react";
-import { useUser } from "@/lib/hooks/user/use-user";
-import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,60 +11,76 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, getNextMonthFirstDay } from "@/lib/utils";
+import { useCredits } from "@/lib/hooks/credits/use-credits";
 
 export const CreditIndicator = () => {
   const { wid } = useParams() as { wid: string };
-  const { workspace, isLoading: isWorkspaceLoading } = useWorkspace(wid);
-  const ownerId = workspace?.ownerId ?? "";
-  const { data: owner, isLoading: isOwnerLoading } = useUser(ownerId);
+  const { data: creditsData, isLoading } = useCredits({ wid });
   const router = useRouter();
 
-  if (isWorkspaceLoading || isOwnerLoading || !owner) return null;
+  if (isLoading || !creditsData?.user) return null;
 
-  const recurringRemaining = Number(owner.credit?.recurring) || 0;
-  const purchasedRemaining = Number(owner.credit?.purchased) || 0;
-  const subscriptionQuota = Number(owner.subscription?.recurringQuota) || 0;
+  const { user, totals } = creditsData;
+  const totalCredits = totals.totalCredits;
+  const remainingCredits = totals.remainingCredits;
+  const remainingPercentage =
+    totals.remainingPercentage > 100 ? 100 : totals.remainingPercentage;
 
-  const totalCredits = subscriptionQuota + purchasedRemaining;
-  const remainingCredits = recurringRemaining + purchasedRemaining;
-  const usedCredits = totalCredits - remainingCredits;
+  const { colorClass, bgTrackClass, progressIndicatorClass, warningVariant } =
+    (() => {
+      const base = {
+        colorClass: "text-emerald-500",
+        bgTrackClass: "text-emerald-500/15",
+        progressIndicatorClass:
+          "[&>[data-slot=progress-indicator]]:bg-emerald-500",
+        warningVariant: "none" as "none" | "low" | "critical",
+      };
 
-  let remainingPercentage = 0;
-  if (totalCredits > 0) {
-    remainingPercentage = (remainingCredits / totalCredits) * 100;
-  }
+      if (remainingPercentage > 30) {
+        return base;
+      }
 
-  const usedPercentage = 100 - remainingPercentage;
+      if (remainingPercentage > 10) {
+        return {
+          ...base,
+          colorClass: "text-yellow-500",
+          bgTrackClass: "text-yellow-500/15",
+          progressIndicatorClass:
+            "[&>[data-slot=progress-indicator]]:bg-yellow-500",
+        };
+      }
 
-  let colorClass = "text-emerald-500";
-  let bgTrackClass = "text-emerald-500/15";
-  let progressIndicatorClass =
-    "[&>[data-slot=progress-indicator]]:bg-emerald-500";
-  let isWarning = false;
-  const isLowCredits = remainingCredits < 100;
+      if (remainingPercentage >= 2) {
+        return {
+          ...base,
+          colorClass: "text-yellow-500",
+          bgTrackClass: "text-yellow-500/15",
+          progressIndicatorClass:
+            "[&>[data-slot=progress-indicator]]:bg-yellow-500",
+          warningVariant: "low",
+        };
+      }
 
-  if (remainingPercentage <= 30 && remainingPercentage > 10) {
-    colorClass = "text-yellow-500";
-    bgTrackClass = "text-yellow-500/15";
-    progressIndicatorClass = "[&>[data-slot=progress-indicator]]:bg-yellow-500";
-  } else if (remainingPercentage <= 10) {
-    colorClass = "text-destructive";
-    bgTrackClass = "text-destructive/15";
-    progressIndicatorClass =
-      "[&>[data-slot=progress-indicator]]:bg-destructive";
-    if (remainingPercentage <= 5) {
-      isWarning = true;
-    }
-  }
+      return {
+        ...base,
+        colorClass: "text-destructive",
+        bgTrackClass: "text-destructive/15",
+        progressIndicatorClass:
+          "[&>[data-slot=progress-indicator]]:bg-destructive",
+        warningVariant: "critical",
+      };
+    })();
 
   const handleBuyMore = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push("/billing");
+    router.push("/pricing");
   };
 
   const renewalDate =
-    owner.subscription?.renewsAt || owner.subscription?.nextPaymentAt;
+    user.subscription?.renewsAt ||
+    user.subscription?.nextPaymentAt ||
+    getNextMonthFirstDay();
 
   const remainingPercentageStr = `${Math.round(remainingPercentage)}%`;
   let triggerTextSize = "text-[9px]";
@@ -76,11 +90,20 @@ export const CreditIndicator = () => {
     <HoverCard openDelay={150} closeDelay={200}>
       <HoverCardTrigger asChild>
         <div className="flex items-center gap-3 cursor-pointer">
-          {isLowCredits && (
-            <div className="flex items-center animate-in fade-in slide-in-from-left-2 duration-300 gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              <span className="text-xs font-medium text-destructive">
-                Credits are running low
+          {warningVariant !== "none" && (
+            <div
+              className={cn(
+                "flex items-center animate-in fade-in slide-in-from-left-2 duration-300 gap-2",
+                warningVariant === "critical"
+                  ? "text-destructive"
+                  : "text-yellow-500",
+              )}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs font-medium">
+                {warningVariant === "critical"
+                  ? "Credits are critically low"
+                  : "Credits are running low"}
               </span>
             </div>
           )}
@@ -111,47 +134,38 @@ export const CreditIndicator = () => {
         sideOffset={10}
         className="w-[300px] p-0 z-50 rounded-2xl shadow-xl border-border overflow-hidden"
       >
-        <div className="bg-card text-foreground p-6 space-y-2.5">
+        <div className="bg-card text-foreground p-6 ">
           <div>
             <h4 className="text-base font-medium">Monthly Credits</h4>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 mt-2.5 mb-2.5">
             <div className="flex items-end justify-between">
               <p className="text-sm text-muted-foreground">
                 <span className="text-xl font-medium text-foreground">
-                  {usedCredits.toLocaleString()}
+                  {remainingCredits.toLocaleString()}
                 </span>
                 <span className="text-muted-foreground">
-                  /{totalCredits.toLocaleString()} used
+                  /{totalCredits.toLocaleString()} remaining
                 </span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {remainingCredits.toLocaleString()} left
               </p>
             </div>
             <Progress
-              value={usedPercentage}
+              value={remainingPercentage}
               className={cn("h-2 bg-secondary", progressIndicatorClass)}
             />
           </div>
 
-          {/* <div className="flex items-center gap-2">
-            <span className="text-lg font-medium text-foreground">
-              {remainingCredits.toLocaleString()} credits left
-            </span>
-          </div> */}
-
-          {renewalDate && (
-            <div className="inline-flex items-center border border-border rounded-full px-3.5 py-1">
-              <span className="text-xs text-muted-foreground">
-                Renews on {formatDate(renewalDate)}
-              </span>
+          {warningVariant === "low" && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-2.5 mb-2.5">
+              <p className="text-sm text-yellow-500 font-medium text-center">
+                Credits are running low. Please top up soon.
+              </p>
             </div>
           )}
 
-          {isWarning && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2.5">
+          {warningVariant === "critical" && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2.5 mb-2.5">
               <p className="text-sm text-destructive font-medium text-center">
                 Credits are critically low. Top up to avoid disruptions.
               </p>
@@ -159,13 +173,17 @@ export const CreditIndicator = () => {
           )}
 
           <Button
-            className="w-full"
+            className="w-full "
             onClick={handleBuyMore}
             aria-label="Buy more credits"
             tabIndex={0}
           >
             Buy More
           </Button>
+
+          <span className="text-xs text-muted-foreground">
+            Next renewal on: {formatDate(renewalDate)}
+          </span>
         </div>
       </HoverCardContent>
     </HoverCard>

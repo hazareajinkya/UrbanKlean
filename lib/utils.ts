@@ -43,6 +43,12 @@ export function formatDate(date?: string) {
   return format(new Date(date), "dd MMM yyyy");
 }
 
+export function getNextMonthFirstDay() {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return nextMonth.toISOString();
+}
+
 export const formatFileSize = (bytes: number) => {
   if (!bytes) return "0 Bytes";
   const k = 1024;

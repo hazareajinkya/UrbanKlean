@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/table";
 import { useUsage, useGlobalUsage } from "@/lib/hooks/usage/use-usage";
 import { IUsage } from "@/lib/types/usage";
+import { useCredits } from "@/lib/hooks/credits/use-credits";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 import { Calendar } from "@/components/ui/calendar";
@@ -75,18 +76,18 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => {
         <p
           className={cn(
             "text-muted-foreground text-sm",
-            isCreditPurchase && "text-emerald-600 dark:text-emerald-400"
+            isCreditPurchase && "text-emerald-600 dark:text-emerald-400",
           )}
         >
           {usage.eventType === "chat_response"
             ? "Chat Response"
             : usage.eventType === "tool_call"
-            ? "Tool Call"
-            : usage.eventType === "credit_purchase"
-            ? "Credit Purchase"
-            : usage.eventType === "credit_renewal"
-            ? "Credit Renewal"
-            : "Unknown"}
+              ? "Tool Call"
+              : usage.eventType === "credit_purchase"
+                ? "Credit Purchase"
+                : usage.eventType === "credit_renewal"
+                  ? "Credit Renewal"
+                  : "Unknown"}
         </p>
       </TableCell>
       <TableCell>
@@ -103,7 +104,7 @@ const UsageTableRow = ({ usage }: { usage: IUsage }) => {
         <span
           className={cn(
             "text-sm font-medium text-foreground",
-            isCreditPurchase && "text-emerald-600 dark:text-emerald-400"
+            isCreditPurchase && "text-emerald-600 dark:text-emerald-400",
           )}
         >
           {usage.amount.toLocaleString()}
@@ -143,6 +144,7 @@ export default function BillingPage() {
   }, [isCalendarOpen, date]);
 
   const { data: usageData, isLoading: isUsageLoading } = useGlobalUsage(date);
+  const { data: creditsData } = useCredits({ userEmail: user?.email });
   const [currentPage, setCurrentPage] = useState(1);
 
   const subscription = user?.subscription;
@@ -179,12 +181,11 @@ export default function BillingPage() {
       : "";
   const renewInfo = getRenewInfo(subscription);
 
-  const recurringRemaining = user?.credit?.recurring || 0;
-  const purchasedRemaining = user?.credit?.purchased || 0;
-  const totalCredits = (subscription?.recurringQuota || 0) + purchasedRemaining;
-  const remaining = recurringRemaining + purchasedRemaining;
-  const used = totalCredits - remaining;
-  const progressValue = totalCredits > 0 ? (used / totalCredits) * 100 : 0;
+  const totalCredits = creditsData?.totals.totalCredits || 0;
+  const remaining = creditsData?.totals.remainingCredits || 0;
+  const used = creditsData?.totals.usedCredits || 0;
+  const remainingPercentage = creditsData?.totals.remainingPercentage ?? 0;
+  const progressValue = remainingPercentage > 100 ? 100 : remainingPercentage;
 
   const tierMessages = tier?.messages ? Number(tier.messages) / 1000 : 0;
 
@@ -249,7 +250,7 @@ export default function BillingPage() {
   const handleStartSubscription = () => {
     const billingCycle = tier?.billingCycle ?? "annually";
     router.push(
-      `/pricing?plan=all_in_one&tier=10000&billingCycle=${billingCycle}`
+      `/pricing?plan=all_in_one&tier=10000&billingCycle=${billingCycle}`,
     );
   };
 
@@ -321,8 +322,8 @@ export default function BillingPage() {
                           isAnnual
                             ? "annually"
                             : isLifetime
-                            ? "once"
-                            : "monthly"
+                              ? "once"
+                              : "monthly"
                         }`}
                         {monthlyEquivalentLabel
                           ? ` • ${monthlyEquivalentLabel}`
@@ -334,7 +335,7 @@ export default function BillingPage() {
 
                 <CardContent>
                   <div className="flex items-center justify-between gap-2 ">
-                    <p className="text-sm text-muted-foreground">Usage</p>
+                    <p className="text-sm text-muted-foreground">Remaining</p>
                     <p className="text-sm text-muted-foreground">
                       {progressValue.toFixed(1)}%
                     </p>
@@ -342,10 +343,7 @@ export default function BillingPage() {
                   <Progress value={progressValue} className="mt-2 mb-2" />
                   <div className="flex justify-between items-center gap-2 mb-4">
                     <p className="text-sm text-muted-foreground">
-                      {used} / {totalCredits}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {remaining} remaining
+                      {remaining} / {totalCredits} remaining
                     </p>
                   </div>
                 </CardContent>
@@ -498,7 +496,7 @@ export default function BillingPage() {
                           variant={"outline"}
                           className={cn(
                             "w-[260px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-1 h-4 w-4" />
@@ -695,7 +693,7 @@ const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
         usage.amount,
         `"${usage.aid}"`,
         `"${usage.sessionId}"`,
-      ].join(",")
+      ].join(","),
     ),
   ].join("\n");
 
@@ -708,7 +706,7 @@ const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
     ? dateRange.to
       ? `${format(dateRange.from, "yyyy-MM-dd")}-to-${format(
           dateRange.to,
-          "yyyy-MM-dd"
+          "yyyy-MM-dd",
         )}`
       : `${format(dateRange.from, "yyyy-MM-dd")}`
     : "all_time";
@@ -765,8 +763,8 @@ function getRenewInfo(subscription?: IUserSubscription) {
       value: subscription.renewsAt
         ? formatDate(subscription.renewsAt)
         : subscription.nextPaymentAt
-        ? formatDate(subscription.nextPaymentAt)
-        : "—",
+          ? formatDate(subscription.nextPaymentAt)
+          : "—",
     };
   }
   if (subscription?.status === "canceled") {
@@ -775,8 +773,8 @@ function getRenewInfo(subscription?: IUserSubscription) {
       value: subscription.canceledAt
         ? formatDate(subscription.canceledAt)
         : subscription.renewsAt
-        ? formatDate(subscription.renewsAt)
-        : "—",
+          ? formatDate(subscription.renewsAt)
+          : "—",
     };
   }
   if (subscription?.status === "trialing") {
@@ -785,8 +783,8 @@ function getRenewInfo(subscription?: IUserSubscription) {
       value: subscription.trialEndsAt
         ? formatDate(subscription.trialEndsAt)
         : subscription.renewsAt
-        ? formatDate(subscription.renewsAt)
-        : "—",
+          ? formatDate(subscription.renewsAt)
+          : "—",
     };
   }
   if (subscription?.status === "past_due") {
@@ -795,8 +793,8 @@ function getRenewInfo(subscription?: IUserSubscription) {
       value: subscription.nextPaymentAt
         ? formatDate(subscription.nextPaymentAt)
         : subscription.renewsAt
-        ? formatDate(subscription.renewsAt)
-        : "—",
+          ? formatDate(subscription.renewsAt)
+          : "—",
     };
   }
   if (subscription?.status === "paused") {
@@ -805,8 +803,8 @@ function getRenewInfo(subscription?: IUserSubscription) {
       value: subscription.canceledAt
         ? formatDate(subscription.canceledAt)
         : subscription.renewsAt
-        ? formatDate(subscription.renewsAt)
-        : "—",
+          ? formatDate(subscription.renewsAt)
+          : "—",
     };
   }
   return {

@@ -138,11 +138,11 @@ export default function WorkspaceLayout({
             variant="ghost"
             size="sm"
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden mr-2"
+            className="lg:hidden "
           >
             <Menu className="h-4 w-4" />
           </Button>
-          <h1 className="text-sm font-medium">{workspace?.name || "Workspace"}</h1>
+          <h1 className="">{workspace?.name || "Workspace"}</h1>
           <div className="ml-auto flex items-center pr-2">
             <CreditIndicator />
           </div>
