@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, MoreVertical } from "lucide-react";
+import { Pencil, Trash2, MoreVertical } from "lucide-react";
 
 interface WorkspaceActionCardProps {
   action: IAction;
@@ -52,13 +52,15 @@ export const WorkspaceActionCard = ({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-base leading-tight mb-0.5 truncate">
+            <h3 className="text-base leading-tight mb-1 truncate">
               {action.name}
             </h3>
-            <p className="text-xs text-muted-foreground truncate">{parentName}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {parentName}
+            </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1.5 shrink-0 -mt-1 -mr-1">
           <Switch
             checked={action.status === "active"}
@@ -78,15 +80,15 @@ export const WorkspaceActionCard = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               {isUserAction && onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(action)}>
-                  <Edit className="w-4 h-4 mr-2" />
+                <DropdownMenuItem onClick={() => onEdit(action)} className="cursor-pointer">
+                  <Pencil className="w-4 h-4 mr-2" />
                   Edit Action
                 </DropdownMenuItem>
               )}
               {onDelete && (
                 <DropdownMenuItem
                   onClick={() => onDelete(action)}
-                  className="text-red-500 hover:text-red-600 focus:text-red-600"
+                  className="text-red-500 hover:text-red-600 focus:text-red-600 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-2 leading-none" />
                   Delete
@@ -97,7 +99,7 @@ export const WorkspaceActionCard = ({
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mt-2">
         <p className="text-sm text-muted-foreground leading-snug line-clamp-2">
           {action.description}
         </p>

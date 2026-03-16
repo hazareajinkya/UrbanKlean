@@ -5,11 +5,13 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Plus, ListTree, Loader } from "lucide-react";
 import { useWorkflows } from "@/lib/hooks/workflow/use-workflow";
+import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
 import { useGlobalWorkflows } from "@/lib/hooks/workflow/use-global-workflows";
 import { useWorkflowActions } from "@/lib/hooks/workflow/use-workflow-actions";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { WorkflowModal } from "@/components/workflows";
 import { WorkspaceWorkflowCard } from "@/components/workflows/workspace-workflow-card";
+import { WorkspaceWorkflowDetailsModal } from "@/components/workflows/workspace-workflow-details-modal";
 import { AvailableWorkflowsPanel } from "@/components/workflows/available-workflows-panel";
 import { IWorkflow, generateDefaultWorkflow } from "@/lib/types/workflow";
 import { CollapsibleTabContainer } from "@/components/ui/collapsible-tab-container";
@@ -25,6 +27,7 @@ export default function WorkflowsPage() {
     null,
   );
   const [isLibraryOpen, setIsLibraryOpen] = useState(true);
+  const [detailsWorkflow, setDetailsWorkflow] = useState<IWorkflow | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     trigger: "",
@@ -33,6 +36,7 @@ export default function WorkflowsPage() {
 
   const { workflows: workspaceWorkflows, isLoading: isLoadingWorkflows } =
     useWorkflows(wid);
+  const { actions: workspaceActions } = useAIActions(wid);
 
   const { globalWorkflows, isLoading: isLoadingGlobalWorkflows } =
     useGlobalWorkflows();
@@ -155,7 +159,7 @@ export default function WorkflowsPage() {
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Custom Workflow
+          Create Workflow
         </Button>
       }
       sidebarContent={
@@ -176,7 +180,7 @@ export default function WorkflowsPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!isLibraryOpen ? "xl:grid-cols-3" : ""}`}>
         {workspaceWorkflows && workspaceWorkflows.length > 0 ? (
           workspaceWorkflows.map((workflow) => (
             <WorkspaceWorkflowCard
@@ -186,6 +190,7 @@ export default function WorkflowsPage() {
               onEdit={handleEditWorkflow}
               onDelete={handleDeleteWorkflowClick}
               onUpdateAgents={handleUpdateAgents}
+              onCardClick={setDetailsWorkflow}
             />
           ))
         ) : (
@@ -207,6 +212,21 @@ export default function WorkflowsPage() {
         onSubmit={handleSubmit}
         isLoading={createWorkflow.isPending || updateWorkflow.isPending}
         isEditing={!!editingWorkflow}
+      />
+
+      <WorkspaceWorkflowDetailsModal
+        workflow={detailsWorkflow}
+        isOpen={!!detailsWorkflow}
+        onClose={() => setDetailsWorkflow(null)}
+        onEdit={(w) => {
+          setDetailsWorkflow(null);
+          handleEditWorkflow(w);
+        }}
+        onDelete={(w) => {
+          setDetailsWorkflow(null);
+          handleDeleteWorkflowClick(w);
+        }}
+        workspaceActions={workspaceActions}
       />
 
       <ConfirmationDialog

@@ -146,7 +146,7 @@ const WorkflowModal = ({
 6. Provide clear next steps or trial options
 
 `}
-              className="mt-2 h-[220px] w-full px-3 py-2 text-sm border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="mt-2 h-[320px] w-full px-3 py-2 text-sm border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               rows={8}
             />
 

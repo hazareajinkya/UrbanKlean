@@ -130,7 +130,7 @@ export default function ActionsPage() {
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Custom Action
+          Create Action
         </Button>
       }
       sidebarContent={
@@ -154,7 +154,7 @@ export default function ActionsPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!isLibraryOpen ? "xl:grid-cols-3" : ""}`}>
         {workspaceActions && workspaceActions.length > 0 ? (
           workspaceActions.map((action) => (
             <WorkspaceActionCard

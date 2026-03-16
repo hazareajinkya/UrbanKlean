@@ -23,6 +23,7 @@ import {
   LayoutGrid,
   Network,
   ListTree,
+  Store,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -174,7 +175,7 @@ const navigation = [
   {
     title: "Apps",
     href: "/apps",
-    icon: LayoutGrid,
+    icon: Store,
   },
 
   {

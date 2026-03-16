@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Check, Loader } from "lucide-react";
+import { Plus, Search, Loader } from "lucide-react";
 import { IWorkflow } from "@/lib/types/workflow";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useGlobalActions } from "@/lib/hooks/actions/use-ai-actions";
@@ -195,17 +195,20 @@ export const AvailableWorkflowsPanel = ({
       .filter((id): id is string => !!id),
   );
 
+  const isWorkflowAdded = (workflow: IWorkflow) =>
+    installedWorkflowIds.has(workflow.id);
+
+  const availableWorkflows = globalWorkflows.filter(
+    (w) => !isWorkflowAdded(w),
+  );
+
   const filteredWorkflows = !searchQuery.trim()
-    ? globalWorkflows
-    : globalWorkflows.filter(
+    ? availableWorkflows
+    : availableWorkflows.filter(
         (workflow) =>
           workflow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           workflow.trigger.toLowerCase().includes(searchQuery.toLowerCase()),
       );
-
-  const isWorkflowAdded = (workflow: IWorkflow) => {
-    return installedWorkflowIds.has(workflow.id);
-  };
 
   if (isLoading) {
     return (
@@ -218,7 +221,7 @@ export const AvailableWorkflowsPanel = ({
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4">
-        <h2 className="text- font-medium mb-2">Available Workflows</h2>
+        <h2 className="mb-2">Available Workflows</h2>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -238,41 +241,79 @@ export const AvailableWorkflowsPanel = ({
               <p className="text-muted-foreground">
                 {searchQuery
                   ? "No workflows found matching your search"
-                  : "No global workflows available"}
+                  : availableWorkflows.length === 0 && globalWorkflows.length > 0
+                    ? "All workflows are already added to your workspace"
+                    : "No global workflows available"}
               </p>
             </div>
           ) : (
             filteredWorkflows.map((workflow) => {
-              const added = isWorkflowAdded(workflow);
               const isProcessing =
                 addingWorkflowId === workflow.id ||
                 workflowPendingInstall?.id === workflow.id;
+              const workflowActions =
+                globalActions?.filter((a) => workflow.toolIds.includes(a.id)) ||
+                [];
+              const uniqueAppsMap = new Map<
+                string,
+                { slug: string; name?: string; icon: string }
+              >();
+              workflowActions.forEach((a) => {
+                if (a.app?.slug && !uniqueAppsMap.has(a.app.slug))
+                  uniqueAppsMap.set(a.app.slug, {
+                    slug: a.app.slug,
+                    name: a.app.name,
+                    icon: a.app.icon,
+                  });
+              });
+              const uniqueApps = Array.from(uniqueAppsMap.values());
 
               return (
                 <div
                   key={workflow.id}
                   onClick={() =>
-                    !added && !isProcessing && handleAddWorkflowClick(workflow)
+                    !isProcessing && handleAddWorkflowClick(workflow)
                   }
-                  className={`flex justify-between items-center gap-4 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all ${
-                    added
-                      ? "opacity-60"
-                      : "hover:border-primary/50 cursor-pointer"
-                  }`}
+                  className="flex items-start justify-between gap-3 border rounded-lg bg-card pl-3 pr-1.5 py-2 transition-all hover:border-primary/50 cursor-pointer"
                 >
-                  <div className="flex flex-col min-w-0">
-                    <p className="text-sm  truncate">{workflow.name}</p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  <div className="flex flex-col min-w-0 flex-1">
+                    {uniqueApps.length > 0 && (
+                      <div className="flex -space-x-2.5 mb-1.5">
+                        {uniqueApps.slice(0, 3).map((app, i) => (
+                          <div
+                            key={app.slug + i}
+                            className="w-7 h-7 rounded-full border-2 border-border bg-muted overflow-hidden flex items-center justify-center flex-shrink-0"
+                          >
+                            {app.icon ? (
+                              <img
+                                src={app.icon}
+                                alt={app.name || "App"}
+                                className="w-full h-full object-contain "
+                              />
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                {app.name ? app.name.charAt(0) : "A"}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        {uniqueApps.length > 3 && (
+                          <div className="w-7 h-7 rounded-full border-2 border-border bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-medium">
+                            +{uniqueApps.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-sm text-primary/60 truncate mt-1">
+                      {workflow.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                       {workflow.trigger}
                     </p>
                   </div>
 
-                  <div
-                    className={`flex items-center justify-center h-7 w-7 rounded-full transition-colors flex-shrink-0 ${added ? "opacity-50" : ""}`}
-                  >
-                    {added ? (
-                      <Check className="h-4 w-4 text-muted-foreground" />
-                    ) : isProcessing ? (
+                  <div className="flex items-center justify-center h-6 w-6 rounded-full transition-colors flex-shrink-0">
+                    {isProcessing ? (
                       <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : (
                       <Plus className="h-4 w-4 text-muted-foreground" />

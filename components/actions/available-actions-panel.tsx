@@ -4,11 +4,10 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import { Plus, Search, Check } from "lucide-react";
+import { Plus, Search, Loader } from "lucide-react";
 import { IAction } from "@/lib/types/actions";
 import { IApp, IInstalledApp } from "@/lib/types/app";
 import { getIntegrationConfig } from "@/lib/data/integration-configs";
-import { Loader } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
 import ConnectAppModal from "@/components/apps/connect-app-modal";
 import { useConnectApp } from "@/lib/hooks/apps/use-apps";
@@ -102,18 +101,9 @@ export const AvailableActionsPanel = ({
       .filter((id): id is string => !!id),
   );
 
-  const installedAppSlugs = new Set(
-    (installedApps ?? [])
-      .filter((a) => a.status === "connected")
-      .map((a) => a.appSlug),
-  );
+  const isActionAdded = (action: IAction) => installedActionIds.has(action.id);
 
-  // Bug: This code have bug it not showing the actions that are in the installed apps
-  // const availableActions = actions.filter(
-  //   (action) => !action.app?.slug || !installedAppSlugs.has(action.app.slug),
-  // );
-
-  const availableActions = actions;
+  const availableActions = actions.filter((a) => !isActionAdded(a));
 
   const filteredActions = !searchQuery.trim()
     ? availableActions
@@ -126,10 +116,6 @@ export const AvailableActionsPanel = ({
           action.slug.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
-  const isActionAdded = (action: IAction) => {
-    return installedActionIds.has(action.id);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -141,7 +127,7 @@ export const AvailableActionsPanel = ({
   return (
     <div className="h-full flex flex-col">
       <div className="mb-4">
-        <h2 className="text- font-medium mb-2">Available Actions</h2>
+        <h2 className="mb-2">Available Actions</h2>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -161,31 +147,26 @@ export const AvailableActionsPanel = ({
               <p className="text-muted-foreground">
                 {searchQuery
                   ? "No actions found matching your search"
-                  : "No integration actions available"}
+                  : availableActions.length === 0 && actions.length > 0
+                    ? "All actions are already added to your workspace"
+                    : "No integration actions available"}
               </p>
             </div>
           ) : (
             filteredActions.map((action) => {
-              const added = isActionAdded(action);
-              const IntegrationLogo = action.app?.icon;
-
-              // Determine icon and parent name
               const iconUrl = action.app?.icon;
               const parentName = action.app?.name || "API";
+              const isProcessing =
+                addingActionId === action.id ||
+                actionPendingInstall?.id === action.id;
 
               return (
                 <div
                   key={action.id}
                   onClick={() =>
-                    !added &&
-                    addingActionId !== action.id &&
-                    handleAddAction(action)
+                    !isProcessing && handleAddAction(action)
                   }
-                  className={`flex items-center justify-between gap-2 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all ${
-                    added
-                      ? "opacity-60"
-                      : "hover:border-primary/50 cursor-pointer"
-                  }`}
+                  className="flex items-center justify-between gap-2 border rounded-lg bg-background pl-3 pr-1.5 py-2 transition-all hover:border-primary/50 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {iconUrl ? (
@@ -202,12 +183,8 @@ export const AvailableActionsPanel = ({
                     <span className="text-sm truncate">{action.name}</span>
                   </div>
 
-                  <div
-                    className={`flex items-center justify-center h-7 w-7 rounded-full transition-colors flex-shrink-0 ${added ? "opacity-50" : ""}`}
-                  >
-                    {added ? (
-                      <Check className="h-4 w-4 text-muted-foreground" />
-                    ) : addingActionId === action.id ? (
+                  <div className="flex items-center justify-center h-7 w-7 rounded-full transition-colors flex-shrink-0">
+                    {isProcessing ? (
                       <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : (
                       <Plus className="h-4 w-4 text-muted-foreground" />

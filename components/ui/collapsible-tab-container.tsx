@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid } from "lucide-react";
+import { Layers, Library, LibraryBig } from "lucide-react";
 
 interface CollapsibleTabContainerProps {
   title: string;
@@ -44,13 +44,10 @@ export function CollapsibleTabContainer({
             {showLibraryButton && (
               <Button
                 variant="outline"
-                size="sm"
                 onClick={onToggleLibrary}
-                className={`flex items-center gap-2 transition-all duration-200  `}
+                className={`bg-card`}
               >
-                <LayoutGrid
-                  className={`w-4 h-4 ${isLibraryOpen ? "scale-110" : ""}`}
-                />
+                <Layers className={`w-4 h-4`} />
                 {libraryButtonText}
               </Button>
             )}

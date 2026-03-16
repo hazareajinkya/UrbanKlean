@@ -1,6 +1,12 @@
 import { IApp } from "@/lib/types/app";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Download, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Loader2, Download, Trash2, MoreVertical } from "lucide-react";
 
 interface AppCardProps {
   app: IApp;
@@ -33,27 +39,39 @@ export default function AppCard({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {isInstalled ? (
             <>
-              <Button variant="outline" size="sm" disabled>
-                <Check className="w-3.5 h-3.5 text-green-800" />
+              <span className="flex h-8 items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 text-sm text-emerald-800 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Installed
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="size-8"
-                onClick={onDisconnect}
-                disabled={isPending}
-                aria-label="Uninstall app"
-              >
-                {isPending ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
-                )}
-              </Button>
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    aria-label="App options"
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
+                    onClick={onDisconnect}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-2 text-destructive" />
+                    Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button
