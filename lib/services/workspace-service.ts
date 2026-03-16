@@ -3,10 +3,12 @@ import {
   arrayUnion,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where,
@@ -16,6 +18,7 @@ import {
   generateDefaultWorkspace,
   IWorkspace,
   IWorkspaceInfo,
+  emailSubscriptionType,
 } from "../types/workspace";
 import { IPlanId } from "../types/user";
 import userService from "./user-service";
@@ -150,6 +153,73 @@ class WorkspaceService {
         }
       }
     }
+  }
+
+  async updateEmailInsightSubscriptions({
+    wid,
+    insightType,
+    memberEmail,
+    enabled,
+  }: {
+    wid: string;
+    insightType: emailSubscriptionType;
+    memberEmail: string;
+    enabled: boolean;
+  }) {
+    const workspaceRef = doc(db, `workspaces/${wid}`);
+    const memberRef = doc(db, `workspaces/${wid}/members/${memberEmail}`);
+    const updatedAt = new Date().toISOString();
+
+    await runTransaction(db, async (transaction) => {
+      const workspaceSnap = await transaction.get(workspaceRef);
+      if (!workspaceSnap.exists()) {
+        throw new Error("Workspace not found");
+      }
+
+      const workspaceData = workspaceSnap.data() as IWorkspace & {
+        emailInsightSubscriptions?: Partial<
+          Record<emailSubscriptionType, string[]>
+        >;
+      };
+
+      const mergedSubscriptions =
+        workspaceData.emailSubscriptions ??
+        workspaceData.emailInsightSubscriptions ??
+        {};
+
+      const currentMembers = mergedSubscriptions[insightType] ?? [];
+      const nextMembers = enabled
+        ? Array.from(new Set([...currentMembers, memberEmail]))
+        : currentMembers.filter((email) => email !== memberEmail);
+
+      const nextEmailSubscriptions = {
+        ...mergedSubscriptions,
+        [insightType]: nextMembers,
+      };
+
+      transaction.update(workspaceRef, {
+        emailSubscriptions: nextEmailSubscriptions,
+        emailInsightSubscriptions: deleteField(),
+        updatedAt,
+      });
+
+      const memberSnap = await transaction.get(memberRef);
+      const existingMemberSubscriptions =
+        (memberSnap.data()?.insightSubscriptions as emailSubscriptionType[]) ??
+        [];
+
+      const nextMemberSubscriptions = enabled
+        ? Array.from(new Set([...existingMemberSubscriptions, insightType]))
+        : existingMemberSubscriptions.filter(
+            (subscription) => subscription !== insightType,
+          );
+
+      transaction.set(
+        memberRef,
+        { insightSubscriptions: nextMemberSubscriptions },
+        { merge: true },
+      );
+    });
   }
 
   async addDomainToWorkspace({ wid, domain }: { wid: string; domain: string }) {
