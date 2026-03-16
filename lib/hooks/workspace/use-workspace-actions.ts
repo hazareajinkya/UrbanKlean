@@ -29,8 +29,8 @@ export const useWorkspaceActions = () => {
     onError: handleError,
   });
 
-  const updateEmailInsightSubscriptions = useMutation({
-    mutationFn: workspaceService.updateEmailInsightSubscriptions,
+  const updateEmailSubscriptions = useMutation({
+    mutationFn: workspaceService.updateEmailSubscriptions,
 
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
@@ -88,7 +88,7 @@ export const useWorkspaceActions = () => {
   return {
     createWorkspace,
     updateWorkspace,
-    updateEmailInsightSubscriptions,
+    updateEmailSubscriptions,
     addWorkspaceDomain,
     removeWorkspaceDomain,
     deleteWorkspace,

@@ -11,7 +11,7 @@ export interface IMember {
   joinedAt?: string;
   invitationToken?: string;
   expiresAt?: string;
-  insightSubscriptions?: emailSubscriptionType[];
+  emailSubscriptions?: emailSubscriptionType[];
 }
 
 export interface IInvitationRequest {

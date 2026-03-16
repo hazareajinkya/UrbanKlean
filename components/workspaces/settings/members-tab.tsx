@@ -63,7 +63,7 @@ export default function MembersPage() {
   const { data: members = [], isLoading } = useMembers(wid);
   const { inviteMember, updateMemberRole, removeMember, resendInvitation } =
     useMemberActions();
-  const { updateEmailInsightSubscriptions } = useWorkspaceActions();
+  const { updateEmailSubscriptions } = useWorkspaceActions();
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("member");
@@ -88,7 +88,7 @@ export default function MembersPage() {
     (member) => member.email === selectedInsightMemberEmail,
   );
   const isInsightTogglePending =
-    updateEmailInsightSubscriptions.isPending &&
+    updateEmailSubscriptions.isPending &&
     pendingInsightMemberEmail === selectedInsightMemberEmail;
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function MembersPage() {
       members.forEach((member) => {
         const overrideValue = currentOverrides[member.email];
         if (overrideValue === undefined) return;
-        const actualValue = member.insightSubscriptions?.includes("daily");
+        const actualValue = member.emailSubscriptions?.includes("daily");
         if ((actualValue ?? false) === overrideValue) {
           delete nextOverrides[member.email];
           hasUpdates = true;
@@ -192,7 +192,7 @@ export default function MembersPage() {
     }));
 
     try {
-      await updateEmailInsightSubscriptions.mutateAsync({
+      await updateEmailSubscriptions.mutateAsync({
         wid,
         insightType: "daily",
         memberEmail: selectedInsightMemberEmail,
@@ -220,7 +220,7 @@ export default function MembersPage() {
     const member = members.find((item) => item.email === memberEmail);
     const overrideValue = optimisticInsightSubscriptions[memberEmail];
     if (overrideValue !== undefined) return overrideValue;
-    return member?.insightSubscriptions?.includes("daily") ?? false;
+    return member?.emailSubscriptions?.includes("daily") ?? false;
   };
 
   const activeMembers = members
