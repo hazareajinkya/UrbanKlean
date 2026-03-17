@@ -32,7 +32,7 @@ import {
   UserMinus,
   Plus,
   XIcon,
-  RefreshCcw,
+  Redo,
   Users,
   User,
   Trash,
@@ -373,9 +373,9 @@ export default function MembersPage() {
                         size="sm"
                         className="text-xs text-muted-foreground hover:text-foreground"
                         onClick={() => handleOpenInsightModal(member.email)}
-                        aria-label={`Subscribe ${member.email} to insights`}
+                        aria-label={`Manage reporting for ${member.email}`}
                       >
-                        Subscribe to insights
+                        Manage Reporting
                       </Button>
                     ) : (
                       <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">
@@ -414,6 +414,7 @@ export default function MembersPage() {
                                 handleUpdateRole(member.email, newRole);
                               }}
                             >
+                              <PencilLine className="w-4 h-4 mr-2" />
                               Change Role
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -488,9 +489,9 @@ export default function MembersPage() {
                               }
                             >
                               {resendInvitation.isPending ? (
-                                <Loader className="w-4 h-4 animate-spin" />
+                                <Loader className="w-4 h-4 animate-spin mr-2" />
                               ) : (
-                                <RefreshCcw className="w-4 h-4" />
+                                <Redo className="w-4 h-4 mr-2" />
                               )}
                               Resend Invitation
                             </DropdownMenuItem>
@@ -570,14 +571,14 @@ export default function MembersPage() {
             size="sm"
             className="absolute right-0 top-0"
             onClick={handleCloseInsightModal}
-            aria-label="Close email insights modal"
+            aria-label="Close manage reporting modal"
           >
             <XIcon className="h-4 w-4" />
           </Button>
-          <div className="space-y-1">
-            <h2 className="text-lg">Email insights</h2>
+          <div className="space-y-0.5">
+            <h2 className="text-">Manage Reporting</h2>
             <p className="text-sm text-muted-foreground">
-              Manage insight subscriptions for{" "}
+              Manage report subscriptions for{" "}
               {selectedInsightMember?.user?.name ||
                 selectedInsightMember?.email ||
                 "member"}
@@ -588,7 +589,7 @@ export default function MembersPage() {
           <div className="border rounded-lg divide-y">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="space-y-1">
-                <div className="text-sm">Daily insights</div>
+                <div className="text-sm">Daily reports</div>
                 <div className="text-xs text-muted-foreground">
                   A short daily summary delivered by email.
                 </div>
@@ -604,21 +605,11 @@ export default function MembersPage() {
                       : false
                   }
                   onCheckedChange={handleToggleDailyInsights}
-                  aria-label="Toggle daily insights subscription"
+                  aria-label="Toggle daily reports subscription"
                   disabled={isInsightTogglePending}
                 />
               </div>
             </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              variant="ghost"
-              onClick={handleCloseInsightModal}
-              aria-label="Close email insights modal"
-            >
-              Close
-            </Button>
           </div>
         </div>
       </Modal>

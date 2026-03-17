@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, subDays } from "date-fns";
+import { exportUsageData } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useSubscriptionActions } from "@/lib/hooks/subscription/use-subscription-actions";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -668,54 +669,6 @@ export default function BillingPage() {
     </>
   );
 }
-
-const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
-  if (!usageData || usageData.length === 0) return;
-
-  const headers = [
-    "Date",
-    "Event Type",
-    "Model",
-    "Token Usage",
-    "Amount",
-    "Agent ID",
-    "Session ID",
-  ];
-
-  const csvContent = [
-    headers.join(","),
-    ...usageData.map((usage) =>
-      [
-        `"${formatDateTime(usage.createdAt)}"`,
-        `"${usage.eventType}"`,
-        `"${usage.metadata?.model || "N/A"}"`,
-        usage.metadata?.tokenUsage.toLocaleString() || "0",
-        usage.amount,
-        `"${usage.aid}"`,
-        `"${usage.sessionId}"`,
-      ].join(","),
-    ),
-  ].join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-
-  const dateStr = dateRange?.from
-    ? dateRange.to
-      ? `${format(dateRange.from, "yyyy-MM-dd")}-to-${format(
-          dateRange.to,
-          "yyyy-MM-dd",
-        )}`
-      : `${format(dateRange.from, "yyyy-MM-dd")}`
-    : "all_time";
-
-  link.setAttribute("download", `usage-history-${dateStr}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
 
 function getSubscriptionTitle(args: {
   hasActiveSubscription: boolean;

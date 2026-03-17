@@ -74,7 +74,7 @@ export const CreditIndicator = () => {
 
   const handleBuyMore = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push("/pricing");
+    router.push("/pricing#extra-credits");
   };
 
   const renewalDate =
@@ -181,9 +181,11 @@ export const CreditIndicator = () => {
             Buy More
           </Button>
 
-          <span className="text-xs text-muted-foreground">
-            Next renewal on: {formatDate(renewalDate)}
-          </span>
+          <div className="mt-2 text-center">
+            <p className="text-xs text-muted-foreground">
+              Renews on {formatDate(renewalDate)}
+            </p>
+          </div>
         </div>
       </HoverCardContent>
     </HoverCard>

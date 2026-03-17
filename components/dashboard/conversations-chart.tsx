@@ -186,30 +186,35 @@ export const ConversationsChart = ({
               dataKey="web"
               stackId="1"
               fill={channelColors.web}
+              radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
             />
             <Bar
               dataKey="email"
               stackId="1"
               fill={channelColors.email}
+              radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
             />
             <Bar
               dataKey="whatsapp"
               stackId="1"
               fill={channelColors.whatsapp}
+              radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
             />
             <Bar
               dataKey="messenger"
               stackId="1"
               fill={channelColors.messenger}
+              radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
             />
             <Bar
               dataKey="instagram"
               stackId="1"
               fill={channelColors.instagram}
+              radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
             />
             <Bar

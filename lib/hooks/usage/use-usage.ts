@@ -4,11 +4,29 @@ import { useCurrentUser } from "../user/use-user";
 
 export const globalUsageKey = ["usage"];
 export const usageKey = (wid: string) => ["usage", wid];
+export const usageByDateKey = (
+  wid: string,
+  dateRange?: { from?: Date; to?: Date },
+) => ["usage", wid, dateRange?.from?.toISOString(), dateRange?.to?.toISOString()];
 
 export const useUsage = (wid: string) => {
   return useQuery({
     queryKey: usageKey(wid),
     queryFn: () => usageService.getUsage(wid),
+    enabled: !!wid,
+  });
+};
+
+export const useWorkspaceUsage = (
+  wid: string,
+  dateRange?: { from?: Date; to?: Date },
+) => {
+  return useQuery({
+    queryKey: usageByDateKey(wid, dateRange),
+    queryFn: () =>
+      dateRange?.from
+        ? usageService.getUsageByDateRange(wid, dateRange)
+        : usageService.getUsage(wid),
     enabled: !!wid,
   });
 };

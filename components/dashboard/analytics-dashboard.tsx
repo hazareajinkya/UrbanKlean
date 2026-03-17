@@ -109,12 +109,12 @@ export const AnalyticsDashboard = ({
   }, [displaySummary.resolution, displaySummary.totalClosedConversations]);
 
   return (
-    <div className="space-y-5 w-full">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-medium">AI Overview</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h1 className="text-xl">AI Overview</h1>
+          <p className="text-sm text-muted-foreground">
             AI analytics and insights for your workspace
           </p>
         </div>

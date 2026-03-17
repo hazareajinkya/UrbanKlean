@@ -68,4 +68,3 @@ export const StatCard = ({
     </motion.div>
   );
 };
-

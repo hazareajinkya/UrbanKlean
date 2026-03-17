@@ -47,7 +47,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
   const chartConfig = {
     positive: {
       label: "Positive",
-      color: "hsl(152, 69%, 41%)",
+      color: "hsl(142, 76%, 36%)",
     },
     neutral: {
       label: "Neutral",
@@ -55,7 +55,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
     },
     negative: {
       label: "Negative",
-      color: "hsl(4, 90%, 58%)",
+      color: "hsl(0, 72%, 51%)",
     },
   };
 
@@ -80,7 +80,8 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
       label: "Positive",
       value: sentiment.positive,
       percentage: total > 0 ? (sentiment.positive / total) * 100 : 0,
-      color: "hsl(152, 69%, 41%)",
+      color: "hsl(142, 76%, 36%)",
+      bgColor: "bg-green-600/10",
       icon: Smile,
       trendIcon: TrendingUp,
     },
@@ -89,6 +90,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
       value: sentiment.neutral,
       percentage: total > 0 ? (sentiment.neutral / total) * 100 : 0,
       color: "hsl(215, 16%, 57%)",
+      bgColor: "bg-slate-500/10",
       icon: Meh,
       trendIcon: Minus,
     },
@@ -96,7 +98,8 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
       label: "Negative",
       value: sentiment.negative,
       percentage: total > 0 ? (sentiment.negative / total) * 100 : 0,
-      color: "hsl(4, 90%, 58%)",
+      color: "hsl(0, 72%, 51%)",
+      bgColor: "bg-red-600/10",
       icon: Frown,
       trendIcon: TrendingDown,
     },
@@ -127,8 +130,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
                   className="flex items-center gap-3 rounded-lg p-2"
                 >
                   <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${stat.color}15` }}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${stat.bgColor}`}
                   >
                     <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
                   </div>
@@ -236,8 +238,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
                 className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
               >
                 <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: `${stat.color}15` }}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform group-hover:scale-105 ${stat.bgColor}`}
                 >
                   <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
                 </div>
