@@ -7,12 +7,11 @@ import { NextRequest } from "next/server";
 import { collection, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "./clients/firebase";
 import { IPerson } from "./types/person";
-import { IAction } from "./types/actions";
+import { IAction, IActionInput } from "./types/actions";
 import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
-import axiosClient from "./clients/axios-client";
 import axios from "axios";
 
 export function cn(...inputs: ClassValue[]) {
@@ -253,17 +252,6 @@ const getInputSchema = (inputs: IActionInput[]) =>
       : schema.describe(input.description || "").optional();
     return acc;
   }, {});
-
-export const getCustomTools = (actions: IAction[]): ToolSet =>
-  actions.reduce((acc, action) => {
-    acc[action.slug] = tool({
-      name: action.name,
-      description: action.description,
-      inputSchema: z.object(getInputSchema(action.inputs)),
-      execute: async (params) => executeAPIAction(action, params),
-    });
-    return acc;
-  }, {} as ToolSet);
 
 export const generateForwardingEmail = () => {
   const prefix = "magical";

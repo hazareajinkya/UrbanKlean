@@ -32,6 +32,7 @@ import { openai } from "@ai-sdk/openai";
 import z from "zod";
 import { emailNeedToReplyPrompt } from "@/prompts/email-need-to-replay-prompt";
 import { google } from "@ai-sdk/google";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 const shouldReplyDecisionSchema = z.object({
   shouldReply: z.boolean().describe("Whether the email requires a reply "),

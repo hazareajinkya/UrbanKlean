@@ -148,7 +148,7 @@ export default function ConnectAppModal({
         closeModal={handleClose}
         className="max-w-md rounded-2xl overflow-hidden p-0 bg-gradient-to-t from-gray-200 via-gray-100 to-white dark:from-gray-800 dark:via-gray-900 dark:to-black"
       >
-        <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
           <button
             onClick={handleClose}
             className="absolute right-4 top-4 z-50 p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground"
