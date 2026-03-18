@@ -129,6 +129,8 @@ class PostmarkBotService {
         workflows,
         channel,
         personId: session.personId,
+        name: postmarkMsg.fromName,
+        email: personEmail,
       });
       const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
