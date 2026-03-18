@@ -5,8 +5,8 @@ import { IWAMessage } from "@/lib/types/wa-api";
 import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import channelService from "@/lib/services/channel-service";
-import axios from "axios";
-// Function to send a text message
+import { AxiosError } from "axios";
+
 export const maxDuration = 60;
 
 const logWebhook = (message: string, data?: unknown) => {
@@ -15,25 +15,26 @@ const logWebhook = (message: string, data?: unknown) => {
 };
 
 const logWebhookError = (error: unknown, context: string) => {
-  if (axios.isAxiosError(error)) {
-    console.error(`[wa-webhook] ${context} - axios error`, {
+  if (error instanceof AxiosError) {
+    console.error(`[wa-webhook] ${context} - axios:`, JSON.stringify({
       message: error.message,
       code: error.code,
       method: error.config?.method,
       url: error.config?.url,
       status: error.response?.status,
-      response: error.response?.data,
-    });
+      responseData: error.response?.data,
+    }));
     return;
   }
   if (error instanceof Error) {
-    console.error(`[wa-webhook] ${context} - error`, {
-      message: error.message,
-      stack: error.stack,
-    });
+    console.error(`[wa-webhook] ${context}:`, error.message, error.stack ?? "");
     return;
   }
-  console.error(`[wa-webhook] ${context} - unknown`, error);
+  try {
+    console.error(`[wa-webhook] ${context}:`, typeof error === "object" ? JSON.stringify(error) : String(error));
+  } catch {
+    console.error(`[wa-webhook] ${context}:`, String(error));
+  }
 };
 
 export async function POST(req: Request) {
@@ -96,11 +97,15 @@ export async function POST(req: Request) {
       logWebhook("incoming user query", { msgType, query, phoneNumberId });
       logWebhook("parsed whatsapp payload", parsed);
 
-      await waService.sendTypingIndicator({
-        messageId: parsed.msg.id,
-        phoneId,
-        accessToken: channel.credentials.access_token,
-      });
+      try {
+        await waService.sendTypingIndicator({
+          messageId: parsed.msg.id,
+          phoneId,
+          accessToken: channel.credentials.access_token,
+        });
+      } catch (error) {
+        logWebhookError(error, "send typing indicator failed");
+      }
 
       const { success, message: ans } = await waBotService.generateResponse({
         waMsg: parsed.msg,

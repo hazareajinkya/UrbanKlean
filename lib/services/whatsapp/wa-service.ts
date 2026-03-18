@@ -256,28 +256,31 @@ class WaService {
         client_id: string;
         client_secret: string;
         code: string;
-        grant_type: string;
+        grant_type?: string;
         redirect_uri?: string;
       } = {
         client_id: waconf.appId,
         client_secret: waconf.appSecret,
         code: authorizationCode,
-        grant_type: "authorization_code",
+        // grant_type: "authorization_code",
       };
 
-      // if (waconf.redirectUri) {
-      //   tokenPayload.redirect_uri = waconf.redirectUri;
-      // }
+      //new code
 
-      const tokenResponse = await waClient.post(
-        `/oauth/access_token`,
-        tokenPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const tokenResponse = await waClient.get(`/oauth/access_token`, {
+        params: tokenPayload,
+      });
+
+      //previous code
+      // const tokenResponse = await waClient.post(
+      //   `/oauth/access_token`,
+      //   tokenPayload,
+      //   {
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //   },
+      // );
 
       return tokenResponse.data as {
         access_token: string;
