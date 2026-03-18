@@ -1,3 +1,4 @@
+import type { emailSubscriptionType } from "./workspace";
 export type MemberRole = "owner" | "admin" | "member";
 export type MemberStatus = "pending" | "accepted";
 
@@ -10,6 +11,7 @@ export interface IMember {
   joinedAt?: string;
   invitationToken?: string;
   expiresAt?: string;
+  emailSubscriptions?: emailSubscriptionType[];
 }
 
 export interface IInvitationRequest {
@@ -46,7 +48,7 @@ export const canDeleteWorkspace = (role: MemberRole): boolean => {
 
 export const canChangeRole = (
   userRole: MemberRole,
-  targetRole: MemberRole
+  targetRole: MemberRole,
 ): boolean => {
   // Only owners can change roles, and they can't change their own role
   return userRole === "owner" && targetRole !== "owner";
@@ -54,7 +56,7 @@ export const canChangeRole = (
 
 export const canRemoveMember = (
   userRole: MemberRole,
-  targetRole: MemberRole
+  targetRole: MemberRole,
 ): boolean => {
   // Users can only remove members with lower or equal hierarchy
   return ROLE_HIERARCHY[userRole] > ROLE_HIERARCHY[targetRole];

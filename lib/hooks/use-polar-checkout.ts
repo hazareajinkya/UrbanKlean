@@ -3,11 +3,14 @@ import { useCurrentUser } from "./user/use-user";
 import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
+import datafastService from "@/lib/services/datafast-service";
 
 interface CheckoutOptions {
-  planId: "growth" | "scale";
+  planId: "all_in_one" | "lifetime";
   tier: number;
+  billingCycle?: "monthly" | "annually" | "lifetime";
+  lifetimePrice?: number;
 }
 
 interface CreateCheckoutResponse {
@@ -28,6 +31,8 @@ export const usePolarCheckout = () => {
       }>("/api/payments/polar/create-checkout", {
         planId: options.planId,
         tier: options.tier,
+        billingCycle: options.billingCycle,
+        lifetimePrice: options.lifetimePrice,
         userId: user?.id,
         userEmail: user?.email,
       });
@@ -35,33 +40,51 @@ export const usePolarCheckout = () => {
     },
   });
 
-  const initiateCheckout = async ({ planId, tier }: CheckoutOptions) => {
+  const initiateCheckout = async ({
+    planId,
+    tier,
+    billingCycle,
+    lifetimePrice,
+  }: CheckoutOptions) => {
     // Check authentication
     if (isLoading) {
       return;
     }
 
     if (!user?.email) {
-      const returnUrl = `/pricing`;
+      const returnUrl = `/pricing?plan=${planId}&tier=${tier}&billingCycle=${billingCycle}`;
+      datafastService.trackGoal("checkout_auth_redirected", {
+        provider: "polar",
+        plan_id: planId,
+      });
       router.push(`/auth?callbackUrl=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
-    const subscriptionStatus = user.subscription?.status;
-    const hasActiveSubscription =
-      subscriptionStatus &&
-      subscriptionStatus !== "canceled" &&
-      subscriptionStatus !== "past_due";
+    // Check for existing subscription (skip for lifetime if user already has lifetime)
+    if (billingCycle !== "lifetime") {
+      const subscriptionStatus = user.subscription?.status;
+      const hasActiveSubscription =
+        subscriptionStatus &&
+        subscriptionStatus !== "canceled" &&
+        subscriptionStatus !== "past_due";
 
-    if (hasActiveSubscription) {
-      toast.error(
-        "You already have an active subscription. Please cancel your current subscription before purchasing a new one."
-      );
-      return;
+      if (hasActiveSubscription) {
+        toast.error(
+          "You already have an active subscription. Please cancel your current subscription before purchasing a new one.",
+        );
+        return;
+      }
+    } else {
+      // For lifetime, check if user already has lifetime access
+      if (user.subscription?.planId === "lifetime") {
+        toast.error("You already have lifetime access to MagicalCX.");
+        return;
+      }
     }
 
     // Get plan data
-    const plan = PLANS[planId];
+    const plan = PLANS[planId as keyof typeof PLANS];
     if (!plan) {
       const errorMessage = `Plan ${planId} not found`;
       console.error(errorMessage);
@@ -69,7 +92,11 @@ export const usePolarCheckout = () => {
       return;
     }
 
-    const tierData = plan.tiers.find((t) => t.messages === tier);
+    const tierData = plan.tiers.find(
+      (t) =>
+        t.messages === tier &&
+        (!billingCycle || t.billingCycle === billingCycle),
+    );
     if (!tierData?.priceIds.polar) {
       const errorMessage = `Polar Product ID not found for ${planId} tier ${tier}`;
       console.error(errorMessage);
@@ -82,6 +109,12 @@ export const usePolarCheckout = () => {
       const { checkoutUrl } = await createCheckoutMutation.mutateAsync({
         planId,
         tier,
+        billingCycle,
+        lifetimePrice,
+      } as any);
+      datafastService.trackGoal("checkout_session_created", {
+        provider: "polar",
+        plan_id: planId,
       });
 
       // Redirect to Polar checkout
@@ -91,6 +124,10 @@ export const usePolarCheckout = () => {
         throw new Error("No checkout URL received");
       }
     } catch (error) {
+      datafastService.trackGoal("checkout_session_failed", {
+        provider: "polar",
+        plan_id: planId,
+      });
       const errorMessage =
         error instanceof Error
           ? error.message

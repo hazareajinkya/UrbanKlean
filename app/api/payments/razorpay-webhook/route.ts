@@ -26,6 +26,27 @@ export async function POST(req: NextRequest) {
 
     const eventType = event.event;
 
+    // console.log("event: ", event);
+
+    console.log("Razorpay webhook event:", {
+      eventType,
+      paymentNotes: event.payload?.payment?.entity?.notes,
+    });
+
+    if (eventType === "payment.captured") {
+      const paymentData = event.payload?.payment?.entity;
+      if (paymentData?.notes?.type === "credit_purchase") {
+        await handleCreditPurchase(paymentData);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+      if (paymentData?.notes?.type === "lifetime_purchase") {
+        await handleLifetimePurchase(paymentData);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+    }
+
+    console.warn(eventType, ": ", eventType);
+
     const subscriptionData = event.payload?.subscription
       ?.entity as RazorpaySubscriptionData;
 
@@ -111,4 +132,30 @@ async function handleSubscriptionPaused(data: RazorpaySubscriptionData) {
 
 async function handleSubscriptionResumed(data: RazorpaySubscriptionData) {
   await paymentService.handleRazorpaySubscriptionResumed(data);
+}
+
+async function handleCreditPurchase(paymentData: any) {
+  const notes = paymentData.notes || {};
+  if (notes.type === "credit_purchase") {
+    await paymentService.handleRazorpayCreditPurchase({
+      paymentId: paymentData.id,
+      orderId: paymentData.order_id,
+      amount: paymentData.amount,
+      currency: paymentData.currency,
+      notes: notes as Record<string, string>,
+    });
+  }
+}
+
+async function handleLifetimePurchase(paymentData: any) {
+  const notes = paymentData.notes || {};
+  if (notes.type === "lifetime_purchase") {
+    await paymentService.handleRazorpayLifetimePurchase({
+      paymentId: paymentData.id,
+      orderId: paymentData.order_id,
+      amount: paymentData.amount,
+      currency: paymentData.currency,
+      notes: notes as Record<string, string>,
+    });
+  }
 }

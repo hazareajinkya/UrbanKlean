@@ -4,18 +4,20 @@ import { tracingChannel } from "diagnostics_channel";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuid } from "uuid";
 import { OnboardingData } from "@/lib/types/onboarding";
-import { backendconf } from "../utils/conf";
+
 
 
 class OnboardingService {
-  async generateCompanyInfo({ url }: { url: string }) {
+  async generateCompanyInfo({ url, email }: { url: string, email?: string }) {
     try {
       const response = await apiClient.post("/api/onboarding/generate-info", {
         url,
+        email,
       });
       return response.data;
     } catch (error) {
       console.log("error: ", error);
+      throw error;
     }
   }
 

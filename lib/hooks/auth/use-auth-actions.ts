@@ -50,7 +50,7 @@ export const useAuthActions = () => {
     },
     onSuccess: (data) => {
       toast.success("Signed in successfully");
-      nextAuthSignIn(data);
+      nextAuthSignIn(data, "/workspaces");
     },
     onError: handleError,
   });
@@ -72,9 +72,9 @@ export const useAuthActions = () => {
   };
 };
 
-const nextAuthSignIn = async (user: IUser) => {
+const nextAuthSignIn = async (user: IUser, callbackURL?: string) => {
+  let callbackUrl = callbackURL;
   const url = window.location.href.split("callbackUrl=");
-  let callbackUrl;
   if (url.length > 1) {
     callbackUrl = decodeURIComponent(url[1]);
   }
@@ -107,11 +107,7 @@ const sendSignInEmail = async (email: string) => {
 };
 
 const verifySignInLink = async () => {
-  const email2 = window.localStorage.getItem("emailForSignIn");
-  console.log("email2: ", email2);
-
   const email = window.localStorage.getItem("emailForSignIn");
-  console.log("email: ", email);
 
   if (!email) {
     throw new Error("No email found");
@@ -122,7 +118,6 @@ const verifySignInLink = async () => {
   if (!isLinkValid) {
     throw new Error("Invalid sign in link");
   }
-
   const result = await signInWithEmailLink(auth, email, window.location.href);
   console.log("result: ", result);
 

@@ -109,13 +109,13 @@ export const AnalyticsDashboard = ({
   }, [displaySummary.resolution, displaySummary.totalClosedConversations]);
 
   return (
-    <div className="space-y-5 w-full">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-medium">Dashboard</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Analytics and insights for your workspace
+          <h1 className="text-xl">AI Overview</h1>
+          <p className="text-sm text-muted-foreground">
+            AI analytics and insights for your workspace
           </p>
         </div>
         {displaySummary.lastUpdated && (
@@ -138,16 +138,15 @@ export const AnalyticsDashboard = ({
           formatValue={formatNumber}
         />
         <StatCard
-          title="Closed Conversations"
-          value={displaySummary.totalClosedConversations}
-          icon={CheckCircle2}
-          formatValue={formatNumber}
+          title="Resolution Rate"
+          value={`${resolutionRate}%`}
+          icon={TrendingUp}
         />
         <StatCard
-          title="Credits Used"
-          value={displaySummary.totalCreditsUsed}
-          icon={Coins}
-          formatValue={formatNumber}
+          title="Avg Cost / Conv"
+          value={displaySummary.avgCostPerConversation}
+          icon={DollarSign}
+          formatValue={formatCurrency}
         />
         <StatCard
           title="Total Cost"
@@ -176,15 +175,16 @@ export const AnalyticsDashboard = ({
       {/* Key Metrics */}
       <div className="grid gap-3 grid-cols-3">
         <StatCard
-          title="Resolution Rate"
-          value={`${resolutionRate}%`}
-          icon={TrendingUp}
+          title="Closed Conversations"
+          value={displaySummary.totalClosedConversations}
+          icon={CheckCircle2}
+          formatValue={formatNumber}
         />
         <StatCard
-          title="Avg Cost / Conv"
-          value={displaySummary.avgCostPerConversation}
-          icon={DollarSign}
-          formatValue={formatCurrency}
+          title="Credits Used"
+          value={displaySummary.totalCreditsUsed}
+          icon={Coins}
+          formatValue={formatNumber}
         />
         <StatCard
           title="Avg Credits / Conv"

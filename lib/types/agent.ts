@@ -33,7 +33,7 @@ export interface IAgentChatCustomization {
 export const generateDefaultAgent = (
   wid: string,
   name: string,
-  workspace: IWorkspace
+  workspace: IWorkspace,
 ): IAgent => {
   const id = v4();
   return {
@@ -54,10 +54,9 @@ export const generateDefaultAgent = (
     },
     settings: {
       temperature: 0.5,
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
-
         ` 
         ${workspace.oneLiner}
         Description: ${workspace.info.description}
@@ -69,7 +68,7 @@ export const generateDefaultAgent = (
         Offerings: ${workspace.info.offerings}
         Differentiators: ${workspace.info.differentiators}
 
-        `
+        `,
       ),
     },
 

@@ -39,6 +39,8 @@ export async function GET(
         primaryColor: agent.customization.primaryColor,
         name: agent.customization.name,
         botIcon: agent.customization.botIcon,
+        starterMessagesEnabled: agent.customization.starterMessagesEnabled,
+        starterMessages: agent.customization.starterMessages,
       },
     };
 

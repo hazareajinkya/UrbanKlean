@@ -34,13 +34,23 @@ export async function POST(req: NextRequest) {
       throw error;
     }
 
-    console.log("Polar webhook event received:", {
-      eventType: event.type,
-      timestamp: event.timestamp,
-    });
-
     const eventType = event.type;
     const eventData = event.data;
+
+    console.log("eventType: ", eventType);
+
+    if (eventType === "order.paid") {
+      const metadata = (eventData as any)?.metadata || {};
+
+      if (metadata.type === "credit_purchase") {
+        await handleCreditPurchase(eventData as any);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+      if (metadata.type === "lifetime_purchase") {
+        await handleLifetimePurchase(eventData as any);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+    }
 
     const subscriptionData = mapSubscriptionToPolarData(eventData as any);
 
@@ -128,5 +138,25 @@ async function handleSubscriptionCanceled(
 async function handleSubscriptionRevoked(
   subscriptionData: PolarSubscriptionData
 ) {
-  await handleSubscriptionCanceled(subscriptionData);
+  await paymentService.handlePolarSubscriptionRevoked(subscriptionData);
+}
+
+async function handleCreditPurchase(checkoutData: any) {
+  const metadata = checkoutData.metadata || {};
+  if (metadata.type === "credit_purchase" && checkoutData.status === "paid") {
+    await paymentService.handlePolarCreditPurchase({
+      checkoutId: checkoutData.id,
+      metadata: metadata as Record<string, string | number | boolean>,
+    });
+  }
+}
+
+async function handleLifetimePurchase(checkoutData: any) {
+  const metadata = checkoutData.metadata || {};
+  if (metadata.type === "lifetime_purchase") {
+    await paymentService.handlePolarLifetimePurchase({
+      checkoutId: checkoutData.id,
+      metadata: metadata as Record<string, string | number | boolean>,
+    });
+  }
 }

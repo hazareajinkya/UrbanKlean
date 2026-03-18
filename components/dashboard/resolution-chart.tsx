@@ -2,9 +2,18 @@
 
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, Label } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle, XCircle, ArrowUpCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  ArrowUpCircle,
+} from "lucide-react";
 
 interface ResolutionChartProps {
   resolution: {
@@ -38,7 +47,9 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       {
         name: "Partially Resolved",
         value: resolution["partially-resolved"],
-        percentage: ((resolution["partially-resolved"] / total) * 100).toFixed(1),
+        percentage: ((resolution["partially-resolved"] / total) * 100).toFixed(
+          1,
+        ),
         colorKey: "partially-resolved",
       },
       {
@@ -59,19 +70,19 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
   const chartConfig = {
     resolved: {
       label: "Resolved",
-      color: "hsl(152, 69%, 41%)",
+      color: "hsl(142, 76%, 36%)",
     },
     "partially-resolved": {
       label: "Partially Resolved",
-      color: "hsl(38, 92%, 50%)",
+      color: "hsl(45, 93%, 40%)",
     },
     unresolved: {
       label: "Unresolved",
-      color: "hsl(4, 90%, 58%)",
+      color: "hsl(0, 72%, 51%)",
     },
     escalated: {
       label: "Escalated",
-      color: "hsl(258, 90%, 66%)",
+      color: "hsl(262, 83%, 50%)",
     },
   };
 
@@ -85,32 +96,33 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       label: "Resolved",
       value: resolution.resolved,
       percentage: total > 0 ? (resolution.resolved / total) * 100 : 0,
-      color: "hsl(152, 69%, 41%)",
-      bgColor: "bg-emerald-500/10",
+      color: "hsl(142, 76%, 36%)",
+      bgColor: "bg-green-600/10",
       icon: CheckCircle2,
     },
     {
       label: "Partial",
       value: resolution["partially-resolved"],
-      percentage: total > 0 ? (resolution["partially-resolved"] / total) * 100 : 0,
-      color: "hsl(38, 92%, 50%)",
-      bgColor: "bg-amber-500/10",
+      percentage:
+        total > 0 ? (resolution["partially-resolved"] / total) * 100 : 0,
+      color: "hsl(45, 93%, 40%)",
+      bgColor: "bg-yellow-600/10",
       icon: AlertCircle,
     },
     {
       label: "Unresolved",
       value: resolution.unresolved,
       percentage: total > 0 ? (resolution.unresolved / total) * 100 : 0,
-      color: "hsl(4, 90%, 58%)",
-      bgColor: "bg-red-500/10",
+      color: "hsl(0, 72%, 51%)",
+      bgColor: "bg-red-600/10",
       icon: XCircle,
     },
     {
       label: "Escalated",
       value: resolution.escalated,
       percentage: total > 0 ? (resolution.escalated / total) * 100 : 0,
-      color: "hsl(258, 90%, 66%)",
-      bgColor: "bg-violet-500/10",
+      color: "hsl(262, 83%, 50%)",
+      bgColor: "bg-purple-600/10",
       icon: ArrowUpCircle,
     },
   ];
@@ -136,7 +148,9 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
                         className="h-3 w-3 shrink-0"
                         style={{ color: stat.color }}
                       />
-                      <span className="text-xs text-muted-foreground">{stat.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {stat.label}
+                      </span>
                     </div>
                     <span className="text-xs font-medium tabular-nums">0</span>
                   </div>
@@ -164,14 +178,20 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
         <div className="flex items-center gap-4">
           {/* Donut Chart with Center Label */}
           <div className="relative shrink-0">
-            <ChartContainer config={chartConfig} className="h-[140px] w-[140px]">
+            <ChartContainer
+              config={chartConfig}
+              className="h-[140px] w-[140px]"
+            >
               <PieChart>
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
                       formatter={(value, name, props) => {
                         const percentage = props.payload?.percentage || "0";
-                        return [`${value} (${percentage}%)`, props.payload?.name || name];
+                        return [
+                          `${value} (${percentage}%)`,
+                          props.payload?.name || name,
+                        ];
                       }}
                     />
                   }
@@ -239,9 +259,13 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
                       className="h-3 w-3 shrink-0 transition-transform group-hover:scale-110"
                       style={{ color: stat.color }}
                     />
-                    <span className="text-xs text-muted-foreground">{stat.label}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {stat.label}
+                    </span>
                   </div>
-                  <span className="text-xs font-medium tabular-nums">{stat.value}</span>
+                  <span className="text-xs font-medium tabular-nums">
+                    {stat.value}
+                  </span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                   <div

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { useDemoModal } from "./demo-modal";
+import datafastService from "@/lib/services/datafast-service";
 
 const checklistItems = [
   "No credit card required",
@@ -16,6 +17,10 @@ const checklistItems = [
 
 export const CtaSection = () => {
   const { openDemoModal } = useDemoModal();
+  const handleBookDemoClick = () => {
+    datafastService.trackGoal("cta_section_book_demo_clicked");
+    openDemoModal();
+  };
   return (
     <section className="section-container border py-24 md:py-32 bg-background overflow-hidden ">
       <div className="">
@@ -36,7 +41,7 @@ export const CtaSection = () => {
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
                 <Button
-                  onClick={openDemoModal}
+                  onClick={handleBookDemoClick}
                   size="lg"
                   className="px-8 py-6 text-base rounded-full bg-foreground text-background hover:bg-foreground/90"
                 >

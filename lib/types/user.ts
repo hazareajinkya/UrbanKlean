@@ -1,4 +1,5 @@
 import { DEFAULT_PROFILE_PIC } from "../constants";
+import { PLANS } from "../plans";
 
 export interface IUserWorkspace {
   id: string;
@@ -11,12 +12,13 @@ export interface ICreditBalance {
   purchased: number;
 }
 
+export type IPlanId = "none" | keyof typeof PLANS;
+
 export interface IUserSubscription {
   subscriptionId?: string;
   customerId?: string;
-  planId?: string;
+  planId?: IPlanId;
   tierId?: string;
-  paddlePriceId?: string;
   razorpayPlanId?: string;
   polarSubscriptionId?: string;
   status?: "active" | "canceled" | "past_due" | "paused" | "trialing";
@@ -26,6 +28,7 @@ export interface IUserSubscription {
   startedAt?: string;
   renewsAt?: string;
   canceledAt?: string;
+  canceledAtPeriodEnd?: boolean;
   lastPaymentAt?: string;
   nextPaymentAt?: string;
 }

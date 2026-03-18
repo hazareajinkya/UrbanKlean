@@ -1,137 +1,247 @@
-export const MESSAGE_TIERS = [
-  5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 50000,
-] as const;
+import { plansConf } from "./utils/conf";
 
 export const PLANS = {
-  growth: {
-    id: "growth",
-    name: "Growth",
-    description: "Perfect for growing brands getting started with MagicalCX.",
-    maxMessages: 10000, // Growth caps at 10K
+  all_in_one: {
+    id: "all_in_one",
+    name: "All in One",
+    description:
+      "Everything you need to automate your customer support and boost revenue.",
+    maxMessages: 10000,
     tiers: [
       {
-        messages: 5000,
-        price: { inr: 9900, usd: 99 },
-        id: "growth_5k_monthly",
+        messages: 10000,
+        price: { inr: 13999, usd: 249 },
+        id: "all_in_one_10k_monthly",
+        billingCycle: "monthly",
         priceIds: {
-          paddle: "pri_01kc1msfdjk4hcsc9ry6tjk2kb",
-          razorpay: "plan_S0ucywKrTQyOtd",
-          polar: "42f12571-1107-4ac3-a7cb-291f0e3db87b",
+          razorpay: plansConf.allInOne.monthly.razorpayPlanId,
+          polar: plansConf.allInOne.monthly.polarProductId,
         },
       },
       {
         messages: 10000,
-        price: { inr: 14900, usd: 149 },
-        id: "growth_10k_monthly",
+        price: { inr: 119988, usd: 2388 },
+        id: "all_in_one_10k_annually",
+        billingCycle: "annually",
         priceIds: {
-          paddle: "pri_01kc1mt13cq7xs4r5k3g5mm2s2",
-          razorpay: "plan_S0udQKkiRc30OX",
-          polar: "876c54dd-f455-4eaa-adc7-660fdef9780a",
+          razorpay: plansConf.allInOne.annually.razorpayPlanId,
+          polar: plansConf.allInOne.annually.polarProductId,
         },
       },
     ],
     features: [
-      "1 AI Agent",
-      "Omnichannel Inbox",
-      "Basic Memory",
-      "Order Tracking",
-      "Basic FAQs & Policies",
-      "1 Workspace",
-      "Standard Response Model",
-      "Business Hours Controls",
+      {
+        label: "10,000 messages/month",
+        tooltip:
+          "1 message = 1 customer message or 1 AI reply. You get 10,000 per month; we notify you before you hit the limit and you can add credits anytime.",
+      },
+      {
+        label: "EFRO revenue engine",
+        tooltip: "Turns support into sales with helpful, timely upsells.",
+      },
+      {
+        label: "Unlimited AI agents",
+        tooltip:
+          "Create unlimited AI agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Conversational memory",
+        tooltip:
+          "Remembers past chats, orders, and preferences so customers never repeat themselves.",
+      },
+      {
+        label: "Unlimited AI actions",
+        tooltip:
+          "Run unlimited AI-powered actions across workflows to automate tasks and execute external API calls at scale.",
+      },
+      {
+        label: "Omnichannel inbox",
+        tooltip:
+          "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
+      },
+      {
+        label: "Integrations",
+        tooltip:
+          "Connect your existing tools and APIs to sync data, automate actions, and keep workflows in one place.",
+      },
+      {
+        label: "Workflows",
+        tooltip:
+          "Define trigger-based automation with step-by-step instructions. Run onboarding, returns, bookings, and custom API actions from natural-language triggers.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip:
+          "Website scrape, PDFs, teach mode, and vector search—train your agent your way.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "CRM",
+        tooltip:
+          "Auto-built customer profiles from every conversation—no manual data entry.",
+      },
+      {
+        label: "Identity resolution",
+        tooltip:
+          "Identifies and merges the same customer across WhatsApp, email, web, and more into one unified profile—no duplicate or fragmented records.",
+      },
+      {
+        label: "Advance analytics",
+        tooltip:
+          "Deep dashboard analytics for trends, sentiment, resolution quality, and performance insights.",
+      },
+      {
+        label: "Weekly Insights Reports",
+        tooltip:
+          "Automated weekly summaries with top questions, feature requests, pain points, and recommendations.",
+      },
+      {
+        label: "White-glove onboarding",
+        tooltip: "We help set up, train, and launch your agent fast.",
+      },
+      {
+        label: "Phishing protection",
+        tooltip:
+          "AI monitors for sensitive data requests, credential attempts, and impersonation—blocks leaks, deflects safely, and never shares protected info.",
+      },
+      {
+        label: "Dedicated success manager",
+        tooltip:
+          "A dedicated point of contact for setup, optimization, and ongoing best-practice guidance to get the most from MagicalCX.",
+      },
+      {
+        label: "10 team seats",
+        tooltip:
+          "Invite up to 10 team members with Owner, Admin, or Member roles to collaborate on conversations and settings.",
+      },
     ],
   },
-  scale: {
-    id: "scale",
-    name: "Scale",
-    description:
-      "Automation, revenue boosts, and advanced CX for teams that want to move faster.",
-    maxMessages: null, // No cap until enterprise
+  lifetime: {
+    id: "lifetime",
+    name: "Lifetime Deal",
+    description: "One-time payment for lifetime access to MagicalCX",
+    maxMessages: 10000,
     tiers: [
       {
-        messages: 5000,
-        price: { inr: 16900, usd: 169 },
-        id: "scale_5k_monthly",
-        priceIds: {
-          paddle: "pri_01kc1mv6erwkfcazcp4xw6y1e5",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
         messages: 10000,
-        price: { inr: 19900, usd: 199 },
-        id: "scale_10k_monthly",
+        price: { inr: 79999, usd: 999 },
+        id: "lifetime_10k",
+        billingCycle: "lifetime",
         priceIds: {
-          paddle: "pri_01kc1mw2vb2a27yf2bs5phshh8",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 15000,
-        price: { inr: 22900, usd: 229 },
-        id: "scale_15k_monthly",
-        priceIds: {
-          paddle: "pri_01kc1mwnfng0y9sfwqn0xmqch0",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 20000,
-        price: { inr: 25900, usd: 259 },
-        id: "scale_20k_monthly",
-        priceIds: {
-          paddle: "pri_01kc1mx7yw2m42726y49wqpzb6",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 25000,
-        price: { inr: 28900, usd: 289 },
-        id: "scale_25k_monthly",
-        priceIds: {
-          paddle: "pri_01kc1mxn498qhsb7fhway6ea5f",
-          razorpay: "",
-          polar: "",
-        },
-      },
-      {
-        messages: 30000,
-        price: { inr: 31900, usd: 319 },
-        id: "scale_30k_monthly",
-        priceIds: {
-          paddle: "pri_01kc1my82mrddwgat580shdfz9",
-          razorpay: "",
-          polar: "",
+          razorpay: null,
+          polar: plansConf.lifetime.polarProductId,
         },
       },
     ],
     features: [
-      "Everything in Growth",
-      "AI Revenue Engine (EFRO)",
-      "Automations (refunds, exchanges, cancellations)",
-      "Zero-Repetition Memory",
-      "Workflows",
-      "Deep Commerce Integrations",
-      "Priority Response Model",
-      "Insights Dashboard",
-      "Brand Guardrails",
-      "Unlimited Agents",
-      "API Access",
+      {
+        label: "10,000 messages/month",
+        tooltip:
+          "1 message = 1 customer message or 1 AI reply. You get 10,000 per month; we notify you before you hit the limit and you can add credits anytime.",
+      },
+      {
+        label: "Lifetime access",
+        tooltip: "One-time payment for lifetime access to MagicalCX.",
+      },
+      {
+        label: "EFRO revenue engine",
+        tooltip: "Turns support into sales with helpful, timely upsells.",
+      },
+      {
+        label: "Unlimited AI agents",
+        tooltip:
+          "Create unlimited AI agents for sales, support, onboarding, and more.",
+      },
+      {
+        label: "Conversational memory",
+        tooltip:
+          "Remembers past chats, orders, and preferences so customers never repeat themselves.",
+      },
+      {
+        label: "Unlimited AI actions",
+        tooltip:
+          "Run unlimited AI-powered actions across workflows to automate tasks and execute external API calls at scale.",
+      },
+      {
+        label: "Omnichannel inbox",
+        tooltip:
+          "One inbox for web, WhatsApp, Instagram, Messenger, email, and Slack.",
+      },
+      {
+        label: "Integrations",
+        tooltip:
+          "Connect your existing tools and APIs to sync data, automate actions, and keep workflows in one place.",
+      },
+      {
+        label: "Workflows",
+        tooltip:
+          "Define trigger-based automation with step-by-step instructions. Run onboarding, returns, bookings, and custom API actions from natural-language triggers.",
+      },
+      {
+        label: "Knowledge suite",
+        tooltip:
+          "Website scrape, PDFs, teach mode, and vector search—train your agent your way.",
+      },
+      {
+        label: "Human handoff + guardrails",
+        tooltip: "Escalate to humans with full context and brand-safe replies.",
+      },
+      {
+        label: "CRM",
+        tooltip:
+          "Auto-built customer profiles from every conversation—no manual data entry.",
+      },
+      {
+        label: "Identity resolution",
+        tooltip:
+          "Identifies and merges the same customer across WhatsApp, email, web, and more into one unified profile—no duplicate or fragmented records.",
+      },
+      {
+        label: "Advance analytics",
+        tooltip:
+          "Deep dashboard analytics for trends, sentiment, resolution quality, and performance insights.",
+      },
+      {
+        label: "Weekly Insights Reports",
+        tooltip:
+          "Automated weekly summaries with top questions, feature requests, pain points, and recommendations.",
+      },
+      {
+        label: "White-glove onboarding",
+        tooltip: "We help set up, train, and launch your agent fast.",
+      },
+      {
+        label: "Phishing protection",
+        tooltip:
+          "AI monitors for sensitive data requests, credential attempts, and impersonation—blocks leaks, deflects safely, and never shares protected info.",
+      },
+      {
+        label: "Dedicated success manager",
+        tooltip:
+          "A dedicated point of contact for setup, optimization, and ongoing best-practice guidance to get the most from MagicalCX.",
+      },
+      {
+        label: "10 team seats",
+        tooltip:
+          "Invite up to 10 team members with Owner, Admin, or Member roles to collaborate on conversations and settings.",
+      },
     ],
   },
 } as const;
 
-export const getPlanByPaddlePriceId = (priceId: string) => {
-  for (const [planKey, plan] of Object.entries(PLANS)) {
-    const tier = plan.tiers.find((t) => t.priceIds.paddle === priceId);
-    if (tier) return { planId: planKey, planName: plan.name, tier };
-  }
-  return null;
-};
+export const CREDIT_ADDON = {
+  id: "credit_addon",
+  name: "Message Credits",
+  messagesPerUnit: 1000,
+  price: { inr: 999, usd: 15 },
+  productId: {
+    polar: plansConf.creditAddon.polarProductId,
+    razorpay: null,
+  },
+} as const;
 
 export const getPlanByRazorpayPlanId = (razorpayPlanId: string) => {
   for (const [planKey, plan] of Object.entries(PLANS)) {
@@ -148,3 +258,5 @@ export const getPlanByPolarProductId = (polarProductId: string) => {
   }
   return null;
 };
+
+export const LIFETIME_PLAN = PLANS.lifetime;

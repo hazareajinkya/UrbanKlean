@@ -16,15 +16,18 @@ import {
   generateDefaultWorkspace,
   IWorkspace,
   IWorkspaceInfo,
+  emailSubscriptionType,
 } from "../types/workspace";
+import { IPlanId } from "../types/user";
 import userService from "./user-service";
 import agentService from "./agent-service";
-import axiosClient from "../clients/axios-client";
+import { axiosClient } from "../clients/axios-client";
 import { deleteCollection } from "../utils";
 import memberService from "./member-service";
 import { IAgent } from "../types/agent";
 import knowledgeService from "./knowledge-service";
 import folderService from "./folder-service";
+import { canCreateWorkspace } from "../utils/permissions";
 
 class WorkspaceService {
   async fetchWorkspaces(ids: string[]) {
@@ -38,7 +41,33 @@ class WorkspaceService {
   async fetchWorkspace(id: string) {
     const docRef = doc(db, `workspaces/${id}`);
     const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
     return snap.data() as IWorkspace;
+  }
+
+  async syncOwnerWorkspacesPlan({
+    ownerId,
+    planId,
+  }: {
+    ownerId: string;
+    planId: IPlanId;
+  }) {
+    if (!ownerId) return;
+    const q = query(
+      collection(db, "workspaces"),
+      where("ownerId", "==", ownerId),
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return;
+    const updatedAt = new Date().toISOString();
+    await Promise.all(
+      snapshot.docs.map((docSnap) =>
+        updateDoc(doc(db, `workspaces/${docSnap.id}`), {
+          planId,
+          updatedAt,
+        }),
+      ),
+    );
   }
 
   async createWorkspace({
@@ -54,12 +83,17 @@ class WorkspaceService {
     info?: IWorkspaceInfo;
     domains: string[];
   }) {
+    const user = await userService.getUser(ownerId);
+    if (!canCreateWorkspace(user?.subscription?.planId)) {
+      throw new Error("You don't have an active plan to create a workspace");
+    }
     const workspace = generateDefaultWorkspace();
     const wid = workspace.id;
     workspace.name = name;
     workspace.oneLiner = description;
     workspace.ownerId = ownerId;
     workspace.domains = domains;
+    workspace.planId = user?.subscription?.planId || "none";
     if (info) {
       workspace.info = info;
     }
@@ -97,7 +131,7 @@ class WorkspaceService {
 
     if (updates.name) {
       const members = await getDocs(
-        query(collection(db, `workspaces/${wid}/members`))
+        query(collection(db, `workspaces/${wid}/members`)),
       );
 
       for (const memberDoc of members.docs) {
@@ -108,7 +142,7 @@ class WorkspaceService {
           const userData = user;
           const workspaces = userData.workspaces || [];
           const updatedWorkspaces = workspaces.map((ws: any) =>
-            ws.id === wid ? { ...ws, name: updates.name } : ws
+            ws.id === wid ? { ...ws, name: updates.name } : ws,
           );
 
           await userService.updateUser(memberEmail, {
@@ -117,6 +151,34 @@ class WorkspaceService {
         }
       }
     }
+  }
+
+  async updateEmailSubscriptions({
+    wid,
+    insightType,
+    memberEmail,
+    enabled,
+  }: {
+    wid: string;
+    insightType: emailSubscriptionType;
+    memberEmail: string;
+    enabled: boolean;
+  }) {
+    const updateValue = enabled
+      ? arrayUnion(memberEmail)
+      : arrayRemove(memberEmail);
+    const insightUpdateValue = enabled
+      ? arrayUnion(insightType)
+      : arrayRemove(insightType);
+    await Promise.all([
+      updateDoc(doc(db, `workspaces/${wid}`), {
+        [`emailSubscriptions.${insightType}`]: updateValue,
+        updatedAt: new Date().toISOString(),
+      }),
+      updateDoc(doc(db, `workspaces/${wid}/members/${memberEmail}`), {
+        emailSubscriptions: insightUpdateValue,
+      }),
+    ]);
   }
 
   async addDomainToWorkspace({ wid, domain }: { wid: string; domain: string }) {
@@ -146,7 +208,7 @@ class WorkspaceService {
         const members = await memberService.fetchMembers(wid);
         if (members?.length) {
           const promises = members.map((member) =>
-            memberService.removeMember({ wid, email: member.email })
+            memberService.removeMember({ wid, email: member.email }),
           );
           await Promise.all(promises);
         }
@@ -160,7 +222,7 @@ class WorkspaceService {
         const agents = await agentService.fetchAgents(wid);
         if (agents?.length) {
           const promises = agents.map((agent: IAgent) =>
-            agentService.deleteAgent({ aid: agent.id! })
+            agentService.deleteAgent({ aid: agent.id! }),
           );
           await Promise.all(promises);
         }
@@ -184,12 +246,21 @@ class WorkspaceService {
       try {
         // Delete workspace teach sessions
         await deleteDoc(
-          doc(db, `workspaces/${wid}/knowledge/teach/sessions/${wid}`)
+          doc(db, `workspaces/${wid}/knowledge/teach/sessions/${wid}`),
         );
       } catch (error) {
         console.error(` Failed to delete teaching session:`, error);
         throw new Error("Failed to delete teaching session.");
       }
+
+      // Delete workspace analytics
+      try {
+        await deleteCollection(`workspaces/${wid}/analytics`);
+      } catch (error) {
+        console.error(`[WorkspaceService] Failed to delete analytics:`, error);
+        throw new Error("Failed to delete analytics.");
+      }
+
       // Delete Qdrant collection
       try {
         await axiosClient.delete(`/api/embeddings/${wid}/qdrant-delete`);
@@ -212,13 +283,13 @@ class WorkspaceService {
             `workspaces/${wid}/folders/${folder.id}/teach`,
           ];
           await Promise.all(
-            folderSubcollections.map((path) => deleteCollection(path))
+            folderSubcollections.map((path) => deleteCollection(path)),
           );
         }
       } catch (error) {
         console.error(
           `[WorkspaceService] Failed to delete folder subcollections:`,
-          error
+          error,
         );
       }
 
@@ -234,6 +305,7 @@ class WorkspaceService {
         `workspaces/${wid}/knowledge/teach/sessions`,
         `workspaces/${wid}/knowledge`,
         `workspaces/${wid}/members`,
+        `workspaces/${wid}/analytics`,
       ];
 
       await Promise.all(subCollections.map((path) => deleteCollection(path)));
@@ -244,7 +316,7 @@ class WorkspaceService {
     } catch (error: any) {
       console.error(
         `[WorkspaceService] Failed to delete workspace ${wid}:`,
-        error
+        error,
       );
       throw new Error(`Failed to delete workspace: ${error?.message || error}`);
     }
@@ -254,7 +326,7 @@ class WorkspaceService {
     wid: string,
     userEmail: string,
     role: "owner" | "admin" | "member" = "member",
-    status: "invite" | "accepted" | "default" = "default"
+    status: "invite" | "accepted" | "default" = "default",
   ) {
     const data = {
       status: status,
@@ -272,6 +344,21 @@ class WorkspaceService {
       url,
     });
     return data;
+  }
+
+  async initWorkspaceTraining({ wid, url }: { wid: string; url: string }) {
+    const { data } = await axiosClient.post("/api/workspace/init-training", {
+      wid,
+      url,
+    });
+    if (!data?.success) {
+      throw new Error(data?.error?.message || "Failed to init training");
+    }
+    return data.data as {
+      mainUrls: string[];
+      mappedUrlsCount: number;
+      trainingUrlsCount: number;
+    };
   }
 }
 

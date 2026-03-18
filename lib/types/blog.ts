@@ -1,4 +1,6 @@
-interface BlogWithAuthor {
+export type BlogFaq = { question: string; answer: string };
+
+export interface BlogWithAuthor {
   id: string;
   wid: string;
   title: string;
@@ -8,6 +10,8 @@ interface BlogWithAuthor {
   published: boolean;
   featuredImage?: string;
   excerpt?: string;
+  keyTakeaway?: string;
+  faqs?: BlogFaq[];
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string[];
@@ -31,10 +35,10 @@ interface BlogWithAuthor {
   };
 }
 
-interface GetBlogsResponse {
+export interface GetBlogsResponse {
   blogs: BlogWithAuthor[];
 }
 
-interface GetBlogResponse {
+export interface GetBlogResponse {
   blog: BlogWithAuthor;
 }

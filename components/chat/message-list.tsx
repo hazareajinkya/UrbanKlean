@@ -38,7 +38,7 @@ export const MessageList = ({
   const brandColor = agent.customization.primaryColor;
   const fontColor = useMemo(
     () => getContrastingColor(brandColor),
-    [brandColor]
+    [brandColor],
   );
 
   const scrollToLastMessageStart = () => {
@@ -66,7 +66,7 @@ export const MessageList = ({
 
     const observer = new IntersectionObserver(
       ([entry]) => setShowScrollButton(!entry.isIntersecting),
-      { root: containerRef.current, threshold: 0 }
+      { root: containerRef.current, threshold: 0 },
     );
 
     observer.observe(target);
@@ -100,7 +100,6 @@ export const MessageList = ({
                   key={message.id ?? index}
                   message={message}
                   isLast={isLastAssistantMessage}
-                  brandColor={brandColor}
                 />
               );
             }
@@ -175,7 +174,7 @@ const ToolBadge = memo(
     <div
       className={clsx(
         "inline-flex items-center gap-2 mr-2 text-sm rounded-full my-2 transition-all duration-300 ease-in-out",
-        isCalling ? "px-0 py-0" : "px-3 py-1.5 border"
+        isCalling ? "px-0 py-0" : "px-3 py-1.5 border",
       )}
       style={{
         backgroundColor: isCalling ? "transparent" : `${brandColor}10`,
@@ -210,53 +209,42 @@ const ToolBadge = memo(
         </div>
       )}
     </div>
-  )
+  ),
 );
 
 ToolBadge.displayName = "ToolBadge";
 
 interface MessagePartsProps {
   parts: IChatMessage["parts"];
-  brandColor: string;
   isLast: boolean;
 }
 
-const MessageParts = memo(
-  ({ parts, brandColor, isLast }: MessagePartsProps) => (
+const MessageParts = memo(({ parts, isLast }: MessagePartsProps) => {
+  const hasPendingToolCall =
+    isLast &&
+    parts?.some((part, index) => {
+      const nextParts = parts.slice(index + 1);
+      const hasSubsequentText = nextParts.some(
+        (p) => p.type === "text" && p.text && p.text.length > 0,
+      );
+
+      if (part.type?.startsWith("tool-")) {
+        return !hasSubsequentText;
+      }
+
+      if (part.type === "dynamic-tool") {
+        const toolPart = part as { state?: string };
+        const isToolCalling =
+          toolPart.state === "call" || toolPart.state === "partial-call";
+        return isToolCalling && !hasSubsequentText;
+      }
+
+      return false;
+    });
+
+  return (
     <>
       {parts?.map((part, index) => {
-        if (
-          part.type === "tool-collectInformation" ||
-          part.type === "tool-searchKnowledge"
-        ) {
-          const nextParts = parts.slice(index + 1);
-          const hasSubsequentText = nextParts.some(
-            (p) => p.type === "text" && p.text && p.text.length > 0
-          );
-
-          if (isLast && !hasSubsequentText) {
-            return <MessageLoading key={index} style={{ padding: 0 }} />;
-          }
-          return null;
-        }
-
-        // Handle dynamic-tool parts - show loading when tool is being called
-        if (part.type === "dynamic-tool") {
-          const toolPart = part as { state?: string };
-          const isToolCalling = toolPart.state === "call" || toolPart.state === "partial-call";
-
-          const nextParts = parts.slice(index + 1);
-          const hasSubsequentText = nextParts.some(
-            (p) => p.type === "text" && p.text && p.text.length > 0
-          );
-
-          // Show loading if tool is being called and no text follows
-          if (isLast && isToolCalling && !hasSubsequentText) {
-            return <MessageLoading key={index} style={{ padding: 0 }} />;
-          }
-          return null;
-        }
-
         if (part.type === "text") {
           return (
             <div
@@ -272,9 +260,10 @@ const MessageParts = memo(
 
         return null;
       })}
+      {hasPendingToolCall && <MessageLoading style={{ padding: 0 }} />}
     </>
-  )
-);
+  );
+});
 
 MessageParts.displayName = "MessageParts";
 
@@ -302,8 +291,8 @@ const LoadingIndicator = memo(() => (
             role: "assistant",
             parts: [{ type: "text", text: "" }],
           } as UIMessage,
-          "assistant"
-        )
+          "assistant",
+        ),
       )}
     >
       <MessageLoading />
@@ -316,36 +305,29 @@ LoadingIndicator.displayName = "LoadingIndicator";
 interface AssistantMessageProps {
   message: IChatMessage;
   isLast: boolean;
-  brandColor: string;
 }
 
-const AssistantMessage = memo(
-  ({ message, isLast, brandColor }: AssistantMessageProps) => (
-    <div>
-      <div className="flex justify-start">
-        <div
-          className={clsx(
-            "max-w-[90%] md:max-w-[75%]",
-            getMessageStyle(message, "assistant")
-          )}
-        >
-          <MessageParts
-            parts={message.parts}
-            brandColor={brandColor}
-            isLast={isLast}
-          />
-        </div>
+const AssistantMessage = memo(({ message, isLast }: AssistantMessageProps) => (
+  <div>
+    <div className="flex justify-start">
+      <div
+        className={clsx(
+          "max-w-[90%] md:max-w-[75%]",
+          getMessageStyle(message, "assistant"),
+        )}
+      >
+        <MessageParts parts={message.parts} isLast={isLast} />
       </div>
-      {isLast && (
-        <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
-          <p className="text-xs text-muted-foreground">
-            {formatTime(message.metadata?.createdAt ?? "")}
-          </p>
-        </div>
-      )}
     </div>
-  )
-);
+    {isLast && (
+      <div className="flex items-center gap-2 max-w-[90%] md:max-w-[75%] w-full mt-2 px-2">
+        <p className="text-xs text-muted-foreground">
+          {formatTime(message.metadata?.createdAt ?? "")}
+        </p>
+      </div>
+    )}
+  </div>
+));
 
 AssistantMessage.displayName = "AssistantMessage";
 
@@ -358,22 +340,42 @@ interface UserMessageProps {
 const UserMessage = memo(
   ({ message, brandColor, fontColor }: UserMessageProps) => (
     <div className="flex justify-end">
-      <div
-        className={clsx(
-          "max-w-[90%] md:max-w-[75%]",
-          getMessageStyle(message, "user")
-        )}
-        style={{
-          backgroundColor: brandColor,
-          color: fontColor,
-        }}
-      >
-        <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
-          {message.parts.map((part) => part.type === "text" && part.text)}
-        </p>
+      <div className="max-w-[90%] md:max-w-[75%] space-y-1">
+        {message.parts.map((part, i) => {
+          if (part.type === "text")
+            return (
+              <div
+                key={i}
+                className={clsx(
+                  getMessageStyle(message, "user"),
+                  "w-fit ml-auto",
+                )}
+                style={{ backgroundColor: brandColor, color: fontColor }}
+              >
+                <p className="text-sm md:text-base whitespace-pre-wrap leading-loose">
+                  {part.text}
+                </p>
+              </div>
+            );
+          if (part.type === "file" && part.mediaType?.startsWith("image/"))
+            return (
+              <div
+                key={i}
+                className="w-fit ml-auto rounded-2xl border border-border bg-background p-0.5"
+                style={{ backgroundColor: brandColor, color: fontColor }}
+              >
+                <img
+                  src={part.url}
+                  alt="Uploaded image"
+                  className="rounded-xl max-w-full max-h-60 object-contain"
+                />
+              </div>
+            );
+          return null;
+        })}
       </div>
     </div>
-  )
+  ),
 );
 
 UserMessage.displayName = "UserMessage";

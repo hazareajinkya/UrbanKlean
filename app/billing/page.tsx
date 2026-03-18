@@ -11,7 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCurrentUser } from "@/lib/hooks/user/use-user";
+import { useCurrentUser, userKey } from "@/lib/hooks/user/use-user";
+import type { IUserSubscription } from "@/lib/types/user";
 import { PLANS } from "@/lib/plans";
 import { capitalize, formatDate, formatDateTime } from "@/lib/utils";
 import {
@@ -23,6 +24,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Loader,
+  Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -36,9 +39,15 @@ import {
 } from "@/components/ui/table";
 import { useUsage, useGlobalUsage } from "@/lib/hooks/usage/use-usage";
 import { IUsage } from "@/lib/types/usage";
+import { useCredits } from "@/lib/hooks/credits/use-credits";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -46,49 +55,74 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, subDays } from "date-fns";
+import { exportUsageData } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { useSubscriptionActions } from "@/lib/hooks/subscription/use-subscription-actions";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ITEMS_PER_PAGE = 10;
 
-const UsageTableRow = ({ usage }: { usage: IUsage }) => (
-  <TableRow className="transition-colors hover:bg-muted/80">
-    <TableCell className="pl-6 py-3">
-      <span className="text-sm text-foreground">
-        {formatDateTime(usage.createdAt)}
-      </span>
-    </TableCell>
-    <TableCell>
-      <p className="text-muted-foreground text-sm">
-        {usage.eventType === "chat_response" ? "Chat Response" : "Tool Call"}
-      </p>
-    </TableCell>
-    <TableCell>
-      <span className="text-sm text-foreground">
-        {usage.metadata.model || "N/A"}
-      </span>
-    </TableCell>
-    <TableCell>
-      <span className="text-sm text-muted-foreground">
-        {usage.metadata.tokenUsage.toLocaleString()}
-      </span>
-    </TableCell>
-    <TableCell>
-      <span className="text-sm font-medium text-foreground">
-        {usage.amount.toLocaleString()}
-      </span>
-    </TableCell>
-    <TableCell className="text-right pr-6">
-      <span className="text-xs text-muted-foreground font-mono">
-        {usage.aid.slice(0, 8)}...
-      </span>
-    </TableCell>
-  </TableRow>
-);
+const UsageTableRow = ({ usage }: { usage: IUsage }) => {
+  const isCreditPurchase = usage.eventType === "credit_purchase";
+  return (
+    <TableRow className="transition-colors hover:bg-muted/80">
+      <TableCell className="pl-6 py-3">
+        <span className="text-sm text-foreground">
+          {formatDateTime(usage.createdAt)}
+        </span>
+      </TableCell>
+      <TableCell>
+        <p
+          className={cn(
+            "text-muted-foreground text-sm",
+            isCreditPurchase && "text-emerald-600 dark:text-emerald-400",
+          )}
+        >
+          {usage.eventType === "chat_response"
+            ? "Chat Response"
+            : usage.eventType === "tool_call"
+              ? "Tool Call"
+              : usage.eventType === "credit_purchase"
+                ? "Credit Purchase"
+                : usage.eventType === "credit_renewal"
+                  ? "Credit Renewal"
+                  : "Unknown"}
+        </p>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm text-foreground">
+          {usage.metadata?.model || "N/A"}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm text-muted-foreground">
+          {usage.metadata?.tokenUsage.toLocaleString()}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span
+          className={cn(
+            "text-sm font-medium text-foreground",
+            isCreditPurchase && "text-emerald-600 dark:text-emerald-400",
+          )}
+        >
+          {usage.amount.toLocaleString()}
+        </span>
+      </TableCell>
+      <TableCell className="text-right pr-6">
+        <span className="text-xs text-muted-foreground font-mono">
+          {usage.aid?.slice(0, 8) || "N/A"}...
+        </span>
+      </TableCell>
+    </TableRow>
+  );
+};
 
 export default function BillingPage() {
   const { user } = useCurrentUser();
+  const router = useRouter();
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 7),
     to: new Date(),
@@ -111,19 +145,50 @@ export default function BillingPage() {
   }, [isCalendarOpen, date]);
 
   const { data: usageData, isLoading: isUsageLoading } = useGlobalUsage(date);
+  const { data: creditsData } = useCredits({ userEmail: user?.email });
   const [currentPage, setCurrentPage] = useState(1);
 
   const subscription = user?.subscription;
+  const subscriptionStatus = subscription?.status ?? "none";
+  const hasActiveSubscription =
+    subscriptionStatus !== "none" &&
+    subscriptionStatus !== "canceled" &&
+    subscriptionStatus !== "past_due";
+  const isPastDue = subscriptionStatus === "past_due";
+  const isCanceled = subscriptionStatus === "canceled";
+  const isCancelingAtPeriodEnd = !!subscription?.canceledAtPeriodEnd;
+  const isRazorpay =
+    subscription?.razorpayPlanId && subscription.razorpayPlanId !== "";
 
-  const plan = PLANS[subscription?.planId as keyof typeof PLANS];
+  const plan = subscription?.planId
+    ? PLANS[subscription.planId as keyof typeof PLANS]
+    : null;
   const tier = plan?.tiers.find((t) => t.id === subscription?.tierId);
+  const planName = plan?.name ?? "No Plan";
+  const planFeatures = plan?.features ?? PLANS.all_in_one.features;
+  const billingCycle = tier?.billingCycle ?? "monthly";
+  const isAnnual = billingCycle === "annually";
+  const isLifetime = billingCycle === "lifetime";
+  const price = isRazorpay ? tier?.price?.inr || 0 : tier?.price?.usd || 0;
+  const currencySymbol = isRazorpay ? "₹" : "$";
+  const formatPrice = (value: number) =>
+    value.toLocaleString(isRazorpay ? "en-IN" : "en-US", {
+      maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    });
+  const monthlyEquivalent = isAnnual ? price / 12 : 0;
+  const monthlyEquivalentLabel =
+    isAnnual && price
+      ? `${currencySymbol}${formatPrice(monthlyEquivalent)} / month`
+      : "";
+  const renewInfo = getRenewInfo(subscription);
 
-  const total = subscription?.recurringQuota || 0;
-  const remaining = user?.credit?.recurring || 0;
-  const used = total - remaining;
-  const progressValue = total > 0 ? (used / total) * 100 : 0;
+  const totalCredits = creditsData?.totals.totalCredits || 0;
+  const remaining = creditsData?.totals.remainingCredits || 0;
+  const used = creditsData?.totals.usedCredits || 0;
+  const remainingPercentage = creditsData?.totals.remainingPercentage ?? 0;
+  const progressValue = remainingPercentage > 100 ? 100 : remainingPercentage;
 
-  const tierMessages = Number(tier?.messages) / 1000;
+  const tierMessages = tier?.messages ? Number(tier.messages) / 1000 : 0;
 
   const totalPages = Math.ceil((usageData?.length || 0) / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -160,14 +225,50 @@ export default function BillingPage() {
     if (provider === "razorpay" || provider === "polar") {
       setShowCancelDialog(true);
     } else {
-      // For Paddle, cancellation is handled in their portal
       manageSubscription();
     }
   };
 
-  const handleCancelConfirm = () => {
-    cancelSubscription(false);
+  const handleCancelConfirm = async () => {
+    let cancelAtCycleEnd = true;
+    if (isRazorpay && subscriptionStatus === "trialing") {
+      cancelAtCycleEnd = false;
+    }
+    await cancelSubscription({ cancelAtCycleEnd });
+    setTimeout(() => {
+      refetchUser();
+    }, 2000);
     setShowCancelDialog(false);
+  };
+
+  const qc = useQueryClient();
+
+  const refetchUser = () => {
+    if (!user?.email) return;
+    qc.invalidateQueries({ queryKey: userKey(user.email) });
+  };
+
+  const handleStartSubscription = () => {
+    const billingCycle = tier?.billingCycle ?? "annually";
+    router.push(
+      `/pricing?plan=all_in_one&tier=10000&billingCycle=${billingCycle}`,
+    );
+  };
+
+  const handleBuyCredits = () => {
+    router.push("/pricing#extra-credits");
+  };
+
+  const handlePrimaryAction = () => {
+    if (hasActiveSubscription) {
+      handleBuyCredits();
+      return;
+    }
+    if (isPastDue) {
+      manageSubscription();
+      return;
+    }
+    handleStartSubscription();
   };
 
   const handleExport = () => {
@@ -177,7 +278,7 @@ export default function BillingPage() {
   return (
     <>
       <WorkspacesNavbar />
-      <div className="mt-24 p-4">
+      <div className="mt-24 max-w-7xl mx-auto px-4 pr-2 md:px-3 lg:px-3">
         <div className="max-w-4xl mx-auto">
           <motion.div
             key="billing"
@@ -203,7 +304,7 @@ export default function BillingPage() {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <h1 className="text-2xl ">
-                          {plan?.name} {tierMessages}k
+                          {planName} {tierMessages ? `${tierMessages}k` : ""}
                         </h1>
                         <span className="text-xs mt-0.5 border text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
                           {capitalize(subscription?.status ?? "")}
@@ -211,16 +312,31 @@ export default function BillingPage() {
                       </div>
                     </div>
 
-                    <p className="text-lg font-medium">
-                      {" "}
-                      ${tier?.price?.usd || 0} / month
-                    </p>
+                    <div className="text-right">
+                      <p className="text-lg font-medium">
+                        {`${currencySymbol}${formatPrice(price)} / ${
+                          isAnnual ? "year" : isLifetime ? "lifetime" : "month"
+                        }`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {`Billed ${
+                          isAnnual
+                            ? "annually"
+                            : isLifetime
+                              ? "once"
+                              : "monthly"
+                        }`}
+                        {monthlyEquivalentLabel
+                          ? ` • ${monthlyEquivalentLabel}`
+                          : ""}
+                      </p>
+                    </div>
                   </div>
                 </CardHeader>
 
                 <CardContent>
                   <div className="flex items-center justify-between gap-2 ">
-                    <p className="text-sm text-muted-foreground">Usage</p>
+                    <p className="text-sm text-muted-foreground">Remaining</p>
                     <p className="text-sm text-muted-foreground">
                       {progressValue.toFixed(1)}%
                     </p>
@@ -228,62 +344,79 @@ export default function BillingPage() {
                   <Progress value={progressValue} className="mt-2 mb-2" />
                   <div className="flex justify-between items-center gap-2 mb-4">
                     <p className="text-sm text-muted-foreground">
-                      {used} / {total}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {remaining} remaining
+                      {remaining} / {totalCredits} remaining
                     </p>
                   </div>
                 </CardContent>
                 <CardFooter className="gap-2 justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Renews On</p>
-                    <p className="text-sm">
-                      {formatDate(subscription?.renewsAt)}
+                    <p className="text-xs text-muted-foreground">
+                      {renewInfo.label}
                     </p>
+                    <p className="text-sm">{renewInfo.value}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="rounded-full"
-                      onClick={handleManageSubscription}
-                      disabled={isManaging || !provider}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      Manage Subscription
-                    </Button>
-                    {(provider === "razorpay" || provider === "polar") && (
+                    {!isRazorpay && (
                       <Button
                         variant="outline"
-                        className="text-destructive rounded-full"
-                        onClick={handleCancelClick}
-                        disabled={isCanceling}
+                        className="rounded-full"
+                        onClick={handleManageSubscription}
+                        disabled={isManaging || !provider}
                       >
-                        Cancel
+                        {isManaging ? (
+                          <Loader className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CreditCard className="w-4 h-4" />
+                        )}
+                        Manage Subscription
                       </Button>
                     )}
+                    {(provider === "razorpay" || provider === "polar") &&
+                      !isCancelingAtPeriodEnd && (
+                        <Button
+                          variant="outline"
+                          className="text-destructive rounded-full"
+                          onClick={handleCancelClick}
+                          disabled={isCanceling}
+                        >
+                          Cancel
+                        </Button>
+                      )}
                   </div>
                 </CardFooter>
               </Card>
 
-              <Card className="w-[30%] dark">
-                <CardHeader></CardHeader>
-                <CardContent>
-                  <h1 className="text-center text-lg mb-1">
-                    Need more messages?
+              <Card className="w-[30%] dark flex flex-col items-center justify-center text-center">
+                <CardContent className="flex flex-col items-center text-center">
+                  <h1 className="text-lg mb-1">
+                    {getSubscriptionTitle({
+                      hasActiveSubscription,
+                      isPastDue,
+                      isCanceled,
+                    })}
                   </h1>
-                  <p className="text-center text-muted-foreground text-sm">
-                    Upgrade your plan or buy message credits to get more
-                    messages.
+                  <p className="text-muted-foreground text-sm">
+                    {getSubscriptionSubtitle({
+                      hasActiveSubscription,
+                      isPastDue,
+                      isCanceled,
+                    })}
                   </p>
                 </CardContent>
-                <CardFooter className="flex-col mt-2 gap-2">
-                  <Button variant="default" className="rounded-full">
-                    <ArrowUpRight className="w-4 h-4" />
-                    Upgrade Plan
-                  </Button>
-                  <Button variant="outline" className="rounded-full">
-                    Buy Message Credits
+                <CardFooter className="flex-col items-center mt-1 gap-1">
+                  <Button
+                    variant="default"
+                    className="rounded-full"
+                    onClick={handlePrimaryAction}
+                  >
+                    {!hasActiveSubscription && (
+                      <ArrowUpRight className="w-4 h-4" />
+                    )}
+                    {getPrimaryButtonLabel({
+                      hasActiveSubscription,
+                      isPastDue,
+                      isCanceled,
+                    })}
                   </Button>
                 </CardFooter>
               </Card>
@@ -294,13 +427,27 @@ export default function BillingPage() {
               </CardHeader>
               <CardContent>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {plan?.features.map((feature) => (
+                  {planFeatures.map((feature) => (
                     <li
-                      key={feature}
+                      key={feature.label}
                       className="flex items-center gap-3 text-sm text-muted-foreground"
                     >
                       <Check className="w-5 h-5 shrink-0" />
-                      <span>{feature}</span>
+                      <span>{feature.label}</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={feature.tooltip}
+                            className="ml-auto inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={6}>
+                          {feature.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
                     </li>
                   ))}
                 </ul>
@@ -350,7 +497,7 @@ export default function BillingPage() {
                           variant={"outline"}
                           className={cn(
                             "w-[260px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-1 h-4 w-4" />
@@ -523,50 +670,98 @@ export default function BillingPage() {
   );
 }
 
-const exportUsageData = (usageData: IUsage[], dateRange?: DateRange) => {
-  if (!usageData || usageData.length === 0) return;
+function getSubscriptionTitle(args: {
+  hasActiveSubscription: boolean;
+  isPastDue: boolean;
+  isCanceled: boolean;
+}) {
+  if (args.hasActiveSubscription) return "Need more messages?";
+  if (args.isPastDue) return "Payment Issue";
+  if (args.isCanceled) return "Subscription Canceled";
+  return "Get Started";
+}
 
-  const headers = [
-    "Date",
-    "Event Type",
-    "Model",
-    "Token Usage",
-    "Amount",
-    "Agent ID",
-    "Session ID",
-  ];
+function getSubscriptionSubtitle(args: {
+  hasActiveSubscription: boolean;
+  isPastDue: boolean;
+  isCanceled: boolean;
+}) {
+  if (args.hasActiveSubscription)
+    return "Top up anytime with extra message credits.";
+  if (args.isPastDue) return "Your payment is past due. Update it to continue.";
+  if (args.isCanceled)
+    return "Restart your subscription to get monthly messages.";
+  return "Start your subscription to unlock monthly messages.";
+}
 
-  const csvContent = [
-    headers.join(","),
-    ...usageData.map((usage) =>
-      [
-        `"${formatDateTime(usage.createdAt)}"`,
-        `"${usage.eventType}"`,
-        `"${usage.metadata.model}"`,
-        usage.metadata.tokenUsage,
-        usage.amount,
-        `"${usage.aid}"`,
-        `"${usage.sessionId}"`,
-      ].join(",")
-    ),
-  ].join("\n");
+function getPrimaryButtonLabel(args: {
+  hasActiveSubscription: boolean;
+  isPastDue: boolean;
+  isCanceled: boolean;
+}) {
+  if (args.hasActiveSubscription) return "Buy Message Credits";
+  if (args.isPastDue) return "Update Payment";
+  if (args.isCanceled) return "Restart Subscription";
+  return "Start Subscription";
+}
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-
-  const dateStr = dateRange?.from
-    ? dateRange.to
-      ? `${format(dateRange.from, "yyyy-MM-dd")}-to-${format(
-          dateRange.to,
-          "yyyy-MM-dd"
-        )}`
-      : `${format(dateRange.from, "yyyy-MM-dd")}`
-    : "all_time";
-
-  link.setAttribute("download", `usage-history-${dateStr}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+function getRenewInfo(subscription?: IUserSubscription) {
+  if (
+    (subscription?.status === "active" ||
+      subscription?.status === "trialing") &&
+    subscription.canceledAtPeriodEnd
+  ) {
+    return {
+      label: "Cancels On",
+      value: subscription.renewsAt
+        ? formatDate(subscription.renewsAt)
+        : subscription.nextPaymentAt
+          ? formatDate(subscription.nextPaymentAt)
+          : "—",
+    };
+  }
+  if (subscription?.status === "canceled") {
+    return {
+      label: "Canceled On",
+      value: subscription.canceledAt
+        ? formatDate(subscription.canceledAt)
+        : subscription.renewsAt
+          ? formatDate(subscription.renewsAt)
+          : "—",
+    };
+  }
+  if (subscription?.status === "trialing") {
+    return {
+      label: "Trial Ends",
+      value: subscription.trialEndsAt
+        ? formatDate(subscription.trialEndsAt)
+        : subscription.renewsAt
+          ? formatDate(subscription.renewsAt)
+          : "—",
+    };
+  }
+  if (subscription?.status === "past_due") {
+    return {
+      label: "Payment Due",
+      value: subscription.nextPaymentAt
+        ? formatDate(subscription.nextPaymentAt)
+        : subscription.renewsAt
+          ? formatDate(subscription.renewsAt)
+          : "—",
+    };
+  }
+  if (subscription?.status === "paused") {
+    return {
+      label: "Paused On",
+      value: subscription.canceledAt
+        ? formatDate(subscription.canceledAt)
+        : subscription.renewsAt
+          ? formatDate(subscription.renewsAt)
+          : "—",
+    };
+  }
+  return {
+    label: "Renews On",
+    value: subscription?.renewsAt ? formatDate(subscription.renewsAt) : "—",
+  };
+}

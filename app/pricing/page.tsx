@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { PricingContent } from "@/components/pricing/pricing-content";
 import { coreConf } from "@/lib/utils/conf";
+import { Loader } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Pricing | MagicalCX",
@@ -24,7 +26,15 @@ export default function PricingPage() {
     <div className="bg-background min-h-screen flex flex-col">
       <Navbar />
 
-      <PricingContent />
+      <Suspense
+        fallback={
+          <div className="flex-1 flex items-center justify-center py-20 text-sm text-muted-foreground">
+            <Loader className="w-4 h-4 animate-spin" />
+          </div>
+        }
+      >
+        <PricingContent />
+      </Suspense>
 
       <div className="bg-background dark">
         <Footer />

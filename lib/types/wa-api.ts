@@ -23,3 +23,15 @@ export interface IWAMessage {
     storageRef?: string;
   };
 }
+export type WATemplateCategory = "MARKETING" | "UTILITY" | "AUTHENTICATION";
+export interface IWaTemplate {
+  id: string;
+  name: string;
+  category: string;
+  language: string;
+  status: string;
+  components: any[];
+  rejected_reason?: string;
+  wabaId?: string;
+  wid?: string;
+}

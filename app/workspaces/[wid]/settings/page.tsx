@@ -9,14 +9,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Settings2, Globe, User, CreditCard } from "lucide-react";
+import { Settings2, Globe, User, Gauge } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GeneralTab } from "@/components/workspaces/settings/general-tab";
 import { DomainsTab } from "@/components/workspaces/settings/domains-tab";
 import MembersTab from "@/components/workspaces/settings/members-tab";
-import BillingTab from "@/components/workspaces/settings/billing-tab";
+import UsageTab from "@/components/workspaces/settings/usage-tab";
 
 const sections = [
   {
@@ -25,19 +25,19 @@ const sections = [
     icon: Settings2,
   },
   {
-    id: "domains",
-    label: "Domains",
-    icon: Globe,
-  },
-  {
-    id: "billing",
-    label: "Billing",
-    icon: CreditCard,
-  },
-  {
     id: "members",
     label: "Members",
     icon: User,
+  },
+  {
+    id: "usage",
+    label: "Usage",
+    icon: Gauge,
+  },
+  {
+    id: "domains",
+    label: "Domains",
+    icon: Globe,
   },
 ];
 
@@ -126,13 +126,13 @@ export default function SettingsPage() {
               <GeneralTab workspace={workspace} wid={wid} />
             )}
 
+            {activeSection === "members" && <MembersTab />}
+
+            {activeSection === "usage" && <UsageTab wid={wid} />}
+
             {activeSection === "domains" && (
               <DomainsTab workspace={workspace} wid={wid} />
             )}
-
-            {activeSection === "members" && <MembersTab />}
-
-            {activeSection === "billing" && <BillingTab wid={wid} />}
           </AnimatePresence>
         </div>
       </main>

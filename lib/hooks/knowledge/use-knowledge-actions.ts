@@ -1,4 +1,4 @@
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -30,7 +30,7 @@ export const useKnowledgeActions = () => {
       urls,
     }: {
       wid: string;
-      urls: { folderId: string; url: string }[];
+      urls: { folderId: string; url: string, folderName: string }[];
     }) => {
       await axiosClient.post(`/api/embeddings/${wid}/web/multi`, {
         urls,

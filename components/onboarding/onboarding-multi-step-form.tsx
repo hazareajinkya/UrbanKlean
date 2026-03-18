@@ -30,6 +30,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
+import datafastService from "@/lib/services/datafast-service";
 
 type ProcessingStep = {
   id: number;
@@ -95,13 +96,14 @@ const CONFIRMATION_STEPS = [
 type Phase = "processing" | "confirmation";
 
 interface OnboardingMultiStepFormProps {
+  email?: string;
   url?: string;
   initialData?: Partial<OnboardingData>;
   onFinish: (data: OnboardingData) => void;
   generateOnboardingInfo: UseMutationResult<
     { data: { data: OnboardingData } },
     Error,
-    { url: string }
+    { url: string; email?: string }
   >;
   uploadLogo: UseMutationResult<string, Error, File>;
   mode?: "onboarding" | "workspace";
@@ -111,6 +113,8 @@ interface OnboardingMultiStepFormProps {
   isSubmitting?: boolean;
   submitButtonText?: string;
   onCompanyNameValidate?: (name: string) => string | null;
+  onParsedPhaseChange?: (phase: "form" | "onboarding" | "success") => void;
+  onEmailError?: (message: string) => void;
 }
 
 const getDefaultOnboardingData = (): OnboardingData => ({
@@ -130,6 +134,7 @@ const getDefaultOnboardingData = (): OnboardingData => ({
 });
 
 export const OnboardingMultiStepForm = ({
+  email,
   url,
   initialData,
   onFinish,
@@ -142,6 +147,8 @@ export const OnboardingMultiStepForm = ({
   isSubmitting = false,
   submitButtonText = "Finish Setup",
   onCompanyNameValidate,
+  onParsedPhaseChange,
+  onEmailError,
 }: OnboardingMultiStepFormProps) => {
   const [phase, setPhase] = useState<Phase>(
     url && !initialData ? "processing" : "confirmation"
@@ -162,13 +169,27 @@ export const OnboardingMultiStepForm = ({
 
     setProcessingStep(1);
     generateOnboardingInfo.mutate(
-      { url },
+      { url, email },
       {
         onSuccess: (result) => {
           setOnboardingData(result.data.data);
         },
-        onError: () => {
-          setPhase("confirmation");
+        onError: (error: any) => {
+          const status = error?.response?.status || error?.status;
+          datafastService.trackGoal("onboarding_generate_info_failed", {
+            url: url || "",
+            workEmail: email || "",
+            reason: error?.response?.data?.message || error?.message || "unknown_error",
+            status: status || 0,
+          });
+          if ((status === 409 || status === 429) && onParsedPhaseChange) {
+            if (status === 409 && onEmailError) {
+              onEmailError("You already have an agent. Please check your email for more information.");
+            }
+            onParsedPhaseChange("form");
+          } else {
+            setPhase("confirmation");
+          }
           setProcessingStep(0);
         },
       }
@@ -726,6 +747,17 @@ export const OnboardingMultiStepForm = ({
             Back
           </Button>
         )}
+        {onParsedPhaseChange && confirmationStep === 1 && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => onParsedPhaseChange("form")}
+            className="w-auto max-w-max rounded-full"
+          >
+            <ChevronLeft className="size-4" />
+            Back
+          </Button>
+        )}
         <Button
           size="lg"
           onClick={handleNextConfirmationStep}
@@ -746,6 +778,10 @@ export const OnboardingMultiStepForm = ({
           )}
         </Button>
       </div>
+
+      <p className="text-xs text-muted-foreground text-center pt-0">
+        Don&apos;t worry, you can always change this in settings later.
+      </p>
     </div>
   );
 };

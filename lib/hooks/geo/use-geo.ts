@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 
 interface GeoData {
   country: string | null;

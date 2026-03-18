@@ -13,7 +13,7 @@ export const useWorkspaces = (ids: string[]) => {
 
   const workspaces = queries
     .map((query) => query.data)
-    .filter((ws) => ws !== undefined);
+    .filter((ws) => ws !== undefined && ws !== null);
 
   const isLoading = queries.some((query) => query.isLoading);
 

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
-import { useCurrentUser } from "@/lib/hooks/user/use-user";
+import { CheckCircle2, Loader, Loader2 } from "lucide-react";
+import { useCurrentUser, userKey } from "@/lib/hooks/user/use-user";
+import { useQueryClient } from "@tanstack/react-query";
+import datafastService from "@/lib/services/datafast-service";
 
 function CheckoutSuccessContent() {
   const router = useRouter();
@@ -15,7 +17,10 @@ function CheckoutSuccessContent() {
 
   const plan = searchParams.get("plan");
   const tier = searchParams.get("tier");
+  const type = searchParams.get("type");
+  const hasTrackedCheckoutSuccess = useRef(false);
 
+  const qc = useQueryClient();
   // Poll for subscription status - webhook will sync it
   const { user, refetch } = useCurrentUser();
 
@@ -35,8 +40,10 @@ function CheckoutSuccessContent() {
   useEffect(() => {
     if (hasSubscription) return;
 
+    if (!user?.email) return;
+
     const pollInterval = setInterval(() => {
-      refetch();
+      qc.invalidateQueries({ queryKey: userKey(user.email) });
     }, 2000); // Poll every 2 seconds
 
     // Stop polling after 30 seconds
@@ -50,7 +57,7 @@ function CheckoutSuccessContent() {
       clearInterval(pollInterval);
       clearTimeout(timeout);
     };
-  }, [hasSubscription, refetch]);
+  }, [hasSubscription, user?.email]);
 
   // Countdown timer
   useEffect(() => {
@@ -75,6 +82,21 @@ function CheckoutSuccessContent() {
     }
   }, [countdown, router]);
 
+  useEffect(() => {
+    if (!hasSubscription || hasTrackedCheckoutSuccess.current) return;
+    hasTrackedCheckoutSuccess.current = true;
+    datafastService.trackGoal("checkout_success_viewed", {
+      plan_id: plan || "unknown",
+      tier: tier || "unknown",
+      checkout_type: type || "subscription",
+    });
+  }, [hasSubscription, plan, tier, type]);
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    qc.invalidateQueries({ queryKey: userKey(user.email) });
+  }, [user]);
   const handleGoToDashboard = () => {
     router.push("/workspaces");
   };
@@ -84,7 +106,7 @@ function CheckoutSuccessContent() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="flex justify-center">
-            <Loader2 className="w-16 h-16 text-primary animate-spin" />
+            <Loader className="w-12 h-12 text-primary animate-spin" />
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-medium">
@@ -114,6 +136,13 @@ function CheckoutSuccessContent() {
           <p className="text-muted-foreground">
             Your subscription has been successfully activated.
           </p>
+        </div>
+        <div
+          className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-200"
+          role="status"
+          aria-live="polite"
+        >
+          It may take up to 2-3 mins to reflect subscription on your account.
         </div>
 
         <div className="space-y-4">

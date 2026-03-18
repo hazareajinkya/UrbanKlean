@@ -73,6 +73,11 @@ const mapInputForSave = (input: IActionInput): IActionInput => {
 };
 
 const METHODS_WITH_BODY: IRequestType[] = ["POST", "PUT", "PATCH", "DELETE"];
+type IUiActionInput = Omit<IActionInput, "children"> & {
+  uiId: string;
+  children?: IUiActionInput[];
+};
+type InputField = "key" | "description" | "type" | "required";
 
 const AddApiActionModal = ({
   isOpen,
@@ -80,6 +85,13 @@ const AddApiActionModal = ({
   wid,
   editingAction,
 }: AddApiActionModalProps) => {
+  const toUiInputs = (inputs: IActionInput[]): IUiActionInput[] =>
+    inputs.map((input) => ({
+      ...input,
+      uiId: uuidv4(),
+      children: input.children ? toUiInputs(input.children) : [],
+    }));
+
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -232,6 +244,7 @@ const AddApiActionModal = ({
       [target]: [
         ...prev[target],
         {
+          uiId: uuidv4(),
           key: "",
           description: "",
           type: "string",
@@ -677,7 +690,7 @@ const AddApiActionModal = ({
       <div
         className={`grid grid-cols-1 ${
           showTestPanel ? "lg:grid-cols-[2fr_1fr]" : "lg:grid-cols-1"
-        } gap-6 h-[75vh]`}
+        } gap-6 h-[75vh] w-full`}
       >
         {/* Left Panel - Form */}
         <div className="flex flex-col min-h-0">

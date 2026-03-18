@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useMembers } from "@/lib/hooks/members/use-members";
 import { useMemberActions } from "@/lib/hooks/members/use-member-actions";
 import { useCurrentUser } from "@/lib/hooks/user/use-user";
+import { useWorkspaceActions } from "@/lib/hooks/workspace/use-workspace-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +32,7 @@ import {
   UserMinus,
   Plus,
   XIcon,
-  RefreshCcw,
+  Redo,
   Users,
   User,
   Trash,
@@ -53,6 +54,8 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Modal from "@/components/ui/modal";
+import { Switch } from "@/components/ui/switch";
 
 export default function MembersPage() {
   const { wid } = useParams() as { wid: string };
@@ -60,6 +63,7 @@ export default function MembersPage() {
   const { data: members = [], isLoading } = useMembers(wid);
   const { inviteMember, updateMemberRole, removeMember, resendInvitation } =
     useMemberActions();
+  const { updateEmailSubscriptions } = useWorkspaceActions();
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("member");
@@ -69,10 +73,42 @@ export default function MembersPage() {
     name: string;
     isPending: boolean;
   } | null>(null);
+  const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
+  const [selectedInsightMemberEmail, setSelectedInsightMemberEmail] =
+    useState("");
+  const [pendingInsightMemberEmail, setPendingInsightMemberEmail] =
+    useState("");
+  const [optimisticInsightSubscriptions, setOptimisticInsightSubscriptions] =
+    useState<Record<string, boolean>>({});
 
   // Get current user's role in this workspace
   const currentUserMember = members.find((m) => m.email === user?.email);
   const currentUserRole = currentUserMember?.role || "member";
+  const selectedInsightMember = members.find(
+    (member) => member.email === selectedInsightMemberEmail,
+  );
+  const isInsightTogglePending =
+    updateEmailSubscriptions.isPending &&
+    pendingInsightMemberEmail === selectedInsightMemberEmail;
+
+  useEffect(() => {
+    setOptimisticInsightSubscriptions((currentOverrides) => {
+      let hasUpdates = false;
+      const nextOverrides = { ...currentOverrides };
+
+      members.forEach((member) => {
+        const overrideValue = currentOverrides[member.email];
+        if (overrideValue === undefined) return;
+        const actualValue = member.emailSubscriptions?.includes("daily");
+        if ((actualValue ?? false) === overrideValue) {
+          delete nextOverrides[member.email];
+          hasUpdates = true;
+        }
+      });
+
+      return hasUpdates ? nextOverrides : currentOverrides;
+    });
+  }, [members]);
 
   const handleInviteMember = async () => {
     if (!email.trim() || !user?.email) return;
@@ -134,11 +170,57 @@ export default function MembersPage() {
     }
   };
 
+  const handleOpenInsightModal = (memberEmail: string) => {
+    setSelectedInsightMemberEmail(memberEmail);
+    setIsInsightModalOpen(true);
+  };
+
+  const handleCloseInsightModal = () => {
+    setIsInsightModalOpen(false);
+    setSelectedInsightMemberEmail("");
+  };
+
+  const handleToggleDailyInsights = async (enabled: boolean) => {
+    if (!selectedInsightMemberEmail) return;
+
+    const previousEnabled = isMemberSubscribed(selectedInsightMemberEmail);
+
+    setPendingInsightMemberEmail(selectedInsightMemberEmail);
+    setOptimisticInsightSubscriptions((currentOverrides) => ({
+      ...currentOverrides,
+      [selectedInsightMemberEmail]: enabled,
+    }));
+
+    try {
+      await updateEmailSubscriptions.mutateAsync({
+        wid,
+        insightType: "daily",
+        memberEmail: selectedInsightMemberEmail,
+        enabled,
+      });
+    } catch (error) {
+      // Error handled by mutation
+      setOptimisticInsightSubscriptions((currentOverrides) => ({
+        ...currentOverrides,
+        [selectedInsightMemberEmail]: previousEnabled,
+      }));
+    } finally {
+      setPendingInsightMemberEmail("");
+    }
+  };
+
   const handleEmailKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       handleInviteMember();
     }
+  };
+
+  const isMemberSubscribed = (memberEmail: string) => {
+    const member = members.find((item) => item.email === memberEmail);
+    const overrideValue = optimisticInsightSubscriptions[memberEmail];
+    if (overrideValue !== undefined) return overrideValue;
+    return member?.emailSubscriptions?.includes("daily") ?? false;
   };
 
   const activeMembers = members
@@ -285,6 +367,23 @@ export default function MembersPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
+                    {canManageMembers(currentUserRole) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => handleOpenInsightModal(member.email)}
+                        aria-label={`Manage reporting for ${member.email}`}
+                      >
+                        Manage Reporting
+                      </Button>
+                    ) : (
+                      <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">
+                        {isMemberSubscribed(member.email)
+                          ? "Subscribed"
+                          : "Not subscribed"}
+                      </span>
+                    )}
                     <span
                       className={
                         "text-xs px-3 py-1 rounded-md bg-primary/5 text-primary"
@@ -315,6 +414,7 @@ export default function MembersPage() {
                                 handleUpdateRole(member.email, newRole);
                               }}
                             >
+                              <PencilLine className="w-4 h-4 mr-2" />
                               Change Role
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -389,9 +489,9 @@ export default function MembersPage() {
                               }
                             >
                               {resendInvitation.isPending ? (
-                                <Loader className="w-4 h-4 animate-spin" />
+                                <Loader className="w-4 h-4 animate-spin mr-2" />
                               ) : (
-                                <RefreshCcw className="w-4 h-4" />
+                                <Redo className="w-4 h-4 mr-2" />
                               )}
                               Resend Invitation
                             </DropdownMenuItem>
@@ -459,6 +559,60 @@ export default function MembersPage() {
         isLoading={removeMember.isPending}
         variant="destructive"
       />
+
+      <Modal
+        isOpen={isInsightModalOpen}
+        closeModal={handleCloseInsightModal}
+        className="max-w-md bg-white dark:bg-black rounded-2xl p-6"
+      >
+        <div className="w-full space-y-4 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0"
+            onClick={handleCloseInsightModal}
+            aria-label="Close manage reporting modal"
+          >
+            <XIcon className="h-4 w-4" />
+          </Button>
+          <div className="space-y-0.5">
+            <h2 className="text-">Manage Reporting</h2>
+            <p className="text-sm text-muted-foreground">
+              Manage report subscriptions for{" "}
+              {selectedInsightMember?.user?.name ||
+                selectedInsightMember?.email ||
+                "member"}
+              .
+            </p>
+          </div>
+
+          <div className="border rounded-lg divide-y">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="space-y-1">
+                <div className="text-sm">Daily reports</div>
+                <div className="text-xs text-muted-foreground">
+                  A short daily summary delivered by email.
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isInsightTogglePending && (
+                  <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+                <Switch
+                  checked={
+                    selectedInsightMemberEmail
+                      ? isMemberSubscribed(selectedInsightMemberEmail)
+                      : false
+                  }
+                  onCheckedChange={handleToggleDailyInsights}
+                  aria-label="Toggle daily reports subscription"
+                  disabled={isInsightTogglePending}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 }

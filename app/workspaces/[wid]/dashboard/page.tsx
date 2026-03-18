@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const isLoading = workspaceLoading || analyticsLoading;
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4">
       <AnalyticsDashboard
         dailyAnalytics={dailyAnalytics}
         summary={summary ?? null}

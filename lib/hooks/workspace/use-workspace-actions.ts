@@ -6,6 +6,7 @@ import { workspaceKey } from "./use-workspace";
 import { userKey } from "../user/use-user";
 import { IWorkspace } from "@/lib/types/workspace";
 import { auth } from "@/lib/clients/firebase";
+import { membersKey } from "../members/use-members";
 
 export const useWorkspaceActions = () => {
   const qc = useQueryClient();
@@ -24,6 +25,17 @@ export const useWorkspaceActions = () => {
     onSuccess: (data, variables) => {
       toast.success("Workspace updated successfully");
       qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
+  const updateEmailSubscriptions = useMutation({
+    mutationFn: workspaceService.updateEmailSubscriptions,
+
+    onSuccess: (data, variables) => {
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+      qc.invalidateQueries({ queryKey: membersKey(variables.wid) });
+      toast.success("Email insights updated");
     },
     onError: handleError,
   });
@@ -65,12 +77,22 @@ export const useWorkspaceActions = () => {
     onError: handleError,
   });
 
+  const initWorkspaceTraining = useMutation({
+    mutationFn: workspaceService.initWorkspaceTraining,
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: workspaceKey(variables.wid) });
+    },
+    onError: handleError,
+  });
+
   return {
     createWorkspace,
     updateWorkspace,
+    updateEmailSubscriptions,
     addWorkspaceDomain,
     removeWorkspaceDomain,
     deleteWorkspace,
     generateWorkspaceInfo,
+    initWorkspaceTraining,
   };
 };

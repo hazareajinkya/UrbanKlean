@@ -1,21 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "../user/use-user";
-import axiosClient from "@/lib/clients/axios-client";
+import { axiosClient } from "@/lib/clients/axios-client";
 import { toast } from "sonner";
 import { IUserSubscription } from "@/lib/types/user";
 import { userKey } from "../user/use-user";
 
-export type PaymentProvider = "paddle" | "polar" | "razorpay" | null;
+export type PaymentProvider = "polar" | "razorpay" | null;
 
 export const getPaymentProvider = (
   subscription?: IUserSubscription
 ): PaymentProvider => {
   if (!subscription) return null;
-
-  // Check for Paddle
-  if (subscription.paddlePriceId && subscription.paddlePriceId !== "none") {
-    return "paddle";
-  }
 
   // Check for Polar
   if (
@@ -52,16 +47,6 @@ export const useSubscriptionActions = () => {
       console.log("provider", provider);
       if (!user?.email) {
         throw new Error("User email is required");
-      }
-
-      if (provider === "paddle") {
-        // Paddle uses environment variable for portal URL
-        const paddleCustomerPortalUrl =
-          process.env.NEXT_PUBLIC_PADDLE_CUSTOMER_PORTAL;
-        if (!paddleCustomerPortalUrl) {
-          throw new Error("Paddle customer portal URL not configured");
-        }
-        return { portalUrl: paddleCustomerPortalUrl };
       }
 
       if (provider === "polar") {
@@ -139,8 +124,12 @@ export const useSubscriptionActions = () => {
     manageSubscriptionMutation.mutate();
   };
 
-  const cancelSubscription = (cancelAtCycleEnd: boolean = true) => {
-    cancelSubscriptionMutation.mutate(cancelAtCycleEnd);
+  const cancelSubscription = async ({
+    cancelAtCycleEnd = true,
+  }: {
+    cancelAtCycleEnd: boolean;
+  }) => {
+    await cancelSubscriptionMutation.mutateAsync(cancelAtCycleEnd);
   };
 
   return {

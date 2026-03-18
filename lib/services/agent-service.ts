@@ -21,6 +21,7 @@ import { invalidateCache, invalidateCaches } from "../utils/cache-utils";
 class AgentService {
   async createAgent({ wid, name }: { wid: string; name: string }) {
     const workspace = await workspaceService.fetchWorkspace(wid);
+    if (!workspace) throw new Error("Workspace not found");
     const agent = generateDefaultAgent(wid, name, workspace);
     await setDoc(doc(db, `agents/${agent.id}`), agent);
     return agent;

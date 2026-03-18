@@ -76,7 +76,7 @@ class CreditService {
           name,
           email,
           threshold,
-          lastCreditEmailSent
+          lastCreditEmailSent,
         );
         break;
       }
@@ -132,7 +132,7 @@ class CreditService {
     name: string | undefined,
     email: string,
     threshold: number,
-    lastCreditEmailSent?: string
+    lastCreditEmailSent?: string,
   ) {
     try {
       if (lastCreditEmailSent) {
@@ -142,8 +142,8 @@ class CreditService {
         if (hoursSinceLastEmail < EMAIL_COOLDOWN_HOURS) {
           console.log(
             `Skipping low credit email to ${email} - last sent ${hoursSinceLastEmail.toFixed(
-              1
-            )} hours ago`
+              1,
+            )} hours ago`,
           );
           return;
         }
@@ -174,7 +174,7 @@ class CreditService {
         });
       }
       console.log(
-        `Low credit email sent to ${email} (threshold: ${threshold})`
+        `Low credit email sent to ${email} (threshold: ${threshold})`,
       );
 
       await updateDoc(doc(db, `users/${userId}`), {

@@ -47,7 +47,7 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
 
       if (!isSecure) {
         toast.error(
-          "WhatsApp connection requires HTTPS. Please access this page over a secure connection."
+          "WhatsApp connection requires HTTPS. Please access this page over a secure connection.",
         );
       }
     };
@@ -75,8 +75,8 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
         window.FB.init({
           appId,
           cookie: true,
-          xfbml: false,
-          version: "v18.0",
+          xfbml: true,
+          version: "v23.0",
         });
         setIsFbReady(true);
       }
@@ -118,7 +118,7 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
   const handleSignup = () => {
     if (!isHttps) {
       toast.error(
-        "Facebook Login requires HTTPS. Please access this page over a secure connection."
+        "Facebook Login requires HTTPS. Please access this page over a secure connection.",
       );
       return;
     }
@@ -136,7 +136,7 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
             toast.error(
               `Facebook Login failed: ${
                 response.error.message || "Unknown error"
-              }`
+              }`,
             );
             return;
           }
@@ -164,12 +164,17 @@ const WaEmbeddedButton: React.FC<WaEmbeddedButtonProps> = ({
           response_type: "code",
           override_default_response_type: true,
           auth_type: "rerequest",
-        }
+          extras: {
+            sessionInfoVersion: 3,
+            featureType: "whatsapp_business_app_onboard",
+            setup: {},
+          },
+        },
       );
     } catch (error) {
       console.error("Error calling FB.login:", error);
       toast.error(
-        "Failed to initiate WhatsApp connection. Please ensure you're on HTTPS."
+        "Failed to initiate WhatsApp connection. Please ensure you're on HTTPS.",
       );
     }
   };

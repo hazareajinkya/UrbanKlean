@@ -13,31 +13,41 @@ export async function POST(req: Request) {
     console.log("Postmark webhook received");
     const body = (await req.json()) as IPostmarkInboundWebhook;
 
-    // Check if it's spam
-    if (postmarkParser.isSpam(body)) {
-      console.log("Email marked as spam, ignoring");
-      return NextResponse.json(
-        { message: "Spam email ignored" },
-        { status: 200 }
+    const hardSkipReason = postmarkParser.getHardSkipReason(body);
+    if (hardSkipReason) {
+      console.log(
+        `Skipping Postmark reply due to hard rule: ${hardSkipReason}`,
       );
-    }
-
-    // Check if it's an auto-reply
-    if (postmarkParser.isAutoReply(body)) {
-      console.log("Auto-reply detected, ignoring");
       return NextResponse.json(
-        { message: "Auto-reply ignored" },
-        { status: 200 }
+        { message: "No reply needed", reason: hardSkipReason },
+        { status: 200 },
       );
     }
 
     // Parse the inbound email
     const parsedMessage = postmarkParser.parseInboundEmail(body);
 
+    const shouldReplyDecision =
+      await postmarkBotService.shouldReplyToEmail(parsedMessage);
+    if (!shouldReplyDecision.shouldReply) {
+      console.log("Skipping Postmark reply due to AI decision", {
+        reason: shouldReplyDecision.reason,
+        confidence: shouldReplyDecision.confidence,
+      });
+      return NextResponse.json(
+        {
+          message: "No reply needed",
+          reason: shouldReplyDecision.reason,
+          confidence: shouldReplyDecision.confidence,
+        },
+        { status: 200 },
+      );
+    }
+
     // Get the email channel to check type
     const channel = await channelService.getChannelByPageId(
       parsedMessage.to,
-      "email"
+      "email",
     );
 
     // Determine channel type (default to "default" if not set)
@@ -49,7 +59,7 @@ export async function POST(req: Request) {
       parsedMessage,
       parsedMessage.to,
       parsedMessage.from,
-      "email"
+      "email",
     );
 
     // Step 3: Send reply via Postmark
@@ -72,7 +82,7 @@ export async function POST(req: Request) {
         ccAddresses.push(...parsedMessage.cc);
       }
       const uniqueCc = [...new Set(ccAddresses)].filter(
-        (email) => email !== parsedMessage.from
+        (email) => email !== parsedMessage.from,
       );
 
       const from =
@@ -95,7 +105,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: "Webhook received and processed successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error processing Postmark webhook:", error);
@@ -104,7 +114,7 @@ export async function POST(req: Request) {
     }
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 200 }
+      { status: 200 },
     );
   }
 }

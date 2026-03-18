@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import { razorpayconf } from "../utils/conf";
 
 // Server-side Razorpay instance
 let razorpayInstance: Razorpay | null = null;
@@ -6,8 +7,8 @@ let razorpayInstance: Razorpay | null = null;
 export const getRazorpayInstance = (): Razorpay => {
   if (razorpayInstance) return razorpayInstance;
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = razorpayconf.keyId;
+  const keySecret = razorpayconf.keySecret;
 
   if (!keyId || !keySecret) {
     throw new Error("Razorpay credentials are not set");
@@ -26,6 +27,7 @@ export interface RazorpaySubscriptionData {
   id: string;
   entity: "subscription";
   plan_id: string;
+  start_at: number;
   status:
     | "created"
     | "authenticated"
@@ -60,6 +62,36 @@ export interface RazorpaySubscriptionCustomData {
   tierId: string;
 }
 
+export interface RazorpayCreditPurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  quantity: number;
+  type: "credit_purchase";
+}
+
+export interface RazorpayLifetimePurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  type: "lifetime_purchase";
+  planId: string;
+}
+
+export interface RazorpaySubscriptionOrderCustomData {
+  userId: string;
+  userEmail: string;
+  quantity: number;
+  type: "subscription";
+  subscriptionId: string;
+  planId: string;
+  tier: string;
+  tierId: string;
+}
+
+export type RazorpayOrderCustomData =
+  | RazorpayCreditPurchaseCustomData
+  | RazorpayLifetimePurchaseCustomData
+  | RazorpaySubscriptionOrderCustomData;
+
 // Map Razorpay status to your app status
 export const mapRazorpayStatus = (
   status: RazorpaySubscriptionData["status"]
@@ -67,6 +99,9 @@ export const mapRazorpayStatus = (
   switch (status) {
     case "active":
       return "active";
+    case "authenticated":
+    case "created":
+      return "trialing";
     case "cancelled":
     case "completed":
     case "expired":
@@ -76,9 +111,6 @@ export const mapRazorpayStatus = (
       return "past_due";
     case "paused":
       return "paused";
-    case "authenticated":
-    case "created":
-      return "trialing";
     default:
       return "canceled";
   }
@@ -91,21 +123,21 @@ export const razorpayApi = {
     customerId?: string;
     totalCount: number;
     notes: RazorpaySubscriptionCustomData;
+    startAt?: number;
   }) {
     const razorpay = getRazorpayInstance();
-
-    // Set trial end date to 14 days from now
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 14);
-    const startAt = Math.floor(trialEndDate.getTime() / 1000);
 
     const params: any = {
       plan_id: arg.planId,
       total_count: arg.totalCount,
       quantity: 1,
       notes: arg.notes as unknown as Record<string, string>,
-      start_at: startAt,
     };
+
+    if (arg.startAt) {
+      params.start_at = arg.startAt;
+    }
+
     if (arg.customerId) {
       params.customer_notify = 1;
     }
@@ -119,6 +151,7 @@ export const razorpayApi = {
 
   async cancelSubscription(subscriptionId: string, cancelAtCycleEnd = true) {
     const razorpay = getRazorpayInstance();
+
     return razorpay.subscriptions.cancel(subscriptionId, cancelAtCycleEnd);
   },
 
@@ -134,5 +167,21 @@ export const razorpayApi = {
     return razorpay.subscriptions.resume(subscriptionId, {
       resume_at: "now",
     });
+  },
+
+  async createOrder(arg: {
+    amount: number; // Amount in paise (INR * 100)
+    currency: string;
+    notes: RazorpayOrderCustomData;
+  }) {
+    const razorpay = getRazorpayInstance();
+
+    const order = await razorpay.orders.create({
+      amount: arg.amount,
+      currency: arg.currency,
+      notes: arg.notes as unknown as Record<string, string>,
+    });
+
+    return order;
   },
 };

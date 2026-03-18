@@ -26,6 +26,7 @@ import {
 } from "../../components/chat/chat-utils";
 import peopleService from "./people-service";
 import { Geo } from "@vercel/functions";
+import { stripUndefined } from "../utils";
 
 class ChatService {
   async createSession(
@@ -35,7 +36,7 @@ class ChatService {
     sessionId?: string,
     providerId?: string,
     fromPage?: string,
-    geo?: Geo
+    geo?: Geo,
   ) {
     const session = generateDefaultSession(
       wid,
@@ -43,10 +44,10 @@ class ChatService {
       "web",
       providerId,
       sessionId,
-      fromPage
+      fromPage,
     );
 
-    if (geo) session.geo = geo;
+    if (geo) session.geo = stripUndefined(geo);
     if (personId) {
       session.personId = personId;
       if (geo) {
@@ -101,7 +102,7 @@ class ChatService {
     personId?: string,
     providerId?: string,
     fromPage?: string,
-    geo?: Geo
+    geo?: Geo,
   ) {
     let session = await this.getSession(sid, aid);
 
@@ -115,7 +116,7 @@ class ChatService {
         sid,
         providerId,
         fromPage,
-        geoDetails
+        geoDetails,
       );
     } else if (personId && session.personId !== personId) {
       // Session exists but personId changed or being added, update it
@@ -131,7 +132,7 @@ class ChatService {
     aid: string,
     waPhoneId: string,
     personId: string,
-    provider: IChannelProvider
+    provider: IChannelProvider,
   ) {
     const session = generateDefaultSession(wid, aid, provider, waPhoneId);
     session.personId = personId;
@@ -145,7 +146,7 @@ class ChatService {
       where("providerId", "==", pid),
       where("status", "==", "open"),
       orderBy("updatedAt", "desc"),
-      limit(1)
+      limit(1),
     );
     const snap = await getDocs(q);
     return snap.docs[0]?.data() as ISession;
@@ -199,7 +200,7 @@ class ChatService {
 
   subscribeToAgentSessions(
     aid: string,
-    callback: (sessions: ISession[]) => void
+    callback: (sessions: ISession[]) => void,
   ) {
     const ref = collection(db, `agents/${aid}/sessions`);
     const q = query(ref, orderBy("updatedAt", "desc"), limit(10));
@@ -214,7 +215,7 @@ class ChatService {
     aid: string,
     sessionId: string,
     personId: string,
-    channel: IChannelProvider
+    channel: IChannelProvider,
   ) {
     const session = generateDefaultSession(wid, aid, channel, sessionId);
     session.personId = personId;
@@ -226,7 +227,7 @@ class ChatService {
     aid: string,
     instaUserId: string,
     personId: string,
-    provider: IChannelProvider
+    provider: IChannelProvider,
   ) {
     const session = generateDefaultSession(wid, aid, provider, instaUserId);
     session.personId = personId;
@@ -238,7 +239,7 @@ class ChatService {
     aid: string,
     messengerUserId: string,
     personId: string,
-    provider: IChannelProvider
+    provider: IChannelProvider,
   ) {
     const session = generateDefaultSession(wid, aid, provider, messengerUserId);
     session.personId = personId;
@@ -250,7 +251,7 @@ class ChatService {
     aid: string,
     providerId: string,
     personId: string,
-    provider: IChannelProvider
+    provider: IChannelProvider,
   ) {
     const session = generateDefaultSession(wid, aid, provider, providerId);
     session.personId = personId;
@@ -262,34 +263,50 @@ class ChatService {
 const chatService = new ChatService();
 export default chatService;
 
+const isEmpty = (v: unknown): boolean =>
+  v === undefined ||
+  v === null ||
+  v === "" ||
+  (Array.isArray(v) && v.length === 0) ||
+  (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0);
+
+const removeEmpty = (obj: any): any => {
+  if (obj === null || obj === undefined) return undefined;
+  if (Array.isArray(obj)) {
+    const cleaned = obj.map(removeEmpty).filter((v) => !isEmpty(v));
+    return cleaned.length ? cleaned : undefined;
+  }
+  if (typeof obj === "object") {
+    const result: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      const cleaned = removeEmpty(v);
+      if (!isEmpty(cleaned)) result[k] = cleaned;
+    }
+    return Object.keys(result).length ? result : undefined;
+  }
+  return obj;
+};
+
 export const cleanMessageForSaving = (message: IChatMessage) => {
-  // Remove undefined fields from message before saving
-  const cleanMessage = Object.fromEntries(
-    Object.entries(message).filter(([_, value]) => value !== undefined)
-  ) as IChatMessage;
+  const cleaned = removeEmpty(message) as IChatMessage;
+  if (!cleaned?.parts?.length) return cleaned;
 
-  // Clean the parts array if it exists
-  if (cleanMessage.parts) {
-    const parts = cleanMessage.parts
-      .map((part) => {
-        return Object.fromEntries(
-          Object.entries(part).filter(([_, value]) => value !== undefined)
-        );
-      })
-      .filter((part) => Object.keys(part).length > 0); // Remove empty parts
-
-    cleanMessage.parts = parts.map((part) => {
-      // Ensure 'data-data' type gets properly typed to satisfy UIMessagePart interface.
-      if (part.type && part.type.startsWith("data-")) {
+  cleaned.parts = cleaned.parts
+    .map((part) => {
+      if (part.type?.startsWith("data-"))
         return { ...part, type: "data-data" } as {
           type: "data-data";
           id?: string;
           data: any;
         };
-      }
       return part;
-    }) as UIMessagePart<{ type: "data"; data: any }, UITools>[];
+    })
+    .filter(
+      (p) => (p as any).type && ((p as any).type !== "text" || (p as any).text),
+    ) as UIMessagePart<{ type: "data"; data: any }, UITools>[];
+  if (!cleaned.parts.length) {
+    const { parts: _, ...rest } = cleaned;
+    return rest as IChatMessage;
   }
-
-  return cleanMessage;
+  return cleaned;
 };

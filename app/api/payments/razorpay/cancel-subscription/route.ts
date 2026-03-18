@@ -60,11 +60,9 @@ export async function POST(req: NextRequest) {
           subscription.subscriptionId
         );
 
-        if (
-          !cancelAtCycleEnd &&
-          (updatedSubscription.status === "cancelled" ||
-            updatedSubscription.status === "completed")
-        ) {
+        // console.log("updatedSubscription: ", updatedSubscription);
+
+        if (cancelAtCycleEnd) {
           try {
             const subscriptionData =
               updatedSubscription as unknown as RazorpaySubscriptionData;
@@ -74,9 +72,14 @@ export async function POST(req: NextRequest) {
                 userEmail: userEmail,
               };
             }
-            await paymentService.handleRazorpaySubscriptionCancelled(
-              subscriptionData
-            );
+
+            await userService.updateUser(userEmail, {
+              subscription: {
+                ...user.subscription,
+                canceledAtPeriodEnd: true,
+              },
+            });
+
             console.log("Manually processed cancellation successfully");
           } catch (processError) {
             console.error(
@@ -118,39 +121,6 @@ export async function POST(req: NextRequest) {
         `Failed to cancel subscription: ${errorMessage}`,
         500
       );
-    }
-
-    if (cancelAtCycleEnd) {
-      const actualCancelTime = razorpayResponse?.current_end
-        ? new Date(razorpayResponse.current_end * 1000).toISOString()
-        : subscription.renewsAt || new Date().toISOString();
-
-      const updatedSubscription: IUserSubscription = {
-        ...subscription,
-        canceledAt: actualCancelTime,
-      };
-      await userService.updateUser(userEmail, {
-        subscription: updatedSubscription,
-      });
-    } else {
-      const updatedSubscription: IUserSubscription = {
-        ...subscription,
-        status: "canceled",
-        planId: "none",
-        tierId: "none",
-        razorpayPlanId: "none",
-        recurringQuota: 0,
-        canceledAt: new Date().toISOString(),
-      };
-      delete updatedSubscription.nextPaymentAt;
-      delete updatedSubscription.renewsAt;
-
-      await userService.updateUser(userEmail, {
-        subscription: updatedSubscription,
-      });
-
-      // Update recurring credits to 0 when subscription is canceled immediately
-      await creditService.renewQuota(userEmail, 0);
     }
 
     return successResponse({

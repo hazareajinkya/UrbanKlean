@@ -23,6 +23,7 @@ class UsageService {
     const year = today.getFullYear();
     const dateKey = `${day}-${month}-${year}`;
     const usageRef = doc(db, `users/${userId}/usage/${dateKey}`);
+
     try {
       await updateDoc(usageRef, {
         events: arrayUnion(usage),
@@ -80,11 +81,11 @@ class UsageService {
 
       const usageCollection = query(
         collection(db, `users/${email}/usage`),
-        limit(5)
+        limit(5),
       );
       const snapshot = await getDocs(usageCollection);
       const data = snapshot.docs.map(
-        (doc) => doc.data() as { createdAt: string; events: IUsage[] }
+        (doc) => doc.data() as { createdAt: string; events: IUsage[] },
       );
       const usageEvents: IUsage[] = [];
       data.forEach((event) => {
@@ -107,7 +108,7 @@ class UsageService {
       const usageCollection = query(
         collection(db, `users/${ownerId}/usage`),
         orderBy("createdAt", "desc"),
-        limit(2)
+        limit(2),
       );
       const snapshot = await getDocs(usageCollection);
       const allUsageEvents: IUsage[] = [];
@@ -116,17 +117,51 @@ class UsageService {
         const data = doc.data();
         if (data.events && Array.isArray(data.events)) {
           const filteredEvents = data.events.filter(
-            (event: IUsage) => event.wid === wid
+            (event: IUsage) => event.wid === wid,
           );
           allUsageEvents.push(...filteredEvents);
         }
       });
-
       return allUsageEvents;
     } catch (error) {
       console.error("Error getting usage: ", error);
       throw error;
     }
+  }
+
+  async getUsageByDateRange(
+    wid: string,
+    dateRange: { from?: Date; to?: Date },
+  ) {
+    if (!dateRange?.from) return [];
+    const workspace = await workspaceService.fetchWorkspace(wid);
+    if (!workspace?.ownerId) return [];
+    const ownerId = workspace.ownerId;
+    const dates: Date[] = [];
+    const current = new Date(dateRange.from);
+    const end = dateRange.to ? new Date(dateRange.to) : new Date(dateRange.from);
+    current.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    while (current <= end) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+    const snapshots = await Promise.all(
+      dates.map((d) => {
+        const dateKey = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+        return getDoc(doc(db, `users/${ownerId}/usage/${dateKey}`));
+      }),
+    );
+    const events: IUsage[] = [];
+    snapshots.forEach((s) => {
+      if (s.exists()) {
+        const data = s.data() as { events: IUsage[] };
+        events.push(...(data.events || []).filter((e) => e.wid === wid));
+      }
+    });
+    return events.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }
 }
 

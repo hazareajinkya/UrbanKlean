@@ -1,8 +1,11 @@
 import { v4 } from "uuid";
 import { getTagsForIndustry } from "../utils/industry-tags";
 import { IWorkspaceAnalyticsSummary } from "./analytics";
+import { PLANS } from "../plans";
+import { IPlanId } from "./user";
 
 export type IWorkspaceType = "onboarding" | "default";
+export type emailSubscriptionType = "daily";
 export interface IWorkspaceInfo {
   email: string;
   tagline: string;
@@ -27,9 +30,11 @@ export interface IWorkspace {
   type: IWorkspaceType;
   info: IWorkspaceInfo;
   analytics?: IWorkspaceAnalyticsSummary;
+  emailSubscriptions?: Partial<Record<emailSubscriptionType, string[]>>;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;
+  planId: IPlanId;
 }
 
 export const generateDefaultWorkspace = (): IWorkspace => {
@@ -42,6 +47,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
     folders: [],
     availableTags: getTagsForIndustry(),
     domains: [],
+    planId: "none",
     info: {
       businessType: "",
       description: "",
@@ -55,6 +61,7 @@ export const generateDefaultWorkspace = (): IWorkspace => {
       offerings: "",
       differentiators: "",
     },
+    emailSubscriptions: {},
     type: "default",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

@@ -19,7 +19,7 @@ import {
 } from "@/lib/hooks/knowledge/use-knowledge-base";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { capitalize, formatDate } from "@/lib/utils";
+import { capitalize, formatDate, formatFileSize } from "@/lib/utils";
 import { PDFIcon } from "@/lib/logos";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ContentItem } from "./content-detail-panel";
@@ -137,14 +137,6 @@ export default function KnowledgeContentList({
   const isLoading =
     documentsLoading || websitesLoading || textsLoading || teachLoading;
 
-  const formatFileSize = (bytes: number) => {
-    if (!bytes) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
   const unifiedContent: UnifiedContentItem[] = [
     ...(documents || []).map((doc) => ({
       id: doc.id,
@@ -256,19 +248,35 @@ export default function KnowledgeContentList({
 
         {/* Desktop: Inline buttons */}
         <div className="hidden md:flex gap-2 shrink-0">
-          <Button variant={"outline"} onClick={onAddDocument} className="rounded-full">
+          <Button
+            variant={"outline"}
+            onClick={onAddDocument}
+            className="rounded-full"
+          >
             <PDFIcon className="w-4 h-4" />
             Document
           </Button>
-          <Button variant={"outline"} onClick={onAddWebsite} className="rounded-full">
+          <Button
+            variant={"outline"}
+            onClick={onAddWebsite}
+            className="rounded-full"
+          >
             <Globe className="w-4 h-4" />
             Website
           </Button>
-          <Button variant={"outline"} onClick={onAddUrl} className="rounded-full">
+          <Button
+            variant={"outline"}
+            onClick={onAddUrl}
+            className="rounded-full"
+          >
             <Globe className="w-4 h-4" />
             URL
           </Button>
-          <Button variant={"outline"} onClick={onAddText} className="rounded-full">
+          <Button
+            variant={"outline"}
+            onClick={onAddText}
+            className="rounded-full"
+          >
             <Type className="w-4 h-4" />
             Text
           </Button>

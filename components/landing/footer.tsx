@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { AiSummaryFooter } from "@/components/landing/ai-summary-footer";
+import { companyAddress } from "@/lib/utils/conf";
 
 const footerLinks = {
   product: {
@@ -9,6 +11,7 @@ const footerLinks = {
       { label: "Overview", href: "/" },
       { label: "Features", href: "/#features" },
       { label: "Pricing", href: "/pricing" },
+      { label: "Free Tools", href: "/free-tools" },
     ],
   },
   company: {
@@ -86,7 +89,7 @@ export const Footer = () => {
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 sm:gap-10 lg:gap-12">
           {/* Logo and Description */}
-          <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 mb-4 sm:mb-0">
+          <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-2 mb-4 sm:mb-0 flex flex-col">
             <div className="flex items-center gap-2 mb-0">
               <img
                 src="/logos/magicalcx-full-trans-light.png"
@@ -96,9 +99,16 @@ export const Footer = () => {
             </div>
 
             <p className="text-sm sm:text-sm text-muted-foreground max-w-sm">
-              {/* Every brand, everywhere, can deliver magical customer experience */}
-              Greater sales, through better customer experience
+              Greater sales, through better customer service
             </p>
+            <div className="mt-auto pt-4">
+              <address className="text-sm text-muted-foreground not-italic leading-relaxed">
+                {companyAddress.line1}
+                <br />
+                {companyAddress.city}, {companyAddress.region}{" "}
+                {companyAddress.zip}
+              </address>
+            </div>
           </div>
 
           {/* Dynamic Link Columns */}
@@ -124,6 +134,7 @@ export const Footer = () => {
         </div>
       </div>
 
+      <AiSummaryFooter />
       <div
         className={`section-content-padding py-4 sm:py-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 relative z-10`}
       >

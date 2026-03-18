@@ -9,15 +9,16 @@ export const WidgetScript = () => {
     !pathname?.startsWith("/workspaces") &&
     !pathname?.startsWith("/widget-test") &&
     !pathname?.startsWith("/api") &&
-    !pathname?.startsWith("/chat");
-
+    !pathname?.startsWith("/chat") &&
+    !pathname?.startsWith("/share") &&
+    !pathname?.startsWith("/billing") &&
+    !pathname?.startsWith("/onboard-share");
   if (!shouldLoad) return null;
 
   return (
     <Script
       async
-      src="https://www.magicalcx.com/api/widget/c0e54882-04fc-489e-975b-e2b7edbf2adf"
-      //   src="http://localhost:3001/api/widget/c0e54882-04fc-489e-975b-e2b7edbf2adf"
+      src="https://www.magicalcx.com/api/widget/5be36366-8f3d-46c3-b0c7-37f67abbc1a9"
       strategy="afterInteractive"
     />
   );

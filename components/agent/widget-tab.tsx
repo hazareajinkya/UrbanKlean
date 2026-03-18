@@ -5,7 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { IAgent } from "@/lib/types/agent";
-import { Globe, Copy, Check, ExternalLink, TestTube, MessageSquare } from "lucide-react";
+import {
+  Globe,
+  Copy,
+  Check,
+  ExternalLink,
+  MessageSquare,
+  Forward,
+} from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { ScrollArea } from "../ui/scroll-area";
@@ -53,8 +60,8 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
           <div>
             <h2 className="text-lg font-medium">Deploy Your Agent</h2>
             <p className="text-sm text-muted-foreground ">
-              Test and deploy your widget in a simulated environment before adding it on
-              your website.
+              Test and deploy your widget in a simulated environment before
+              adding it on your website.
             </p>
           </div>
 
@@ -66,9 +73,21 @@ export default function WidgetTab({ agent, wid, aid }: WidgetTabProps) {
               </Button>
             </Link>
             <Link href={`/chat/${aid}`} target="_blank">
-              <Button variant="outline" className="flex items-center gap-2 bg-card">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-card"
+              >
                 <MessageSquare className="w-4 h-4" />
                 View Chat Page
+              </Button>
+            </Link>
+            <Link href={`/share/${aid}`} target="_blank">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-card"
+              >
+                <Forward className="w-4 h-4" />
+                Open Share Page
               </Button>
             </Link>
           </div>

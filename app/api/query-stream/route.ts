@@ -182,6 +182,7 @@ export async function POST(req: Request) {
 
       onFinish: async ({ responseMessage }) => {
         const totalTokens = (await result.usage).totalTokens;
+
         const aiMessage = {
           ...responseMessage,
           id: v4(),

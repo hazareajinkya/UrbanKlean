@@ -22,7 +22,7 @@ export default function UserProfileModal({
 }: UserProfileModalProps) {
   return (
     <Modal isOpen={isOpen} closeModal={onClose} size="md">
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="">
           <div className="flex items-center justify-between ">
             <h3 className="text-lg font-medium">Profile Information</h3>

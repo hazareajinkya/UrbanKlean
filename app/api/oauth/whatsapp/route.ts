@@ -7,7 +7,8 @@ import channelService from "@/lib/services/channel-service";
 import { generateDefaultChannel } from "@/lib/types/channel";
 import { errorResponse, successResponse } from "@/lib/types/api-response";
 import waService from "@/lib/services/whatsapp/wa-service";
-
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/clients/firebase";
 const whatsappAuthSchema = z.object({
   wid: z.string().min(1, "Workspace ID is required"),
   phone_number_id: z.string().min(1, "Phone number ID is required"),
@@ -63,6 +64,24 @@ export async function POST(req: NextRequest) {
       accessToken: access_token,
     });
 
+    const needsRegistration = await waService.checkRegistrationStatus({
+      phoneId: validatedParams.phone_number_id,
+      accessToken: access_token,
+    });
+
+    if (needsRegistration) {
+      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      await setDoc(doc(db, `whatsapp/${validatedParams.phone_number_id}`), {
+        pin,
+      });
+      credentials.pin = pin;
+      await waService.registerPhoneNumber({
+        phoneId: validatedParams.phone_number_id,
+        pin,
+        accessToken: access_token,
+      });
+    }
+
     const metadata = {
       phone_number_id: validatedParams.phone_number_id,
       name: phoneInfo.name,
@@ -76,10 +95,30 @@ export async function POST(req: NextRequest) {
       validatedParams.phone_number_id,
       "whatsapp",
       credentials,
-      metadata
+      metadata,
     );
 
     await channelService.addChannel(validatedParams.wid, channel);
+
+    try {
+      const templates = await waService.getMetaTemplates({
+        wabaId: validatedParams.waba_id,
+        accessToken: access_token,
+      });
+      await waService.saveTemplatesBatch({
+        wid: validatedParams.wid,
+        wabaId: validatedParams.waba_id,
+        templates,
+      });
+      console.log(
+        `Successfully synced ${templates.length} templates for WABA ID: ${validatedParams.waba_id}`,
+      );
+    } catch (templateError) {
+      console.error(
+        "Failed to sync templates during connection, but continuing:",
+        templateError,
+      );
+    }
 
     return successResponse(
       {
@@ -87,7 +126,7 @@ export async function POST(req: NextRequest) {
         phoneNumber: phoneInfo.display_phone_number,
         name: phoneInfo.name,
       },
-      "WhatsApp channel connected successfully"
+      "WhatsApp channel connected successfully",
     );
   } catch (error: any) {
     console.error("Error during WhatsApp OAuth:", error);
@@ -96,14 +135,14 @@ export async function POST(req: NextRequest) {
         `Validation error: ${error.issues
           .map((e: z.ZodIssue) => e.message)
           .join(", ")}`,
-        400
+        400,
       );
     }
     return errorResponse(
       error?.response?.data?.error?.message ||
         error?.message ||
         "Failed to connect WhatsApp channel",
-      error?.response?.status || 500
+      error?.response?.status || 500,
     );
   }
 }
@@ -136,12 +175,25 @@ export async function DELETE(req: NextRequest) {
     });
 
     await channelService.deleteChannel(wid, channelId);
+
+    try {
+      await waService.deleteAllTemplates({ wid, wabaId });
+      console.log(
+        `Successfully cleaned up templates for workspace: ${wid}, wabaId: ${wabaId}`,
+      );
+    } catch (cleanupError) {
+      console.error(
+        "Failed to clean up local templates, they may be orphaned:",
+        cleanupError,
+      );
+    }
+
     return successResponse(null, "Successfully disconnected WhatsApp channel");
   } catch (error: any) {
     console.error("Error during WhatsApp channel disconnect:", error);
     return errorResponse(
       error?.message || "Failed to disconnect WhatsApp channel",
-      error?.response?.status || 500
+      error?.response?.status || 500,
     );
   }
 }

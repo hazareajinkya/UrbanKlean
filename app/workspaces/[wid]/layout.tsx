@@ -24,16 +24,21 @@ import {
   Network,
   ListTree,
   Store,
+  TrendingUp,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import UserProfileModal from "@/components/user/user-profile-modal";
+import { CreditIndicator } from "@/components/workspaces/credit-indicator";
 import { useHotkeys } from "react-hotkeys-hook";
 import { sidebarCollapseShortcut } from "@/lib/utils/shortcuts";
 import { useSession } from "next-auth/react";
 import { useMember } from "@/lib/hooks/members/use-members";
-import { GeminiLogo } from "@/lib/logos";
+import { GeminiLogo, WAOutlineIcon } from "@/lib/logos";
+import { isWorkspacePlanActive } from "@/lib/utils/plan-utils";
+import { toast } from "sonner";
+import { useChannels } from "@/hooks/channels/use-channels";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
@@ -47,6 +52,7 @@ export default function WorkspaceLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { data: session, status } = useSession();
   const userEmail = session?.user?.email ?? "";
+  const { user, isLoading: isUserLoading } = useCurrentUser();
   const { data: member, isLoading: isMemberLoading } = useMember(
     wid,
     userEmail,
@@ -67,7 +73,7 @@ export default function WorkspaceLayout({
     redirect("/auth");
   }
 
-  if (isMemberLoading) {
+  if (isMemberLoading || isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
@@ -79,6 +85,7 @@ export default function WorkspaceLayout({
   }
 
   if (!member) {
+    toast.error("You are not a member of this workspace");
     redirect("/workspaces");
   }
 
@@ -91,6 +98,21 @@ export default function WorkspaceLayout({
         </div>
       </div>
     );
+  }
+
+  if (!workspace) {
+    toast.error("Workspace not found or has been deleted");
+    redirect("/workspaces");
+  }
+
+  if (!isWorkspacePlanActive(workspace)) {
+    toast.dismiss();
+    toast.error("Your workspace plan has expired. Please upgrade to continue.");
+    if (workspace.ownerId === user?.email) {
+      redirect(`/billing`);
+    } else {
+      redirect(`/pricing`);
+    }
   }
 
   return (
@@ -113,18 +135,21 @@ export default function WorkspaceLayout({
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-card flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
+        <header className="bg-card flex h-12 shrink-0 items-center border-b border-border px-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden"
+            className="lg:hidden "
           >
             <Menu className="h-4 w-4" />
           </Button>
-          <h1 className="text- font-mdium">{workspace?.name || "Workspace"}</h1>
+          <h1 className="">{workspace?.name || "Workspace"}</h1>
+          <div className="ml-auto flex items-center pr-2">
+            <CreditIndicator />
+          </div>
         </header>
-        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
+        <div className="flex-1 min-h-0 overflow-y-auto w-full">{children}</div>
       </div>
     </div>
   );
@@ -134,7 +159,7 @@ const navigation = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: ChartColumnIncreasing,
+    icon: TrendingUp,
   },
 
   {
@@ -143,15 +168,11 @@ const navigation = [
     icon: Book,
   },
   {
-    title: "Agents",
+    title: "AI Agents",
     href: "/agents",
     icon: Waves,
   },
-  {
-    title: "Channels",
-    href: "/channels",
-    icon: Rss,
-  },
+
   {
     title: "Customers",
     href: "/customers",
@@ -163,7 +184,7 @@ const navigation = [
     icon: ListTree,
   },
   {
-    title: "Actions",
+    title: "AI Actions",
     href: "/actions",
     icon: Zap,
   },
@@ -177,7 +198,11 @@ const navigation = [
     href: "/apps",
     icon: Store,
   },
-
+  {
+    title: "Channels",
+    href: "/channels",
+    icon: Rss,
+  },
   {
     title: "Settings",
     href: "/settings",
@@ -197,12 +222,25 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
   const pathname = usePathname();
   const { wid } = useParams() as { wid: string };
   const { user } = useCurrentUser();
+  const { data: channels } = useChannels(wid);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined")
       return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
     return false;
   });
   const [isModalOpen, setIsModelOpen] = useState(false);
+
+  const hasWhatsapp =
+    channels?.some((channel) => channel.provider === "whatsapp") ?? false;
+
+  const dynamicNavigation = [...navigation];
+  if (hasWhatsapp) {
+    dynamicNavigation.splice(6, 0, {
+      title: "WA Templates",
+      href: "/wa-templates",
+      icon: WAOutlineIcon as any,
+    });
+  }
 
   const handleSignOut = () => {
     router.push("/auth");
@@ -241,7 +279,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         >
           {!isCollapsed && (
             <>
-              <h2 className="font-medium truncate">Magical CX</h2>
+              <h2 className="font-medium truncate">MagicalCX</h2>
               <GeminiLogo className="w-4.5 text-muted-foreground rotate-45 " />
               {/* <img
                 src={"/logos/magicalcx-icon-trans-dark.png"}
@@ -272,10 +310,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
         </Button>
       </div>
 
-      {/* Navigation */}
       <div className="flex-1 px-3 py-4">
         <nav className={`${isCollapsed ? "space-y-2" : "space-y-1"}`}>
-          {navigation.map((item) => {
+          {dynamicNavigation.map((item) => {
             const href = `/workspaces/${wid}${item.href}`;
             const isActive = pathname.includes(href);
 

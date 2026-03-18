@@ -9,21 +9,17 @@ export const RESEND_API_BASE = "https://api.resend.com";
 // WhatsApp Configuration
 export const WA_WINDOW_EXPIRATION_HOURS = 24;
 export const WA_PHONE_ID = "859793977226436";
-export const WA_REDIRECT_URI = process.env.NEXT_PUBLIC_WA_REDIRECT_URI ?? "";
 
 // Facebook Configuration
 export const FB_ID = process.env.NEXT_PUBLIC_FB_ID ?? "";
 export const FB_APP_ID = process.env.NEXT_PUBLIC_FB_APP_ID ?? "";
 export const FB_APP_SECRET = process.env.FB_APP_SECRET ?? "";
-export const FB_REDIRECT_URI = process.env.NEXT_PUBLIC_FB_REDIRECT_URI ?? "";
+export const FB_CONFIG_ID = process.env.NEXT_PUBLIC_FB_CONFIG_ID ?? "";
 
 // Instagram Configuration
 export const INSTA_ID = process.env.NEXT_PUBLIC_INSTA_ID ?? "";
 export const INSTAGRAM_APP_ID = process.env.NEXT_PUBLIC_INSTAGRAM_APP_ID ?? "";
 export const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET ?? "";
-export const INSTAGRAM_REDIRECT_URI =
-  process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ??
-  "http://localhost:3000/api/oauth/instagram";
 
 // Slack OAuth Configuration
 export const SLACK_APP_ID = process.env.NEXT_PUBLIC_SLACK_APP_ID ?? "";
@@ -38,21 +34,33 @@ export const SLACK_REDIRECT_URI =
 export const SLACK_WEBHOOK_VERIFY_TOKEN =
   process.env.SLACK_WEBHOOK_VERIFY_TOKEN ?? "";
 
+export const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "";
+export const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET ?? "";
+export const RAZORPAY_WEBHOOK_SECRET =
+  process.env.RAZORPAY_WEBHOOK_SECRET ?? "";
+
+export const coreConf = {
+  isProd: process.env.NEXT_PUBLIC_ENV === "production",
+  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
+};
+
+export const companyAddress = {
+  line1: "8 The Green STE D",
+  city: "Dover",
+  region: "County of Kent, Delaware",
+  zip: "19901",
+};
+
 // API Configs
 export const waconf = {
-  version: "v24.0",
+  version: "v23.0",
   phoneID: WA_PHONE_ID,
   accessToken: process.env.WA_ACCESS_TOKEN,
   expirationWindow: WA_WINDOW_EXPIRATION_HOURS,
   baseURL: FACEBOOK_GRAPH_API_BASE,
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
-  redirectUri: WA_REDIRECT_URI,
-};
-
-export const coreConf = {
-  isProd: process.env.NEXT_PUBLIC_ENV === "production",
-  baseUrl: process.env.NEXT_PUBLIC_BASE_URL ?? "",
+  redirectUri: `https://www.magicalcx.com/api/oauth/whatsapp`,
 };
 
 export const instaconf = {
@@ -62,7 +70,7 @@ export const instaconf = {
   baseURL: INSTAGRAM_GRAPH_API_BASE,
   appId: INSTAGRAM_APP_ID,
   appSecret: INSTAGRAM_APP_SECRET,
-  redirectUri: INSTAGRAM_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/instagram`,
 };
 
 export const fbconf = {
@@ -72,7 +80,8 @@ export const fbconf = {
   baseURL: FACEBOOK_GRAPH_API_BASE,
   appId: FB_APP_ID,
   appSecret: FB_APP_SECRET,
-  redirectUri: FB_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/facebook`,
+  configId: FB_CONFIG_ID,
 };
 
 export const slackconf = {
@@ -80,7 +89,7 @@ export const slackconf = {
   clientId: SLACK_CLIENT_ID,
   clientSecret: SLACK_CLIENT_SECRET,
   signingSecret: SLACK_SIGNING_SECRET,
-  redirectUri: SLACK_REDIRECT_URI,
+  redirectUri: `${coreConf.baseUrl}/api/oauth/slack`,
   webhookVerifyToken: SLACK_WEBHOOK_VERIFY_TOKEN,
   baseURL: SLACK_API_BASE,
 };
@@ -111,3 +120,33 @@ export const shopifyconf = {
   accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
 };
 export const ENCRYPTION_SECRET = process.env.ENCRYPTION_SECRET ?? "";
+export const razorpayconf = {
+  keyId: RAZORPAY_KEY_ID,
+  keySecret: RAZORPAY_KEY_SECRET,
+  webHookSecret: RAZORPAY_KEY_SECRET,
+};
+
+export const plansConf = {
+  allInOne: {
+    monthly: {
+      razorpayPlanId:
+        process.env.NEXT_PUBLIC_ALLINONE_MONTHLY_RAZORPAY_PLAN_ID ?? "",
+      polarProductId:
+        process.env.NEXT_PUBLIC_ALLINONE_MONTHLY_POLAR_PRODUCT_ID ?? "",
+    },
+    annually: {
+      razorpayPlanId:
+        process.env.NEXT_PUBLIC_ALLINONE_ANNUALLY_RAZORPAY_PLAN_ID ?? "",
+      polarProductId:
+        process.env.NEXT_PUBLIC_ALLINONE_ANNUALLY_POLAR_PRODUCT_ID ?? "",
+    },
+  },
+
+  creditAddon: {
+    polarProductId: process.env.NEXT_PUBLIC_CREDIT_ADDON_POLAR_PRODUCT_ID ?? "",
+  },
+
+  lifetime: {
+    polarProductId: process.env.NEXT_PUBLIC_LIFETIME_POLAR_PRODUCT_ID ?? "",
+  },
+};

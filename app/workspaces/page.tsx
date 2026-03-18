@@ -41,6 +41,8 @@ import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-mult
 import { WorkspacesNavbar } from "@/components/workspaces/workspace-navbar";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { canCreateWorkspace } from "@/lib/utils/permissions";
+import { toast } from "sonner";
 
 export default function WorkspacesPage() {
   const router = useRouter();
@@ -75,7 +77,7 @@ export default function WorkspacesPage() {
             setIsDeleteModalOpen(false);
             setDeletingWorkspace(undefined);
           },
-        }
+        },
       );
     }
   };
@@ -86,6 +88,15 @@ export default function WorkspacesPage() {
   };
 
   const openCreateModal = () => {
+    if (!canCreateWorkspace(user?.subscription?.planId)) {
+      toast.error("Upgrade your plan to create a workspace", {
+        action: {
+          label: "Upgrade",
+          onClick: () => router.push("/pricing"),
+        },
+      });
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -93,7 +104,7 @@ export default function WorkspacesPage() {
     return (
       <>
         <WorkspacesNavbar />
-        <div className="mt-24 px-4 md:px-24">
+        <div className="mt-24 max-w-7xl mx-auto px-4 pr-2 md:px-3 lg:px-3">
           <div className="animate-pulse">
             <Skeleton className="h-8 w-48 mb-8 rounded-lg" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,7 +121,7 @@ export default function WorkspacesPage() {
   return (
     <>
       <WorkspacesNavbar />
-      <div className="mt-24 px-4 md:px-24">
+      <div className="mt-24 max-w-7xl mx-auto px-4 pr-2 md:px-3 lg:px-3">
         <div className="flex gap-4 justify-between mb-8">
           <h2 className="text-xl font-medium">Workspaces</h2>
           <Button onClick={openCreateModal}>
@@ -131,7 +142,9 @@ export default function WorkspacesPage() {
               <div
                 key={workspace.id}
                 className="dark:border group relative h-[340px] w-full cursor-pointer overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5 transition-all duration-500 hover:shadow-2xl hover:ring-black/10 hover:-translate-y-1"
-                onClick={() => router.push(`/workspaces/${workspace.id}`)}
+                onClick={() =>
+                  router.push(`/workspaces/${workspace.id}/dashboard`)
+                }
               >
                 {/* Full Background Layer */}
                 <div
@@ -318,7 +331,7 @@ const CreateWorkspaceModal = ({
     Partial<OnboardingData> | undefined
   >(undefined);
 
-  const { createWorkspace } = useWorkspaceActions();
+  const { createWorkspace, initWorkspaceTraining } = useWorkspaceActions();
   const { generateOnboardingInfo, uploadLogo } = useOnboardingActions();
 
   const validateDomainInput = (value: string): boolean => {
@@ -410,10 +423,11 @@ const CreateWorkspaceModal = ({
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (workspace) => {
+          if (url) initWorkspaceTraining.mutate({ wid: workspace.id, url });
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -441,7 +455,7 @@ const CreateWorkspaceModal = ({
       className="relative max-w-xl bg-white dark:bg-black rounded-2xl p-4 max-h-[90vh] flex flex-col"
       clickOutsideToClose={false}
     >
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 w-full">
         {phase === "url-input" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-start justify-between">
@@ -485,7 +499,7 @@ const CreateWorkspaceModal = ({
                     placeholder="yourcompany.com"
                     className={cn(
                       "text-base",
-                      domainError && "border-destructive"
+                      domainError && "border-destructive",
                     )}
                   />
                 </InputGroup>

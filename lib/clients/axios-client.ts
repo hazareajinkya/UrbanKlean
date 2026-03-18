@@ -17,7 +17,7 @@ import {
 } from "../utils/conf";
 
 // Create axios instance with default configuration
-const axiosClient: AxiosInstance = axios.create({
+export const axiosClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_URL,
   timeout: 120000, // 2 minutes
   headers: {
@@ -94,7 +94,7 @@ axiosClient.interceptors.request.use(
     // Log request in development
     if (process.env.NODE_ENV === "development") {
       console.log(
-        `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
+        `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
       );
     }
 
@@ -103,7 +103,7 @@ axiosClient.interceptors.request.use(
   (error) => {
     console.error("❌ Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 export const blogClient = axios.create({
@@ -132,7 +132,7 @@ axiosClient.interceptors.response.use(
 
       console.error(
         `❌ API Error ${status}:`,
-        data?.message || data || message
+        data?.message || data || message,
       );
 
       // Handle specific error cases
@@ -146,7 +146,7 @@ axiosClient.interceptors.response.use(
           break;
         case 403:
           console.error(
-            "❌ Forbidden: You don't have permission to access this resource"
+            "❌ Forbidden: You don't have permission to access this resource",
           );
           break;
         case 404:
@@ -181,38 +181,37 @@ axiosClient.interceptors.response.use(
         data: null,
       });
     }
-  }
+  },
 );
 
 // Utility functions for common HTTP methods
 export const apiClient = {
   get: <T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> => axiosClient.get(url, config),
 
   post: <T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> => axiosClient.post(url, data, config),
 
   put: <T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> => axiosClient.put(url, data, config),
 
   patch: <T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> => axiosClient.patch(url, data, config),
 
   delete: <T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> => axiosClient.delete(url, config),
 };
 
-export default axiosClient;

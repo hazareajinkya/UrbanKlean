@@ -1,6 +1,8 @@
 import { Polar } from "@polar-sh/sdk";
+import { CREDIT_ADDON, LIFETIME_PLAN } from "../plans";
 
 let polarInstance: Polar | null = null;
+const discountIdByCodeCache: Record<string, string> = {};
 
 export const getPolarInstance = (): Polar => {
   if (polarInstance) return polarInstance;
@@ -49,8 +51,22 @@ export interface PolarSubscriptionCustomData {
   tierId: string;
 }
 
+export interface PolarCreditPurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  quantity: number;
+  type: "credit_purchase";
+}
+
+export interface PolarLifetimePurchaseCustomData {
+  userId: string;
+  userEmail: string;
+  type: "lifetime_purchase";
+  planId: string;
+}
+
 export const mapPolarStatus = (
-  status: PolarSubscriptionData["status"]
+  status: PolarSubscriptionData["status"],
 ): "active" | "canceled" | "past_due" | "paused" | "trialing" => {
   switch (status) {
     case "active":
@@ -72,6 +88,26 @@ export const mapPolarStatus = (
 };
 
 export const polarApi = {
+  async getDiscountIdByCode(args: { code: string }) {
+    const normalizedCode = args.code.trim().toLowerCase();
+    if (!normalizedCode) return null;
+    if (discountIdByCodeCache[normalizedCode]) {
+      return discountIdByCodeCache[normalizedCode];
+    }
+    const polar = getPolarInstance();
+    const pages = await polar.discounts.list({ query: args.code, limit: 100 });
+    for await (const page of pages) {
+      const discount = page.result.items.find(
+        (item) => item.code?.toLowerCase() === normalizedCode
+      );
+      if (discount?.id) {
+        discountIdByCodeCache[normalizedCode] = discount.id;
+        return discount.id;
+      }
+    }
+    return null;
+  },
+
   async createCheckoutSession(arg: {
     productId: string;
     customerEmail?: string;
@@ -149,15 +185,16 @@ export const polarApi = {
         createdAt: result.createdAt.toISOString(),
         metadata: result.metadata as Record<string, string | number | boolean>,
       } as PolarSubscriptionData;
-    } else {
-      // Revoke immediately
-      await polar.subscriptions.revoke({
-        id: subscriptionId,
-      });
-
-      // Get updated subscription
-      return this.getSubscription(subscriptionId);
     }
+    // else {
+    //   // Revoke immediately
+    //   await polar.subscriptions.revoke({
+    //     id: subscriptionId,
+    //   });
+
+    //   // Get updated subscription
+    //   return this.getSubscription(subscriptionId);
+    // }
   },
 
   async createCustomerPortalSession(arg: { customerId: string }) {
@@ -170,5 +207,137 @@ export const polarApi = {
     return {
       url: result.customerPortalUrl || "",
     };
+  },
+
+  async createCreditCheckout(arg: {
+    productId: string;
+    quantity: number;
+    customerEmail?: string;
+    customerId?: string;
+    successUrl: string;
+    metadata: PolarCreditPurchaseCustomData;
+  }) {
+    const polar = getPolarInstance();
+
+    if (arg.quantity < 1 || arg.quantity > 50) {
+      throw new Error(
+        `Invalid quantity: ${arg.quantity}. Quantity must be between 1 and 50.`,
+      );
+    }
+
+    const priceAmountCents = Math.round(
+      CREDIT_ADDON.price.usd * 100 * arg.quantity,
+    );
+    if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
+      throw new Error(
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
+      );
+    }
+
+    try {
+      const result = await polar.checkouts.create({
+        products: [arg.productId],
+        prices: {
+          [arg.productId]: [
+            {
+              amountType: "fixed",
+              priceAmount: priceAmountCents,
+              priceCurrency: "usd",
+            },
+          ],
+        },
+        customerEmail: arg.customerEmail,
+        customerId: arg.customerId,
+        successUrl: arg.successUrl,
+        metadata: {
+          userId: arg.metadata.userId,
+          userEmail: arg.metadata.userEmail,
+          quantity: arg.metadata.quantity.toString(),
+          type: arg.metadata.type,
+        },
+      });
+      return {
+        id: result.id,
+        url: result.url || "",
+      };
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const res = (error as { response?: { data?: { detail?: unknown } } })
+          .response;
+        const detail = res?.data?.detail;
+        if (detail != null) {
+          throw new Error(
+            `Polar checkout creation failed: ${JSON.stringify(detail)}`,
+          );
+        }
+      }
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to create Polar checkout session");
+    }
+  },
+
+  async createLifetimeCheckout(arg: {
+    productId: string;
+    customerEmail?: string;
+    customerId?: string;
+    successUrl: string;
+    metadata: PolarLifetimePurchaseCustomData;
+    discountId?: string;
+  }) {
+    const polar = getPolarInstance();
+
+    const tier = LIFETIME_PLAN.tiers[0];
+    const priceAmountCents = tier.price.usd * 100;
+    if (priceAmountCents < 50 || priceAmountCents > 99_999_999) {
+      throw new Error(
+        `Invalid price amount: ${priceAmountCents} cents. Must be between 50 and 99,999,999.`,
+      );
+    }
+
+    try {
+      const result = await polar.checkouts.create({
+        products: [arg.productId],
+        discountId: arg.discountId,
+        prices: {
+          [arg.productId]: [
+            {
+              amountType: "fixed",
+              priceAmount: priceAmountCents,
+              priceCurrency: "usd",
+            },
+          ],
+        },
+        customerEmail: arg.customerEmail,
+        customerId: arg.customerId,
+        successUrl: arg.successUrl,
+        metadata: {
+          userId: arg.metadata.userId,
+          userEmail: arg.metadata.userEmail,
+          type: arg.metadata.type,
+          planId: arg.metadata.planId,
+        },
+      });
+      return {
+        id: result.id,
+        url: result.url || "",
+      };
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const res = (error as { response?: { data?: { detail?: unknown } } })
+          .response;
+        const detail = res?.data?.detail;
+        if (detail != null) {
+          throw new Error(
+            `Polar lifetime checkout creation failed: ${JSON.stringify(detail)}`,
+          );
+        }
+      }
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to create Polar lifetime checkout session");
+    }
   },
 };

@@ -7,13 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAgent } from "@/lib/types/agent";
-import { Loader, Upload, Building, Plus, X, GripVertical } from "lucide-react";
+import {
+  Loader,
+  Upload,
+  Building,
+  Plus,
+  X,
+  GripVertical,
+  Sparkles,
+} from "lucide-react";
 import { useRef, useState } from "react";
-import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
-import storageService from "@/lib/services/storage-service";
 import { toast } from "sonner";
 import { ChatPreview } from "@/components/chat/chat-preview";
+import { useAppearanceActions } from "@/lib/hooks/agent/use-appearance-actions";
 
 interface AppearanceTabProps {
   agent: IAgent;
@@ -24,89 +31,54 @@ const MAX_STARTER_MESSAGES = 5;
 export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const [name, setName] = useState(agent.customization.name);
   const [greetingMessage, setGreetingMessage] = useState(
-    agent.customization.greetingMessage
+    agent.customization.greetingMessage,
   );
   const [primaryColor, setPrimaryColor] = useState(
-    agent.customization.primaryColor
+    agent.customization.primaryColor,
   );
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSavingStarters, setIsSavingStarters] = useState(false);
 
   // Drag state for reordering
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   // Starter messages state
   const [starterMessagesEnabled, setStarterMessagesEnabled] = useState(
-    agent.customization.starterMessagesEnabled ?? false
+    agent.customization.starterMessagesEnabled ?? false,
   );
   const [starterMessages, setStarterMessages] = useState<string[]>(
-    agent.customization.starterMessages ?? []
+    agent.customization.starterMessages ?? [],
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wid = getwid();
-  const { updateAgent } = useAgentActions(wid);
+  const { saveAppearance, generateStarters, isSaving } =
+    useAppearanceActions(agent);
 
   const handleSave = async () => {
-    setIsSaving(true);
     try {
-      let botIconUrl = agent.customization.botIcon;
-      botIconUrl = (await uploadLogo()) || botIconUrl;
+      await saveAppearance({
+        name,
+        greetingMessage,
+        primaryColor,
+        botIcon: logoPreview || agent.customization.botIcon,
+        logoFile,
+        starterMessagesEnabled,
+        starterMessages,
+      });
 
-      // Filter out empty starter messages
-
-      const updates = {
-        customization: {
-          ...agent.customization,
-          name,
-          greetingMessage,
-          primaryColor,
-          botIcon: botIconUrl,
-          starterMessagesEnabled,
-          starterMessages: starterMessages.filter((msg) => msg.trim() !== ""),
-        },
-      };
-
-      updateAgent.mutate(
-        { aid: agent.id, updates },
-        {
-          onSuccess: () => {
-            setLogoFile(null);
-            setLogoPreview(null);
-          },
-          onSettled: () => {
-            setIsSaving(false);
-          },
-        }
-      );
+      // If we get here, save was successful
+      setLogoFile(null);
+      setLogoPreview(null);
     } catch (error) {
-      toast.error("Failed to upload logo");
-      console.error(error);
-      setIsSaving(false);
+      // Error is handled by the hook (toasts)
+      console.error("Save failed", error);
     }
   };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const uploadLogo = async () => {
-    if (logoFile) {
-      const res = await storageService.uploadFile(
-        logoFile,
-        `w/${wid}/agents/${agent.id}/logo`,
-        logoFile.name
-      );
-      const url = res.downloadURL;
-      if (logoPreview) {
-        URL.revokeObjectURL(logoPreview);
-      }
-      return url;
-    }
-    return null;
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +128,20 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
     setDragIndex(null);
   };
 
+  const handleGenerateStarters = async () => {
+    generateStarters.mutate(undefined, {
+      onSuccess: (starters: string[]) => {
+        if (Array.isArray(starters)) {
+          const sortedStarters = starters.sort(
+            (a: string, b: string) => a.length - b.length,
+          );
+          setStarterMessages(sortedStarters);
+          setStarterMessagesEnabled(true);
+        }
+      },
+    });
+  };
+
   // Create preview agent with current state
   const previewAgent: IAgent = {
     ...agent,
@@ -185,11 +171,9 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                 onClick={handleSave}
                 size={"sm"}
                 className="rounded-full"
-                disabled={isSaving || updateAgent.isPending}
+                disabled={isSaving}
               >
-                {isSaving || updateAgent.isPending ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : null}
+                {isSaving ? <Loader className="w-4 h-4 animate-spin" /> : null}
                 Save
               </Button>
             </div>
@@ -226,7 +210,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                       variant="outline"
                       size="sm"
                       onClick={handleUploadClick}
-                      disabled={isSaving || updateAgent.isPending}
+                      disabled={isSaving}
                     >
                       <Upload className="w-4 h-4 mr-1" />
                       Upload Logo
@@ -287,10 +271,25 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     </p>
                   </div>
 
-                  <Switch
-                    checked={starterMessagesEnabled}
-                    onCheckedChange={setStarterMessagesEnabled}
-                  />
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateStarters}
+                      disabled={generateStarters.isPending || isSaving}
+                    >
+                      {generateStarters.isPending ? (
+                        <Loader className="w-4 h-4 animate-spin mr-1" />
+                      ) : (
+                        <Sparkles className="w-4 h-4 mr-1" />
+                      )}
+                      Generate with AI
+                    </Button>
+                    <Switch
+                      checked={starterMessagesEnabled}
+                      onCheckedChange={setStarterMessagesEnabled}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -383,7 +382,7 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
       {/* Preview Card */}
       <Card className="h-max">
         <CardHeader>
-          <CardTitle>Live Preview</CardTitle>
+          <CardTitle>Demo Preview</CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-2">
           <ChatPreview

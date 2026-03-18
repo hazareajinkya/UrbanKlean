@@ -46,9 +46,7 @@ export const WorkspacesNavbar = () => {
           tabIndex={0}
           className="relative inline-flex items-center focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <span className="font-medium text-base text-primary tracking-tight">
-            Magical CX
-          </span>
+          <span className="font-medium text-base text-primary ">MagicalCX</span>
         </Link>
         <div className="flex items-center gap-6">
           {navLinks.map((link) => {

@@ -1,6 +1,32 @@
 import { instaClient } from "@/lib/clients/axios-client";
 
 class InstaService {
+  async sendSenderAction({
+    to,
+    accessToken,
+    action,
+  }: {
+    to: string;
+    accessToken: string;
+    action: "typing_on" | "typing_off";
+  }) {
+    try {
+      const { data } = await instaClient.post(
+        `/me/messages`,
+        { recipient: { id: to }, sender_action: action },
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      return data;
+    } catch (error: any) {
+      console.log("error: ", error.response?.data);
+      console.log(
+        `Error sending sender action (${action}):`,
+        JSON.stringify(error, null, 2),
+      );
+      throw error;
+    }
+  }
+
   async sendTextMessage({
     to,
     text,

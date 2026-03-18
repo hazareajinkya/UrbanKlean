@@ -55,9 +55,11 @@ export default function Modal({
                 leaveTo="opacity-0 scale-95"
               >
                 <DialogPanel
-                  className={`w-full transform overflow-hidden text-left align-middle shadow-xl transition-all ${className} `}
+                  className={` w-full transform overflow-hidden text-left align-middle shadow-xl transition-all ${className} `}
                 >
-                  {children}
+                  <div className="w-full flex h-full flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500 transform overflow-hidden text-left align-middle  transition-all">
+                    {children}
+                  </div>
                 </DialogPanel>
               </TransitionChild>
             </div>

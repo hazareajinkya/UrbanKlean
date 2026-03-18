@@ -57,9 +57,6 @@ const ChannelsPage = () => {
     const scopes = [
       "instagram_business_basic",
       "instagram_business_manage_messages",
-      "instagram_business_manage_comments",
-      "instagram_business_content_publish",
-      "instagram_business_manage_insights",
     ].join(",");
     console.log("scopes: ", scopes);
 
@@ -71,8 +68,7 @@ const ChannelsPage = () => {
   };
 
   const handleConnectFB = () => {
-    // const configId = "793606190090300";
-    const configId = "1771474206880747";
+    const configId = fbconf.configId;
     const url = `https://www.facebook.com/${fbconf.version}/dialog/oauth?client_id=${fbconf.appId}&config_id=${configId}&redirect_uri=${fbconf.redirectUri}&response_type=code&state=${wid}`;
     window.open(url, "_blank");
   };
@@ -280,7 +276,7 @@ const ChannelCard = ({ channel }: { channel: IChannel }) => {
 
   // Get currently assigned agent
   const assignedAgent = agents?.find(
-    (agent) => agent.id === channel.assignedAgentId
+    (agent) => agent.id === channel.assignedAgentId,
   );
 
   const handleAssignAgent = (agentId: string) => {
@@ -489,7 +485,7 @@ const EmailChannelSettingsModal = ({
       closeModal={onClose}
       className="max-w-md bg-background rounded-xl p-6 shadow-xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold">Email settings</h2>
           <p className="text-sm text-muted-foreground">{channelName}</p>
