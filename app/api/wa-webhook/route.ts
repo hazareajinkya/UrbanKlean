@@ -5,12 +5,40 @@ import { IWAMessage } from "@/lib/types/wa-api";
 import waService from "@/lib/services/whatsapp/wa-service";
 import waBotService from "@/lib/services/whatsapp/wa-bot-service";
 import channelService from "@/lib/services/channel-service";
+import axios from "axios";
 // Function to send a text message
 export const maxDuration = 60;
 
+const logWebhook = (message: string, data?: unknown) => {
+  if (data === undefined) return console.log(`[wa-webhook] ${message}`);
+  console.log(`[wa-webhook] ${message}`, data);
+};
+
+const logWebhookError = (error: unknown, context: string) => {
+  if (axios.isAxiosError(error)) {
+    console.error(`[wa-webhook] ${context} - axios error`, {
+      message: error.message,
+      code: error.code,
+      method: error.config?.method,
+      url: error.config?.url,
+      status: error.response?.status,
+      response: error.response?.data,
+    });
+    return;
+  }
+  if (error instanceof Error) {
+    console.error(`[wa-webhook] ${context} - error`, {
+      message: error.message,
+      stack: error.stack,
+    });
+    return;
+  }
+  console.error(`[wa-webhook] ${context} - unknown`, error);
+};
+
 export async function POST(req: Request) {
   try {
-    console.log("POST request received");
+    logWebhook("POST request received");
     const body = await req.json();
 
     const value = body.entry[0].changes[0].value;
@@ -18,7 +46,7 @@ export async function POST(req: Request) {
     const phoneNumberId = value.metadata?.phone_number_id || body.entry[0].id;
 
     if (!phoneNumberId) {
-      console.error("phone_number_id not found in webhook");
+      logWebhook("phone_number_id not found in webhook");
       return NextResponse.json(
         { error: "phone_number_id not found" },
         { status: 400 },
@@ -28,9 +56,7 @@ export async function POST(req: Request) {
       await channelService.getChannelByPhoneNumberId(phoneNumberId);
 
     if (!channel) {
-      console.log(
-        `Unable to find channel for phone_number_id ${phoneNumberId}`,
-      );
+      logWebhook(`Unable to find channel for phone_number_id ${phoneNumberId}`);
       return NextResponse.json(
         { message: "Channel not found" },
         { status: 200 },
@@ -41,9 +67,7 @@ export async function POST(req: Request) {
     const agentId = channel.assignedAgentId;
 
     if (!agentId) {
-      console.log(
-        `No agent assigned to channel for phone_number_id ${phoneNumberId}`,
-      );
+      logWebhook(`No agent assigned to channel for phone_number_id ${phoneNumberId}`);
       return NextResponse.json(
         { message: "No agent assigned to channel" },
         { status: 200 },
@@ -69,9 +93,8 @@ export async function POST(req: Request) {
       const query =
         msgType === "image" ? parsed.msg.image?.url : parsed.msg.text;
 
-      console.log("user query: ", query);
-
-      console.log("Whatsapp body: ", parsed);
+      logWebhook("incoming user query", { msgType, query, phoneNumberId });
+      logWebhook("parsed whatsapp payload", parsed);
 
       await waService.sendTypingIndicator({
         messageId: parsed.msg.id,
@@ -103,10 +126,11 @@ export async function POST(req: Request) {
             )
           ) {
             console.warn(
-              `Cannot send message to ${parsed.contact.waId}: ${error.message}. ` +
+              `[wa-webhook] Cannot send message to ${parsed.contact.waId}: ${error.message}. ` +
                 `This is expected in development/test mode. Add the number to the allowed recipient list in Meta Business Manager.`,
             );
           } else {
+            logWebhookError(error, "failed to send whatsapp text response");
             throw error;
           }
         }
@@ -118,10 +142,11 @@ export async function POST(req: Request) {
       const phone = value.statuses[0].recipient_id;
 
       const hasMsgRead = status === "read";
-      console.log("message status:", status);
+      logWebhook("message status update", { status, msgId, phone, hasMsgRead });
 
       if (value.statuses[0].errors) {
-        console.error("WhatsApp status error: ", value.statuses[0].errors);
+        logWebhook("whatsapp status contains errors");
+        logWebhookError(value.statuses[0].errors, "status errors from whatsapp");
       }
     }
     else if (
@@ -136,7 +161,7 @@ export async function POST(req: Request) {
         reason,
       } = change;
 
-      console.log(
+      logWebhook(
         `Template status update: ${message_template_name} -> ${event}`,
       );
 
@@ -158,11 +183,11 @@ export async function POST(req: Request) {
           status: newStatus,
           rejectedReason: reason,
         });
-        console.log(
+        logWebhook(
           `Updated template ${message_template_name} status to ${newStatus} for workspace ${channelInfo.wid}`,
         );
       } else {
-        console.log(
+        logWebhook(
           `Could not find workspace for WABA ID ${wabaId} to update template status`,
         );
       }
@@ -173,7 +198,7 @@ export async function POST(req: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error processing WhatsApp webhook:", error);
+    logWebhookError(error, "error processing whatsapp webhook");
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -186,7 +211,7 @@ export async function GET(req: Request) {
   const mode = searchParams.get("hub.mode");
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
-  console.log(mode, token, challenge);
+  logWebhook("webhook verification request", { mode, token, challenge });
 
   if (mode === "subscribe" && token === process.env.WA_VERIFY_TOKEN) {
     return new Response(challenge, { status: 200 });
