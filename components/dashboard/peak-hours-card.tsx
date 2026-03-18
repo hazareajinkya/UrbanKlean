@@ -61,7 +61,6 @@ export const PeakHoursCard = ({ dailyAnalytics }: PeakHoursCardProps) => {
     // Find max count across all days and slots
     const max = Math.max(
       ...data.flatMap((day) => day.slots.map((s) => s.count)),
-      1 // At least 1 to avoid division by zero
     );
 
     return { heatmapData: data, maxCount: max };

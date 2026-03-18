@@ -37,18 +37,8 @@ export const CreditIndicator = () => {
         warningVariant: "none" as "none" | "low" | "critical",
       };
 
-      if (remainingPercentage > 30) {
-        return base;
-      }
-
       if (remainingPercentage > 10) {
-        return {
-          ...base,
-          colorClass: "text-yellow-500",
-          bgTrackClass: "text-yellow-500/15",
-          progressIndicatorClass:
-            "[&>[data-slot=progress-indicator]]:bg-yellow-500",
-        };
+        return base;
       }
 
       if (remainingPercentage >= 2) {
@@ -82,10 +72,6 @@ export const CreditIndicator = () => {
     user.subscription?.nextPaymentAt ||
     getNextMonthFirstDay();
 
-  const remainingPercentageStr = `${Math.round(remainingPercentage)}%`;
-  let triggerTextSize = "text-[9px]";
-  if (remainingPercentageStr.length >= 3) triggerTextSize = "text-[8px]";
-
   return (
     <HoverCard openDelay={150} closeDelay={200}>
       <HoverCardTrigger asChild>
@@ -107,24 +93,19 @@ export const CreditIndicator = () => {
               </span>
             </div>
           )}
-          <div className="relative">
+          <div className="relative flex items-center gap-2">
+            <span
+              className={cn("text-lg font-medium tabular-nums", colorClass)}
+            >
+              {remainingCredits.toLocaleString()}
+            </span>
             <CircularProgress
               value={remainingPercentage}
-              size={36}
-              strokeWidth={2.5}
+              size={24}
+              strokeWidth={2}
               colorClass={colorClass}
               trackColorClass={bgTrackClass}
-            >
-              <span
-                className={cn(
-                  "font-medium tracking-tight text-xs leading-none",
-                  triggerTextSize,
-                  colorClass,
-                )}
-              >
-                {remainingPercentageStr}
-              </span>
-            </CircularProgress>
+            />
           </div>
         </div>
       </HoverCardTrigger>
@@ -145,14 +126,17 @@ export const CreditIndicator = () => {
                 <span className="text-xl font-medium text-foreground">
                   {remainingCredits.toLocaleString()}
                 </span>
-                <span className="text-muted-foreground">
-                  /{totalCredits.toLocaleString()} remaining
+                <span className="text-muted-foreground ml-1">
+                  / {totalCredits.toLocaleString()} remaining
                 </span>
               </p>
             </div>
             <Progress
               value={remainingPercentage}
-              className={cn("h-2 bg-secondary", progressIndicatorClass)}
+              className={cn(
+                "h-2 bg-black/10 dark:bg-white/10 mt-2",
+                progressIndicatorClass,
+              )}
             />
           </div>
 
@@ -173,7 +157,7 @@ export const CreditIndicator = () => {
           )}
 
           <Button
-            className="w-full "
+            className="w-full mt-2"
             onClick={handleBuyMore}
             aria-label="Buy more credits"
             tabIndex={0}

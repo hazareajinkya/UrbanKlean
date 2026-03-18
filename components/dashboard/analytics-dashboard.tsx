@@ -138,16 +138,15 @@ export const AnalyticsDashboard = ({
           formatValue={formatNumber}
         />
         <StatCard
-          title="Closed Conversations"
-          value={displaySummary.totalClosedConversations}
-          icon={CheckCircle2}
-          formatValue={formatNumber}
+          title="Resolution Rate"
+          value={`${resolutionRate}%`}
+          icon={TrendingUp}
         />
         <StatCard
-          title="Credits Used"
-          value={displaySummary.totalCreditsUsed}
-          icon={Coins}
-          formatValue={formatNumber}
+          title="Avg Cost / Conv"
+          value={displaySummary.avgCostPerConversation}
+          icon={DollarSign}
+          formatValue={formatCurrency}
         />
         <StatCard
           title="Total Cost"
@@ -176,15 +175,16 @@ export const AnalyticsDashboard = ({
       {/* Key Metrics */}
       <div className="grid gap-3 grid-cols-3">
         <StatCard
-          title="Resolution Rate"
-          value={`${resolutionRate}%`}
-          icon={TrendingUp}
+          title="Closed Conversations"
+          value={displaySummary.totalClosedConversations}
+          icon={CheckCircle2}
+          formatValue={formatNumber}
         />
         <StatCard
-          title="Avg Cost / Conv"
-          value={displaySummary.avgCostPerConversation}
-          icon={DollarSign}
-          formatValue={formatCurrency}
+          title="Credits Used"
+          value={displaySummary.totalCreditsUsed}
+          icon={Coins}
+          formatValue={formatNumber}
         />
         <StatCard
           title="Avg Credits / Conv"
