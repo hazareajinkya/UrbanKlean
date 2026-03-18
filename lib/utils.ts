@@ -43,6 +43,12 @@ export function formatDate(date?: string) {
   return format(new Date(date), "dd MMM yyyy");
 }
 
+export function getNextMonthFirstDay() {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return nextMonth.toISOString();
+}
+
 export const formatFileSize = (bytes: number) => {
   if (!bytes) return "0 Bytes";
   const k = 1024;
@@ -458,3 +464,38 @@ export const stripUndefined = <T extends object>(obj: T): T =>
   Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined),
   ) as T;
+
+export const exportUsageData = (
+  usageData: { createdAt: string; eventType: string; metadata?: { model?: string; tokenUsage?: number }; amount: number; aid?: string | null; sessionId?: string | null }[],
+  dateRange?: { from?: Date; to?: Date },
+) => {
+  if (!usageData?.length) return;
+  const headers = ["Date", "Event Type", "Model", "Token Usage", "Amount", "Agent ID", "Session ID"];
+  const csvContent = [
+    headers.join(","),
+    ...usageData.map((u) =>
+      [
+        `"${formatDateTime(u.createdAt)}"`,
+        `"${u.eventType}"`,
+        `"${u.metadata?.model || "N/A"}"`,
+        u.metadata?.tokenUsage?.toLocaleString() || "0",
+        u.amount,
+        `"${u.aid ?? ""}"`,
+        `"${u.sessionId ?? ""}"`,
+      ].join(","),
+    ),
+  ].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  const dateStr = dateRange?.from
+    ? dateRange.to
+      ? `${format(dateRange.from, "yyyy-MM-dd")}-to-${format(dateRange.to, "yyyy-MM-dd")}`
+      : format(dateRange.from, "yyyy-MM-dd")
+    : "all_time";
+  link.setAttribute("download", `usage-history-${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};

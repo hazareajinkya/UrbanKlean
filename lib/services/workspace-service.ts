@@ -16,6 +16,7 @@ import {
   generateDefaultWorkspace,
   IWorkspace,
   IWorkspaceInfo,
+  emailSubscriptionType,
 } from "../types/workspace";
 import { IPlanId } from "../types/user";
 import userService from "./user-service";
@@ -150,6 +151,34 @@ class WorkspaceService {
         }
       }
     }
+  }
+
+  async updateEmailSubscriptions({
+    wid,
+    insightType,
+    memberEmail,
+    enabled,
+  }: {
+    wid: string;
+    insightType: emailSubscriptionType;
+    memberEmail: string;
+    enabled: boolean;
+  }) {
+    const updateValue = enabled
+      ? arrayUnion(memberEmail)
+      : arrayRemove(memberEmail);
+    const insightUpdateValue = enabled
+      ? arrayUnion(insightType)
+      : arrayRemove(insightType);
+    await Promise.all([
+      updateDoc(doc(db, `workspaces/${wid}`), {
+        [`emailSubscriptions.${insightType}`]: updateValue,
+        updatedAt: new Date().toISOString(),
+      }),
+      updateDoc(doc(db, `workspaces/${wid}/members/${memberEmail}`), {
+        emailSubscriptions: insightUpdateValue,
+      }),
+    ]);
   }
 
   async addDomainToWorkspace({ wid, domain }: { wid: string; domain: string }) {

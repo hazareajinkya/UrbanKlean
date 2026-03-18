@@ -24,6 +24,7 @@ import { OnboardingData } from "@/lib/types/onboarding";
 import { OnboardingMultiStepForm } from "@/components/onboarding/onboarding-multi-step-form";
 import OnboardingAnimation from "@/components/onboarding/onboarding-animation";
 import datafastService from "@/lib/services/datafast-service";
+import { sendGTMEvent } from "@next/third-parties/google";
 
 type Phase = "form" | "onboarding" | "success";
 
@@ -101,6 +102,7 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   useEffect(() => {
     datafastService.trackGoal("onboarding_page_viewed");
+    sendGTMEvent({ event: "onboarding_viewed" });
   }, []);
 
   useEffect(() => {
@@ -155,6 +157,7 @@ function OnboardingContent() {
   const handleOnboardingFinish = async (data: OnboardingData) => {
     if (!url) return;
     datafastService.trackGoal("onboarding_completed");
+    sendGTMEvent({ event: "onboarding_complete" });
 
     try {
       const result = await startOnboarding.mutateAsync({

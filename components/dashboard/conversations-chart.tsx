@@ -16,12 +16,12 @@ interface ConversationsChartProps {
 }
 
 const channelColors: Record<string, string> = {
-  web: "hsl(var(--primary))", // Primary
-  email: "hsl(38, 92%, 50%)", // Orange
-  whatsapp: "hsl(142, 70%, 45%)", // WhatsApp Green
-  messenger: "hsl(214, 89%, 52%)", // Messenger Blue
-  instagram: "hsl(326, 78%, 55%)", // Instagram Pink/Magenta
-  slack: "hsl(283, 65%, 50%)", // Slack Purple
+  web: "var(--primary)",
+  email: "#4285F4", // Gmail primary blue
+  whatsapp: "#25D366", // WhatsApp primary green
+  messenger: "#0084FF", // Messenger blue
+  instagram: "#E1306C", // Instagram gradient red-pink
+  slack: "#4A154B", // Slack aubergine (primary)
 };
 
 export const ConversationsChart = ({
@@ -105,7 +105,11 @@ export const ConversationsChart = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <ChartContainer config={chartConfig} className="h-[260px] w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="h-[260px] w-full"
+          aria-label="7-day conversations by channel stacked bar chart"
+        >
           <BarChart
             data={chartData}
             margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
@@ -138,7 +142,7 @@ export const ConversationsChart = ({
                 if (!active || !payload?.length) return null;
 
                 const filteredPayload = payload.filter(
-                  (item) => item.value !== 0
+                  (item) => item.value !== 0,
                 );
 
                 if (filteredPayload.length === 0) return null;
@@ -186,31 +190,41 @@ export const ConversationsChart = ({
               dataKey="web"
               stackId="1"
               fill={channelColors.web}
+              radius={[0, 0, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="Web conversations"
             />
             <Bar
               dataKey="email"
               stackId="1"
               fill={channelColors.email}
+              radius={[0, 0, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="Email conversations"
             />
             <Bar
               dataKey="whatsapp"
               stackId="1"
               fill={channelColors.whatsapp}
+              radius={[0, 0, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="WhatsApp conversations"
             />
             <Bar
               dataKey="messenger"
               stackId="1"
               fill={channelColors.messenger}
+              radius={[0, 0, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="Messenger conversations"
             />
             <Bar
               dataKey="instagram"
               stackId="1"
               fill={channelColors.instagram}
+              radius={[0, 0, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="Instagram conversations"
             />
             <Bar
               dataKey="slack"
@@ -218,14 +232,19 @@ export const ConversationsChart = ({
               fill={channelColors.slack}
               radius={[4, 4, 0, 0]}
               className="transition-opacity hover:opacity-80"
+              aria-label="Slack conversations"
             />
           </BarChart>
         </ChartContainer>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-2 border-t border-border/50">
+        <div
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-3 border-t border-border/50"
+          role="list"
+          aria-label="Channel legend"
+        >
           {Object.entries(chartConfig).map(([key, config]) => (
-            <div key={key} className="flex items-center gap-1.5">
+            <div key={key} className="flex items-center gap-2" role="listitem">
               <span
-                className={`h-3 w-3 rounded-sm shrink-0 ${
+                className={`h-3.5 w-3.5 rounded-sm shrink-0 ${
                   key === "web" ? "bg-primary" : ""
                 }`}
                 style={
@@ -233,7 +252,7 @@ export const ConversationsChart = ({
                 }
                 aria-hidden="true"
               />
-              <span className="text-xs text-muted-foreground font-medium">
+              <span className="text-sm text-foreground font-medium">
                 {config.label}
               </span>
             </div>

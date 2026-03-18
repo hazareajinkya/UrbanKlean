@@ -10,7 +10,13 @@ import {
   defaultUserMessage,
   IChatMessage,
 } from "@/lib/types/session";
-import { convertToModelMessages, generateText, stepCountIs } from "ai";
+import {
+  convertToModelMessages,
+  gateway,
+  generateObject,
+  generateText,
+  stepCountIs,
+} from "ai";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
@@ -23,16 +29,64 @@ import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
 import workflowService from "../workflow-service";
+import { openai } from "@ai-sdk/openai";
+import z from "zod";
+import { emailNeedToReplyPrompt } from "@/prompts/email-need-to-replay-prompt";
+import { google } from "@ai-sdk/google";
+
+const shouldReplyDecisionSchema = z.object({
+  shouldReply: z.boolean().describe("Whether the email requires a reply "),
+  reason: z.string().min(3).max(240).describe("The reason for the decision"),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("The confidence level of the decision"),
+});
 
 class PostmarkBotService {
   ERROR_MESSAGE = "Something went wrong";
   UNABLE_RESOLVE_AGENT_MESSAGE = "Unable to resolve agent";
 
+  async shouldReplyToEmail(postmarkMsg: IPostmarkMessage) {
+    const emailContent = (
+      postmarkMsg.strippedTextReply ||
+      postmarkMsg.textBody ||
+      ""
+    ).trim();
+
+    if (!emailContent) {
+      return {
+        shouldReply: false,
+        reason: "Empty email body",
+        confidence: 1,
+      };
+    }
+
+    const truncatedContent = emailContent.slice(0, 4000);
+
+    try {
+      const result = await generateObject({
+        model: gateway("openai/gpt-oss-120b"),
+        schema: shouldReplyDecisionSchema,
+        prompt: emailNeedToReplyPrompt(postmarkMsg, truncatedContent),
+      });
+      return result.object;
+    } catch (error) {
+      console.error("Postmark shouldReply classifier failed:", error);
+      return {
+        shouldReply: false,
+        reason: "Classifier failure fallback",
+        confidence: 0,
+      };
+    }
+  }
+
   async generateResponse(
     postmarkMsg: IPostmarkMessage,
     email: string,
     personEmail: string,
-    channel: IChannelProvider // userId: string, // waMsg: IWAMessage,
+    channel: IChannelProvider, // userId: string, // waMsg: IWAMessage,
   ) {
     try {
       const aid = await channelService.resolveAgent(email, channel);
@@ -67,7 +121,7 @@ class PostmarkBotService {
 
       const actions = await actionService.getActionsForWorflows(
         agent.wid,
-        workflows
+        workflows,
       );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({
@@ -75,6 +129,8 @@ class PostmarkBotService {
         workflows,
         channel,
         personId: session.personId,
+        name: postmarkMsg.fromName,
+        email: personEmail,
       });
       const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
@@ -107,7 +163,7 @@ class PostmarkBotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -164,7 +220,7 @@ class PostmarkBotService {
       agent.id,
       email,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleService.updatePastSessionIds({

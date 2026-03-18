@@ -8,6 +8,7 @@ import {
 import "./globals.css";
 import { ClientProvider } from "./client-provider";
 import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { coreConf } from "@/lib/utils/conf";
 
 import { WidgetScript } from "@/components/widget-script";
@@ -43,6 +44,7 @@ const playfair = STIX_Two_Text({
   variable: "--font-playfair",
   style: "italic",
 });
+const gtmId = "GTM-M2R4PW7N";
 
 export const metadata: Metadata = {
   metadataBase: coreConf.baseUrl ? new URL(coreConf.baseUrl) : undefined,
@@ -71,6 +73,7 @@ export default function RootLayout({
       <body
         className={` ${inter.variable} ${stixTwoText.variable} ${playfair.variable} ${playfairItalic.variable} ${bodona.variable} font-sans antialiased`}
       >
+        {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
         <ClientProvider>{children}</ClientProvider>
         <WidgetScript />
         <Script

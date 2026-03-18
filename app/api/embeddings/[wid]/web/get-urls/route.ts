@@ -7,13 +7,13 @@ import {
 import { NextRequest } from "next/server";
 import folderService from "@/lib/services/folder-service";
 import workspaceService from "@/lib/services/workspace-service";
-import { generateObject } from "ai";
+import { gateway, generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import z from "zod";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ wid: string }> }
+  { params }: { params: Promise<{ wid: string }> },
 ) {
   try {
     const { wid } = await params;
@@ -40,7 +40,7 @@ export async function GET(
           urls: Array.from(new Set(url.url || [])),
         })),
       },
-      "URL mapped successfully"
+      "URL mapped successfully",
     );
   } catch (error) {
     console.error("URL mapping failed: ", error);
@@ -59,11 +59,11 @@ const categorizeUrls = async (
   folders: {
     id: string;
     name: string;
-  }[]
+  }[],
 ) => {
   try {
     const mainContentUrlResult = await generateObject({
-      model: google("gemini-3-flash-preview"),
+      model: gateway("openai/gpt-oss-120b"),
       schema: categorizeUrlSchema,
       prompt: `You are organizing a website's URLs into logical folders for a knowledge base.
 
@@ -105,7 +105,7 @@ const categorizeUrls = async (
             ...(u.category && { hint: u.category }),
           })),
           null,
-          2
+          2,
         )}`,
     });
 
@@ -128,5 +128,5 @@ export const categorizeUrlSchema = z.array(
     url: z
       .array(z.string())
       .describe("List of URLs categorized into this folder"),
-  })
+  }),
 );

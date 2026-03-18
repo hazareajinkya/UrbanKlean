@@ -24,16 +24,16 @@ export const workflowsToText = (workflows: IWorkflow[]) =>
   workflows
     .map(
       (w) =>
-        `Name: ${w.name} \n Trigger: ${w.trigger} \n Instructions: ${w.instructions}`
+        `Name: ${w.name} \n Trigger: ${w.trigger} \n Instructions: ${w.instructions}`,
     )
     .join("\n\n");
 
 const fineTuningInstructions = (
   reasoning?: string,
-  improvementSuggestions?: string
+  improvementSuggestions?: string,
 ) => {
   console.log(
-    (reasoning || improvementSuggestions) && "Has guidance context..........."
+    (reasoning || improvementSuggestions) && "Has guidance context...........",
   );
   return `
   ## Fine-Tuning Instructions
@@ -94,6 +94,8 @@ export const getSystemPrompt = (arg: {
   isFinetuning?: boolean;
   reasoning?: string;
   suggestion?: string;
+  name?: string;
+  email?: string;
 }) => {
   const {
     agent,
@@ -104,6 +106,8 @@ export const getSystemPrompt = (arg: {
     isFinetuning,
     reasoning,
     suggestion,
+    name,
+    email,
   } = arg;
   const workflowsText = workflowsToText(workflows);
   const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
@@ -126,5 +130,7 @@ export const getSystemPrompt = (arg: {
 
   ## Context
   - Channel:${channel}
+  ${name ? `- Name:${name}` : ""}
+  ${email ? `- Email:${email}` : ""}
 `;
 };

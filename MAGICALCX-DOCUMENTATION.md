@@ -597,6 +597,12 @@ Custom Actions allow the AI to take real actions during conversations by calling
 | **Admin**  | Can manage members, invite users, configure agents  |
 | **Member** | Basic access to conversations and dashboard         |
 
+### Email Insight Subscriptions
+
+- Owners and admins can subscribe members to email insights from the Members tab.
+- Subscriptions are stored per workspace and control who receives daily insights.
+- Member records are updated with their subscribed insight types for quick access.
+
 ### Invitation System
 
 - Email-based invitations

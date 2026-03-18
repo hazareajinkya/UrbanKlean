@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Settings2, Globe, User, ListTree } from "lucide-react";
+import { Settings2, Globe, User, Gauge } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ const sections = [
   {
     id: "usage",
     label: "Usage",
-    icon: ListTree,
+    icon: Gauge,
   },
   {
     id: "domains",
