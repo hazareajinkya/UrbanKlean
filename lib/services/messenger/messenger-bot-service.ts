@@ -3,13 +3,16 @@ import agentService from "../agent-service";
 import { convertToModelMessages, generateText, stepCountIs } from "ai";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
-import { defaultAImessage, defaultUserMessage, IChatMessage } from "@/lib/types/session";
+import {
+  defaultAImessage,
+  defaultUserMessage,
+  IChatMessage,
+} from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
 import { IExternalIds } from "@/lib/types/person";
 import { IChannelProvider } from "@/lib/types/channel";
 import { IMessengerMessage } from "@/lib/types/messenger-api";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
 import { collectInformation } from "@/lib/tools/collect-info";
 import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
@@ -17,6 +20,7 @@ import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import peopleServiceV2 from "../people-service-v2";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class MessengerBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -43,7 +47,7 @@ class MessengerBotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ messengerUserId, agent, channel }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -55,9 +59,17 @@ class MessengerBotService {
       const userMsg = defaultUserMessage(query, msg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(agent.wid, workflows);
+      const actions = await actionService.getActionsForWorkflows(
+        agent.wid,
+        workflows,
+      );
       const model = getModel(agent);
-      const systemPrompt = getSystemPrompt({ agent, workflows, channel, personId: session.personId });
+      const systemPrompt = getSystemPrompt({
+        agent,
+        workflows,
+        channel,
+        personId: session.personId,
+      });
       const customTools = getCustomTools(actions);
       const chatHistory: IChatMessage[] = [...session.messages, userMsg];
       const messages = convertToModelMessages(chatHistory);
@@ -91,7 +103,7 @@ class MessengerBotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -119,7 +131,7 @@ class MessengerBotService {
   }) {
     let session = await chatService.getSessionByProviderId(
       messengerUserId,
-      agent.id
+      agent.id,
     );
     if (session) return session;
 
@@ -149,7 +161,7 @@ class MessengerBotService {
       agent.id,
       messengerUserId,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleServiceV2.updatePastSessionIds({

@@ -4,6 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const actionKey = (wid: string, id: string) => ["actions", wid, id];
 export const actionsKey = (wid: string) => ["actions", wid];
+export const globalActionsKey = (appSlug?: string) => [
+  "global-actions",
+  appSlug || "all",
+];
 
 export const useAIActions = (wid?: string) => {
   const qc = useQueryClient();
@@ -13,9 +17,8 @@ export const useAIActions = (wid?: string) => {
     queryKey: actionsKey(workspaceId),
     queryFn: () =>
       actionService.getActions(workspaceId).then((actions) => {
-        // Cache individual actions
         actions?.forEach((action) =>
-          qc.setQueryData(actionKey(workspaceId, action.id), action)
+          qc.setQueryData(actionKey(workspaceId, action.id), action),
         );
         return actions;
       }),
@@ -39,6 +42,20 @@ export const useAIAction = (actionId: string) => {
 
   return {
     action: query.data,
+    ...query,
+  };
+};
+
+
+
+export const useGlobalActions = (appSlug?: string) => {
+  const query = useQuery({
+    queryKey: globalActionsKey(appSlug),
+    queryFn: () => actionService.getGlobalActions(appSlug),
+  });
+
+  return {
+    globalActions: query.data,
     ...query,
   };
 };

@@ -7,76 +7,178 @@ import {
   getDocs,
   collection,
 } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 import { IWorkflow } from "../types/workflow";
 import { db } from "../clients/firebase";
 import cacheService from "./cache-service";
 import { invalidateCache } from "../utils/cache-utils";
+import actionService from "./action-service";
 
 class WorkflowService {
   async createWorkflow({
-    aid,
+    wid,
     workflow,
   }: {
-    aid: string;
+    wid: string;
     workflow: IWorkflow;
   }) {
-    await setDoc(doc(db, `agents/${aid}/workflows/${workflow.id}`), workflow);
+    await setDoc(
+      doc(db, `workspaces/${wid}/workflows/${workflow.id}`),
+      workflow,
+    );
 
-    // Invalidate server-side cache via API
-    invalidateCache({ type: "workflows", id: aid });
+    invalidateCache({ type: "workflows", id: wid });
   }
 
   async updateWorkflow({
-    aid,
+    wid,
     workflowId,
     updates,
   }: {
-    aid: string;
+    wid: string;
     workflowId: string;
     updates: Partial<IWorkflow>;
   }) {
-    await updateDoc(doc(db, `agents/${aid}/workflows/${workflowId}`), {
+    await updateDoc(doc(db, `workspaces/${wid}/workflows/${workflowId}`), {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
 
-    // Invalidate server-side cache via API
-    invalidateCache({ type: "workflows", id: aid });
+    invalidateCache({ type: "workflows", id: wid });
   }
 
-  async getWorkflow(aid: string, workflowId: string) {
-    const docRef = doc(db, `agents/${aid}/workflows/${workflowId}`);
+  async getWorkflow(wid: string, workflowId: string) {
+    const docRef = doc(db, `workspaces/${wid}/workflows/${workflowId}`);
     const docSnap = await getDoc(docRef);
     return docSnap.data() as IWorkflow;
   }
 
-  async getWorkflows(aid: string) {
-    // Try cache first
-    const cached = await cacheService.getWorkflows(aid);
-    if (cached) return cached;
+  async getWorkflows(wid: string, aid?: string) {
+    let workflows = await cacheService.getWorkflows(wid);
 
-    // Cache miss - fetch from Firestore
-    const docRef = collection(db, `agents/${aid}/workflows`);
-    const docSnap = await getDocs(docRef);
-    const workflows = docSnap.docs.map((doc) => doc.data() as IWorkflow);
+    if (!workflows) {
+      const colRef = collection(db, `workspaces/${wid}/workflows`);
+      const snap = await getDocs(colRef);
+      workflows = snap.docs.map((doc) => doc.data() as IWorkflow);
 
-    // Store in cache (fire and forget)
-    cacheService.setWorkflows(aid, workflows);
+      cacheService.setWorkflows(wid, workflows);
+    }
 
+    return workflows.filter(
+      (w) => w.isActive && (!aid || (w.aids ?? []).includes(aid)),
+    );
+  }
+  async getAllWorkflows(wid: string) {
+    let workflows = await cacheService.getWorkflows(wid);
+
+    if (!workflows) {
+      const colRef = collection(db, `workspaces/${wid}/workflows`);
+      const snap = await getDocs(colRef);
+      workflows = snap.docs.map((doc) => doc.data() as IWorkflow);
+
+      cacheService.setWorkflows(wid, workflows);
+    }
     return workflows;
   }
 
   async deleteWorkflow({
-    aid,
+    wid,
     workflowId,
   }: {
-    aid: string;
+    wid: string;
     workflowId: string;
   }) {
-    await deleteDoc(doc(db, `agents/${aid}/workflows/${workflowId}`));
+    await deleteDoc(doc(db, `workspaces/${wid}/workflows/${workflowId}`));
 
     // Invalidate server-side cache via API
-    invalidateCache({ type: "workflows", id: aid });
+    invalidateCache({ type: "workflows", id: wid });
+  }
+
+  async getGlobalWorkflows() {
+    const workflowsRef = collection(db, "workflows");
+    const snap = await getDocs(workflowsRef);
+    return snap.docs.map((d) => d.data() as IWorkflow);
+  }
+
+  async addIntegrationWorkflow({
+    wid,
+    globalWorkflow,
+  }: {
+    wid: string;
+    globalWorkflow: IWorkflow;
+  }) {
+    const workspaceActions = (await actionService.getActions(wid)) ?? [];
+
+    const originalIdToWorkspaceId = new Map<string, string>();
+    workspaceActions.forEach((a) => {
+      if (a.originalId) {
+        originalIdToWorkspaceId.set(a.originalId, a.id);
+      }
+    });
+
+    const mappedToolIds: string[] = [];
+
+    for (const toolId of globalWorkflow.toolIds) {
+      const existingId = originalIdToWorkspaceId.get(toolId);
+      if (existingId) {
+        mappedToolIds.push(existingId);
+        continue;
+      }
+
+      try {
+        const globalAction = await actionService.getGlobalAction(toolId);
+        if (globalAction) {
+          const installed = await actionService.addIntegrationAction({
+            wid,
+            globalAction,
+          });
+          mappedToolIds.push(installed.id);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to install action ${toolId} for workflow:`,
+          error,
+        );
+      }
+    }
+
+    const workspaceWorkflow: IWorkflow = {
+      ...globalWorkflow,
+      id: uuidv4(),
+      originalId: globalWorkflow.id,
+      wid,
+      toolIds: mappedToolIds,
+      aids: [],
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(
+      doc(db, `workspaces/${wid}/workflows/${workspaceWorkflow.id}`),
+      workspaceWorkflow,
+    );
+
+    invalidateCache({ type: "workflows", id: wid });
+
+    return workspaceWorkflow;
+  }
+
+  async toggleWorkflowStatus({
+    wid,
+    workflowId,
+    isActive,
+  }: {
+    wid: string;
+    workflowId: string;
+    isActive: boolean;
+  }) {
+    await updateDoc(doc(db, `workspaces/${wid}/workflows/${workflowId}`), {
+      isActive,
+      updatedAt: new Date().toISOString(),
+    });
+
+    invalidateCache({ type: "workflows", id: wid });
   }
 }
 

@@ -1,5 +1,12 @@
 import { v4 } from "uuid";
 
+export type IActionApp = {
+  id: string;
+  slug?: string;
+  name: string;
+  icon: string;
+};
+
 export interface IAction {
   id: string;
   wid: string;
@@ -8,19 +15,27 @@ export interface IAction {
   slug: string;
   description: string;
   type: IActionType;
-
+  app?: IActionApp;
+  originalId?: string;
   apiUrl: string;
   requestType: IRequestType;
   headers: Record<string, string>;
   authorization: IActionAuthorization;
-  inputs: IActionInput[];
-
+  query?: IActionInput[];
+  body?: IActionInput[];
+  status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
 }
+export type IActionIntegration = "shopify" | "none";
+export type IActionParentAuth = {
+  appId: string;
+  appSlug: string;
+  appAuthType: string;
+};
 
 export type IActionAuthorization = {
-  type: "none" | "api-key" | "bearer-token";
+  type: "none" | "api-key" | "bearer-token" | "parent-auth" | "basic";
   apiKey?: {
     key: string;
     value: string;
@@ -29,17 +44,22 @@ export type IActionAuthorization = {
   bearerToken?: {
     token: string;
   };
+  basic?: {
+    username: string;
+    password: string;
+  };
+  parentAuth?: IActionParentAuth;
 };
-export type IRequestType = "GET" | "POST" | "PUT" | "DELETE";
+export type IRequestType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type IActionInput = {
   key: string;
-  type: "string" | "number" | "boolean" | "url" | "object";
+  type: "string" | "number" | "boolean" | "url" | "object" | "array";
   required: boolean;
   description?: string;
   children?: IActionInput[];
 };
 
-export type IActionType = "internal" | "user" | "integration";
+export type IActionType = "internal" | "user" | "integration" | "app-action";
 
 export const generateDefaultAction = (
   wid: string,
@@ -51,10 +71,12 @@ export const generateDefaultAction = (
   authorization: IActionAuthorization,
   requestType: IRequestType,
   headers: Record<string, string>,
-  inputs: IActionInput[]
+  query?: IActionInput[],
+  body?: IActionInput[],
 ): IAction => {
   return {
     id: v4(),
+    status: "active",
     wid,
     name,
     slug,
@@ -64,7 +86,8 @@ export const generateDefaultAction = (
     apiUrl,
     description,
     headers,
-    inputs,
+    query,
+    body,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

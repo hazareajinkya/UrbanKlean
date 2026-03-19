@@ -21,7 +21,6 @@ import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
 import creditService from "../credit-service";
 import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
@@ -33,6 +32,7 @@ import { openai } from "@ai-sdk/openai";
 import z from "zod";
 import { emailNeedToReplyPrompt } from "@/prompts/email-need-to-replay-prompt";
 import { google } from "@ai-sdk/google";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 const shouldReplyDecisionSchema = z.object({
   shouldReply: z.boolean().describe("Whether the email requires a reply "),
@@ -105,7 +105,7 @@ class PostmarkBotService {
           channel,
           name: postmarkMsg.fromName,
         }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -119,7 +119,7 @@ class PostmarkBotService {
       const userMsg = defaultUserMessage(query, postmarkMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );

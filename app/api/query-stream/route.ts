@@ -10,7 +10,6 @@ import actionService from "@/lib/services/action-service";
 import { collectInformation } from "@/lib/tools/collect-info";
 import { IAction } from "@/lib/types/actions";
 import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
-import { executeAPIAction } from "@/lib/utils/api-actions-utils";
 import { getModel, getSystemPrompt } from "@/lib/utils/query-stream-utils";
 import { IChatMessage } from "@/lib/types/session";
 import { convertToMyModelMessages } from "@/components/chat/chat-utils";
@@ -19,7 +18,8 @@ import { defaultUsage } from "@/lib/types/usage";
 import { v4 } from "uuid";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { normIp, getCustomTools, getClientIp, latency } from "@/lib/utils";
+import { normIp, getClientIp, latency } from "@/lib/utils";
+import { getCustomTools } from "@/lib/utils/server-actions";
 import workflowService from "@/lib/services/workflow-service";
 
 const ratelimit = new Ratelimit({
@@ -56,9 +56,9 @@ export async function POST(req: Request) {
 
     latency.start();
 
-    // First batch: rate limit + agent + workflows (parallel with granular timing)
+    // First batch: rate limit + agent (parallel with granular timing)
     const batch1Start = performance.now();
-    const [rateLimitResult, agent, workflows] = await Promise.all([
+    const [rateLimitResult, agent] = await Promise.all([
       ratelimit.limit(ip).then((r) => {
         console.log(
           `  ├─ rateLimit: ${(performance.now() - batch1Start).toFixed(0)}ms`,
@@ -70,12 +70,6 @@ export async function POST(req: Request) {
           `  ├─ agent: ${(performance.now() - batch1Start).toFixed(0)}ms`,
         );
         return a;
-      }),
-      workflowService.getWorkflows(aid).then((w) => {
-        console.log(
-          `  ├─ workflows: ${(performance.now() - batch1Start).toFixed(0)}ms`,
-        );
-        return w;
       }),
     ]);
     console.log(
@@ -91,6 +85,14 @@ export async function POST(req: Request) {
 
     // Second batch: all agent-dependent calls (parallel with granular timing)
     const batch2Start = performance.now();
+
+    // Fetch workflows first (depends on agent.wid)
+    const workflows = await workflowService.getWorkflows(agent.wid, aid);
+    console.log(
+      `  ├─ workflows: ${(performance.now() - batch2Start).toFixed(0)}ms`,
+    );
+
+    console.log("workflows: ", workflows);
     const systemPrompt = getSystemPrompt({
       agent,
       workflows,
@@ -98,6 +100,7 @@ export async function POST(req: Request) {
       personId,
       geo,
     });
+
     const [creditInfo, , actions] = await Promise.all([
       creditService.getCredit(agent.ownerId).then((c) => {
         console.log(
@@ -121,7 +124,7 @@ export async function POST(req: Request) {
           );
           return s;
         }),
-      actionService.getActionsForWorflows(agent.wid, workflows).then((a) => {
+      actionService.getActionsForWorkflows(agent.wid, workflows).then((a) => {
         console.log(
           `  ├─ actions: ${(performance.now() - batch2Start).toFixed(0)}ms`,
         );

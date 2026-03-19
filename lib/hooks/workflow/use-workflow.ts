@@ -1,25 +1,26 @@
 import workflowService from "@/lib/services/workflow-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const workflowKey = (aid: string, workflowId: string) => [
+export const workflowKey = (wid: string, workflowId: string) => [
   "workflows",
-  aid,
+  wid,
   workflowId,
 ];
-export const workflowsKey = (aid: string) => ["workflows", aid];
+export const workflowsKey = (wid: string) => ["workflows", wid];
 
-export const useWorkflows = (aid: string) => {
+export const useWorkflows = (wid: string) => {
   const qc = useQueryClient();
 
   const query = useQuery({
-    queryKey: workflowsKey(aid),
+    queryKey: workflowsKey(wid),
     queryFn: () =>
-      workflowService.getWorkflows(aid).then((workflows) => {
+      workflowService.getAllWorkflows(wid).then((workflows) => {
         workflows.map((workflow) =>
-          qc.setQueryData(workflowKey(aid, workflow.id), workflow)
+          qc.setQueryData(workflowKey(wid, workflow.id), workflow),
         );
         return workflows;
       }),
+    enabled: !!wid,
   });
 
   return {
@@ -28,10 +29,11 @@ export const useWorkflows = (aid: string) => {
   };
 };
 
-export const useWorkflow = (aid: string, workflowId: string) => {
+export const useWorkflow = (wid: string, workflowId: string) => {
   const query = useQuery({
-    queryKey: workflowKey(aid, workflowId),
-    queryFn: () => workflowService.getWorkflow(aid, workflowId),
+    queryKey: workflowKey(wid, workflowId),
+    queryFn: () => workflowService.getWorkflow(wid, workflowId),
+    enabled: !!wid && !!workflowId,
   });
 
   return {
