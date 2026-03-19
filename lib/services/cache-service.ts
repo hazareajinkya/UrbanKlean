@@ -62,9 +62,8 @@ class CacheService {
     if (redis) this.log("INVALIDATE", key);
   }
 
-  // Workflows cache (keyed by agent ID)
-  async getWorkflows(aid: string): Promise<IWorkflow[] | null> {
-    const key = `${cachePrefix.workflows}${aid}`;
+  async getWorkflows(wid: string): Promise<IWorkflow[] | null> {
+    const key = `${cachePrefix.workflows}${wid}`;
     const cached = await this.get<IWorkflow[]>(key);
     if (cached) {
       this.log("HIT", key, `${cached.length} workflows`);
@@ -74,14 +73,14 @@ class CacheService {
     return cached;
   }
 
-  async setWorkflows(aid: string, workflows: IWorkflow[]): Promise<void> {
-    const key = `${cachePrefix.workflows}${aid}`;
+  async setWorkflows(wid: string, workflows: IWorkflow[]): Promise<void> {
+    const key = `${cachePrefix.workflows}${wid}`;
     await this.set(key, workflows);
     if (redis) this.log("SET", key, `${workflows.length} workflows`);
   }
 
-  async invalidateWorkflows(aid: string): Promise<void> {
-    const key = `${cachePrefix.workflows}${aid}`;
+  async invalidateWorkflows(wid: string): Promise<void> {
+    const key = `${cachePrefix.workflows}${wid}`;
     await this.del(key);
     if (redis) this.log("INVALIDATE", key);
   }

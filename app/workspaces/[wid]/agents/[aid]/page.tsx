@@ -75,7 +75,7 @@ export default function AgentPage() {
     { id: "chat", label: "Playground", icon: Play },
     { id: "chat-history", label: "History", icon: MessagesSquare },
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "workflow", label: "Workflows", icon: ListTree },
+    // { id: "workflow", label: "Workflows", icon: ListTree },
     { id: "settings", label: "Settings", icon: Settings2 },
     { id: "widget", label: "Widget", icon: Code },
   ];
@@ -103,7 +103,7 @@ export default function AgentPage() {
                 "flex items-center gap-2 px-3.5 py-2 g-secondary text-sm rounded-md transition-all duration-200 hover:text-primary hover:bg-secondary",
                 tab === tabItem.id
                   ? "text-primary "
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <tabItem.icon className="w-4 h-4" />
@@ -138,7 +138,7 @@ export default function AgentPage() {
           {tab === "chat" && <ChatTab agent={agent} />}
           {tab === "chat-history" && <ChatHistoryTab agent={agent} />}
           {tab === "appearance" && <AppearanceTab agent={agent} />}
-          {tab === "workflow" && <WorkflowTab agent={agent} />}
+          {/* {tab === "workflow" && <WorkflowTab agent={agent} />} */}
           {tab === "settings" && <SettingsTab agent={agent} />}
           {tab === "widget" && <WidgetTab agent={agent} wid={wid} aid={aid} />}
         </div>

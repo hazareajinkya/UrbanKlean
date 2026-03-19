@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import actionService from "@/lib/services/action-service";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -30,19 +31,11 @@ import {
   IActionAuthorization,
 } from "@/lib/types/actions";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
-import {
-  Plus,
-  Trash2,
-  X,
-  RefreshCw,
-  Settings,
-  Loader,
-  TestTube,
-  EyeOff,
-  Play,
-} from "lucide-react";
+import { ArrowRight, Plus, Trash2, X, Loader, Play } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import TestApiRequest from "./test-api-request";
+
+type InputTarget = "query" | "body";
 
 interface AddApiActionModalProps {
   isOpen: boolean;
@@ -51,6 +44,35 @@ interface AddApiActionModalProps {
   editingAction?: IAction | null;
 }
 
+const normalizeInput = (
+  input: IActionInput,
+  fallbackKey: string,
+): IActionInput => ({
+  key: input.key || fallbackKey,
+  description: input.description || "",
+  type: input.type,
+  required: input.required,
+  children: input.children?.map((child, i) =>
+    normalizeInput(child, `field_${i}`),
+  ),
+});
+
+const mapInputForSave = (input: IActionInput): IActionInput => {
+  const result: IActionInput = {
+    type: input.type,
+    key: input.key,
+    required: input.required,
+    description: input.description,
+  };
+  if ((input.type === "object" || input.type === "array") && input.children) {
+    result.children = input.children
+      .filter((child) => child.key.trim() !== "")
+      .map(mapInputForSave);
+  }
+  return result;
+};
+
+const METHODS_WITH_BODY: IRequestType[] = ["POST", "PUT", "PATCH", "DELETE"];
 type IUiActionInput = Omit<IActionInput, "children"> & {
   uiId: string;
   children?: IUiActionInput[];
@@ -75,7 +97,8 @@ const AddApiActionModal = ({
     description: string;
     method: string;
     url: string;
-    inputs: IUiActionInput[];
+    query: IActionInput[];
+    body: IActionInput[];
     headers: Array<{ key: string; value: string }>;
     authorization: IActionAuthorization;
   }>({
@@ -83,13 +106,16 @@ const AddApiActionModal = ({
     description: editingAction?.description || "",
     method: editingAction?.requestType || "GET",
     url: editingAction?.apiUrl || "",
-    inputs:
-      editingAction?.inputs && editingAction.inputs.length > 0
-        ? toUiInputs(
-            editingAction.inputs.map((input, index) => ({
-              ...input,
-              key: input.key || `param_${index}`,
-            })),
+    query:
+      editingAction?.query && editingAction.query.length > 0
+        ? editingAction.query.map((input, index) =>
+            normalizeInput(input, `param_${index}`),
+          )
+        : [],
+    body:
+      editingAction?.body && editingAction.body.length > 0
+        ? editingAction.body.map((input, index) =>
+            normalizeInput(input, `field_${index}`),
           )
         : [],
     headers: Object.entries(editingAction?.headers || {}).map(
@@ -105,23 +131,69 @@ const AddApiActionModal = ({
   const [showTestPanel, setShowTestPanel] = useState(false);
   const { saveAction, updateAction } = useAiActionsActions();
 
-  const handleSave = () => {
-    const sanitizeInputs = (inputs: IUiActionInput[]): IActionInput[] =>
-      inputs
-        .filter((param) => param.key?.trim())
-        .map((param) => {
-          const children =
-            param.children && param.children.length
-              ? sanitizeInputs(param.children)
-              : [];
-          return {
-            type: param.type,
-            key: param.key,
-            required: param.required,
-            description: param.description,
-            ...(children.length ? { children } : {}),
-          };
-        });
+  const showBodyTab = METHODS_WITH_BODY.includes(
+    formData.method as IRequestType,
+  );
+
+  // Auto-extract {param} variables from URL and sync into query params
+  useEffect(() => {
+    const urlValue = formData.url;
+    if (!urlValue) return;
+
+    const templateVarRegex = /\{([\w-]+)\}/g;
+    const extractedKeys: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = templateVarRegex.exec(urlValue)) !== null) {
+      extractedKeys.push(match[1]);
+    }
+
+    if (extractedKeys.length === 0) return;
+
+    setFormData((prev) => {
+      const existingKeys = new Set(prev.query.map((q) => q.key));
+      const newParams: IActionInput[] = extractedKeys
+        .filter((key) => !existingKeys.has(key))
+        .map((key) => ({
+          key,
+          description: "",
+          type: "string" as const,
+          required: true,
+        }));
+
+      if (newParams.length === 0) return prev;
+
+      return {
+        ...prev,
+        query: [...prev.query, ...newParams],
+      };
+    });
+  }, [formData.url]);
+
+  // If method changes to one without body, switch away from body tab
+  useEffect(() => {
+    if (!showBodyTab && activeTab === "body") {
+      setActiveTab("parameters");
+    }
+  }, [showBodyTab, activeTab]);
+
+  const handleSave = async () => {
+    let authorization = { ...formData.authorization };
+    try {
+      authorization = await actionService.encryptActionAuthorization({
+        authorization,
+        existingAuthorization: editingAction?.authorization,
+      });
+    } catch (error) {
+      console.error("Failed to encrypt settings:", error);
+      return;
+    }
+
+    const sanitizedQuery = formData.query
+      .filter((param) => param.key.trim() !== "")
+      .map(mapInputForSave);
+    const sanitizedBody = formData.body
+      .filter((param) => param.key.trim() !== "")
+      .map(mapInputForSave);
 
     const actionData: IAction = {
       id: editingAction?.id || uuidv4(),
@@ -141,10 +213,12 @@ const AddApiActionModal = ({
         },
         {} as Record<string, string>,
       ),
-      authorization: formData.authorization,
-      inputs: sanitizeInputs(formData.inputs),
+      authorization: authorization,
+      query: sanitizedQuery.length > 0 ? sanitizedQuery : undefined,
+      body: sanitizedBody.length > 0 ? sanitizedBody : undefined,
       createdAt: editingAction?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      status: "active",
     };
 
     if (editingAction) {
@@ -164,11 +238,11 @@ const AddApiActionModal = ({
     }
   };
 
-  const addInput = () => {
+  const handleAddInput = (target: InputTarget) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: [
-        ...prev.inputs,
+      [target]: [
+        ...prev[target],
         {
           uiId: uuidv4(),
           key: "",
@@ -180,95 +254,127 @@ const AddApiActionModal = ({
     }));
   };
 
-  const updateInput = (index: number, field: InputField, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      inputs: prev.inputs.map((input, i) =>
-        i === index
-          ? {
-              ...input,
-              [field]: value,
-              children:
-                field === "type" && value !== "object"
-                  ? ([] as IUiActionInput[])
-                  : input.children,
-            }
-          : input,
-      ),
-    }));
-  };
-
-  const addNestedInput = (parentIndex: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      inputs: prev.inputs.map((input, i) =>
-        i === parentIndex
-          ? {
-              ...input,
-              children: [
-                ...(input.children || []),
-                {
-                  uiId: uuidv4(),
-                  key: "",
-                  description: "",
-                  type: "string",
-                  required: false,
-                },
-              ],
-            }
-          : input,
-      ),
-    }));
-  };
-
-  const updateNestedInput = (
-    parentIndex: number,
+  const handleUpdateInput = (
+    target: InputTarget,
     index: number,
-    field: InputField,
-    value: any,
+    field: keyof IActionInput,
+    value: IActionInput[keyof IActionInput],
   ) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: prev.inputs.map((input, i) =>
-        i === parentIndex
-          ? {
+      [target]: prev[target].map((input, inputIndex) => {
+        if (inputIndex !== index) return input;
+
+        if (field === "type") {
+          const nextType = value as IActionInput["type"];
+          if (nextType === "object" || nextType === "array") {
+            return {
               ...input,
-              children: (input.children || []).map((child, ci) =>
-                ci === index
-                  ? {
-                      ...child,
-                      [field]: value,
-                      children:
-                        field === "type" && value !== "object"
-                          ? ([] as IUiActionInput[])
-                          : child.children,
-                    }
-                  : child,
-              ),
-            }
-          : input,
-      ),
+              type: nextType,
+              children: input.children || [],
+            };
+          }
+
+          return {
+            ...input,
+            type: nextType,
+            children: undefined,
+          };
+        }
+
+        return { ...input, [field]: value };
+      }),
     }));
   };
 
-  const removeNestedInput = (parentIndex: number, index: number) => {
+  const handleRemoveInput = (target: InputTarget, index: number) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: prev.inputs.map((input, i) =>
-        i === parentIndex
-          ? {
-              ...input,
-              children: (input.children || []).filter((_, ci) => ci !== index),
-            }
-          : input,
-      ),
+      [target]: prev[target].filter((_, inputIndex) => inputIndex !== index),
     }));
   };
 
-  const removeInput = (index: number) => {
+  const handleAddObjectVariable = (target: InputTarget, inputIndex: number) => {
     setFormData((prev) => ({
       ...prev,
-      inputs: prev.inputs.filter((_, i) => i !== index),
+      [target]: prev[target].map((input, currentIndex) => {
+        if (currentIndex !== inputIndex) return input;
+        return {
+          ...input,
+          children: [
+            ...(input.children || []),
+            {
+              key: "",
+              description: "",
+              type: "string",
+              required: false,
+            },
+          ],
+        };
+      }),
+    }));
+  };
+
+  const handleUpdateObjectVariable = (args: {
+    target: InputTarget;
+    inputIndex: number;
+    variableIndex: number;
+    field: keyof IActionInput;
+    value: IActionInput[keyof IActionInput];
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      [args.target]: prev[args.target].map((input, currentInputIndex) => {
+        if (currentInputIndex !== args.inputIndex) return input;
+
+        return {
+          ...input,
+          children: (input.children || []).map(
+            (variable, currentVariableIndex) => {
+              if (currentVariableIndex !== args.variableIndex) return variable;
+              if (args.field === "type") {
+                const nextType = args.value as IActionInput["type"];
+                if (nextType === "object" || nextType === "array") {
+                  return {
+                    ...variable,
+                    type: nextType,
+                    children: variable.children || [],
+                  };
+                }
+
+                return {
+                  ...variable,
+                  type: nextType,
+                  children: undefined,
+                };
+              }
+
+              return { ...variable, [args.field]: args.value };
+            },
+          ),
+        };
+      }),
+    }));
+  };
+
+  const handleRemoveObjectVariable = (args: {
+    target: InputTarget;
+    inputIndex: number;
+    variableIndex: number;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      [args.target]: prev[args.target].map((input, currentInputIndex) => {
+        if (currentInputIndex !== args.inputIndex) return input;
+
+        return {
+          ...input,
+          children: (input.children || []).filter(
+            (_, currentVariableIndex) =>
+              currentVariableIndex !== args.variableIndex,
+          ),
+        };
+      }),
     }));
   };
 
@@ -304,6 +410,274 @@ const AddApiActionModal = ({
       headers: prev.headers.filter((_, i) => i !== index),
     }));
   };
+
+  const renderInputTable = (config: {
+    target: InputTarget;
+    tabValue: string;
+    items: IActionInput[];
+    emptyMessage: string;
+    addButtonLabel: string;
+    keyPlaceholder: string;
+  }) => (
+    <TabsContent value={config.tabValue} className="space-y-4 pt-2 pb-4">
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Key</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-center">Required</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {config.items.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground py-8"
+                >
+                  {config.emptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              config.items.map((input, index) => (
+                <Fragment key={index}>
+                  <TableRow>
+                    <TableCell>
+                      <Input
+                        value={input.key}
+                        onChange={(event) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "key",
+                            event.target.value,
+                          )
+                        }
+                        placeholder={config.keyPlaceholder}
+                        className="w-full"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={input.description || ""}
+                        onChange={(event) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "description",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Description"
+                        className="w-full"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={input.type}
+                        onValueChange={(value) =>
+                          handleUpdateInput(config.target, index, "type", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="string">String</SelectItem>
+                          <SelectItem value="number">Number</SelectItem>
+                          <SelectItem value="boolean">Boolean</SelectItem>
+                          <SelectItem value="url">URL</SelectItem>
+                          <SelectItem value="object">Object (JSON)</SelectItem>
+                          <SelectItem value="array">Array (JSON)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={input.required}
+                        onCheckedChange={(checked) =>
+                          handleUpdateInput(
+                            config.target,
+                            index,
+                            "required",
+                            checked,
+                          )
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveInput(config.target, index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+
+                  {input.type === "object" || input.type === "array" ? (
+                    <>
+                      <TableRow className="bg-muted/20">
+                        <TableCell className="pl-4 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <ArrowRight className="size-3" />
+                            Nested variables for{" "}
+                            <span className="font-medium text-foreground">
+                              {input.key ||
+                                (input.type === "array" ? "array" : "object")}
+                            </span>
+                          </span>
+                        </TableCell>
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                      </TableRow>
+
+                      {(input.children || []).map(
+                        (
+                          objectVariable: IActionInput,
+                          variableIndex: number,
+                        ) => (
+                          <TableRow
+                            key={`${index}-${variableIndex}`}
+                            className="bg-muted/10"
+                          >
+                            <TableCell className="pl-8">
+                              <Input
+                                value={objectVariable.key}
+                                onChange={(event) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "key",
+                                    value: event.target.value,
+                                  })
+                                }
+                                placeholder="field"
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={objectVariable.description || ""}
+                                onChange={(event) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "description",
+                                    value: event.target.value,
+                                  })
+                                }
+                                placeholder="Field description"
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={objectVariable.type}
+                                onValueChange={(value) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "type",
+                                    value,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="string">String</SelectItem>
+                                  <SelectItem value="number">Number</SelectItem>
+                                  <SelectItem value="boolean">
+                                    Boolean
+                                  </SelectItem>
+                                  <SelectItem value="url">URL</SelectItem>
+                                  <SelectItem value="object">
+                                    Object (JSON)
+                                  </SelectItem>
+                                  <SelectItem value="array">
+                                    Array (JSON)
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={objectVariable.required}
+                                onCheckedChange={(checked) =>
+                                  handleUpdateObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                    field: "required",
+                                    value: checked,
+                                  })
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveObjectVariable({
+                                    target: config.target,
+                                    inputIndex: index,
+                                    variableIndex,
+                                  })
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ),
+                      )}
+
+                      <TableRow className="bg-muted/10">
+                        <TableCell className="pl-8">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleAddObjectVariable(config.target, index)
+                            }
+                            className="gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Variable
+                          </Button>
+                        </TableCell>
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                        <TableCell />
+                      </TableRow>
+                    </>
+                  ) : null}
+                </Fragment>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Button variant="outline" onClick={() => handleAddInput(config.target)}>
+        <Plus className="w-4 h-4" />
+        {config.addButtonLabel}
+      </Button>
+    </TabsContent>
+  );
 
   return (
     <Modal
@@ -408,6 +782,14 @@ const AddApiActionModal = ({
                   >
                     Parameters
                   </TabsTrigger>
+                  {showBodyTab && (
+                    <TabsTrigger
+                      value="body"
+                      className="border-b-2 border-transparent data-[state=active]:border-primary "
+                    >
+                      Body
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger
                     value="authorization"
                     className="border-b-2 border-transparent data-[state=active]:border-primary "
@@ -423,231 +805,24 @@ const AddApiActionModal = ({
                 </TabsList>
               </div>
 
-              <TabsContent value="parameters" className="space-y-4 pt-2 pb-4">
-                <div className="border rounded-md">
-                  {formData.inputs.length === 0 ? (
-                    <div className="p-6 text-center text-sm text-muted-foreground bg-muted/30 rounded-md">
-                      Add Parameter to add inputs if your API needs them.
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Key</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead className="text-center">
-                            Required
-                          </TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {formData.inputs.map((input, index) => (
-                          <Fragment key={input.uiId}>
-                            <TableRow>
-                              <TableCell>
-                                <Input
-                                  value={input.key}
-                                  onChange={(e) =>
-                                    updateInput(index, "key", e.target.value)
-                                  }
-                                  placeholder="city"
-                                  className="w-full"
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  value={input.description || ""}
-                                  onChange={(e) =>
-                                    updateInput(
-                                      index,
-                                      "description",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="City of the user"
-                                  className="w-full"
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Select
-                                  value={input.type}
-                                  onValueChange={(value) =>
-                                    updateInput(index, "type", value)
-                                  }
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="string">
-                                      String
-                                    </SelectItem>
-                                    <SelectItem value="number">
-                                      Number
-                                    </SelectItem>
-                                    <SelectItem value="boolean">
-                                      Boolean
-                                    </SelectItem>
-                                    <SelectItem value="url">URL</SelectItem>
-                                    <SelectItem value="object">
-                                      Object (JSON)
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Switch
-                                  checked={input.required}
-                                  onCheckedChange={(checked) =>
-                                    updateInput(index, "required", checked)
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => removeInput(index)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                            {input.type === "object" && (
-                              <>
-                                <TableRow>
-                                  <TableCell colSpan={5}>
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      <span className="font-medium">-&gt;</span>
-                                      <span className="font-medium">
-                                        Nested variables for{" "}
-                                        {input.key || "object"}
-                                      </span>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                                {(input.children || []).map(
-                                  (child, childIndex) => (
-                                    <TableRow key={child.uiId}>
-                                      <TableCell className="pl-8">
-                                        <Input
-                                          value={child.key}
-                                          onChange={(e) =>
-                                            updateNestedInput(
-                                              index,
-                                              childIndex,
-                                              "key",
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder="field"
-                                          className="w-full"
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <Input
-                                          value={child.description || ""}
-                                          onChange={(e) =>
-                                            updateNestedInput(
-                                              index,
-                                              childIndex,
-                                              "description",
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder="Field description"
-                                          className="w-full"
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <Select
-                                          value={child.type}
-                                          onValueChange={(value) =>
-                                            updateNestedInput(
-                                              index,
-                                              childIndex,
-                                              "type",
-                                              value,
-                                            )
-                                          }
-                                        >
-                                          <SelectTrigger className="w-full">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="string">
-                                              String
-                                            </SelectItem>
-                                            <SelectItem value="number">
-                                              Number
-                                            </SelectItem>
-                                            <SelectItem value="boolean">
-                                              Boolean
-                                            </SelectItem>
-                                            <SelectItem value="url">
-                                              URL
-                                            </SelectItem>
-                                            <SelectItem value="object">
-                                              Object (JSON)
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        <Switch
-                                          checked={child.required}
-                                          onCheckedChange={(checked) =>
-                                            updateNestedInput(
-                                              index,
-                                              childIndex,
-                                              "required",
-                                              checked,
-                                            )
-                                          }
-                                        />
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            removeNestedInput(index, childIndex)
-                                          }
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                      </TableCell>
-                                    </TableRow>
-                                  ),
-                                )}
-                                <TableRow>
-                                  <TableCell colSpan={5} className="pl-8">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => addNestedInput(index)}
-                                      className="gap-2"
-                                    >
-                                      <Plus className="w-4 h-4" />
-                                      Add Variable
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              </>
-                            )}
-                          </Fragment>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </div>
+              {renderInputTable({
+                target: "query",
+                tabValue: "parameters",
+                items: formData.query,
+                emptyMessage: "No query parameters defined yet.",
+                addButtonLabel: "Add Parameter",
+                keyPlaceholder: "city",
+              })}
 
-                <Button variant="outline" onClick={addInput} className="">
-                  <Plus className="w-4 h-4" />
-                  Add Parameter
-                </Button>
-              </TabsContent>
+              {showBodyTab &&
+                renderInputTable({
+                  target: "body",
+                  tabValue: "body",
+                  items: formData.body,
+                  emptyMessage: "No body fields defined yet.",
+                  addButtonLabel: "Add Body Field",
+                  keyPlaceholder: "field_name",
+                })}
 
               <TabsContent
                 value="authorization"
@@ -882,7 +1057,8 @@ const AddApiActionModal = ({
             <TestApiRequest
               url={formData.url}
               method={formData.method as IRequestType}
-              inputs={formData.inputs}
+              query={formData.query}
+              body={formData.body}
               headers={formData.headers}
               authorization={formData.authorization}
               onClose={() => setShowTestPanel(false)}

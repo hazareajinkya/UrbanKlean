@@ -1,25 +1,45 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { RefreshCw, Plus, Code, Edit, Trash2, Loader } from "lucide-react";
-import { useAIActions } from "@/lib/hooks/actions/use-ai-actions";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { Plus, Code, Loader } from "lucide-react";
+import { toast } from "sonner";
+import {
+  useAIActions,
+  useGlobalActions,
+} from "@/lib/hooks/actions/use-ai-actions";
+import { useInstalledApps, usePublishedApps } from "@/lib/hooks/apps/use-apps";
 import { useAiActionsActions } from "@/lib/hooks/actions/use-ai-actions-actions";
-import { formatDate } from "@/lib/utils";
 import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { AddApiActionModal } from "@/components/actions";
+import { WorkspaceActionCard } from "@/components/actions/workspace-action-card";
+import { AvailableActionsPanel } from "@/components/actions/available-actions-panel";
+import { IAction } from "@/lib/types/actions";
+import { CollapsibleTabContainer } from "@/components/ui/collapsible-tab-container";
 
 export default function ActionsPage() {
   const { wid } = useParams() as { wid: string };
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const postInstallHandled = useRef(false);
   const [isAddActionModalOpen, setIsAddActionModalOpen] = useState(false);
-  const [editingAction, setEditingAction] = useState<any>(null);
+  const [editingAction, setEditingAction] = useState<IAction | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingAction, setDeletingAction] = useState<any>(null);
+  const [deletingAction, setDeletingAction] = useState<IAction | null>(null);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(true);
 
-  const { actions, isLoading } = useAIActions(wid);
-  const { deleteAction } = useAiActionsActions();
+  const { actions: workspaceActions, isLoading: isLoadingWorkspaceActions } =
+    useAIActions(wid);
+
+  const { globalActions, isLoading: isLoadingGlobalActions } =
+    useGlobalActions();
+
+  const { installedApps } = useInstalledApps(wid);
+  const { apps } = usePublishedApps();
+
+  const { deleteAction, toggleActionStatus, addIntegrationAction } =
+    useAiActionsActions();
 
   const handleDeleteAction = () => {
     if (!deletingAction) return;
@@ -35,93 +55,129 @@ export default function ActionsPage() {
     );
   };
 
+  const handleToggleStatus = (
+    actionId: string,
+    status: "active" | "inactive",
+  ) => {
+    toggleActionStatus.mutate({ wid, actionId, status });
+  };
+
+  const handleAddIntegrationAction = async (action: IAction) => {
+    await addIntegrationAction.mutateAsync({ wid, globalAction: action });
+  };
+
+  useEffect(() => {
+    if (postInstallHandled.current) return;
+
+    const postInstallAction = searchParams.get("postInstallAction");
+    const actionId = searchParams.get("actionId");
+    const connectStatus = searchParams.get("connectStatus");
+
+    if (
+      postInstallAction === "add_action" &&
+      actionId &&
+      connectStatus === "connected" &&
+      globalActions &&
+      !isLoadingGlobalActions
+    ) {
+      postInstallHandled.current = true;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("postInstallAction");
+      url.searchParams.delete("actionId");
+      url.searchParams.delete("connectStatus");
+      url.searchParams.delete("appSlug");
+      url.searchParams.delete("workspaceId");
+      router.replace(url.pathname + url.search, { scroll: false });
+
+      const action = globalActions.find((a) => a.id === actionId);
+      if (action) {
+        handleAddIntegrationAction(action)
+          .then(() =>
+            toast.success(`Action "${action.name}" added successfully`),
+          )
+          .catch(() =>
+            toast.error("Failed to add action after app installation"),
+          );
+      }
+    }
+  }, [searchParams, globalActions, isLoadingGlobalActions]);
+
+  const handleEditAction = (action: IAction) => {
+    if (action.type === "user") {
+      setEditingAction(action);
+      setIsAddActionModalOpen(true);
+    }
+  };
+
+  const handleDeleteActionClick = (action: IAction) => {
+    setDeletingAction(action);
+    setIsDeleteModalOpen(true);
+  };
+
+  const isLoading = isLoadingWorkspaceActions || isLoadingGlobalActions;
+
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl ">AI Actions</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your AI actions and API actions here.
-          </p>
-        </div>
+    <CollapsibleTabContainer
+      title="Actions"
+      description="Manage your workspace actions and add integration actions"
+      isLibraryOpen={isLibraryOpen}
+      onToggleLibrary={() => setIsLibraryOpen(!isLibraryOpen)}
+      libraryButtonText="Actions Library"
+      createButton={
         <Button
           onClick={() => setIsAddActionModalOpen(true)}
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add Action
+          Create Action
         </Button>
+      }
+      sidebarContent={
+        <AvailableActionsPanel
+          actions={globalActions}
+          workspaceActions={workspaceActions}
+          installedApps={installedApps}
+          apps={apps}
+          wid={wid}
+          isLoading={isLoadingGlobalActions}
+          onAddAction={handleAddIntegrationAction}
+        />
+      }
+      isLoading={isLoading}
+      loaderComponent={
+        <div className="flex-1 flex items-center justify-center h-full">
+          <div className="text-center">
+            <Loader className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading actions...</p>
+          </div>
+        </div>
+      }
+    >
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!isLibraryOpen ? "xl:grid-cols-3" : ""}`}
+      >
+        {workspaceActions && workspaceActions.length > 0 ? (
+          workspaceActions.map((action) => (
+            <WorkspaceActionCard
+              key={action.id}
+              action={action}
+              onToggleStatus={handleToggleStatus}
+              onEdit={action.type === "user" ? handleEditAction : undefined}
+              onDelete={handleDeleteActionClick}
+            />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12">
+            <Code className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">
+              No actions in your workspace yet. <br /> Add integration actions
+              from the library or create a custom action.
+            </p>
+          </div>
+        )}
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-12">
-          <Loader className="mx-auto h-8 w-8 text-muted-foreground animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading actions...</p>
-        </div>
-      ) : actions && actions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {actions.map((action) => (
-            <Card key={action.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="space-y-0 pt-0">
-                <div className="mb-4 flex gap-2 items-center justify-between">
-                  <div>
-                    <p className="font-mediu">{action.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {action.description}
-                    </p>
-                  </div>
-                  <div className="">
-                    <img
-                      src="/api-logo.png"
-                      alt="API Logo"
-                      className="w-8 h-8 rounded-sm object-cover"
-                    />
-                  </div>
-
-                  {/* <div className="uppercase text-xs text-muted-foreground bg-muted px-2 rounded-sm py-0.5">
-                    {action.type}
-                  </div> */}
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-xs text-muted-foreground">{action.slug}</p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingAction(action);
-                        setIsAddActionModalOpen(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setDeletingAction(action);
-                        setIsDeleteModalOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <Code className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            No custom actions yet. <br /> Create your first API action to get
-            started.
-          </p>
-        </div>
-      )}
-
-      {/* Modals */}
       {isAddActionModalOpen && (
         <AddApiActionModal
           isOpen={isAddActionModalOpen}
@@ -145,6 +201,6 @@ export default function ActionsPage() {
         description={`Are you sure you want to delete "${deletingAction?.name}"? This action cannot be undone.`}
         isLoading={deleteAction.isPending}
       />
-    </div>
+    </CollapsibleTabContainer>
   );
 }

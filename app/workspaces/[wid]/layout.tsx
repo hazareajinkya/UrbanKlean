@@ -18,11 +18,13 @@ import {
   ChevronLeft,
   Rss,
   Settings2,
+  Code,
   Shield,
-  Gauge,
-  ChartNoAxesColumnIncreasing,
+  LayoutGrid,
+  Network,
+  ListTree,
+  Store,
   TrendingUp,
-  MessageSquare,
 } from "lucide-react";
 import { useParams, useRouter, usePathname, redirect } from "next/navigation";
 import Link from "next/link";
@@ -177,9 +179,24 @@ const navigation = [
     icon: Users,
   },
   {
+    title: "Workflows",
+    href: "/workflows",
+    icon: ListTree,
+  },
+  {
     title: "AI Actions",
     href: "/actions",
     icon: Zap,
+  },
+  // {
+  //   title: "Integrations",
+  //   href: "/integrations",
+  //   icon: Code,
+  // },
+  {
+    title: "Apps",
+    href: "/apps",
+    icon: Store,
   },
   {
     title: "Channels",
@@ -316,7 +333,9 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 `}
                 title={isCollapsed ? item.title : undefined}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className={`flex items-center gap-3 min-w-0 flex-1 ${isCollapsed ? "justify-center" : ""}`}
+                >
                   <item.icon
                     className={`h-4 w-4 shrink-0 ${
                       isCollapsed ? "h-4.5 w-4.5" : ""

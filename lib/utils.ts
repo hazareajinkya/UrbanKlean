@@ -12,7 +12,6 @@ import { tool, ToolSet } from "ai";
 import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
-import { axiosClient } from "./clients/axios-client";
 import axios from "axios";
 
 export function cn(...inputs: ClassValue[]) {
@@ -254,17 +253,6 @@ const getInputSchema = (inputs: IActionInput[]) =>
     return acc;
   }, {});
 
-export const getCustomTools = (actions: IAction[]): ToolSet =>
-  actions.reduce((acc, action) => {
-    acc[action.slug] = tool({
-      name: action.name,
-      description: action.description,
-      inputSchema: z.object(getInputSchema(action.inputs)),
-      execute: async (params) => executeAPIAction(action, params),
-    });
-    return acc;
-  }, {} as ToolSet);
-
 export const generateForwardingEmail = () => {
   const prefix = "magical";
   const id = v4().replace(/-/g, "").slice(0, 6); // short, clean
@@ -460,17 +448,43 @@ export const getClientIp = (req: Request | { headers: Headers }): string => {
   return "unknown";
 };
 
+export const generateToken = (): string => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const part1 = Array.from({ length: 4 }, () =>
+    chars.charAt(Math.floor(Math.random() * chars.length)),
+  ).join("");
+  const part2 = Array.from({ length: 4 }, () =>
+    chars.charAt(Math.floor(Math.random() * chars.length)),
+  ).join("");
+  return `${part1}-${part2}`;
+};
+
 export const stripUndefined = <T extends object>(obj: T): T =>
   Object.fromEntries(
     Object.entries(obj).filter(([_, v]) => v !== undefined),
   ) as T;
 
 export const exportUsageData = (
-  usageData: { createdAt: string; eventType: string; metadata?: { model?: string; tokenUsage?: number }; amount: number; aid?: string | null; sessionId?: string | null }[],
+  usageData: {
+    createdAt: string;
+    eventType: string;
+    metadata?: { model?: string; tokenUsage?: number };
+    amount: number;
+    aid?: string | null;
+    sessionId?: string | null;
+  }[],
   dateRange?: { from?: Date; to?: Date },
 ) => {
   if (!usageData?.length) return;
-  const headers = ["Date", "Event Type", "Model", "Token Usage", "Amount", "Agent ID", "Session ID"];
+  const headers = [
+    "Date",
+    "Event Type",
+    "Model",
+    "Token Usage",
+    "Amount",
+    "Agent ID",
+    "Session ID",
+  ];
   const csvContent = [
     headers.join(","),
     ...usageData.map((u) =>

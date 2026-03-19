@@ -18,9 +18,9 @@ import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import { IExternalIds } from "@/lib/types/person";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
 import peopleServiceV2 from "../people-service-v2";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class WABotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -49,7 +49,7 @@ class WABotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ agent, channel, waPhoneId, name }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -61,9 +61,9 @@ class WABotService {
       const userMsg = defaultUserMessage(query, waMsg.id);
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
-        workflows
+        workflows,
       );
       const model = getModel(agent);
       const systemPrompt = getSystemPrompt({ agent, workflows, channel });
@@ -99,7 +99,7 @@ class WABotService {
         agent.wid,
         agent.id,
         session.id,
-        "chat_response"
+        "chat_response",
       );
       usage.amount = -creditCosts.query;
       usage.metadata = {
@@ -159,7 +159,7 @@ class WABotService {
       agent.id,
       waPhoneId,
       personData!.id,
-      channel
+      channel,
     );
 
     await peopleServiceV2.updatePastSessionIds({

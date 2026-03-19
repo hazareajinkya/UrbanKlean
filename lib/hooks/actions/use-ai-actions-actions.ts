@@ -39,9 +39,84 @@ export const useAiActionsActions = () => {
     onError: handleError,
   });
 
+  const toggleActionStatus = useMutation({
+    mutationFn: actionService.toggleActionStatus,
+    onMutate: async (variables) => {
+      const { wid, actionId, status } = variables;
+      await qc.cancelQueries({ queryKey: actionsKey(wid) });
+      const previousActions = qc.getQueryData<IAction[]>(actionsKey(wid));
+      if (previousActions) {
+        qc.setQueryData<IAction[]>(actionsKey(wid), (old) => {
+          if (!old) return old;
+          return old.map((action) =>
+            action.id === actionId
+              ? { ...action, status, updatedAt: new Date().toISOString() }
+              : action,
+          );
+        });
+      }
+
+      return { previousActions };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousActions) {
+        qc.setQueryData(actionsKey(variables.wid), context.previousActions);
+      }
+      handleError(err);
+    },
+    onSettled: (_, __, variables) => {
+      qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
+    },
+  });
+
+  const addIntegrationAction = useMutation({
+    mutationFn: actionService.addIntegrationAction,
+    onMutate: async (variables) => {
+      const { wid, globalAction } = variables;
+
+      await qc.cancelQueries({ queryKey: actionsKey(wid) });
+
+      const previousActions = qc.getQueryData<IAction[]>(actionsKey(wid));
+
+      qc.setQueryData<IAction[]>(actionsKey(wid), (old) => {
+        if (!old) return [globalAction];
+
+        if (old.some((a) => a.slug === globalAction.slug)) return old;
+
+        return [
+          ...old,
+          {
+            ...globalAction,
+            id: "temp-" + Date.now(),
+            wid,
+            type: "integration",
+          },
+        ];
+      });
+
+      return { previousActions };
+    },
+    onSuccess: (_, variables) => {
+      toast.success("Action added to workspace");
+    },
+    onError: (err, variables, context) => {
+      // Rollback to previous value on error
+      if (context?.previousActions) {
+        qc.setQueryData(actionsKey(variables.wid), context.previousActions);
+      }
+      handleError(err);
+    },
+    onSettled: (_, __, variables) => {
+      // Refetch to ensure we have the latest data
+      qc.invalidateQueries({ queryKey: actionsKey(variables.wid) });
+    },
+  });
+
   return {
     saveAction,
     updateAction,
     deleteAction,
+    toggleActionStatus,
+    addIntegrationAction,
   };
 };

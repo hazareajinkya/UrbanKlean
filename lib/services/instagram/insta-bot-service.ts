@@ -8,8 +8,8 @@ import { searchKnowledge } from "@/lib/tools/search-knowledgebase";
 import chatService from "../chat-service";
 import {
   defaultAImessage,
-  defaultUserMessage,
   defaultUserImageMessage,
+  defaultUserMessage,
   IChatMessage,
 } from "@/lib/types/session";
 import { IAgent } from "@/lib/types/agent";
@@ -20,11 +20,12 @@ import { creditCosts } from "@/lib/constants";
 import { defaultUsage } from "@/lib/types/usage";
 import usageService from "../usage-service";
 import actionService from "../action-service";
-import { getCustomTools } from "@/lib/utils";
+
 import { IExternalIds } from "@/lib/types/person";
 import peopleServiceV2 from "../people-service-v2";
 import instaService from "./insta-service";
 import workflowService from "../workflow-service";
+import { getCustomTools } from "@/lib/utils/server-actions";
 
 class InstaBotService {
   ERROR_MESSAGE = "Something went wrong";
@@ -101,7 +102,7 @@ class InstaBotService {
       const [creditInfo, session, workflows] = await Promise.all([
         creditService.getCredit(agent.ownerId),
         this.getOrCreateSession({ instaUserId, agent, channel, accessToken }),
-        workflowService.getWorkflows(agent.id),
+        workflowService.getWorkflows(agent.wid, agent.id),
       ]);
 
       if (!creditInfo || creditInfo.availableCredit < creditCosts.query) {
@@ -123,7 +124,7 @@ class InstaBotService {
       }
       chatService.saveMessage(agent.id, session.id, userMsg);
 
-      const actions = await actionService.getActionsForWorflows(
+      const actions = await actionService.getActionsForWorkflows(
         agent.wid,
         workflows,
       );
