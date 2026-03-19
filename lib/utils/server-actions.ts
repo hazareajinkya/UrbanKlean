@@ -74,7 +74,7 @@ export const getCustomTools = (actions: IAction[]): ToolSet => {
         // return executeAPIAction(action, params);
         try {
           const response = await backendClient.post("/actions/execute", {
-            aid: action.id,
+            action,
             wid: action.wid,
             params,
           });
