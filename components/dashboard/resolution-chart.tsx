@@ -15,6 +15,14 @@ import {
   ArrowUpCircle,
 } from "lucide-react";
 
+/** Shared with SentimentChart — positive/negative match resolved/unresolved slices */
+export const resolutionChartPalette = {
+  resolved: "hsl(142, 76%, 36%)",
+  partiallyResolved: "hsl(45, 93%, 40%)",
+  unresolved: "hsl(0, 72%, 51%)",
+  escalated: "hsl(262, 83%, 50%)",
+} as const;
+
 interface ResolutionChartProps {
   resolution: {
     resolved: number;
@@ -70,19 +78,19 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
   const chartConfig = {
     resolved: {
       label: "Resolved",
-      color: "hsl(142, 76%, 36%)",
+      color: resolutionChartPalette.resolved,
     },
     "partially-resolved": {
       label: "Partially Resolved",
-      color: "hsl(45, 93%, 40%)",
+      color: resolutionChartPalette.partiallyResolved,
     },
     unresolved: {
       label: "Unresolved",
-      color: "hsl(0, 72%, 51%)",
+      color: resolutionChartPalette.unresolved,
     },
     escalated: {
       label: "Escalated",
-      color: "hsl(262, 83%, 50%)",
+      color: resolutionChartPalette.escalated,
     },
   };
 
@@ -96,7 +104,7 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       label: "Resolved",
       value: resolution.resolved,
       percentage: total > 0 ? (resolution.resolved / total) * 100 : 0,
-      color: "hsl(142, 76%, 36%)",
+      color: resolutionChartPalette.resolved,
       bgColor: "bg-green-600/10",
       icon: CheckCircle2,
     },
@@ -105,7 +113,7 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       value: resolution["partially-resolved"],
       percentage:
         total > 0 ? (resolution["partially-resolved"] / total) * 100 : 0,
-      color: "hsl(45, 93%, 40%)",
+      color: resolutionChartPalette.partiallyResolved,
       bgColor: "bg-yellow-600/10",
       icon: AlertCircle,
     },
@@ -113,7 +121,7 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       label: "Unresolved",
       value: resolution.unresolved,
       percentage: total > 0 ? (resolution.unresolved / total) * 100 : 0,
-      color: "hsl(0, 72%, 51%)",
+      color: resolutionChartPalette.unresolved,
       bgColor: "bg-red-600/10",
       icon: XCircle,
     },
@@ -121,7 +129,7 @@ export const ResolutionChart = ({ resolution }: ResolutionChartProps) => {
       label: "Escalated",
       value: resolution.escalated,
       percentage: total > 0 ? (resolution.escalated / total) * 100 : 0,
-      color: "hsl(262, 83%, 50%)",
+      color: resolutionChartPalette.escalated,
       bgColor: "bg-purple-600/10",
       icon: ArrowUpCircle,
     },
