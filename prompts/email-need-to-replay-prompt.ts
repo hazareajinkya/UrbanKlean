@@ -1,30 +1,17 @@
 export const emailNeedToReplyPrompt = (
   postmarkMsg: { from: string; subject: string },
   truncatedContent: string,
-) => `You are an email triage classifier for a customer support AI inbox.
+) => `Classify if this customer support email needs a human reply.
 
-Classify whether this email requires a reply from support.
+shouldReply=true: Sender asks a specific question, reports a problem, or requests action about our product/service.
 
-Reply required (shouldReply=true):
-- The sender asks a question.
-- The sender requests help, clarification, action, or troubleshooting.
-- The sender reports an issue, complaint, or feedback needing acknowledgement.
+shouldReply=false: Notifications, receipts, newsletters, vendor pitches, demo deliveries, or any email whose PRIMARY purpose is to inform/promote — even if it contains soft phrases like "curious what you think" or "let me know your feedback".
 
-No reply needed (shouldReply=false):
-- Billing/transactional/system notification emails (invoice, receipt, payment confirmation, statement, security alert, marketing digest).
-- Automated messages, delivery reports, and bot-generated notifications.
-- Generic FYI updates with no request.
+Core test: Is the sender seeking help FROM us, or informing/pitching TO us?
 
-Email metadata:
-- From: ${postmarkMsg.from}
-- Subject: ${postmarkMsg.subject}
+From: ${postmarkMsg.from}
+Subject: ${postmarkMsg.subject}
+Content: """${truncatedContent}"""
 
-Email content:
-"""
-${truncatedContent}
-"""
-
-Return a strict JSON object with:
-- shouldReply: boolean
-- reason: short reason string
-- confidence: number from 0 to 1`;
+Return ONLY JSON:
+{"shouldReply":boolean,"reason":"one sentence","confidence":0-1}`;
