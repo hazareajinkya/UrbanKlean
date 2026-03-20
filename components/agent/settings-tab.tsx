@@ -16,7 +16,7 @@ import { models } from "@/lib/models";
 import { IAgent } from "@/lib/types/agent";
 import { Settings, Save, FileText, Brain, Loader, Folder } from "lucide-react";
 import { useState } from "react";
-import { GoogleLogo, OpenAIIcon } from "@/lib/logos";
+import { GoogleLogo, GrokLogo, OpenAIIcon } from "@/lib/logos";
 import { useAgentActions } from "@/lib/hooks/agent/use-agent-actions";
 import { getwid } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -108,6 +108,8 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                             <div className="flex items-center gap-2">
                               {modelOption.provider === "openai" ? (
                                 <OpenAIIcon className="w-4 h-4" />
+                              ) : modelOption.provider === "xai" ? (
+                                <GrokLogo className="w-4 h-4" />
                               ) : (
                                 <GoogleLogo className="w-4 h-4" />
                               )}
