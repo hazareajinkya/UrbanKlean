@@ -27,51 +27,54 @@ import {
 // --- Visual Components ---
 
 const MemoryVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-yellow-50/30 flex items-center justify-center p-6 overflow-hidden">
-    {/* Subtle decorative elements */}
-    <div className="absolute top-4 left-4 w-24 h-24 bg-gradient-to-br from-yellow-100/40 to-amber-50/30 rounded-full blur-2xl" />
-
-    <div className="relative w-full max-w-[300px] space-y-3">
-      {/* User message - RIGHT side, dark bg */}
+  <div className="w-full h-full min-h-[200px] bg-[#eeecea] flex items-center justify-center px-4 py-6 overflow-hidden">
+    <div className="w-full max-w-[320px] space-y-3">
+      {/* User — right */}
       <motion.div
-        className="flex items-end gap-2.5 justify-end"
-        initial={{ x: 15, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
+        className="flex items-end justify-end gap-2"
+        initial={{ y: 8, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
       >
-        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm max-w-[200px]">
-          <p className="text-xs">Do you have the shirt I bought last time?</p>
+        <div className="bg-neutral-900 text-white px-3.5 py-2 rounded-2xl rounded-br-sm text-[11px] leading-snug max-w-[210px] shadow-sm">
+          Do you have the shirt I bought last time?
         </div>
-        <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-neutral-600" />
-        </div>
+        <img src="https://i.pravatar.cc/80?img=32" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
       </motion.div>
 
-      {/* Memory indicator - EFRO style */}
+      {/* AI — left (both bubbles grouped under one avatar) */}
       <motion.div
-        className="flex items-center justify-center gap-2 py-1"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
+        className="flex items-end gap-2"
+        initial={{ y: 8, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.4, duration: 0.35, ease: "easeOut" }}
       >
-        <div className="flex items-center gap-1.5 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200">
-          <Brain className="w-2.5 h-2.5 text-yellow-600" />
-          <span className="text-[9px] font-medium text-yellow-700">Past order recalled</span>
-        </div>
-      </motion.div>
-
-      {/* AI message - LEFT side, light bg */}
-      <motion.div
-        className="flex items-end gap-2.5"
-        initial={{ x: -15, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-      >
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-4 h-4 text-primary" />
-        </div>
-        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 shadow-sm border border-neutral-100 max-w-[200px]">
-          <p className="text-xs text-neutral-700">Yes! The Blue Oxford Shirt in Medium is in stock.</p>
+        <img src="https://i.pravatar.cc/80?img=12" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
+        <div className="space-y-1.5 max-w-[240px]">
+          <motion.div
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-50 border border-yellow-200 w-fit"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.25 }}
+          >
+            <Brain className="w-2.5 h-2.5 text-yellow-600" />
+            <span className="text-[9px] font-medium text-yellow-700">Past order recalled</span>
+          </motion.div>
+          <div className="bg-white text-neutral-800 px-3.5 py-2 rounded-2xl rounded-bl-sm text-[11px] leading-snug shadow-sm w-full">
+            Yes! The Blue Oxford Shirt in Medium is back in stock
+          </div>
+          <motion.div
+            className="bg-white text-neutral-800 px-3.5 py-2 rounded-2xl text-[11px] leading-snug shadow-sm w-full"
+            initial={{ y: 6, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.8, duration: 0.35, ease: "easeOut" }}
+          >
+            Want me to add size L to your cart? Same as your last order 🛒
+          </motion.div>
         </div>
       </motion.div>
     </div>
@@ -79,69 +82,59 @@ const MemoryVisual = () => (
 );
 
 const EFROVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-amber-50/20 flex items-center justify-center p-6 overflow-hidden">
-    {/* Subtle decorative elements */}
-    <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-amber-100/30 to-orange-50/20 rounded-full blur-2xl" />
-
-    <div className="relative w-full max-w-[280px] space-y-3">
-      {/* User message - RIGHT side, dark bg */}
+  <div className="w-full h-full min-h-[200px] bg-[#eeecea] flex items-center justify-center px-4 py-6 overflow-hidden">
+    <div className="w-full max-w-[320px] space-y-3">
+      {/* User — right */}
       <motion.div
-        className="flex items-end gap-2 justify-end"
-        initial={{ x: 15, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
+        className="flex items-end justify-end gap-2"
+        initial={{ y: 8, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
       >
-        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-3 py-2 shadow-sm max-w-[160px]">
-          <p className="text-[11px]">I'm buying the running shoes. That's all!</p>
+        <div className="bg-neutral-900 text-white px-3.5 py-2 rounded-2xl rounded-br-sm text-[11px] leading-snug max-w-[210px] shadow-sm">
+          I&apos;m buying the running shoes
         </div>
-        <div className="w-7 h-7 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-          <User className="w-3.5 h-3.5 text-neutral-600" />
-        </div>
+        <img src="https://i.pravatar.cc/80?img=5" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
       </motion.div>
 
-      {/* EFRO thinking indicator */}
-      <motion.div
-        className="flex items-center justify-center gap-2 py-1"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
-      >
-        <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
-          <Zap className="w-2.5 h-2.5 text-amber-600" />
-          <span className="text-[9px] font-medium text-amber-700">EFRO™ checking...</span>
-        </div>
-      </motion.div>
-
-      {/* AI Response - LEFT side, light bg */}
+      {/* AI — left */}
       <motion.div
         className="flex items-end gap-2"
-        initial={{ x: -15, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
+        initial={{ y: 8, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.4, duration: 0.35, ease: "easeOut" }}
       >
-        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-3.5 h-3.5 text-primary" />
-        </div>
-        <div className="space-y-2 max-w-[210px]">
-          <div className="bg-white rounded-2xl rounded-bl-md px-3 py-2 shadow-sm border border-neutral-100">
-            <p className="text-[11px] text-neutral-700 leading-relaxed">Runners who got these also loved our performance socks — 30% off when bundled!</p>
-          </div>
-          {/* Bundle card */}
+        <img src="https://i.pravatar.cc/80?img=12" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
+        <div className="space-y-1.5 max-w-[240px]">
           <motion.div
-            className="bg-white rounded-xl p-2.5 shadow-sm border border-neutral-100"
-            initial={{ y: 10, opacity: 0 }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-100 w-fit"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.25 }}
+          >
+            <Zap className="w-2.5 h-2.5 text-amber-500" />
+            <span className="text-[9px] font-medium text-amber-600">EFRO™ checking...</span>
+          </motion.div>
+          <div className="bg-white text-neutral-800 px-3.5 py-2 rounded-2xl rounded-bl-sm text-[11px] leading-snug shadow-sm w-full">
+            Runners who got these also loved our performance socks, 30% off when bundled!
+          </div>
+          <motion.div
+            className="bg-white rounded-xl p-2 shadow-sm border border-neutral-100"
+            initial={{ y: 8, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true }}
             transition={{ delay: 1, duration: 0.3 }}
           >
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-[14px]">
-                🧦
-              </div>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-sm">🧦</div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-medium text-neutral-700">Pro Running Socks</p>
                 <p className="text-[9px] text-neutral-400 line-through">$18</p>
               </div>
-              <div className="text-[11px] font-semibold text-emerald-600">$12.60</div>
+              <div className="text-[11px] font-medium text-emerald-600">$12.60</div>
             </div>
           </motion.div>
         </div>
@@ -151,58 +144,29 @@ const EFROVisual = () => (
 );
 
 const HumanlyClearVisual = () => (
-  <div className="relative w-full h-full min-h-[200px] bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center p-6 overflow-hidden">
-    {/* Subtle decorative elements */}
-    <div className="absolute top-4 right-4 w-24 h-24 bg-gradient-to-br from-primary/5 to-blue-100/30 rounded-full blur-2xl" />
-    <div className="absolute bottom-8 left-4 w-16 h-16 bg-gradient-to-br from-green-100/40 to-emerald-50/30 rounded-full blur-xl" />
-
-    <div className="relative w-full max-w-[300px] space-y-4">
-      {/* User message - RIGHT side, dark bg */}
-      <motion.div
-        className="flex items-end gap-2.5 justify-end"
-        initial={{ x: 20, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-      >
-        <div className="bg-neutral-900 text-white rounded-2xl rounded-br-md px-4 py-2.5 shadow-sm max-w-[200px]">
-          <p className="text-xs leading-relaxed">I've been waiting 2 weeks for my order! 😤</p>
+  <div className="w-full h-full min-h-[200px] bg-[#eeecea] flex items-center justify-center px-4 py-6 overflow-hidden">
+    <div className="w-full max-w-[320px] space-y-3">
+      {/* User 1 — right */}
+      <motion.div className="flex items-end justify-end gap-2" initial={{ y: 8, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.35, ease: "easeOut" }}>
+        <div className="bg-neutral-900 text-white px-3.5 py-2 rounded-2xl rounded-br-sm text-[11px] leading-snug max-w-[210px] shadow-sm">
+          You sent me the wrong size wtf, I ordered L and got S
         </div>
-        <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <User className="w-4 h-4 text-neutral-600" />
+        <img src="https://i.pravatar.cc/80?img=47" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
+      </motion.div>
+
+      {/* AI 1 & 2 — left, one avatar */}
+      <motion.div className="flex items-end gap-2" initial={{ y: 8, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.4, duration: 0.35, ease: "easeOut" }}>
+        <img src="https://i.pravatar.cc/80?img=12" alt="" className="w-7 h-7 rounded-full flex-shrink-0 object-cover shadow-sm" />
+        <div className="space-y-1.5 max-w-[240px]">
+          <div className="bg-white text-neutral-800 px-3.5 py-2 rounded-2xl rounded-bl-sm text-[11px] leading-snug shadow-sm">
+            That&apos;s our mistake, not yours. Really sorry. I&apos;m raising a replacement for size L right now. Tracking details within the hour
+          </div>
+          <motion.div className="bg-white text-neutral-800 px-3.5 py-2 rounded-2xl text-[11px] leading-snug shadow-sm" initial={{ y: 6, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.8, duration: 0.35, ease: "easeOut" }}>
+            No need to return the wrong one either, keep it 💙
+          </motion.div>
         </div>
       </motion.div>
 
-      {/* AI Response - LEFT side, light bg */}
-      <motion.div
-        className="flex items-end gap-2.5"
-        initial={{ x: -20, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
-      >
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <Sparkles className="w-4 h-4 text-primary" />
-        </div>
-        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 shadow-sm border border-neutral-100 max-w-[220px]">
-          <p className="text-xs text-neutral-700 leading-relaxed">I completely understand—that's frustrating. Let me check and fix this right now.</p>
-        </div>
-      </motion.div>
-
-      {/* Quality indicators */}
-      <motion.div
-        className="flex items-center justify-center gap-3 pt-2"
-        initial={{ y: 15, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.1, duration: 0.4 }}
-      >
-        <div className="flex items-center gap-1.5 bg-green-50 px-2.5 py-1 rounded-full border border-green-100">
-          <Check className="w-3 h-3 text-green-600" />
-          <span className="text-[10px] font-medium text-green-700">Empathetic</span>
-        </div>
-        <div className="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-          <Brain className="w-3 h-3 text-blue-600" />
-          <span className="text-[10px] font-medium text-blue-700">Context-Aware</span>
-        </div>
-      </motion.div>
     </div>
   </div>
 );
