@@ -10,6 +10,7 @@ import { Redis } from "@upstash/redis";
 import { getClientIp } from "@/lib/utils";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/clients/firebase";
+import { WHITELISTED_EMAILS } from "@/lib/constants";
 
 const redis = Redis.fromEnv();
 const RATE_LIMIT_WINDOW_SECONDS = 60;
@@ -19,14 +20,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { url, email } = onboardingStartSchema.parse(body);
     let rateLimitKey: string | null = null;
-
-    const WHITELISTED_EMAILS = [
-      "support@magicalcx.com",
-      "sakthiyapriyamba13@gmail.com",
-      "akil@thestagetwo.com",
-      "suryajayaraman@thestagetwo.com",
-      "karthikcharles.411@gmail.com",
-    ];
 
     if (email && !WHITELISTED_EMAILS.includes(email)) {
       const docs = await getDocs(

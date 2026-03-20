@@ -13,6 +13,7 @@ import z from "zod";
 import { executeAPIAction } from "./utils/api-actions-utils";
 import { v4 } from "uuid";
 import axios from "axios";
+import { WHITELISTED_EMAILS } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -512,4 +513,9 @@ export const exportUsageData = (
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+export const IsWhitelistedEmail = (email?: string): boolean => {
+  if (!email) return false;
+  return WHITELISTED_EMAILS.includes(email);
 };
