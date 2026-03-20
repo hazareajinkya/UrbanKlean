@@ -84,7 +84,7 @@ class WorkspaceService {
     domains: string[];
   }) {
     const user = await userService.getUser(ownerId);
-    if (!canCreateWorkspace(user?.subscription?.planId)) {
+    if (!canCreateWorkspace(user)) {
       throw new Error("You don't have an active plan to create a workspace");
     }
     const workspace = generateDefaultWorkspace();

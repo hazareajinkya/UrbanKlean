@@ -22,6 +22,7 @@ import {
   validateDomain,
   isBlockedCompanyDomain,
   cn,
+  IsWhitelistedEmail,
 } from "@/lib/utils";
 import {
   Edit2,
@@ -88,7 +89,7 @@ export default function WorkspacesPage() {
   };
 
   const openCreateModal = () => {
-    if (!canCreateWorkspace(user?.subscription?.planId)) {
+    if (!canCreateWorkspace(user) && !IsWhitelistedEmail(user?.email)) {
       toast.error("Upgrade your plan to create a workspace", {
         action: {
           label: "Upgrade",

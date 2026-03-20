@@ -15,13 +15,14 @@ interface ConversationsChartProps {
   dailyAnalytics: IAnalytics[];
 }
 
+/** Theme chart tokens + primary — coherent in light/dark, distinct in stacks */
 const channelColors: Record<string, string> = {
   web: "var(--primary)",
-  email: "#4285F4", // Gmail primary blue
-  whatsapp: "#25D366", // WhatsApp primary green
-  messenger: "#0084FF", // Messenger blue
-  instagram: "#E1306C", // Instagram gradient red-pink
-  slack: "#4A154B", // Slack aubergine (primary)
+  email: "var(--chart-1)",
+  whatsapp: "var(--chart-2)",
+  messenger: "var(--chart-3)",
+  instagram: "var(--chart-channel-instagram)",
+  slack: "var(--chart-5)",
 };
 
 export const ConversationsChart = ({
@@ -89,7 +90,7 @@ export const ConversationsChart = ({
         </CardHeader>
         <CardContent>
           <div className="flex h-[280px] flex-col items-center justify-center gap-2">
-            <span className="text-3xl font-semibold">0</span>
+            <span className="text-3xl font-medium">0</span>
             <span className="text-sm text-muted-foreground">conversations</span>
           </div>
         </CardContent>
@@ -157,19 +158,13 @@ export const ConversationsChart = ({
                           className="flex items-center gap-2"
                         >
                           <div
-                            className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${
-                              item.dataKey === "web" ? "bg-primary" : ""
-                            }`}
-                            style={
-                              item.dataKey !== "web"
-                                ? {
-                                    backgroundColor:
-                                      chartConfig[
-                                        item.dataKey as keyof typeof chartConfig
-                                      ]?.color || item.color,
-                                  }
-                                : undefined
-                            }
+                            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                            style={{
+                              backgroundColor:
+                                chartConfig[
+                                  item.dataKey as keyof typeof chartConfig
+                                ]?.color || item.color,
+                            }}
                           />
                           <span className="text-muted-foreground">
                             {chartConfig[
@@ -244,12 +239,8 @@ export const ConversationsChart = ({
           {Object.entries(chartConfig).map(([key, config]) => (
             <div key={key} className="flex items-center gap-2" role="listitem">
               <span
-                className={`h-3.5 w-3.5 rounded-sm shrink-0 ${
-                  key === "web" ? "bg-primary" : ""
-                }`}
-                style={
-                  key !== "web" ? { backgroundColor: config.color } : undefined
-                }
+                className="h-3.5 w-3.5 shrink-0 rounded-sm"
+                style={{ backgroundColor: config.color }}
                 aria-hidden="true"
               />
               <span className="text-sm text-foreground font-medium">

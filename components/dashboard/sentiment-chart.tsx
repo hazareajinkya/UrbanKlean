@@ -5,6 +5,7 @@ import { Cell, Pie, PieChart, Label } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Smile, Meh, Frown, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { resolutionChartPalette } from "./resolution-chart";
 
 interface SentimentChartProps {
   sentiment: {
@@ -47,7 +48,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
   const chartConfig = {
     positive: {
       label: "Positive",
-      color: "hsl(142, 76%, 36%)",
+      color: resolutionChartPalette.resolved,
     },
     neutral: {
       label: "Neutral",
@@ -55,7 +56,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
     },
     negative: {
       label: "Negative",
-      color: "hsl(0, 72%, 51%)",
+      color: resolutionChartPalette.unresolved,
     },
   };
 
@@ -80,7 +81,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
       label: "Positive",
       value: sentiment.positive,
       percentage: total > 0 ? (sentiment.positive / total) * 100 : 0,
-      color: "hsl(142, 76%, 36%)",
+      color: resolutionChartPalette.resolved,
       bgColor: "bg-green-600/10",
       icon: Smile,
       trendIcon: TrendingUp,
@@ -98,7 +99,7 @@ export const SentimentChart = ({ sentiment }: SentimentChartProps) => {
       label: "Negative",
       value: sentiment.negative,
       percentage: total > 0 ? (sentiment.negative / total) * 100 : 0,
-      color: "hsl(0, 72%, 51%)",
+      color: resolutionChartPalette.unresolved,
       bgColor: "bg-red-600/10",
       icon: Frown,
       trendIcon: TrendingDown,

@@ -21,3 +21,11 @@ export const creditCosts = {
 
 export const BOOK_DEMO_IFRAME =
   "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1_55d95GVOjLV4i2tcGuUvvYi5C6WW59vDCaCOHRAynad1I2Cu-vVJqugAJ30mcQKyhJ-JLPaZ?gv=true";
+
+export const WHITELISTED_EMAILS = [
+  "support@magicalcx.com",
+  "sakthiyapriyamba13@gmail.com",
+  "akil@thestagetwo.com",
+  "suryajayaraman@thestagetwo.com",
+  "karthikcharles.411@gmail.com",
+];
