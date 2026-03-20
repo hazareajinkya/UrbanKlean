@@ -52,8 +52,15 @@ export async function POST(req: NextRequest) {
       "Onboarding started successfully",
     );
   } catch (error: any) {
-    console.error("Error starting onboarding:", error);
-    return serverErrorResponse(error);
+    console.error(
+      "Error starting onboarding:",
+      error.response.data.error.message,
+    );
+
+    return errorResponse(
+      error.response?.data?.error?.message || "Failed to start onboarding",
+      error.response?.status || 500,
+    );
   }
 }
 const onboardingStartSchema = z.object({
