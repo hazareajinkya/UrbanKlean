@@ -11,7 +11,77 @@ import {
 } from "./use-people";
 import { mergeService } from "@/lib/services/merge-service";
 
-export const usePeopleActions = () => {
+export const usePeopleActions = (wid?: string) => {
+  const createPerson = useMutation({
+    mutationFn: async ({
+      wid: workspaceId,
+      name,
+      emails,
+      phones,
+      company,
+      title,
+      location,
+      tags,
+      interests,
+      notes,
+      summary,
+    }: {
+      wid: string;
+      name: string;
+      emails?: { value: string; verified: boolean }[];
+      phones?: { value: string; verified: boolean }[];
+      company?: string;
+      title?: string;
+      location?: string;
+      tags?: string[];
+      interests?: string[];
+      notes?: string[];
+      summary?: string;
+    }) => {
+      const person = await peopleServiceV2.createPerson({
+        wid: workspaceId,
+        name,
+        emails: emails || [],
+        phones: phones || [],
+      });
+
+      // Update additional fields after creation
+      if (
+        company ||
+        location ||
+        title ||
+        tags?.length ||
+        interests?.length ||
+        notes?.length ||
+        summary
+      ) {
+        await peopleService.replacePersonDetails(workspaceId, person.id, {
+          company,
+          location,
+          title,
+          tags,
+          interests,
+          notes,
+          summary,
+        });
+      }
+
+      return person;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: peopleKey(variables.wid) });
+      queryClient.invalidateQueries({
+        queryKey: peopleCountKey(variables.wid),
+      });
+
+      toast.success("Customer created successfully");
+    },
+    onError: (error: any) => {
+      console.error("Error creating person:", error);
+      toast.error("Failed to create customer");
+    },
+  });
+
   const updatePerson = useMutation({
     mutationFn: async ({
       wid,
@@ -102,6 +172,7 @@ export const usePeopleActions = () => {
   });
 
   return {
+    createPerson,
     updatePerson,
     mergePerson,
     notMergePersons,

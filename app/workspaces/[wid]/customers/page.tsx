@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IPerson } from "@/lib/types/person";
-import CustomerEditForm from "@/components/customers/customer-edit-form";
+import CustomerFormModal from "@/components/customers/customer-form-modal";
 import CustomerDetailPanel from "@/components/customers/customer-detail-panel";
 import {
   Table,
@@ -57,6 +57,7 @@ export default function CustomersPage() {
   const { data: identicalPersons = [] } = useAllIdenticalPersons(wid);
   const [selectedPerson, setSelectedPerson] = useState<IPerson | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
@@ -98,6 +99,12 @@ export default function CustomersPage() {
   const handleEdit = (person: IPerson) => {
     setSelectedPerson(person);
     setIsEditFormOpen(true);
+  };
+
+  const handleCloseFormModal = () => {
+    setIsEditFormOpen(false);
+    setIsAddCustomerOpen(false);
+    setTimeout(() => setSelectedPerson(null), 200);
   };
 
   const handleCloseDetailPanel = () => {
@@ -209,6 +216,13 @@ export default function CustomersPage() {
                 {Math.floor(identicalPersons.length / 2)}
               </span>
             )}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setIsAddCustomerOpen(true)}
+            className="h-8"
+          >
+            Add Customer
           </Button>
           <div className="relative w-64 ">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -426,11 +440,12 @@ export default function CustomersPage() {
       </div>
 
       {/* Edit Modal */}
-      <CustomerEditForm
-        isOpen={isEditFormOpen}
-        onClose={() => setIsEditFormOpen(false)}
+      <CustomerFormModal
+        isOpen={isEditFormOpen || isAddCustomerOpen}
+        onClose={handleCloseFormModal}
         person={selectedPerson}
         wid={wid}
+        mode={isAddCustomerOpen ? "create" : "edit"}
       />
     </div>
   );

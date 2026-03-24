@@ -36,16 +36,18 @@ interface CustomerEditFormProps {
   person: IPerson | null;
   wid: string;
   isLoading?: boolean;
+  mode?: "create" | "edit";
 }
 
-export default function CustomerEditForm({
+export default function CustomerFormModal({
   isOpen,
   onClose,
   person,
   wid,
   isLoading = false,
+  mode = "edit",
 }: CustomerEditFormProps) {
-  const { updatePerson } = usePeopleActions();
+  const { createPerson, updatePerson } = usePeopleActions(wid);
 
   const form = useForm<PersonFormValues>({
     resolver: zodResolver(personSchema),
@@ -64,30 +66,44 @@ export default function CustomerEditForm({
   });
 
   useEffect(() => {
-    if (person && isOpen) {
-      form.reset({
-        name: person.name || "",
-        emails: person.emails?.map((email) => email.value) || [],
-        phones: person.phones?.map((phone) => phone.value) || [],
-        company: person.company || "",
-        title: person.title || "",
-        location: person.location || "",
-        tags: person.tags || [],
-        interests: person.interests || [],
-        notes: person.notes || [],
-        summary: person.summary || "",
-      });
+    if (isOpen) {
+      if (mode === "create") {
+        // For create mode, reset to empty defaults
+        form.reset({
+          name: "",
+          emails: [],
+          phones: [],
+          company: "",
+          title: "",
+          location: "",
+          tags: [],
+          interests: [],
+          notes: [],
+          summary: "",
+        });
+      } else if (person) {
+        // For edit mode, populate from person data
+        form.reset({
+          name: person.name || "",
+          emails: person.emails?.map((email) => email.value) || [],
+          phones: person.phones?.map((phone) => phone.value) || [],
+          company: person.company || "",
+          title: person.title || "",
+          location: person.location || "",
+          tags: person.tags || [],
+          interests: person.interests || [],
+          notes: person.notes || [],
+          summary: person.summary || "",
+        });
+      }
     }
-  }, [person, isOpen, form]);
+  }, [person, isOpen, form, mode]);
 
   const handleSubmit = (data: PersonFormValues) => {
-    if (!person) return;
-
-    updatePerson.mutate(
-      {
-        wid,
-        personId: person.id,
-        updates: {
+    if (mode === "create") {
+      createPerson.mutate(
+        {
+          wid,
           name: data.name,
           emails: data.emails?.map((email) => ({
             value: email,
@@ -105,13 +121,46 @@ export default function CustomerEditForm({
           notes: data.notes,
           summary: data.summary,
         },
-      },
-      {
-        onSuccess: () => {
-          onClose();
+        {
+          onSuccess: () => {
+            onClose();
+          },
         },
-      },
-    );
+      );
+    } else {
+      // Edit mode
+      if (!person) return;
+
+      updatePerson.mutate(
+        {
+          wid,
+          personId: person.id,
+          updates: {
+            name: data.name,
+            emails: data.emails?.map((email) => ({
+              value: email,
+              verified: false,
+            })),
+            phones: data.phones?.map((phone) => ({
+              value: phone,
+              verified: false,
+            })),
+            company: data.company,
+            title: data.title,
+            location: data.location,
+            tags: data.tags,
+            interests: data.interests,
+            notes: data.notes,
+            summary: data.summary,
+          },
+        },
+        {
+          onSuccess: () => {
+            onClose();
+          },
+        },
+      );
+    }
   };
 
   const handleAddArrayItem = (
@@ -179,12 +228,14 @@ export default function CustomerEditForm({
     <Modal
       isOpen={isOpen}
       closeModal={onClose}
-      className="max-w-3xl  bg-card rounded-xl border shadow-lg"
+      className="max-w-3xl  bg-card rounded-xl border shadow-lg w-full"
     >
-      <div className="max-h-[75vh] overflow-hidden flex flex-col">
+      <div className="max-h-[75vh] overflow-hidden flex flex-col w-full ">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
-          <h2 className="text-sm font-medium">Edit Customer</h2>
+          <h2 className="text-sm font-medium">
+            {mode === "create" ? "Add Customer" : "Edit Customer"}
+          </h2>
           <Button
             variant="ghost"
             size="icon"
@@ -200,7 +251,7 @@ export default function CustomerEditForm({
           <div className="flex-1 flex items-center justify-center py-16">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
-        ) : !person ? (
+        ) : mode === "edit" && !person ? (
           <div className="flex-1 flex items-center justify-center py-16 text-sm text-muted-foreground">
             No customer selected
           </div>
@@ -214,9 +265,9 @@ export default function CustomerEditForm({
               {/* Section 1: Avatar + Name */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14 flex-shrink-0">
-                  <AvatarImage src="" alt={watchedName || person.name} />
+                  <AvatarImage src="" alt={watchedName} />
                   <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                    {getInitials(watchedName || person.name || "?")}
+                    {getInitials(watchedName || "?")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-1.5">
@@ -463,8 +514,21 @@ export default function CustomerEditForm({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={updatePerson.isPending}>
-                {updatePerson.isPending ? (
+              <Button
+                type="submit"
+                disabled={
+                  mode === "create"
+                    ? createPerson.isPending
+                    : updatePerson.isPending
+                }
+              >
+                {mode === "create" ? (
+                  createPerson.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Create"
+                  )
+                ) : updatePerson.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "Save Changes"
