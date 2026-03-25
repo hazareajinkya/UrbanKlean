@@ -18,6 +18,7 @@ import {
   Calendar,
   Globe,
   MessageCircleCode,
+  Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { IPerson } from "@/lib/types/person";
@@ -204,6 +205,14 @@ export default function CustomersPage() {
 
         <div className="flex items-center gap-3">
           <Button
+            size="sm"
+            onClick={() => setIsAddCustomerOpen(true)}
+            className="h-8"
+          >
+            <Plus className="w-4 h-4 " />
+            Add Customer
+          </Button>
+          <Button
             variant={showDuplicates ? "default" : "outline"}
             size="sm"
             onClick={() => setShowDuplicates(!showDuplicates)}
@@ -217,13 +226,7 @@ export default function CustomersPage() {
               </span>
             )}
           </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsAddCustomerOpen(true)}
-            className="h-8"
-          >
-            Add Customer
-          </Button>
+
           <div className="relative w-64 ">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
