@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,11 +33,12 @@ function OnboardingContent() {
   const [domain, setDomain] = useState("");
   const [emailError, setEmailError] = useState("");
   const [domainError, setDomainError] = useState("");
+  const router = useRouter();
 
   const [phase, setPhase] = useState<Phase>("form");
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
-    null
+    null,
   );
 
   const { startOnboarding, uploadLogo, generateOnboardingInfo } =
@@ -176,13 +177,22 @@ function OnboardingContent() {
         setOnboardingData(data);
       }
 
-      setPhase("success");
+      router.push(
+        "/thanks?" +
+          new URLSearchParams({
+            companyName: data.companyName,
+            industry: data.industry,
+            email: email,
+            estimatedTime: result.data.estimatedTime?.toString() || "",
+          }).toString(),
+      );
     } catch (error: any) {
       console.error("Error completing onboarding:", error);
       datafastService.trackGoal("onboarding_failed", {
         workEmail: email,
         domain: url.replace(/^https?:\/\//, ""),
-        reason: error?.response?.data?.message || error?.message || "unknown_error",
+        reason:
+          error?.response?.data?.message || error?.message || "unknown_error",
         status: error?.response?.status || error?.status || 0,
       });
     }
@@ -199,13 +209,13 @@ function OnboardingContent() {
       <div
         className={cn(
           "flex min-h-screen flex-col px-8 lg:px-16 xl:px-24 py-12 relative z-10 bg-white",
-          phase !== "form" && "justify-center"
+          phase !== "form" && "justify-center",
         )}
       >
         <div
           className={cn(
             "max-w-md w-full mx-auto",
-            phase === "form" && "flex flex-1 min-h-0 flex-col"
+            phase === "form" && "flex flex-1 min-h-0 flex-col",
           )}
         >
           {phase === "form" && (
@@ -241,7 +251,7 @@ function OnboardingContent() {
                         className={cn(
                           "h-11 transition-all",
                           emailError &&
-                          "border-destructive focus-visible:ring-destructive/20"
+                            "border-destructive focus-visible:ring-destructive/20",
                         )}
                       />
                       {emailError && (
@@ -353,78 +363,6 @@ function OnboardingContent() {
               onParsedPhaseChange={setPhase}
               onEmailError={setEmailError}
             />
-          )}
-
-          {phase === "success" && onboardingData && (
-            <div className="animate-in fade-in duration-500 space-y-6">
-              <div className="flex items-center gap-3 text-green-600">
-                <div className="size-8 rounded-full bg-green-100 flex items-center justify-center">
-                  <PartyPopper className="size-4" />
-                </div>
-                <span className="text-sm font-medium">Setup Complete</span>
-              </div>
-
-              <div className="space-y-4">
-                <h1 className="text-2xl font-medium text-gray-900">
-                  {onboardingData.companyName
-                    ? `${onboardingData.companyName}'s AI Agent is Being Created`
-                    : "Your AI Agent is Being Created"}
-                </h1>
-                <p className="text-muted-foreground leading-8">
-                  We're training your AI support agent
-                  {onboardingData.companyName && (
-                    <>
-                      {" "}
-                      for{" "}
-                      <span className="font-medium text-gray-900">
-                        {onboardingData.companyName}
-                      </span>
-                    </>
-                  )}
-                  {onboardingData.industry && (
-                    <>
-                      {" "}
-                      in the{" "}
-                      <span className="font-medium text-gray-900">
-                        {onboardingData.industry}
-                      </span>{" "}
-                      space
-                    </>
-                  )}
-                  {/* {onboardingData.targetAudience && (
-                    <>
-                      , optimized to serve{" "}
-                      <span className="font-medium text-gray-900">
-                        {onboardingData.targetAudience
-                          .toLowerCase()
-                          .slice(0, 60)}
-                        {onboardingData.targetAudience.length > 60 ? "..." : ""}
-                      </span>
-                    </>
-                  )} */}
-                  . You'll receive an email at{" "}
-                  <span className="font-medium text-gray-900">{email}</span>{" "}
-                  within{" "}
-                  <span className="font-medium text-gray-900">
-                    {onboardingData.estimatedTime || "10-15"} minutes
-                  </span>
-                  .
-                </p>
-              </div>
-
-              <p className="text-sm text-muted-foreground leading-6.5">
-                For demo purposes (before payment), your{" "}
-                {onboardingData.companyName}'s AI agent is trained only on a
-                handful of key pages and basic public information from your
-                website, so the answers are intentionally limited for
-                proof‑of‑concept and will be far more robust and accurate once
-                you’re live on the paid platform.
-              </p>
-
-              <p className="text-sm text-gray-400">
-                You can safely close this page.
-              </p>
-            </div>
           )}
         </div>
       </div>
