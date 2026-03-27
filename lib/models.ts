@@ -1,4 +1,14 @@
 export const models = [
+  {
+    value: "xai/grok-4.20-reasoning-beta",
+    label: "Grok 4.20 Reasoning (beta)",
+    provider: "xai",
+  },
+  {
+    value: "xai/grok-4.1-fast-non-reasoning",
+    label: "Grok 4.1 Fast",
+    provider: "xai",
+  },
   { value: "gpt-5.2", label: "GPT-5.2", provider: "openai" },
 
   { value: "gpt-5", label: "GPT-5", provider: "openai" },

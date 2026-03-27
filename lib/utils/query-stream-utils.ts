@@ -1,10 +1,11 @@
 import { openai } from "@ai-sdk/openai";
 import { IAgent } from "../types/agent";
 import { google } from "@ai-sdk/google";
+import { gateway } from "ai";
 import {
   geminiHumanPrompt,
   getRequestPromptFromHints,
-  identityCollectionPrompt,
+  getIdentityCollectionPrompt,
 } from "@/prompts/system-prompt";
 import { IChannelProvider } from "../types/channel";
 import { Geo } from "@vercel/functions";
@@ -12,12 +13,11 @@ import { channelPrompts } from "@/prompts/channel-prompts";
 import { IWorkflow } from "../types/workflow";
 
 export const getModel = (agent: IAgent) => {
-  let model = openai("gpt-4.1-mini");
-  if (agent.settings.model.includes("gpt"))
-    model = openai(agent.settings.model);
-  else if (agent.settings.model.includes("gemini"))
-    model = google(agent.settings.model);
-  return model;
+  const id = agent.settings.model;
+  if (id.startsWith("xai/")) return gateway(id);
+  if (id.includes("gpt")) return openai(id);
+  if (id.includes("gemini")) return google(id);
+  return openai("gpt-4.1-mini");
 };
 
 export const workflowsToText = (workflows: IWorkflow[]) =>
@@ -111,11 +111,23 @@ export const getSystemPrompt = (arg: {
   } = arg;
   const workflowsText = workflowsToText(workflows);
   const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
+  const requiresInfo = agent.customization.requiresInfo ?? {
+    active: true,
+    nameEmail: true,
+    phone: false,
+  };
+  const identityCollectionPrompt =
+    !personId && channel === "web" && !isFinetuning && requiresInfo.active
+      ? getIdentityCollectionPrompt({
+          requireNameEmail: requiresInfo.nameEmail,
+          requirePhone: requiresInfo.phone,
+        })
+      : "";
 
   return `${geminiHumanPrompt}
   ${!isFinetuning && geoInfo}
   ${agent.settings.systemPrompt}
-  ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
+  ${identityCollectionPrompt}
   ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
   ${channel === "whatsapp" && channelPrompts.whatsapp}
   ${channel === "email" && channelPrompts.email}

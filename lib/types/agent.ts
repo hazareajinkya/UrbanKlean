@@ -28,6 +28,11 @@ export interface IAgentChatCustomization {
   primaryColor: string;
   starterMessagesEnabled: boolean;
   starterMessages: string[];
+  requiresInfo: {
+    active: boolean;
+    nameEmail: boolean;
+    phone: boolean;
+  };
 }
 
 export const generateDefaultAgent = (
@@ -51,6 +56,11 @@ export const generateDefaultAgent = (
       primaryColor: workspace.info.primaryColor || "#000000",
       starterMessagesEnabled: false,
       starterMessages: [],
+      requiresInfo: {
+        active: false,
+        nameEmail: true,
+        phone: false,
+      },
     },
     settings: {
       temperature: 0.5,

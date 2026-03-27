@@ -41,6 +41,11 @@ export async function GET(
         botIcon: agent.customization.botIcon,
         starterMessagesEnabled: agent.customization.starterMessagesEnabled,
         starterMessages: agent.customization.starterMessages,
+        requiresInfo: {
+          active: agent.customization.requiresInfo?.active ?? true,
+          nameEmail: agent.customization.requiresInfo?.nameEmail ?? true,
+          phone: agent.customization.requiresInfo?.phone ?? false,
+        },
       },
     };
 
