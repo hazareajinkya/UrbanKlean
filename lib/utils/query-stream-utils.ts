@@ -5,7 +5,7 @@ import { gateway } from "ai";
 import {
   geminiHumanPrompt,
   getRequestPromptFromHints,
-  identityCollectionPrompt,
+  getIdentityCollectionPrompt,
 } from "@/prompts/system-prompt";
 import { IChannelProvider } from "../types/channel";
 import { Geo } from "@vercel/functions";
@@ -111,11 +111,23 @@ export const getSystemPrompt = (arg: {
   } = arg;
   const workflowsText = workflowsToText(workflows);
   const geoInfo = geo ? getRequestPromptFromHints(geo) : "";
+  const requiresInfo = agent.customization.requiresInfo ?? {
+    active: true,
+    nameEmail: true,
+    phone: false,
+  };
+  const identityCollectionPrompt =
+    !personId && channel === "web" && !isFinetuning && requiresInfo.active
+      ? getIdentityCollectionPrompt({
+          requireNameEmail: requiresInfo.nameEmail,
+          requirePhone: requiresInfo.phone,
+        })
+      : "";
 
   return `${geminiHumanPrompt}
   ${!isFinetuning && geoInfo}
   ${agent.settings.systemPrompt}
-  ${!personId && channel === "web" && !isFinetuning && identityCollectionPrompt}
+  ${identityCollectionPrompt}
   ${isFinetuning ? fineTuningInstructions(reasoning, suggestion) : ""}
   ${channel === "whatsapp" && channelPrompts.whatsapp}
   ${channel === "email" && channelPrompts.email}

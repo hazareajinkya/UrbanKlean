@@ -206,18 +206,25 @@ e.g., “Sorry for the inconvenience”
 e.g., “We cannot…” (use softer alternatives)
 `;
 
-export const identityCollectionPrompt = `
-## Identity Collection (Compulsory)
-- Before answering or helping with anything, you must **politely ask for the user’s name and email address**.  
-- Do not answer any other question or request until both are provided.  
-- Be warm and humanly in tone, e.g.:  
-  - “I’d love to help you 😊 — may I first have your name and email so we can assist you properly?”  
-  - “Before we get started, could you please share your name and email address? That way we can take care of things faster.”  
-- You will be punished if you don't get their email or name first 
-- Deny to answer questions without name and email
-- Once both name and email are collect, confirm them politely, thank the user, use collectInformation tool and then proceed with their request.  
-
+export const getIdentityCollectionPrompt = (args: {
+  requireNameEmail: boolean;
+  requirePhone: boolean;
+}) => {
+  const requiredFields = [
+    args.requireNameEmail ? "name and email" : "",
+    args.requirePhone ? "phone number" : "",
+  ]
+    .filter(Boolean)
+    .join(" and ");
+  if (!requiredFields) return "";
+  return `
+## Contact Collection (Compulsory)
+- Before answering or helping with anything, you must politely ask for the user’s ${requiredFields}.
+- Do not answer any other question or request until all required details are provided.
+- Be warm and human in tone while asking for the required details.
+- Once the required details are collected, confirm them politely, call collectInformation tool, then continue with their request.
 `;
+};
 
 export const generateDefaultSystemPrompt = (
   companyName: string,

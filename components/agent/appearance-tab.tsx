@@ -15,6 +15,8 @@ import {
   X,
   GripVertical,
   Sparkles,
+  UserRound,
+  Phone,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { getwid } from "@/lib/utils";
@@ -49,6 +51,15 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
   const [starterMessages, setStarterMessages] = useState<string[]>(
     agent.customization.starterMessages ?? [],
   );
+  const [requiresInfoActive, setRequiresInfoActive] = useState(
+    agent.customization.requiresInfo?.active ?? true,
+  );
+  const [requiresInfoNameEmail, setRequiresInfoNameEmail] = useState(
+    agent.customization.requiresInfo?.nameEmail ?? true,
+  );
+  const [requiresInfoPhone, setRequiresInfoPhone] = useState(
+    agent.customization.requiresInfo?.phone ?? false,
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +77,11 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
         logoFile,
         starterMessagesEnabled,
         starterMessages,
+        requiresInfo: {
+          active: requiresInfoActive,
+          nameEmail: requiresInfoNameEmail,
+          phone: requiresInfoPhone,
+        },
       });
 
       // If we get here, save was successful
@@ -153,23 +169,25 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
       botIcon: logoPreview || agent.customization.botIcon,
       starterMessagesEnabled,
       starterMessages: starterMessages.filter((msg) => msg.trim() !== ""),
+      requiresInfo: {
+        active: requiresInfoActive,
+        nameEmail: requiresInfoNameEmail,
+        phone: requiresInfoPhone,
+      },
     },
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
-      {/* Settings Column */}
       <div className="space-y-6 mb-24">
         {/* Agent Appearance Card */}
         <Card className="py-4">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                Agent Appearance
-              </CardTitle>
+              <CardTitle>Agent Appearance</CardTitle>
               <Button
                 onClick={handleSave}
-                size={"sm"}
+                size="sm"
                 className="rounded-full"
                 disabled={isSaving}
               >
@@ -180,7 +198,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Brand Logo Section - Moved to top */}
               <div>
                 <Label>Brand Logo</Label>
                 <div className="mt-2 flex items-center gap-4">
@@ -218,7 +235,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                   </div>
                 </div>
               </div>
-
               <div className="border-t pt-6 space-y-4">
                 <div>
                   <Label htmlFor="agentName">Agent Name</Label>
@@ -230,7 +246,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     className="mt-2"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="greetingMessage">Greeting Message</Label>
                   <Textarea
@@ -242,7 +257,6 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                     className="mt-2"
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="primaryColor">Brand Color</Label>
                   <div className="flex gap-2 mt-2">
@@ -262,118 +276,183 @@ export default function AppearanceTab({ agent }: AppearanceTabProps) {
                   </div>
                 </div>
               </div>
-              <div className="border-t pt-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="">
-                    <h1>Starter Messages</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Show quick suggestions when users start a new conversation
-                    </p>
-                  </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* Require Details Card */}
+        <Card className="py-4">
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                <p className="">Require details before chat</p>
+                <p className="text-sm text-muted-foreground leading-snug">
+                  Forces visitors to provide contact info before the agent
+                  answers any questions
+                </p>
+              </div>
+              <Switch
+                checked={requiresInfoActive}
+                aria-label="Toggle required details before chat"
+                onCheckedChange={(checked) => {
+                  setRequiresInfoActive(checked);
+                  if (checked && !requiresInfoNameEmail && !requiresInfoPhone)
+                    setRequiresInfoNameEmail(true);
+                }}
+              />
+            </div>
+            {requiresInfoActive ? (
+              <div className="mt-4 space-y-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center justify-between gap-3 rounded-lg px-4 py-3 hover:bg-muted/40 transition-colors">
                   <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerateStarters}
-                      disabled={generateStarters.isPending || isSaving}
-                    >
-                      {generateStarters.isPending ? (
-                        <Loader className="w-4 h-4 animate-spin mr-1" />
-                      ) : (
-                        <Sparkles className="w-4 h-4 mr-1" />
-                      )}
-                      Generate with AI
-                    </Button>
-                    <Switch
-                      checked={starterMessagesEnabled}
-                      onCheckedChange={setStarterMessagesEnabled}
-                    />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 shrink-0">
+                      <UserRound className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Name & email</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Collects both as one step
+                      </p>
+                    </div>
                   </div>
+                  <Switch
+                    checked={requiresInfoNameEmail}
+                    disabled={requiresInfoActive}
+                    aria-label="Toggle required name and email"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg px-4 py-3 hover:bg-muted/40 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-600 shrink-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Phone number</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Useful when callback is needed.
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={requiresInfoPhone}
+                    aria-label="Toggle required phone number"
+                    onCheckedChange={(checked) => {
+                      if (!checked && !requiresInfoNameEmail) return;
+                      setRequiresInfoPhone(checked);
+                    }}
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                {starterMessages.map((message, index) => (
-                  <div
-                    key={index}
-                    draggable={starterMessagesEnabled}
-                    onDragStart={() =>
-                      starterMessagesEnabled && handleDragStart(index)
-                    }
-                    onDragOver={(e) =>
-                      starterMessagesEnabled && handleDragOver(e, index)
-                    }
-                    onDragEnd={handleDragEnd}
-                    className={`flex items-center gap-3 p-2 rounded-lg transition-all group
-                      ${
-                        dragIndex === index
-                          ? "bg-primary/10 border-2 border-dashed border-primary/40"
-                          : "bg-muted/30 hover:bg-muted/50"
-                      } ${!starterMessagesEnabled ? "opacity-50" : ""}`}
-                  >
-                    {/* Drag handle */}
-                    <div
-                      className={`text-muted-foreground p-1 ${
-                        starterMessagesEnabled
-                          ? "cursor-grab active:cursor-grabbing hover:text-foreground"
-                          : "cursor-not-allowed opacity-50"
-                      }`}
-                      title={
-                        starterMessagesEnabled ? "Drag to reorder" : "Disabled"
-                      }
-                    >
-                      <GripVertical className="w-4 h-4" />
-                    </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-3 animate-in fade-in duration-200">
+                When off, the agent will automatically ask for name and email
+                when it sees fit.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-                    {/* Input field */}
-                    <Input
-                      value={message}
-                      disabled={!starterMessagesEnabled}
-                      onChange={(e) =>
-                        handleStarterMessageChange(index, e.target.value)
-                      }
-                      placeholder={`e.g. "How can I get started?"`}
-                      className="flex-1 border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-100"
-                    />
-
-                    {/* Delete button */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={!starterMessagesEnabled}
-                      onClick={() => handleRemoveStarterMessage(index)}
-                      className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${
-                        starterMessagesEnabled
-                          ? "opacity-0 group-hover:opacity-100"
-                          : "opacity-0 cursor-not-allowed"
-                      }`}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-
-                {starterMessages.length < MAX_STARTER_MESSAGES && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!starterMessagesEnabled}
-                    onClick={handleAddStarterMessage}
-                    className="w-full mt-3"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add Message ({starterMessages.length}/{MAX_STARTER_MESSAGES}
-                    )
-                  </Button>
-                )}
-
-                {starterMessages.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Add up to {MAX_STARTER_MESSAGES} starter messages for your
-                    users
-                  </p>
-                )}
+        {/* Starter Messages Card */}
+        <Card className="py-4">
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                <p className="">Starter Messages</p>
+                <p className="text-sm text-muted-foreground leading-snug">
+                  Show quick suggestions when users start a new conversation
+                </p>
               </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateStarters}
+                  disabled={generateStarters.isPending || isSaving}
+                >
+                  {generateStarters.isPending ? (
+                    <Loader className="w-4 h-4 animate-spin mr-1" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-1" />
+                  )}
+                  Generate
+                </Button>
+                <Switch
+                  checked={starterMessagesEnabled}
+                  onCheckedChange={setStarterMessagesEnabled}
+                  aria-label="Toggle starter messages"
+                />
+              </div>
+            </div>
+          </CardContent>
+          <CardContent>
+            <div className="space-y-2">
+              {starterMessages.map((message, index) => (
+                <div
+                  key={index}
+                  draggable={starterMessagesEnabled}
+                  onDragStart={() =>
+                    starterMessagesEnabled && handleDragStart(index)
+                  }
+                  onDragOver={(e) =>
+                    starterMessagesEnabled && handleDragOver(e, index)
+                  }
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-all group ${
+                    dragIndex === index
+                      ? "bg-primary/10 border-2 border-dashed border-primary/40"
+                      : "bg-muted/30 hover:bg-muted/50"
+                  } ${!starterMessagesEnabled ? "opacity-50" : ""}`}
+                >
+                  <div
+                    className={`text-muted-foreground p-1 ${starterMessagesEnabled ? "cursor-grab active:cursor-grabbing hover:text-foreground" : "cursor-not-allowed opacity-50"}`}
+                    title={
+                      starterMessagesEnabled ? "Drag to reorder" : "Disabled"
+                    }
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
+                  <Input
+                    value={message}
+                    disabled={!starterMessagesEnabled}
+                    onChange={(e) =>
+                      handleStarterMessageChange(index, e.target.value)
+                    }
+                    placeholder={`e.g. "How can I get started?"`}
+                    className="flex-1 border-0 bg-transparent focus-visible:ring-1 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-100"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={!starterMessagesEnabled}
+                    onClick={() => handleRemoveStarterMessage(index)}
+                    className={`h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity ${
+                      starterMessagesEnabled
+                        ? "opacity-0 group-hover:opacity-100"
+                        : "opacity-0 cursor-not-allowed"
+                    }`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              {starterMessages.length < MAX_STARTER_MESSAGES && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!starterMessagesEnabled}
+                  onClick={handleAddStarterMessage}
+                  className="w-full mt-3"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Message ({starterMessages.length}/{MAX_STARTER_MESSAGES})
+                </Button>
+              )}
+              {starterMessages.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Add up to {MAX_STARTER_MESSAGES} starter messages for your
+                  users
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
