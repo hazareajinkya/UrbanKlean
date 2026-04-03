@@ -1,9 +1,8 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { DocumentSnapshot } from "firebase/firestore";
-import peopleService, {
-  PEOPLE_PAGE_LIMIT,
-} from "../../services/people-service";
-import peopleServiceV2 from "../../services/people-service-v2";
+import { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import peopleServiceV2 from "@/lib/services/people-service-v2";
+import { IChannelProvider } from "@/lib/types/channel";
+import { IPeopleStore, usePeopleStore } from "@/lib/stores/people-store";
 
 export const peopleKey = (wid: string) => ["people", wid];
 export const peopleCountKey = (wid: string) => ["peopleCount", wid];
@@ -16,46 +15,94 @@ export const identicalPersonsKey = (wid: string, personId: string) => [
   wid,
   personId,
 ];
-export const usePeople = (wid: string) => {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery({
-      queryKey: peopleKey(wid),
-      queryFn: async ({ pageParam }) => {
-        return peopleService.getPeoplePage(
-          wid,
-          pageParam as DocumentSnapshot | null,
-          PEOPLE_PAGE_LIMIT
-        );
-      },
-      initialPageParam: null as DocumentSnapshot | null,
-      getNextPageParam: (lastPage) => {
-        if (lastPage.people.length < PEOPLE_PAGE_LIMIT) return undefined;
-        return lastPage.lastVisible || undefined;
-      },
-      enabled: !!wid,
+export const usePeople = ({
+  wid,
+  searchQuery,
+  selectedChannels,
+  selectedTags,
+}: {
+  wid: string;
+  searchQuery: string;
+  selectedChannels: IChannelProvider[];
+  selectedTags: string[];
+}) => {
+  const people = usePeopleStore((state: IPeopleStore) => state.people);
+  const rawPeople = usePeopleStore((state: IPeopleStore) => state.rawPeople);
+  const hasMore = usePeopleStore((state: IPeopleStore) => state.hasMore);
+  const nPeople = usePeopleStore((state: IPeopleStore) => state.nPeople);
+  const isLoading = usePeopleStore(
+    (state: IPeopleStore) => state.isInitialLoading,
+  );
+  const isFetchingNext = usePeopleStore(
+    (state: IPeopleStore) => state.isFetchingNext,
+  );
+  const resetAndLoadPeople = usePeopleStore(
+    (state: IPeopleStore) => state.resetAndLoadPeople,
+  );
+  const loadMorePeople = usePeopleStore(
+    (state: IPeopleStore) => state.loadMorePeople,
+  );
+  const applyLocalFilters = usePeopleStore(
+    (state: IPeopleStore) => state.applyLocalFilters,
+  );
+  const resetStore = usePeopleStore((state: IPeopleStore) => state.resetStore);
+
+  const canonicalSelectedTags = useMemo(
+    () =>
+      [...new Set(selectedTags.filter(Boolean))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [selectedTags],
+  );
+  const canonicalSelectedChannels = useMemo(
+    () =>
+      [...new Set(selectedChannels.filter(Boolean))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [selectedChannels],
+  );
+  const tagSignature = canonicalSelectedTags.join("|");
+  const channelSignature = canonicalSelectedChannels.join("|");
+
+  useEffect(() => {
+    if (!wid) {
+      resetStore();
+      return;
+    }
+
+    resetAndLoadPeople({
+      wid,
+      selectedTags: canonicalSelectedTags,
+      searchQuery,
+      selectedChannels: canonicalSelectedChannels,
     });
+  }, [wid, tagSignature, resetAndLoadPeople]);
 
-  const { data: nPeople = 0 } = useQuery({
-    queryKey: peopleCountKey(wid),
-    queryFn: () => peopleService.getPeopleCount(wid),
-    enabled: !!wid,
-  });
+  useEffect(() => {
+    applyLocalFilters({
+      searchQuery,
+      selectedChannels: canonicalSelectedChannels,
+    });
+  }, [searchQuery, channelSignature, applyLocalFilters]);
 
-  const people = data?.pages.flatMap((page) => page.people) ?? [];
+  useEffect(() => {
+    return () => {
+      resetStore();
+    };
+  }, [resetStore]);
 
   const loadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    loadMorePeople();
   };
 
   return {
     people,
-    hasMore: hasNextPage,
+    rawPeople,
+    hasMore,
     nPeople,
     loadMore,
     isLoading,
-    isFetchingNext: isFetchingNextPage,
+    isFetchingNext,
   };
 };
 

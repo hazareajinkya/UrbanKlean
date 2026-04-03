@@ -62,7 +62,7 @@ class PeopleServiceV2 {
               provider: externalId.provider,
               id: externalId.id,
             }),
-            limit(1)
+            limit(1),
           );
           const snaps = await getDocs(q);
           if (snaps.docs.length > 0) {
@@ -87,7 +87,7 @@ class PeopleServiceV2 {
         const q = query(
           peopleCol,
           where("ips", "array-contains-any", ipNs),
-          limit(10)
+          limit(10),
         );
         const snaps = await getDocs(q);
         // Identify by phones - check each phone in order if it exists in the docs
@@ -141,7 +141,7 @@ class PeopleServiceV2 {
         const q = query(
           peopleCol,
           where("emails", "array-contains-any", emailNs),
-          limit(1)
+          limit(1),
         );
         const snaps = await getDocs(q);
         console.log("Email lookup result count:", snaps.docs.length);
@@ -157,7 +157,7 @@ class PeopleServiceV2 {
         const q = query(
           peopleCol,
           where("phones", "array-contains-any", phoneNs),
-          limit(1)
+          limit(1),
         );
         const snaps = await getDocs(q);
         console.log("Phone lookup result count:", snaps.docs.length);
@@ -183,7 +183,7 @@ class PeopleServiceV2 {
     if (!personIds || personIds.length === 0) return [];
     const q = query(
       collection(db, `workspaces/${wid}/people`),
-      where("id", "in", personIds)
+      where("id", "in", personIds),
     );
     const snaps = await getDocs(q);
     return snaps.docs.map((doc) => doc.data() as IPerson);
@@ -403,7 +403,7 @@ class PeopleServiceV2 {
       throw new Error(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to merge persons"
+          "Failed to merge persons",
       );
     }
   }
@@ -411,18 +411,11 @@ class PeopleServiceV2 {
   async getAllIdenticalPersons(wid: string) {
     try {
       const peopleCol = collection(db, `workspaces/${wid}/people`);
-      const snaps = await getDocs(peopleCol);
 
+      const q = query(peopleCol, where("identicalPersonIds", "not-in", [[]]));
+      const snaps = await getDocs(q);
       if (snaps.empty) return [];
-
-      const persons: IPerson[] = [];
-      for (const doc of snaps.docs) {
-        const person = doc.data() as IPerson;
-        if (person.identicalPersonIds?.length > 0) {
-          persons.push(person);
-        }
-      }
-      return persons;
+      return snaps.docs.map((doc) => doc.data() as IPerson);
     } catch (error) {
       console.error("Error getting all identical persons: ", error);
       return [];
