@@ -1,7 +1,7 @@
 import { v4 } from "uuid";
 import { generateDefaultSystemPrompt } from "@/prompts/system-prompt";
 import { IWorkspace } from "./workspace";
-
+export type AgentTrainingStatus = "pending" | "trained";
 export interface IAgent {
   id: string;
   wid: string;
@@ -10,6 +10,7 @@ export interface IAgent {
   settings: IAgentSettings;
   knowledgeFolders: string[];
   ownerId: string;
+  trainingStatus?: AgentTrainingStatus;
   createdAt: string;
   updatedAt: string;
   lastActivity: string;

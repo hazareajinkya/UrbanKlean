@@ -16,10 +16,13 @@ export async function POST(req: NextRequest) {
       url,
       ...onboardingData,
     });
-    console.log("response: ", response.data);
     return successResponse(
-      { estimatedTime: response.data.data.estimatedTime },
-      "Onboarding completed successfully"
+      {
+        estimatedTime: response.data.data.estimatedTime,
+        agentId: response.data.data.agentId,
+        workspaceId: response.data.data.workspaceId,
+      },
+      "Onboarding completed successfully",
     );
   } catch (error: any) {
     console.error("Error completing onboarding:", error);

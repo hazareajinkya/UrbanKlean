@@ -180,10 +180,9 @@ function OnboardingContent() {
       router.push(
         "/thanks?" +
           new URLSearchParams({
-            companyName: data.companyName,
-            industry: data.industry,
             email: email,
             estimatedTime: result.data.estimatedTime?.toString() || "",
+            id: result.data.agentId,
           }).toString(),
       );
     } catch (error: any) {
