@@ -750,8 +750,12 @@ export default function CustomersPage() {
               <div className="w-[450px] h-full">
                 <CustomerDetailPanel
                   person={selectedPerson}
+                  wid={wid}
                   onEdit={handleEdit}
                   onClose={handleCloseDetailPanel}
+                  onPersonUpdated={(updatedPerson) =>
+                    setSelectedPerson(updatedPerson)
+                  }
                 />
               </div>
             )}

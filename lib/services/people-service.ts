@@ -120,6 +120,7 @@ class PeopleService {
     if (data.title !== undefined) update.title = data.title;
     if (data.location !== undefined) update.location = data.location;
     if (data.summary !== undefined) update.summary = data.summary;
+    if (data.followUp !== undefined) update.followUp = data.followUp;
 
     // externalIds (shallow merge)
     if (data.externalIds) {
@@ -176,6 +177,7 @@ class PeopleService {
     if (data.title !== undefined) update.title = data.title;
     if (data.location !== undefined) update.location = data.location;
     if (data.summary !== undefined) update.summary = data.summary;
+    if (data.followUp !== undefined) update.followUp = data.followUp;
 
     // externalIds (shallow merge)
     if (data.externalIds) {
@@ -183,27 +185,27 @@ class PeopleService {
         update[`externalIds.${k}`] = v;
       }
     }
-    if (data.emails?.length) {
+    if (data.emails !== undefined) {
       update.emails = data.emails;
     }
 
-    if (data.phones?.length) {
+    if (data.phones !== undefined) {
       update.phones = data.phones;
     }
 
-    if (data.tags?.length) {
+    if (data.tags !== undefined) {
       update.tags = data.tags;
     }
 
-    if (data.interests?.length) {
+    if (data.interests !== undefined) {
       update.interests = data.interests;
     }
 
-    if (data.notes?.length) {
+    if (data.notes !== undefined) {
       update.notes = data.notes;
     }
 
-    if (data.memories?.length) {
+    if (data.memories !== undefined) {
       update.memories = data.memories;
     }
 

@@ -28,4 +28,5 @@ export const WHITELISTED_EMAILS = [
   "akil@thestagetwo.com",
   "suryajayaraman@thestagetwo.com",
   "karthikcharles.411@gmail.com",
+  "abhinav@magicalcx.com",
 ];

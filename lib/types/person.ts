@@ -2,6 +2,42 @@ import { v4 } from "uuid";
 import { normEmail, normPhone } from "../utils";
 import { IChannelProvider } from "./channel";
 
+export type IFollowUpScheduleInput =
+  | {
+      type: "once";
+      date: string;
+      time: string;
+    }
+  | {
+      type: "interval";
+      every: number;
+      unit: "min" | "hour";
+    };
+
+export type IFollowUpStatus = "scheduled" | "sent" | "failed" | "canceled";
+
+export interface IFollowUpTemplateConfig {
+  name: string;
+  languageCode: string;
+  components?: any[];
+  previewText?: string;
+}
+
+export interface IFollowUpJob {
+  id: string;
+  type: "once" | "cron";
+  providerJobId: string;
+  timezone: string;
+  phone: string;
+  schedule: IFollowUpScheduleInput & { cron?: string; notBefore?: string };
+  template: IFollowUpTemplateConfig;
+  status: IFollowUpStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastRunAt?: string;
+  error?: string;
+}
+
 export interface IPerson {
   id: string;
 
@@ -47,6 +83,8 @@ export interface IPerson {
       profilePic?: string[];
     };
   };
+
+  followUp?: IFollowUpJob[];
 
   createdAt: string;
   updatedAt: string;
@@ -99,6 +137,7 @@ export const generateDefaultPerson = ({
     summary: "",
     notes: [],
     metadata: metadata ?? {},
+    followUp: [],
     identicalPersonIds: [],
     pastSessionIds: sessionId && aid ? [{ aid, sid: sessionId }] : [],
     createdAt: new Date().toISOString(),

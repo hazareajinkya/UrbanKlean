@@ -216,6 +216,7 @@ class PeopleServiceV2 {
     if (data.title !== undefined) update.title = data.title;
     if (data.location !== undefined) update.location = data.location;
     if (data.summary !== undefined) update.summary = data.summary;
+    if (data.followUp !== undefined) update.followUp = data.followUp;
 
     // externalIds (shallow merge)
     if (data.externalIds?.length) {
