@@ -298,6 +298,9 @@ export default function CustomersPage() {
     [],
   );
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const [draftChannels, setDraftChannels] = useState<IChannelProvider[]>([]);
+  const [draftTags, setDraftTags] = useState<string[]>([]);
   const [tagSearchQuery, setTagSearchQuery] = useState("");
   const {
     people,
@@ -368,12 +371,14 @@ export default function CustomersPage() {
   const hasActiveFilters =
     selectedChannels.length > 0 || selectedTags.length > 0;
   const activeFilterCount = selectedChannels.length + selectedTags.length;
+  const hasDraftFilters =
+    draftChannels.length > 0 || draftTags.length > 0;
   const shouldShowTagSearch = availableTags.length > 7;
   const filteredAvailableTags = useMemo(() => {
     const filteredAvailableTagsRaw = availableTags.filter((tag) =>
       fromSlug(tag).toLowerCase().includes(tagSearchQuery.trim().toLowerCase()),
     );
-    const selectedTagsInFiltered = selectedTags.filter((tag) =>
+    const selectedTagsInFiltered = draftTags.filter((tag) =>
       filteredAvailableTagsRaw.includes(tag),
     );
     const unselectedTagsInFiltered = filteredAvailableTagsRaw.filter(
@@ -381,18 +386,40 @@ export default function CustomersPage() {
     );
 
     return [...selectedTagsInFiltered, ...unselectedTagsInFiltered];
-  }, [availableTags, selectedTags, tagSearchQuery]);
+  }, [availableTags, draftTags, tagSearchQuery]);
 
-  const handleToggleChannel = useCallback((channel: IChannelProvider) => {
-    setSelectedChannels((currentChannels) =>
+  const handleFilterOpenChange = useCallback((open: boolean) => {
+    if (open) {
+      setDraftChannels([...selectedChannels]);
+      setDraftTags([...selectedTags]);
+    }
+    setFilterMenuOpen(open);
+  }, [selectedChannels, selectedTags]);
+
+  const handleApplyFilters = useCallback(() => {
+    setSelectedChannels(draftChannels);
+    setSelectedTags(draftTags);
+    setFilterMenuOpen(false);
+  }, [draftChannels, draftTags]);
+
+  const handleClearFiltersMenu = useCallback(() => {
+    setDraftChannels([]);
+    setDraftTags([]);
+    setSelectedChannels([]);
+    setSelectedTags([]);
+    setFilterMenuOpen(false);
+  }, []);
+
+  const handleToggleDraftChannel = useCallback((channel: IChannelProvider) => {
+    setDraftChannels((currentChannels) =>
       currentChannels.includes(channel)
         ? currentChannels.filter((currentChannel) => currentChannel !== channel)
         : [...currentChannels, channel],
     );
   }, []);
 
-  const handleToggleTag = useCallback((tag: string) => {
-    setSelectedTags((currentTags) =>
+  const handleToggleDraftTag = useCallback((tag: string) => {
+    setDraftTags((currentTags) =>
       currentTags.includes(tag)
         ? currentTags.filter((currentTag) => currentTag !== tag)
         : [...currentTags, tag],
@@ -402,6 +429,11 @@ export default function CustomersPage() {
   const handleClearFilters = useCallback(() => {
     setSelectedChannels([]);
     setSelectedTags([]);
+  }, []);
+
+  const handleClearDraftFilters = useCallback(() => {
+    setDraftChannels([]);
+    setDraftTags([]);
   }, []);
 
   const handleClearSearchAndFilters = useCallback(() => {
@@ -479,7 +511,10 @@ export default function CustomersPage() {
               Clear
             </Button>
           )}
-          <DropdownMenu>
+          <DropdownMenu
+            open={filterMenuOpen}
+            onOpenChange={handleFilterOpenChange}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant={hasActiveFilters ? "default" : "outline"}
@@ -502,8 +537,8 @@ export default function CustomersPage() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={handleClearFilters}
-                  disabled={!hasActiveFilters}
+                  onClick={handleClearDraftFilters}
+                  disabled={!hasDraftFilters}
                 >
                   Clear all
                 </Button>
@@ -516,8 +551,8 @@ export default function CustomersPage() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={() => setSelectedChannels([])}
-                  disabled={selectedChannels.length === 0}
+                  onClick={() => setDraftChannels([])}
+                  disabled={draftChannels.length === 0}
                 >
                   Clear
                 </Button>
@@ -530,8 +565,8 @@ export default function CustomersPage() {
                 availableChannels.map((channel) => (
                   <DropdownMenuCheckboxItem
                     key={channel}
-                    checked={selectedChannels.includes(channel)}
-                    onCheckedChange={() => handleToggleChannel(channel)}
+                    checked={draftChannels.includes(channel)}
+                    onCheckedChange={() => handleToggleDraftChannel(channel)}
                     onSelect={(event) => event.preventDefault()}
                   >
                     <div className="flex items-center gap-2">
@@ -550,8 +585,8 @@ export default function CustomersPage() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={() => setSelectedTags([])}
-                  disabled={selectedTags.length === 0}
+                  onClick={() => setDraftTags([])}
+                  disabled={draftTags.length === 0}
                 >
                   Clear
                 </Button>
@@ -600,8 +635,8 @@ export default function CustomersPage() {
                       {filteredAvailableTags.map((tag) => (
                         <DropdownMenuCheckboxItem
                           key={tag}
-                          checked={selectedTags.includes(tag)}
-                          onCheckedChange={() => handleToggleTag(tag)}
+                          checked={draftTags.includes(tag)}
+                          onCheckedChange={() => handleToggleDraftTag(tag)}
                           onSelect={(event) => event.preventDefault()}
                         >
                           {fromSlug(tag)}
@@ -611,6 +646,27 @@ export default function CustomersPage() {
                   </ScrollArea>
                 </div>
               )}
+              <DropdownMenuSeparator />
+              <div className="flex items-center justify-end gap-2 px-2 py-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={handleClearFiltersMenu}
+                  disabled={!hasDraftFilters && !hasActiveFilters}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8"
+                  onClick={handleApplyFilters}
+                >
+                  Apply
+                </Button>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
