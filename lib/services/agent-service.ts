@@ -4,10 +4,12 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   setDoc,
   where,
   updateDoc,
   query,
+  limit,
 } from "firebase/firestore";
 
 import { db } from "../clients/firebase";
@@ -17,6 +19,7 @@ import { deleteCollection, checkRecentlyActive } from "../utils";
 import channelService from "./channel-service";
 import cacheService from "./cache-service";
 import { invalidateCache, invalidateCaches } from "../utils/cache-utils";
+import { IWorkspace } from "../types/workspace";
 
 class AgentService {
   async createAgent({ wid, name }: { wid: string; name: string }) {
@@ -85,7 +88,7 @@ class AgentService {
         await channelService.unassignAgentFromChannel(
           agent.wid,
           channelId,
-          aid
+          aid,
         );
       });
       await Promise.all(promises);
@@ -123,16 +126,16 @@ class AgentService {
     try {
       const agents = await this.fetchAgents(wid);
       const agentsToUpdate = agents.filter((agent) =>
-        agent.knowledgeFolders?.includes(folderId)
+        agent.knowledgeFolders?.includes(folderId),
       );
 
       const updatePromises = agentsToUpdate.map((agent) =>
         updateDoc(doc(db, `agents/${agent.id}`), {
           knowledgeFolders: agent.knowledgeFolders.filter(
-            (id) => id !== folderId
+            (id) => id !== folderId,
           ),
           updatedAt: new Date().toISOString(),
-        })
+        }),
       );
       await Promise.all(updatePromises);
 
@@ -141,12 +144,51 @@ class AgentService {
         agentsToUpdate.map((agent) => ({
           type: "agent" as const,
           id: agent.id,
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error removing folder from agents:", error);
     }
   };
+  fetchAgentUsingOnBoardingEmail = async (email: string) => {
+    const workspaceQ = query(
+      collection(db, `workspaces`),
+      where("info.email", "==", email),
+    );
+    const workspaces = await getDocs(workspaceQ);
+    if (workspaces.empty) return null;
+    const workspace = workspaces.docs[0].data() as IWorkspace;
+    const agentQ = query(
+      collection(db, `agents`),
+      where("wid", "==", workspace.id),
+      limit(1),
+    );
+    const agents = await getDocs(agentQ);
+    if (agents.empty) return null;
+    return agents.docs[0].data() as IAgent;
+  };
+
+  subscribeToAgentSnapshot = (args: {
+    aid: string;
+    onChange: (agent: IAgent | null) => void;
+    onError?: (error: Error) => void;
+  }) => {
+    const ref = doc(db, `agents/${args.aid}`);
+    return onSnapshot(
+      ref,
+      (snap) => {
+        if (!snap.exists()) {
+          args.onChange(null);
+          return;
+        }
+        args.onChange(snap.data() as IAgent);
+      },
+      (error) => {
+        args.onError?.(error);
+      },
+    );
+  };
+  // nothing
 }
 
 const agentService = new AgentService();
