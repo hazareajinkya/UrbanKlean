@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Star, CreditCard, ShieldCheck } from "lucide-react";
 
-import { normalizeDomain, validateDomain } from "@/lib/utils";
+import {
+  isBlockedCompanyDomain,
+  normalizeDomain,
+  validateDomain,
+} from "@/lib/utils";
 import datafastService from "@/lib/services/datafast-service";
 import { UrlInputForm } from "./url-input-form";
 
@@ -44,13 +48,14 @@ export const HeroSection = () => {
 
   const handleSubmit = (e: React.FormEvent, source: "hero" | "floating") => {
     e.preventDefault();
-    if (!url) {
-      setError("Please enter a website URL");
-      datafastService.trackGoal("onboarding_validation_failed", {
-        source,
-        reason: "empty_domain",
-        domain: "",
-      });
+    const trimmed = url.trim();
+    if (!trimmed) {
+      setError("");
+      datafastService.trackGoal(
+        source === "floating" ? "floating_cta_clicked" : "hero_cta_clicked",
+      );
+      datafastService.trackGoal("onboarding_started", { source, domain: "" });
+      router.push("/onboarding");
       return;
     }
 
@@ -64,11 +69,23 @@ export const HeroSection = () => {
       });
       return;
     }
+    if (isBlockedCompanyDomain(normalized)) {
+      setError("Please enter your own company domain");
+      datafastService.trackGoal("onboarding_validation_failed", {
+        source,
+        reason: "blocked_domain",
+        domain: normalized,
+      });
+      return;
+    }
 
     datafastService.trackGoal(
       source === "floating" ? "floating_cta_clicked" : "hero_cta_clicked",
     );
-    datafastService.trackGoal("onboarding_started", { source, domain: normalized });
+    datafastService.trackGoal("onboarding_started", {
+      source,
+      domain: normalized,
+    });
     setError("");
     setUrl(`https://${normalized}`);
     router.push(`/onboarding?url=${normalized}`);
