@@ -503,10 +503,10 @@ const SignedIn = () => {
 
       <div className="flex flex-col gap-3 w-full pt-4">
         <Button
+          asChild
           className="w-full h-12 text-base font-medium shadow-sm hover:shadow-md transition-all bg-black text-white hover:bg-gray-900"
-          onClick={() => (window.location.href = "/workspaces")}
         >
-          Go to Dashboard
+          <Link href="/workspaces">Go to Dashboard</Link>
         </Button>
         <Button
           variant="outline"
