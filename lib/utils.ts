@@ -477,6 +477,8 @@ export const exportUsageData = (
   dateRange?: { from?: Date; to?: Date },
 ) => {
   if (!usageData?.length) return;
+  const toCsvField = (value: string | number) =>
+    `"${String(value).replace(/"/g, '""')}"`;
   const headers = [
     "Date",
     "Event Type",
@@ -487,17 +489,19 @@ export const exportUsageData = (
     "Session ID",
   ];
   const csvContent = [
-    headers.join(","),
+    headers.map(toCsvField).join(","),
     ...usageData.map((u) =>
       [
-        `"${formatDateTime(u.createdAt)}"`,
-        `"${u.eventType}"`,
-        `"${u.metadata?.model || "N/A"}"`,
+        formatDateTime(u.createdAt),
+        u.eventType,
+        u.metadata?.model || "N/A",
         u.metadata?.tokenUsage?.toLocaleString() || "0",
         u.amount,
-        `"${u.aid ?? ""}"`,
-        `"${u.sessionId ?? ""}"`,
-      ].join(","),
+        u.aid ?? "",
+        u.sessionId ?? "",
+      ]
+        .map(toCsvField)
+        .join(","),
     ),
   ].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
