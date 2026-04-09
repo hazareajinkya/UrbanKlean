@@ -430,3 +430,17 @@ const filterIndexedPeople = (args: {
     })
     .map((indexedPerson) => indexedPerson.person);
 };
+
+export const refreshWorkspacePeopleListIfActive = async (wid: string) => {
+  const state = usePeopleStore.getState();
+  if (state.queryState.wid !== wid) {
+    return;
+  }
+
+  await state.resetAndLoadPeople({
+    wid,
+    selectedTags: state.queryState.selectedTags,
+    searchQuery: state.localFilters.searchQuery,
+    selectedChannels: state.localFilters.selectedChannels,
+  });
+};

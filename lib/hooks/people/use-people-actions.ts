@@ -8,8 +8,10 @@ import {
   peopleCountKey,
   peopleKey,
   allIdenticalPersonsKey,
+  identicalPersonsKey,
 } from "./use-people";
 import { mergeService } from "@/lib/services/merge-service";
+import { refreshWorkspacePeopleListIfActive } from "@/lib/stores/people-store";
 
 export const usePeopleActions = (wid?: string) => {
   const createPerson = useMutation({
@@ -66,9 +68,11 @@ export const usePeopleActions = (wid?: string) => {
         });
       }
 
-      return person;
+      const latest = await peopleService.getPerson(workspaceId, person.id);
+      return latest ?? person;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
+      await refreshWorkspacePeopleListIfActive(variables.wid);
       queryClient.invalidateQueries({ queryKey: peopleKey(variables.wid) });
       queryClient.invalidateQueries({
         queryKey: peopleCountKey(variables.wid),
@@ -94,10 +98,14 @@ export const usePeopleActions = (wid?: string) => {
     }) => {
       return await peopleService.replacePersonDetails(wid, personId, updates);
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
+      await refreshWorkspacePeopleListIfActive(variables.wid);
       queryClient.invalidateQueries({ queryKey: peopleKey(variables.wid) });
       queryClient.invalidateQueries({
         queryKey: peopleCountKey(variables.wid),
+      });
+      queryClient.invalidateQueries({
+        queryKey: identicalPersonsKey(variables.wid, variables.personId),
       });
 
       toast.success("Customer updated successfully");
@@ -124,7 +132,8 @@ export const usePeopleActions = (wid?: string) => {
         personBId,
       });
     },
-    onSuccess: (mergedPerson, variables) => {
+    onSuccess: async (mergedPerson, variables) => {
+      await refreshWorkspacePeopleListIfActive(variables.wid);
       queryClient.invalidateQueries({
         queryKey: peopleKey(variables.wid),
       });

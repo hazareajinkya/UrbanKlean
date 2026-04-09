@@ -340,7 +340,11 @@ export default function CustomersPage() {
   const handleCloseFormModal = useCallback(() => {
     setIsEditFormOpen(false);
     setIsAddCustomerOpen(false);
-    setTimeout(() => setSelectedPerson(null), 200);
+  }, []);
+
+  const handleCustomerSaved = useCallback((person: IPerson) => {
+    setSelectedPerson(person);
+    setIsDetailPanelOpen(true);
   }, []);
 
   const handleCloseDetailPanel = useCallback(() => {
@@ -826,6 +830,8 @@ export default function CustomersPage() {
         person={selectedPerson}
         wid={wid}
         mode={isAddCustomerOpen ? "create" : "edit"}
+        availableTags={availableTags}
+        onCustomerSaved={handleCustomerSaved}
       />
     </div>
   );

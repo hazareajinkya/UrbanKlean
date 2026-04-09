@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IPerson } from "@/lib/types/person";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { usePeopleActions } from "@/lib/hooks/people/use-people-actions";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2, X, Plus, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { fromSlug, getInitials, toSlug } from "@/lib/utils";
 
 const personSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,6 +37,9 @@ interface CustomerEditFormProps {
   wid: string;
   isLoading?: boolean;
   mode?: "create" | "edit";
+  availableTags?: string[];
+  /** Fired with the persisted person after create or update (server-shaped). */
+  onCustomerSaved?: (person: IPerson) => void;
 }
 
 export default function CustomerFormModal({
@@ -46,8 +49,12 @@ export default function CustomerFormModal({
   wid,
   isLoading = false,
   mode = "edit",
+  availableTags: availableTagsProp,
+  onCustomerSaved,
 }: CustomerEditFormProps) {
+  const availableTags = availableTagsProp ?? [];
   const { createPerson, updatePerson } = usePeopleActions(wid);
+  const [tagInput, setTagInput] = useState("");
 
   const form = useForm<PersonFormValues>({
     resolver: zodResolver(personSchema),
@@ -99,6 +106,12 @@ export default function CustomerFormModal({
     }
   }, [person, isOpen, form, mode]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setTagInput("");
+    }
+  }, [isOpen]);
+
   const handleSubmit = (data: PersonFormValues) => {
     if (mode === "create") {
       createPerson.mutate(
@@ -122,7 +135,10 @@ export default function CustomerFormModal({
           summary: data.summary,
         },
         {
-          onSuccess: () => {
+          onSuccess: (created) => {
+            if (created) {
+              onCustomerSaved?.(created);
+            }
             onClose();
           },
         },
@@ -155,7 +171,10 @@ export default function CustomerFormModal({
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (updated) => {
+            if (updated) {
+              onCustomerSaved?.(updated);
+            }
             onClose();
           },
         },
@@ -191,15 +210,47 @@ export default function CustomerFormModal({
     );
   };
 
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddTag = (value: string) => {
+    const current = form.getValues("tags") || [];
+    if (current.includes(value)) return;
+    form.setValue("tags", [...current, value]);
+  };
+
+  const handleAddCustomTag = (raw: string) => {
+    const slug = toSlug(raw);
+    if (!slug) return;
+    const current = form.getValues("tags") || [];
+    if (current.includes(slug)) return;
+    form.setValue("tags", [...current, slug]);
+  };
+
+  const handleCommitTagInput = () => {
+    const trimmed = tagInput.trim();
+    if (!trimmed) return;
+    const slug = toSlug(trimmed);
+    if (!slug) return;
+
+    const currentTags = form.getValues("tags") || [];
+    const unselected = availableTags.filter((t) => !currentTags.includes(t));
+    const matchPreset = unselected.find(
+      (t) =>
+        t === slug ||
+        t.toLowerCase() === trimmed.toLowerCase() ||
+        fromSlug(t).toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (matchPreset) {
+      handleAddTag(matchPreset);
+    } else {
+      handleAddCustomTag(trimmed);
+    }
+    setTagInput("");
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const value = e.currentTarget.value.trim();
-      const current = form.getValues("tags") || [];
-      if (value && !current.includes(value)) {
-        form.setValue("tags", [...current, value]);
-        e.currentTarget.value = "";
-      }
+      handleCommitTagInput();
     }
   };
 
@@ -221,6 +272,22 @@ export default function CustomerFormModal({
   const interests = form.watch("interests") || [];
   const notes = form.watch("notes") || [];
   const watchedName = form.watch("name");
+
+  const unselectedSuggestions = useMemo(
+    () => availableTags.filter((t) => !tags.includes(t)),
+    [availableTags, tags],
+  );
+  const filteredUnselectedSuggestions = useMemo(() => {
+    const q = tagInput.trim().toLowerCase();
+    if (!q) return unselectedSuggestions;
+    return unselectedSuggestions.filter(
+      (t) =>
+        t.toLowerCase().includes(q) || fromSlug(t).toLowerCase().includes(q),
+    );
+  }, [unselectedSuggestions, tagInput]);
+
+  const showTagSuggestionsUi =
+    availableTags.length > 0 && unselectedSuggestions.length > 0;
 
   if (!isOpen) return null;
 
@@ -261,7 +328,7 @@ export default function CustomerFormModal({
             className="flex flex-col flex-1 overflow-hidden"
           >
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 space-y-6">
               {/* Section 1: Avatar + Name */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14 flex-shrink-0">
@@ -406,38 +473,113 @@ export default function CustomerFormModal({
               </div>
 
               {/* Section 4: Tags & Interests - 2 Column Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Tags</Label>
-                  <div className="space-y-2">
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium"
-                          >
-                            {tag}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveArrayItem("tags", index)
-                              }
-                              className="hover:text-primary/70 transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
+              <div className="grid min-w-0 grid-cols-2 gap-4">
+                <div className="min-w-0 space-y-2">
+                  <Label htmlFor="customer-tag-input">Tags</Label>
+                  {tags.length > 0 ? (
+                    <div className="flex flex-wrap content-start gap-1.5 pr-0.5">
+                      {tags.map((tag, index) => (
+                        <span
+                          key={`${tag}-${index}`}
+                          className="inline-flex max-w-full min-w-0 items-center gap-1 px-2.5 py-1 bg-secondary text-secondary-foreground rounded-md text-xs font-medium cursor-pointer"
+                        >
+                          <span className="min-w-0 truncate">
+                            {fromSlug(tag)}
                           </span>
-                        ))}
-                      </div>
-                    )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveArrayItem("tags", index)}
+                            className="shrink-0 hover:text-secondary-foreground/70 transition-colors"
+                            aria-label={`Remove tag ${fromSlug(tag)}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="relative min-w-0">
+                    {showTagSuggestionsUi ? (
+                      <Search
+                        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden
+                      />
+                    ) : null}
                     <Input
-                      placeholder="Type and press Enter"
-                      onKeyDown={handleTagKeyDown}
+                      id="customer-tag-input"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleTagInputKeyDown}
+                      placeholder={
+                        showTagSuggestionsUi
+                          ? "Search or add a tag…"
+                          : "Add a tag and press Enter"
+                      }
+                      className={`h-9 min-w-0   pr-9 text-sm ${showTagSuggestionsUi ? "pl-9" : "pl-3"}`}
+                      autoComplete="off"
+                      aria-describedby="customer-tag-input-hint"
                     />
+                    {tagInput.trim() ? (
+                      <button
+                        type="button"
+                        aria-label="Clear tag field"
+                        onClick={() => setTagInput("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
                   </div>
+                  <p
+                    id="customer-tag-input-hint"
+                    className="text-[11px] leading-snug text-muted-foreground"
+                  >
+                    {showTagSuggestionsUi
+                      ? "Type to filter available tags. Press Enter to add—workspace tags match when possible, otherwise a custom slug is saved."
+                      : availableTags.length > 0
+                        ? "All workspace tags are on this customer. Press Enter to add a custom tag."
+                        : 'Press Enter to add. Tags are saved as slugs (e.g. "VIP Client" becomes vip-client).'}
+                  </p>
+
+                  {showTagSuggestionsUi ? (
+                    <div className="min-w-0  rounded-lg border border-border/50 bg-muted/25">
+                      <div className="border-b border-border/40 px-2.5 py-1.5">
+                        <p className="text-[11px] font-medium text-muted-foreground">
+                          Available tags
+                        </p>
+                      </div>
+                      <div className=" min-h-0  p-2">
+                        {filteredUnselectedSuggestions.length === 0 ? (
+                          <p className="px-0.5 py-1 text-xs text-muted-foreground">
+                            No matching available tags. Press Enter to add a
+                            custom tag.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {filteredUnselectedSuggestions.map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => {
+                                  handleAddTag(tag);
+                                  setTagInput("");
+                                }}
+                                className="inline-flex max-w-full min-w-0 items-center px-2.5 py-1 text-left text-xs font-medium bg-secondary text-secondary-foreground rounded-md cursor-pointer transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                aria-label={`Add tag ${fromSlug(tag)}`}
+                              >
+                                <span className="min-w-0 truncate">
+                                  {fromSlug(tag)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-                <div className="space-y-1.5">
+                <div className="min-w-0 space-y-1.5">
                   <Label>Interests</Label>
                   <div className="space-y-2">
                     {interests.length > 0 && (
