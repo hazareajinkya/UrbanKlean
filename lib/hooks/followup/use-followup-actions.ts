@@ -5,6 +5,15 @@ import queryClient from "@/lib/clients/query-client";
 import { peopleCountKey, peopleKey } from "@/lib/hooks/people/use-people";
 import { IFollowUpScheduleInput, IFollowUpTemplateConfig } from "@/lib/types/person";
 
+type IFollowUpMutationArgs = {
+  personId: string;
+  phone: string;
+  timezone: string;
+  isOnTest?: boolean;
+  template?: IFollowUpTemplateConfig | null;
+  schedule: IFollowUpScheduleInput;
+};
+
 const useFollowUpActions = ({ wid }: { wid: string }) => {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: peopleKey(wid) });
@@ -12,13 +21,7 @@ const useFollowUpActions = ({ wid }: { wid: string }) => {
   };
 
   const createFollowUp = useMutation({
-    mutationFn: async (args: {
-      personId: string;
-      phone: string;
-      timezone: string;
-      template: IFollowUpTemplateConfig;
-      schedule: IFollowUpScheduleInput;
-    }) => {
+    mutationFn: async (args: IFollowUpMutationArgs) => {
       const response = await apiClient.post("/api/followup", {
         wid,
         ...args,
@@ -39,14 +42,11 @@ const useFollowUpActions = ({ wid }: { wid: string }) => {
   });
 
   const updateFollowUp = useMutation({
-    mutationFn: async (args: {
-      personId: string;
-      followUpId: string;
-      phone: string;
-      timezone: string;
-      template: IFollowUpTemplateConfig;
-      schedule: IFollowUpScheduleInput;
-    }) => {
+    mutationFn: async (
+      args: IFollowUpMutationArgs & {
+        followUpId: string;
+      },
+    ) => {
       const response = await apiClient.patch("/api/followup", {
         wid,
         ...args,

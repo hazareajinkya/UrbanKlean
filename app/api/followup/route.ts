@@ -7,7 +7,9 @@ import {
   validateBody,
 } from "@/lib/types/api-response";
 import peopleService from "@/lib/services/people-service";
-import scheduleService from "@/lib/services/schedule-service";
+import scheduleService, {
+  IFollowUpWebhookPayload,
+} from "@/lib/services/schedule-service";
 import {
   IFollowUpJob,
   IFollowUpScheduleInput,
@@ -22,9 +24,14 @@ const zScheduleInput = z.union([
     time: z.string().min(1, "time is required"),
   }),
   z.object({
-    type: z.literal("interval"),
-    every: z.number().int().positive("every should be > 0"),
-    unit: z.enum(["min", "hour"]),
+    type: z.literal("cron"),
+    cron: z
+      .string()
+      .trim()
+      .min(1, "cron is required")
+      .refine((value) => value.split(/\s+/).length === 5, {
+        message: "cron must have 5 parts",
+      }),
   }),
 ]);
 
@@ -40,7 +47,8 @@ const zCreateFollowUp = z.object({
   personId: z.string().min(1, "personId is required"),
   phone: z.string().min(1, "phone is required"),
   timezone: z.string().min(1, "timezone is required"),
-  template: zTemplate,
+  isOnTest: z.boolean().optional().default(false),
+  template: zTemplate.nullable().optional(),
   schedule: zScheduleInput,
 });
 
@@ -50,7 +58,8 @@ const zUpdateFollowUp = z.object({
   followUpId: z.string().min(1, "followUpId is required"),
   phone: z.string().min(1, "phone is required"),
   timezone: z.string().min(1, "timezone is required"),
-  template: zTemplate,
+  isOnTest: z.boolean().optional().default(false),
+  template: zTemplate.nullable().optional(),
   schedule: zScheduleInput,
 });
 
@@ -68,6 +77,7 @@ const buildFollowUpJob = ({
   followUpId,
   phone,
   timezone,
+  isOnTest,
   template,
   schedule,
   scheduleResult,
@@ -75,9 +85,14 @@ const buildFollowUpJob = ({
   followUpId: string;
   phone: string;
   timezone: string;
-  template: IFollowUpTemplateConfig;
+  isOnTest: boolean;
+  template: IFollowUpTemplateConfig | null;
   schedule: IFollowUpScheduleInput;
-  scheduleResult: { type: "once" | "cron"; id: string; meta: Record<string, any> };
+  scheduleResult: {
+    type: "once" | "cron";
+    id: string;
+    meta: Record<string, any>;
+  };
 }): IFollowUpJob => {
   const now = new Date().toISOString();
 
@@ -96,9 +111,7 @@ const buildFollowUpJob = ({
             notBefore: scheduleResult.meta.notBefore,
           }
         : {
-            type: "interval",
-            every: schedule.every,
-            unit: schedule.unit,
+            type: "cron",
             cron: scheduleResult.meta.cron,
           },
     template,
@@ -115,6 +128,7 @@ const buildWebhookPayload = ({
   phone,
   timezone,
   schedule,
+  isOnTest,
   template,
 }: {
   wid: string;
@@ -123,28 +137,43 @@ const buildWebhookPayload = ({
   phone: string;
   timezone: string;
   schedule: IFollowUpScheduleInput;
-  template: IFollowUpTemplateConfig;
+  isOnTest: boolean;
+  template: IFollowUpTemplateConfig | null;
 }) => {
-  return {
+  const payload: IFollowUpWebhookPayload = {
     wid,
     personId,
     followUpId,
     phone,
     timezone,
+    isOnTest,
     scheduleType: schedule.type,
     template,
   };
+
+  return payload;
 };
 
 export async function POST(req: NextRequest) {
   try {
-    const { wid, personId, phone, timezone, template, schedule } =
+    const { wid, personId, phone, timezone, isOnTest, template, schedule } =
       await validateBody(req, zCreateFollowUp);
 
     const person = await peopleService.getPerson(wid, personId);
 
     if (!person) {
       return errorResponse("Person not found", 404);
+    }
+
+    const effectiveIsOnTest = scheduleService.isOnTesting || isOnTest;
+    const resolvedTemplate: IFollowUpTemplateConfig | null = effectiveIsOnTest
+      ? null
+      : (template ?? null);
+    if (!effectiveIsOnTest && !resolvedTemplate) {
+      return errorResponse(
+        "Template is required when test mode is disabled",
+        400,
+      );
     }
 
     const followUpId = v4();
@@ -158,7 +187,8 @@ export async function POST(req: NextRequest) {
         phone,
         timezone,
         schedule,
-        template,
+        isOnTest: effectiveIsOnTest,
+        template: resolvedTemplate,
       }),
     });
 
@@ -166,7 +196,8 @@ export async function POST(req: NextRequest) {
       followUpId,
       phone,
       timezone,
-      template,
+      isOnTest: effectiveIsOnTest,
+      template: resolvedTemplate,
       schedule,
       scheduleResult,
     });
@@ -199,8 +230,26 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { wid, personId, followUpId, phone, timezone, template, schedule } =
-      await validateBody(req, zUpdateFollowUp);
+    const {
+      wid,
+      personId,
+      followUpId,
+      phone,
+      timezone,
+      isOnTest,
+      template,
+      schedule,
+    } = await validateBody(req, zUpdateFollowUp);
+    const effectiveIsOnTest = scheduleService.isOnTesting || isOnTest;
+    const resolvedTemplate: IFollowUpTemplateConfig | null = effectiveIsOnTest
+      ? null
+      : (template ?? null);
+    if (!effectiveIsOnTest && !resolvedTemplate) {
+      return errorResponse(
+        "Template is required when test mode is disabled",
+        400,
+      );
+    }
 
     const person = await peopleService.getPerson(wid, personId);
 
@@ -209,7 +258,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     const existingFollowUps = getFollowUps(person);
-    const targetFollowUp = existingFollowUps.find((item) => item.id === followUpId);
+    const targetFollowUp = existingFollowUps.find(
+      (item) => item.id === followUpId,
+    );
 
     if (!targetFollowUp) {
       return errorResponse("Follow-up not found", 404);
@@ -234,7 +285,8 @@ export async function PATCH(req: NextRequest) {
         phone,
         timezone,
         schedule,
-        template,
+        isOnTest: effectiveIsOnTest,
+        template: resolvedTemplate,
       }),
     });
 
@@ -242,7 +294,8 @@ export async function PATCH(req: NextRequest) {
       followUpId,
       phone,
       timezone,
-      template,
+      isOnTest: effectiveIsOnTest,
+      template: resolvedTemplate,
       schedule,
       scheduleResult,
     });
@@ -278,7 +331,10 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { wid, personId, followUpId } = await validateBody(req, zCancelFollowUp);
+    const { wid, personId, followUpId } = await validateBody(
+      req,
+      zCancelFollowUp,
+    );
 
     const person = await peopleService.getPerson(wid, personId);
 
@@ -287,7 +343,9 @@ export async function DELETE(req: NextRequest) {
     }
 
     const existingFollowUps = getFollowUps(person);
-    const targetFollowUp = existingFollowUps.find((item) => item.id === followUpId);
+    const targetFollowUp = existingFollowUps.find(
+      (item) => item.id === followUpId,
+    );
 
     if (!targetFollowUp) {
       return errorResponse("Follow-up not found", 404);

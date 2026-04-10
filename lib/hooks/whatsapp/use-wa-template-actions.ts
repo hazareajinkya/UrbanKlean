@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/clients/axios-client";
 import { toast } from "sonner";
 import { waTemplateKey } from "./use-wa-templates";
 import { IWaTemplate } from "@/lib/types/wa-api";
+import { handleError } from "@/lib/utils";
 
 export interface ICreateTemplate {
   wid: string;
@@ -43,13 +44,7 @@ export const useWaTemplateActions = () => {
       toast.success("Template created successfully");
       qc.invalidateQueries({ queryKey: waTemplateKey(variables.wid) });
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to create template",
-      );
-    },
+    onError: handleError,
   });
 
   const deleteTemplate = useMutation({
@@ -63,13 +58,7 @@ export const useWaTemplateActions = () => {
       toast.success("Template deleted successfully");
       qc.invalidateQueries({ queryKey: waTemplateKey(variables.wid) });
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to delete template",
-      );
-    },
+    onError: handleError,
   });
 
   const sendTestMessage = useMutation({
@@ -83,13 +72,7 @@ export const useWaTemplateActions = () => {
     onSuccess: () => {
       toast.success("Test message sent successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to send test message",
-      );
-    },
+    onError: handleError,
   });
 
   const sendTemplateMessage = useMutation({
@@ -103,13 +86,7 @@ export const useWaTemplateActions = () => {
     onSuccess: () => {
       toast.success("Template message sent successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to send template message",
-      );
-    },
+    onError: handleError,
   });
 
   const editTemplate = useMutation({
@@ -121,32 +98,29 @@ export const useWaTemplateActions = () => {
       toast.success("Template updated successfully");
       qc.invalidateQueries({ queryKey: waTemplateKey(variables.wid) });
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to update template",
-      );
-    },
+    onError: handleError,
   });
 
   const syncTemplates = useMutation({
     mutationFn: async (wid: string) => {
-      const response = await apiClient.get(`/api/wa-templates?wid=${wid}&sync=true`);
+      const response = await apiClient.get(
+        `/api/wa-templates?wid=${wid}&sync=true`,
+      );
       return response.data;
     },
     onSuccess: (_, wid) => {
       toast.success("Templates synced successfully");
       qc.invalidateQueries({ queryKey: waTemplateKey(wid) });
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to sync templates",
-      );
-    },
+    onError: handleError,
   });
 
-  return { createTemplate, editTemplate, deleteTemplate, sendTestMessage, sendTemplateMessage, syncTemplates };
+  return {
+    createTemplate,
+    editTemplate,
+    deleteTemplate,
+    sendTestMessage,
+    sendTemplateMessage,
+    syncTemplates,
+  };
 };

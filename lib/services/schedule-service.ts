@@ -1,6 +1,9 @@
 import upstash from "../clients/upstash";
 import { coreConf } from "../utils/conf";
-import { IFollowUpScheduleInput } from "../types/person";
+import {
+  IFollowUpScheduleInput,
+  IFollowUpTemplateConfig,
+} from "../types/person";
 
 export type IScheduleCreateResult = {
   type: "once" | "cron";
@@ -8,14 +11,26 @@ export type IScheduleCreateResult = {
   meta: Record<string, any>;
 };
 
-const toCron = (every: number, unit: "min" | "hour") => {
-  if (!Number.isInteger(every) || every <= 0) {
-    throw new Error("Invalid interval");
-  }
+export type IFollowUpWebhookPayload = {
+  wid: string;
+  personId: string;
+  followUpId: string;
+  phone: string;
+  timezone: string;
+  scheduleType: "once" | "cron";
+  isOnTest: boolean;
+  template: IFollowUpTemplateConfig | null;
+};
 
-  if (unit === "min") return `*/${every} * * * *`;
-  if (unit === "hour") return `0 */${every} * * *`;
-  throw new Error("Invalid unit");
+export const isOnTesting = false;
+
+const validateCronExpression = (cron: string) => {
+  const value = cron.trim();
+  const parts = value.split(/\s+/);
+  if (parts.length !== 5) {
+    throw new Error("Cron expression must have 5 parts.");
+  }
+  return value;
 };
 
 const toNotBefore = ({
@@ -27,26 +42,62 @@ const toNotBefore = ({
   time: string;
   timezone: string;
 }) => {
-  const iso = `${date}T${time}:00`;
-  const localDate = new Date(iso);
+  const [year, month, day] = date.split("-").map((part) => Number(part));
+  const [hour, minute] = time.split(":").map((part) => Number(part));
 
-  if (Number.isNaN(localDate.getTime())) {
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute)
+  ) {
     throw new Error("Invalid date/time");
   }
 
-  const localAsTzText = localDate.toLocaleString("en-US", {
-    timeZone: timezone,
-    hour12: false,
-  });
+  new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format(new Date());
 
-  const zonedDate = new Date(localAsTzText);
+  const getTzOffsetMs = (timestampMs: number) => {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
 
-  if (Number.isNaN(zonedDate.getTime())) {
-    throw new Error("Invalid timezone");
+    const parts = formatter.formatToParts(new Date(timestampMs));
+    const map = Object.fromEntries(
+      parts
+        .filter((part) => part.type !== "literal")
+        .map((part) => [part.type, part.value]),
+    );
+
+    const asUtc = Date.UTC(
+      Number(map.year),
+      Number(map.month) - 1,
+      Number(map.day),
+      Number(map.hour),
+      Number(map.minute),
+      Number(map.second),
+    );
+
+    return asUtc - timestampMs;
+  };
+
+  const naiveUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
+  const initialOffset = getTzOffsetMs(naiveUtc);
+  let correctedTimestamp = naiveUtc - initialOffset;
+  const correctedOffset = getTzOffsetMs(correctedTimestamp);
+
+  if (correctedOffset !== initialOffset) {
+    correctedTimestamp = naiveUtc - correctedOffset;
   }
 
-  const offsetMs = localDate.getTime() - zonedDate.getTime();
-  return new Date(localDate.getTime() + offsetMs).toISOString();
+  return new Date(correctedTimestamp).toISOString();
 };
 
 const create = async ({
@@ -55,12 +106,18 @@ const create = async ({
   timezone,
 }: {
   input: IFollowUpScheduleInput;
-  payload: Record<string, any>;
+  payload: IFollowUpWebhookPayload;
   timezone: string;
 }): Promise<IScheduleCreateResult> => {
   try {
-    // const url = `${coreConf.baseUrl}/api/followup-webhook`;
-    const url = `https://magicalcx.ratcat.in/api/followup-webhook`;
+    const url = `${coreConf.baseUrl}/api/followup-webhook`;
+    const resolvedPayload: IFollowUpWebhookPayload = isOnTesting
+      ? {
+          ...payload,
+          isOnTest: true,
+          template: null,
+        }
+      : payload;
 
     if (input.type === "once") {
       const notBefore = toNotBefore({
@@ -72,10 +129,15 @@ const create = async ({
       const notBeforeTimestamp = Math.floor(
         new Date(notBefore).getTime() / 1000,
       );
+      const nowTimestamp = Math.floor(Date.now() / 1000);
+
+      if (notBeforeTimestamp <= nowTimestamp) {
+        throw new Error("One-time schedule must be in the future");
+      }
 
       const res = await upstash.publishJSON({
         url,
-        body: payload,
+        body: resolvedPayload,
         notBefore: notBeforeTimestamp,
       });
 
@@ -100,12 +162,12 @@ const create = async ({
       };
     }
 
-    if (input.type === "interval") {
-      const cron = toCron(input.every, input.unit);
+    if (input.type === "cron") {
+      const cron = validateCronExpression(input.cron);
 
       const res = await upstash.schedules.create({
         destination: url,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(resolvedPayload),
         headers: {
           "Content-Type": "application/json",
         },
@@ -116,8 +178,6 @@ const create = async ({
         type: "cron",
         id: res.scheduleId,
         meta: {
-          every: input.every,
-          unit: input.unit,
           cron,
           timezone,
         },
@@ -150,7 +210,7 @@ const cancel = async ({
 };
 
 const scheduleService = {
-  toCron,
+  isOnTesting,
   toNotBefore,
   create,
   cancel,

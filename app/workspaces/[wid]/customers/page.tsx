@@ -2,6 +2,7 @@
 
 import { usePeople } from "@/lib/hooks/people/use-people";
 import { useWorkspace } from "@/lib/hooks/workspace/use-workspace";
+import { useChannels } from "@/hooks/channels/use-channels";
 import { useParams } from "next/navigation";
 import {
   type KeyboardEvent,
@@ -287,6 +288,9 @@ const CustomerListRow = memo(function CustomerListRow({
 export default function CustomersPage() {
   const { wid } = useParams() as { wid: string };
   const { workspace } = useWorkspace(wid);
+  const { data: channels } = useChannels(wid);
+  const hasWhatsapp =
+    channels?.some((channel) => channel.provider === "whatsapp") ?? false;
   const [selectedPerson, setSelectedPerson] = useState<IPerson | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
@@ -450,7 +454,7 @@ export default function CustomersPage() {
   const rowVirtualizer = useVirtualizer({
     count: people.length,
     getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => 74,
+    estimateSize: () => 62,
     overscan: 10,
   });
 
@@ -813,6 +817,7 @@ export default function CustomersPage() {
                 <CustomerDetailPanel
                   person={selectedPerson}
                   wid={wid}
+                  hasWhatsapp={hasWhatsapp}
                   onEdit={handleEdit}
                   onClose={handleCloseDetailPanel}
                   onPersonUpdated={(updatedPerson) =>

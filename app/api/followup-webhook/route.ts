@@ -20,14 +20,22 @@ const zWebhookBody = z.object({
   personId: z.string().min(1, "personId is required"),
   followUpId: z.string().min(1, "followUpId is required"),
   phone: z.string().min(1, "phone is required"),
-  scheduleType: z.enum(["once", "interval"]),
-  template: z.union([zTemplatePayload, z.null()]),
+  scheduleType: z.enum(["once", "cron"]),
+  isOnTest: z.boolean().optional().default(false),
+  template: zTemplatePayload.nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const { wid, personId, followUpId, phone, scheduleType, template } =
-      await validateBody(req, zWebhookBody);
+    const {
+      wid,
+      personId,
+      followUpId,
+      phone,
+      scheduleType,
+      isOnTest,
+      template,
+    } = await validateBody(req, zWebhookBody);
 
     const now = new Date().toISOString();
 
@@ -100,16 +108,27 @@ export async function POST(req: NextRequest) {
       return errorResponse(message, 500);
     };
 
-    if (template === null) {
+    if (isOnTest) {
       return persistFollowUpSuccess();
+    }
+
+    if (!template) {
+      return persistFollowUpFailed(
+        "Template is required when test mode is disabled",
+      );
     }
 
     try {
       const channels = await channelService.getChannels(wid);
-      const waChannel = channels.find((channel) => channel.provider === "whatsapp");
+      const waChannel = channels.find(
+        (channel) => channel.provider === "whatsapp",
+      );
 
       if (!waChannel) {
-        return errorResponse("No WhatsApp channel found for this workspace", 404);
+        return errorResponse(
+          "No WhatsApp channel found for this workspace",
+          404,
+        );
       }
 
       const phoneId = waChannel.metadata.phone_number_id;

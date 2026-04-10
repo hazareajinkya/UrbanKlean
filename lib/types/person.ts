@@ -9,9 +9,8 @@ export type IFollowUpScheduleInput =
       time: string;
     }
   | {
-      type: "interval";
-      every: number;
-      unit: "min" | "hour";
+      type: "cron";
+      cron: string;
     };
 
 export type IFollowUpStatus = "scheduled" | "sent" | "failed" | "canceled";
@@ -30,7 +29,7 @@ export interface IFollowUpJob {
   timezone: string;
   phone: string;
   schedule: IFollowUpScheduleInput & { cron?: string; notBefore?: string };
-  template: IFollowUpTemplateConfig;
+  template: IFollowUpTemplateConfig | null;
   status: IFollowUpStatus;
   createdAt: string;
   updatedAt: string;

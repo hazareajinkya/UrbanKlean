@@ -1,6 +1,6 @@
 "use client";
 
-import { IPerson } from "@/lib/types/person";
+import { IFollowUpJob, IPerson } from "@/lib/types/person";
 import {
   Mail,
   Phone,
@@ -19,20 +19,29 @@ import {
   CalendarClock,
   Repeat,
   Ban,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, fromSlug } from "@/lib/utils";
+import { cronToReadableText } from "@/lib/utils/cron-utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useState } from "react";
 import FollowUpModal from "./follow-up-modal";
 import useFollowUpActions from "@/lib/hooks/followup/use-followup-actions";
 import { Badge } from "@/components/ui/badge";
+import { isOnTesting } from "@/lib/services/schedule-service";
 
 interface CustomerDetailPanelProps {
   person: IPerson | null;
   wid: string;
+  hasWhatsapp: boolean;
   onEdit: (person: IPerson) => void;
   onClose?: () => void;
   onPersonUpdated?: (person: IPerson) => void;
@@ -83,6 +92,7 @@ const CopyableItem = ({
 export default function CustomerDetailPanel({
   person,
   wid,
+  hasWhatsapp,
   onEdit,
   onClose,
   onPersonUpdated,
@@ -92,6 +102,8 @@ export default function CustomerDetailPanel({
   const [editingFollowUpId, setEditingFollowUpId] = useState<string | null>(
     null,
   );
+  const [isFollowUpMutationPending, setIsFollowUpMutationPending] =
+    useState(false);
 
   if (!person) {
     return (
@@ -117,12 +129,31 @@ export default function CustomerDetailPanel({
   const hasMemories = person.memories?.length > 0;
   const hasNotes = person.notes?.length > 0;
   const hasSummary = person.summary?.length > 0;
+  const getFollowUpScheduleText = (schedule: IFollowUpJob["schedule"]) => {
+    if (schedule.type === "once") {
+      return `${schedule.date} at ${schedule.time}`;
+    }
+
+    return cronToReadableText(schedule.cron);
+  };
   const hasPastSessions =
     person.pastSessionIds && person.pastSessionIds.length > 0;
   const hasExternalIds = person.externalIds?.length > 0;
   const hasPhone = person.phones?.length > 0;
+  const scheduleFollowUpDisabled = (!hasWhatsapp || !hasPhone) && !isOnTesting;
+  const scheduleFollowUpTooltip =
+    !hasWhatsapp && !isOnTesting
+      ? "Add a WhatsApp channel to your workspace to schedule follow-ups."
+      : !hasPhone
+        ? "Add a phone number to schedule WhatsApp follow-ups."
+        : null;
   const followUps = Array.isArray(person.followUp) ? person.followUp : [];
-  const activeFollowUps = followUps.filter((item) => item.status !== "canceled");
+  const activeFollowUps = followUps.filter(
+    (item) => item.status === "scheduled",
+  );
+  const historyFollowUps = followUps.filter(
+    (item) => item.status !== "scheduled",
+  );
   const editingFollowUp =
     followUps.find((item) => item.id === editingFollowUpId) ?? null;
 
@@ -166,31 +197,8 @@ export default function CustomerDetailPanel({
         </div>
       </div>
 
-      <div className="border-b px-5 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">Follow-ups</p>
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingFollowUpId(null);
-              setIsFollowUpModalOpen(true);
-            }}
-            disabled={!hasPhone}
-            className="h-8"
-          >
-            <CalendarClock className="h-4 w-4" />
-            Schedule
-          </Button>
-        </div>
-        {!hasPhone && (
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Add a phone number to schedule WhatsApp follow-ups.
-          </p>
-        )}
-      </div>
-
       {/* Customer Info Header */}
-      <div className="px-5 py-5 border-b border-border/50">
+      <div className="px-5 py-5 border-b border-border/50 flex items-center justify-between ">
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 border-2 border-background shadow-sm flex-shrink-0">
             <AvatarImage src="" />
@@ -211,6 +219,52 @@ export default function CustomerDetailPanel({
             )}
           </div>
         </div>
+
+        {person.phones?.length > 0 && (
+          <>
+            {" "}
+            {scheduleFollowUpTooltip ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    tabIndex={0}
+                    className="inline-flex rounded-md"
+                    aria-label={scheduleFollowUpTooltip}
+                  >
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setEditingFollowUpId(null);
+                        setIsFollowUpModalOpen(true);
+                      }}
+                      disabled={scheduleFollowUpDisabled}
+                      className="h-8"
+                    >
+                      <CalendarClock className="h-4 w-4" />
+                      Follow-up
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {scheduleFollowUpTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingFollowUpId(null);
+                  setIsFollowUpModalOpen(true);
+                }}
+                disabled={scheduleFollowUpDisabled}
+                className="h-8"
+              >
+                <CalendarClock className="h-4 w-4" />
+                Follow-up
+              </Button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Content */}
@@ -386,9 +440,14 @@ export default function CustomerDetailPanel({
 
         {followUps.length > 0 && (
           <div className="px-5 py-4 border-t border-border/30">
-            <SectionLabel>Scheduled Follow-ups</SectionLabel>
+            <SectionLabel>Active Follow-ups</SectionLabel>
             <div className="space-y-2">
-              {followUps.map((item) => (
+              {activeFollowUps.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No active follow-ups.
+                </p>
+              )}
+              {activeFollowUps.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-md border border-border/60 bg-muted/20 p-2.5"
@@ -401,7 +460,7 @@ export default function CustomerDetailPanel({
                         <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
                       )}
                       <p className="text-xs text-foreground">
-                        {item.template.name}
+                        {item.template?.name || "No template"}
                       </p>
                     </div>
                     <Badge variant="outline" className="h-5 text-[10px]">
@@ -409,13 +468,13 @@ export default function CustomerDetailPanel({
                     </Badge>
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    {item.schedule.type === "once"
-                      ? `${item.schedule.date} at ${item.schedule.time}`
-                      : `Every ${item.schedule.every} ${item.schedule.unit}`}
+                    {getFollowUpScheduleText(item.schedule)}
                     {` · ${item.timezone}`}
                   </p>
                   {item.error && (
-                    <p className="mt-1 text-[11px] text-red-500">{item.error}</p>
+                    <p className="mt-1 text-[11px] text-red-500">
+                      {item.error}
+                    </p>
                   )}
                   <div className="mt-2 flex items-center justify-end gap-1.5">
                     <Button
@@ -426,8 +485,21 @@ export default function CustomerDetailPanel({
                         setEditingFollowUpId(item.id);
                         setIsFollowUpModalOpen(true);
                       }}
-                      disabled={item.status === "canceled"}
+                      disabled={
+                        item.status !== "scheduled" || isFollowUpMutationPending
+                      }
+                      aria-busy={
+                        isFollowUpMutationPending &&
+                        editingFollowUpId === item.id
+                      }
                     >
+                      {isFollowUpMutationPending &&
+                      editingFollowUpId === item.id ? (
+                        <Loader2
+                          className="h-3.5 w-3.5 animate-spin"
+                          aria-hidden
+                        />
+                      ) : null}
                       Edit
                     </Button>
                     <Button
@@ -436,22 +508,74 @@ export default function CustomerDetailPanel({
                       className="h-7 text-[11px]"
                       onClick={() => handleCancelFollowUp(item.id)}
                       disabled={
-                        cancelFollowUp.isPending || item.status === "canceled"
+                        item.status !== "scheduled" ||
+                        (cancelFollowUp.isPending &&
+                          cancelFollowUp.variables?.followUpId === item.id)
+                      }
+                      aria-busy={
+                        cancelFollowUp.isPending &&
+                        cancelFollowUp.variables?.followUpId === item.id
                       }
                     >
-                      <Ban className="h-3.5 w-3.5" />
+                      {cancelFollowUp.isPending &&
+                      cancelFollowUp.variables?.followUpId === item.id ? (
+                        <Loader2
+                          className="h-3.5 w-3.5 animate-spin"
+                          aria-hidden
+                        />
+                      ) : (
+                        <Ban className="h-3.5 w-3.5" aria-hidden />
+                      )}
                       Cancel
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
+            {historyFollowUps.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <SectionLabel>Follow-up History</SectionLabel>
+                {historyFollowUps.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-md border border-border/60 bg-muted/10 p-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {item.type === "once" ? (
+                          <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                        ) : (
+                          <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                        <p className="text-xs text-foreground">
+                          {item.template?.name || "No template"}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="h-5 text-[10px]">
+                        {item.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {getFollowUpScheduleText(item.schedule)}
+                      {` · ${item.timezone}`}
+                    </p>
+                    {item.error && (
+                      <p className="mt-1 text-[11px] text-red-500">
+                        {item.error}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {activeFollowUps.length === 0 && hasPhone && (
+        {followUps.length === 0 && hasPhone && (
           <div className="px-5 py-4 border-t border-border/30">
-            <p className="text-xs text-muted-foreground">No follow-ups scheduled yet.</p>
+            <p className="text-xs text-muted-foreground">
+              No follow-ups scheduled yet.
+            </p>
           </div>
         )}
       </div>
@@ -475,6 +599,7 @@ export default function CustomerDetailPanel({
         wid={wid}
         person={person}
         followUp={editingFollowUp}
+        onMutationPendingChange={setIsFollowUpMutationPending}
         onSaved={(updatedPerson) => {
           if (onPersonUpdated) {
             onPersonUpdated(updatedPerson);

@@ -2,7 +2,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useWaTemplateActions } from "@/lib/hooks/whatsapp/use-wa-template-actions";
-import { useWaTemplates } from "@/lib/hooks/whatsapp/use-wa-templates";
+import {
+  EMPTY_WA_TEMPLATES,
+  useWaTemplates,
+} from "@/lib/hooks/whatsapp/use-wa-templates";
 import Modal from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +19,12 @@ import {
 } from "@/components/ui/select";
 import { Loader, X } from "lucide-react";
 import { IWaTemplate } from "@/lib/types/wa-api";
+import {
+  buildWaBodySubmitComponent,
+  findWaTemplateComponent,
+  getWaTemplateVariablePositions,
+  interpolateWaTemplateText,
+} from "@/lib/utils/wa-template";
 
 interface SendTemplateModalProps {
   wid: string;
@@ -34,8 +43,11 @@ const SendTemplateModal = ({
   isOpen,
   onClose,
 }: SendTemplateModalProps) => {
-  const { data: templates = [], isLoading: templatesLoading } =
-    useWaTemplates(wid);
+  const { data: templatesData, isLoading: templatesLoading } = useWaTemplates(
+    wid,
+    { enabled: isOpen },
+  );
+  const templates = templatesData ?? EMPTY_WA_TEMPLATES;
   const { sendTemplateMessage } = useWaTemplateActions();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
@@ -52,22 +64,29 @@ const SendTemplateModal = ({
   );
 
   const bodyComponent = useMemo(
-    () => selectedTemplate?.components?.find((c: any) => c.type === "BODY"),
+    () =>
+      findWaTemplateComponent(selectedTemplate?.components, "BODY") as
+        | { type?: string; text?: string }
+        | undefined,
     [selectedTemplate],
   );
 
   const bodyText = bodyComponent?.text || "";
 
-  const posMatches: string[] = useMemo(() => {
-    if (!bodyText) return [];
-    return Array.from(
-      new Set(
-        (bodyText.match(/\{\{(\d+)\}\}/g) || []).map((m: string) =>
-          m.replace(/[{}]/g, ""),
-        ),
-      ),
-    ).sort((a, b) => parseInt(a as string) - parseInt(b as string)) as string[];
-  }, [bodyText]);
+  const variablePositions = useMemo(
+    () => getWaTemplateVariablePositions(bodyText),
+    [bodyText],
+  );
+
+  const previewText = useMemo(
+    () =>
+      interpolateWaTemplateText({
+        text: bodyText,
+        positions: variablePositions,
+        valuesByPosition: variables,
+      }),
+    [bodyText, variablePositions, variables],
+  );
 
   useEffect(() => {
     setVariables({});
@@ -78,20 +97,11 @@ const SendTemplateModal = ({
     if (!selectedTemplate) return;
 
     try {
-      let components: any[] = [];
-      if (posMatches.length > 0) {
-        const parameters = posMatches.map((pos: string) => ({
-          type: "text",
-          text: variables[pos] || "",
-        }));
-
-        components = [
-          {
-            type: "body",
-            parameters,
-          },
-        ];
-      }
+      const bodyComponentPayload = buildWaBodySubmitComponent({
+        positions: variablePositions,
+        valuesByPosition: variables,
+      });
+      const components = bodyComponentPayload ? [bodyComponentPayload] : [];
 
       await sendTemplateMessage.mutateAsync({
         wid,
@@ -108,17 +118,6 @@ const SendTemplateModal = ({
       console.error("Failed to send template message", error);
     }
   };
-
-  let previewText = bodyText;
-  if (posMatches.length > 0) {
-    posMatches.forEach((match: string) => {
-      const val = variables[match] || `{{${match}}}`;
-      previewText = previewText.replace(
-        new RegExp(`\\{\\{${match}\\}\\}`, "g"),
-        val,
-      );
-    });
-  }
 
   return (
     <Modal
@@ -154,7 +153,7 @@ const SendTemplateModal = ({
                   Template
                 </Label>
                 <Select
-                  value={selectedTemplateId}
+                  value={selectedTemplateId || undefined}
                   onValueChange={(val) => setSelectedTemplateId(val)}
                   disabled={templatesLoading}
                 >
@@ -186,13 +185,13 @@ const SendTemplateModal = ({
                 </Select>
               </div>
 
-              {posMatches.length > 0 && selectedTemplate && (
+              {variablePositions.length > 0 && selectedTemplate && (
                 <div className="grid gap-4 mt-2 p-4 border border-border rounded-lg bg-muted/20">
                   <h3 className="font-medium text-sm text-foreground/80">
                     Template Variables
                   </h3>
                   <div className="grid gap-3">
-                    {posMatches.map((variable: string) => (
+                    {variablePositions.map((variable: string) => (
                       <div key={variable} className="grid gap-1.5">
                         <Label
                           htmlFor={`var-${variable}`}
