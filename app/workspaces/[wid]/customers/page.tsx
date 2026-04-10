@@ -379,10 +379,7 @@ export default function CustomersPage() {
   const hasActiveFilters =
     selectedChannels.length > 0 || selectedTags.length > 0;
   const activeFilterCount = selectedChannels.length + selectedTags.length;
-
-  const hasDraftFilters =
-    draftChannels.length > 0 || draftTags.length > 0;
-
+  const hasDraftFilters = draftChannels.length > 0 || draftTags.length > 0;
   const shouldShowTagSearch = availableTags.length > 7;
   const filteredAvailableTags = useMemo(() => {
     const filteredAvailableTagsRaw = availableTags.filter((tag) =>
@@ -398,14 +395,16 @@ export default function CustomersPage() {
     return [...selectedTagsInFiltered, ...unselectedTagsInFiltered];
   }, [availableTags, draftTags, tagSearchQuery]);
 
-  const handleFilterOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      setDraftChannels([...selectedChannels]);
-      setDraftTags([...selectedTags]);
-    }
-    setFilterMenuOpen(open);
-  }, [selectedChannels, selectedTags]);
-
+  const handleFilterOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        setDraftChannels([...selectedChannels]);
+        setDraftTags([...selectedTags]);
+      }
+      setFilterMenuOpen(open);
+    },
+    [selectedChannels, selectedTags],
+  );
 
   const handleApplyFilters = useCallback(() => {
     setSelectedChannels(draftChannels);
@@ -487,7 +486,7 @@ export default function CustomersPage() {
   const emptyStateDescription =
     rawPeople.length === 0
       ? "There are no customers to display yet for the current workspace filters."
-      : searchQuery.trim() || selectedChannels.length > 0
+      : searchQuery.trim() || hasActiveFilters
         ? "We couldn't find any customers matching the current search and filters. Try adjusting them and try again."
         : "There are no customers to display yet.";
 
