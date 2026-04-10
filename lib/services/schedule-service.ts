@@ -59,7 +59,8 @@ const create = async ({
   timezone: string;
 }): Promise<IScheduleCreateResult> => {
   try {
-    const url = `${coreConf.baseUrl}/api/followup-webhook`;
+    // const url = `${coreConf.baseUrl}/api/followup-webhook`;
+    const url = `https://magicalcx.ratcat.in/api/followup-webhook`;
 
     if (input.type === "once") {
       const notBefore = toNotBefore({
@@ -68,7 +69,9 @@ const create = async ({
         timezone,
       });
 
-      const notBeforeTimestamp = Math.floor(new Date(notBefore).getTime() / 1000);
+      const notBeforeTimestamp = Math.floor(
+        new Date(notBefore).getTime() / 1000,
+      );
 
       const res = await upstash.publishJSON({
         url,
@@ -77,12 +80,12 @@ const create = async ({
       });
 
       const messageId =
-        "messageId" in res
-          ? res.messageId
-          : (res as any).messageIds?.[0];
+        "messageId" in res ? res.messageId : (res as any).messageIds?.[0];
 
       if (!messageId) {
-        throw new Error("Failed to get message id from QStash publish response");
+        throw new Error(
+          "Failed to get message id from QStash publish response",
+        );
       }
 
       return {

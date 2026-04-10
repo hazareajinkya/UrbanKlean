@@ -9,17 +9,19 @@ import channelService from "@/lib/services/channel-service";
 import peopleService from "@/lib/services/people-service";
 import waService from "@/lib/services/whatsapp/wa-service";
 
+const zTemplatePayload = z.object({
+  name: z.string().min(1, "template name is required"),
+  languageCode: z.string().min(1, "languageCode is required"),
+  components: z.array(z.any()).optional(),
+});
+
 const zWebhookBody = z.object({
   wid: z.string().min(1, "wid is required"),
   personId: z.string().min(1, "personId is required"),
   followUpId: z.string().min(1, "followUpId is required"),
   phone: z.string().min(1, "phone is required"),
   scheduleType: z.enum(["once", "interval"]),
-  template: z.object({
-    name: z.string().min(1, "template name is required"),
-    languageCode: z.string().min(1, "languageCode is required"),
-    components: z.array(z.any()).optional(),
-  }),
+  template: z.union([zTemplatePayload, z.null()]),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,32 +29,9 @@ export async function POST(req: NextRequest) {
     const { wid, personId, followUpId, phone, scheduleType, template } =
       await validateBody(req, zWebhookBody);
 
-    const channels = await channelService.getChannels(wid);
-    const waChannel = channels.find((channel) => channel.provider === "whatsapp");
-
-    if (!waChannel) {
-      return errorResponse("No WhatsApp channel found for this workspace", 404);
-    }
-
-    const phoneId = waChannel.metadata.phone_number_id;
-    const accessToken = waChannel.credentials.access_token;
-
-    if (!phoneId || !accessToken) {
-      return errorResponse("WhatsApp channel credentials incomplete", 400);
-    }
-
     const now = new Date().toISOString();
 
-    try {
-      await waService.sendTemplateTestMessage({
-        to: phone,
-        phoneId,
-        accessToken,
-        templateName: template.name,
-        languageCode: template.languageCode,
-        components: template.components,
-      });
-
+    const persistFollowUpSuccess = async () => {
       const person = await peopleService.getPerson(wid, personId);
       if (!person) {
         return errorResponse("Person not found", 404);
@@ -89,7 +68,9 @@ export async function POST(req: NextRequest) {
       });
 
       return successResponse({ ok: true });
-    } catch (error: any) {
+    };
+
+    const persistFollowUpFailed = async (message: string) => {
       const person = await peopleService.getPerson(wid, personId);
 
       if (person && Array.isArray(person.followUp)) {
@@ -102,7 +83,7 @@ export async function POST(req: NextRequest) {
             ...item,
             status: "failed" as const,
             updatedAt: now,
-            error: error?.message || "Failed to send follow-up",
+            error: message,
           };
         });
 
@@ -116,7 +97,42 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      return errorResponse(error?.message || "Failed to execute follow-up", 500);
+      return errorResponse(message, 500);
+    };
+
+    if (template === null) {
+      return persistFollowUpSuccess();
+    }
+
+    try {
+      const channels = await channelService.getChannels(wid);
+      const waChannel = channels.find((channel) => channel.provider === "whatsapp");
+
+      if (!waChannel) {
+        return errorResponse("No WhatsApp channel found for this workspace", 404);
+      }
+
+      const phoneId = waChannel.metadata.phone_number_id;
+      const accessToken = waChannel.credentials.access_token;
+
+      if (!phoneId || !accessToken) {
+        return errorResponse("WhatsApp channel credentials incomplete", 400);
+      }
+
+      await waService.sendTemplateTestMessage({
+        to: phone,
+        phoneId,
+        accessToken,
+        templateName: template.name,
+        languageCode: template.languageCode,
+        components: template.components,
+      });
+
+      return persistFollowUpSuccess();
+    } catch (error: any) {
+      return persistFollowUpFailed(
+        error?.message || "Failed to send follow-up",
+      );
     }
   } catch (error: any) {
     return errorResponse(error?.message || "Invalid webhook payload", 400);
