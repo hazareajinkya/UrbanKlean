@@ -379,6 +379,7 @@ export default function CustomersPage() {
   const hasActiveFilters =
     selectedChannels.length > 0 || selectedTags.length > 0;
   const activeFilterCount = selectedChannels.length + selectedTags.length;
+
   const hasDraftFilters = draftChannels.length > 0 || draftTags.length > 0;
   const shouldShowTagSearch = availableTags.length > 7;
   const filteredAvailableTags = useMemo(() => {
