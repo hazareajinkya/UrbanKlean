@@ -15,6 +15,7 @@ import clsx from "clsx";
 import { consumeStream, UIMessage } from "ai";
 import { Streamdown } from "streamdown";
 import { useHistoryStore } from "@/lib/stores/history-store";
+import { apiClient } from "@/lib/clients/axios-client";
 import {
   Check,
   Circle,
@@ -30,7 +31,7 @@ import {
   User,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
+  Sparkles,
   MessageSquare,
   Tag,
   Lightbulb,
@@ -58,6 +59,8 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ChatSummary } from "./history/chat-summary";
 import SendTemplateModal from "./history/send-template-modal";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 
 interface ChatHistoryTabProps {
   agent: IAgent;
@@ -355,6 +358,13 @@ const HistoryMessageList = ({
   }, [currentSession?.messages]);
 
   const [isSendTemplateModalOpen, setIsSendTemplateModalOpen] = useState(false);
+  const summarizeChat = useMutation({
+    mutationFn: ({ aid, sid }: { aid: string; sid: string }) =>
+      apiClient.post("/api/ticket-close/close", { aid, sid }),
+    onSuccess: () => toast.success("Summarized"),
+    onError: (error: any) =>
+      toast.error(error?.message || "Failed to summarize"),
+  });
   const persons = useHistoryStore((state) => state.persons);
   return (
     <div className="h-full flex flex-col">
@@ -372,6 +382,29 @@ const HistoryMessageList = ({
               </p>
             </div>
             <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-center gap-1.5 text-xs transition-all duration-200"
+                onClick={() =>
+                  summarizeChat.mutate({
+                    aid: currentSession.aid,
+                    sid: currentSession.id,
+                  })
+                }
+                disabled={
+                  summarizeChat.isPending ||
+                  currentSession.status !== "open"
+                }
+                aria-label="Summarize conversation"
+              >
+                {summarizeChat.isPending ? (
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" aria-hidden />
+                )}
+                {currentSession.status === "open" ? "Summarize" : "Summarized"}
+              </Button>
               {currentSession.channel === "whatsapp" &&
                 persons[currentSession.personId ?? ""]?.phones?.[0]?.value && (
                   <Button

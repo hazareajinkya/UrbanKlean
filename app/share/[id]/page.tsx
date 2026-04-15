@@ -2,14 +2,17 @@
 
 import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import AgentPreviewTabs from "@/components/agent/agent-preview-tabs";
 import { Button } from "@/components/ui/button";
+import { useAgent } from "@/lib/hooks/agent/use-agent";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
 export default function SharePage() {
   const params = useParams();
-  const id = params.id;
+  const id = (Array.isArray(params.id) ? params.id[0] : params.id) as string;
+  const { agent } = useAgent(id);
   return (
     <div className="bg-background min-h-screen flex flex-col">
       <Navbar />
@@ -97,20 +100,11 @@ export default function SharePage() {
 
           {/* Center/Right Column: Mobile Frame */}
           <div className="flex justify-center lg:justify-end w-full">
-            <div className="relative">
-              {/* Glow effect - smaller on mobile */}
-              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-60" />
-              <div className="relative bg-gray-900 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl shadow-2xl">
-                <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden">
-                  <iframe
-                    src={`/chat/${id}`}
-                    className="w-[355px] h-[647px] border-0 max-w-full"
-                    title="Magical CX"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-                  />
-                </div>
-              </div>
-            </div>
+            <AgentPreviewTabs
+              aid={id}
+              wid={agent?.wid ?? id}
+              botName={agent?.customization.name ?? "AI Agent"}
+            />
           </div>
         </div>
 

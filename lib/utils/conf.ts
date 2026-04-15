@@ -50,6 +50,9 @@ export const companyAddress = {
   region: "County of Kent, Delaware",
   zip: "19901",
 };
+export const VAPI_ASSISTANT_ID =
+  process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID ??
+  "4e80fade-0b13-4dcc-b3e0-69ded2cc60bd";
 
 // API Configs
 export const waconf = {
