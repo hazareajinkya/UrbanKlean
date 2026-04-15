@@ -28,6 +28,7 @@ import {
   Timer,
   ChevronLeft,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
 import { UseMutationResult } from "@tanstack/react-query";
 import datafastService from "@/lib/services/datafast-service";
@@ -36,7 +37,7 @@ type ProcessingStep = {
   id: number;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;
 };
 

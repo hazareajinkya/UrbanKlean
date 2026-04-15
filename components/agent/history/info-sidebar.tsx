@@ -22,6 +22,7 @@ import {
   BadgeDollarSignIcon,
   CircleDollarSign,
   Code,
+  type LucideIcon,
 } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history-store";
 import { toast } from "sonner";
@@ -56,7 +57,7 @@ const CopyableItem = ({
   value,
   mono,
 }: {
-  icon: React.ElementType;
+  icon: LucideIcon;
   value: string;
   mono?: boolean;
 }) => {

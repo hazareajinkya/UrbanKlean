@@ -32,6 +32,7 @@ import {
   Loader2,
   Wand2,
   Settings,
+  type LucideIcon,
 } from "lucide-react";
 import { usePolicyGenerator } from "@/lib/hooks/free-tools/use-policy-generator";
 import { toast } from "sonner";
@@ -336,7 +337,7 @@ const PolicySection = ({
   iconColor,
 }: {
   title: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   content: string;
   iconColor: string;
 }) => {

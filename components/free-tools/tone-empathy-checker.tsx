@@ -22,6 +22,7 @@ import {
   Shield,
   Zap,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/clients/axios-client";
@@ -34,7 +35,7 @@ import type {
 const TONE_OPTIONS: {
   value: ToneGoal;
   label: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   description: string;
 }[] = [
     {

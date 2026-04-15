@@ -20,6 +20,7 @@ import {
   Sparkles,
   ArrowRight,
   User,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -49,7 +50,7 @@ const InfoRow = ({
   value,
   mono = false,
 }: {
-  icon: React.ElementType;
+  icon: LucideIcon;
   value: string;
   mono?: boolean;
 }) => (

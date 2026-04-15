@@ -20,6 +20,7 @@ import {
   Repeat,
   Ban,
   Loader2,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, fromSlug } from "@/lib/utils";
@@ -58,7 +59,7 @@ const CopyableItem = ({
   value,
   mono,
 }: {
-  icon: React.ElementType;
+  icon: LucideIcon;
   value: string;
   mono?: boolean;
 }) => {
