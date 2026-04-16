@@ -52,7 +52,7 @@ export const companyAddress = {
 };
 export const VAPI_ASSISTANT_ID =
   process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID ??
-  "4e80fade-0b13-4dcc-b3e0-69ded2cc60bd";
+  "a7e7f84f-ab3b-4588-95ef-0178522fa41d";
 
 // API Configs
 export const waconf = {
