@@ -104,6 +104,7 @@ export default function SharePage() {
               aid={id}
               wid={agent?.wid ?? id}
               botName={agent?.customization.name ?? "AI Agent"}
+              vapiAssistantId={agent?.settings?.vapiAssistantId ?? ""}
             />
           </div>
         </div>

@@ -12,18 +12,22 @@ import {
   saveLocalDeviceId,
   saveLocalSession,
 } from "@/components/chat/chat-utils";
-import { VAPI_ASSISTANT_ID } from "@/lib/utils/conf";
 import { v4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 export default function AgentPreviewTabs({
   aid,
   wid,
   botName,
+  vapiAssistantId = "",
 }: {
   aid: string;
   wid: string;
   botName: string;
+  vapiAssistantId?: string;
 }) {
+  const router = useRouter();
+  const trimmedVapiAssistantId = vapiAssistantId.trim();
   const fromPage =
     typeof window !== "undefined"
       ? encodeURIComponent(window.location.href)
@@ -91,6 +95,11 @@ export default function AgentPreviewTabs({
       return;
     }
     if (voiceState === "connecting" || isVoiceConnected) return;
+    if (!trimmedVapiAssistantId) {
+      setVoiceState("error");
+      setVoiceError("Hey, you need to add VAPI Assistant ID in settings.");
+      return;
+    }
     const sessionId = getLocalSession(aid) || v4();
     const deviceId = getLocalDeviceId(wid) || v4();
     saveLocalSession(aid, sessionId);
@@ -98,7 +107,7 @@ export default function AgentPreviewTabs({
     setVoiceError(null);
     setVoiceState("connecting");
     try {
-      await vapiRef.current.start(VAPI_ASSISTANT_ID, {
+      await vapiRef.current.start(trimmedVapiAssistantId, {
         variableValues: {
           aid,
           wid,
@@ -169,18 +178,37 @@ export default function AgentPreviewTabs({
             <div className="w-[355px] h-[647px] rounded-xl overflow-hidden bg-white p-6 flex flex-col">
               <div className="text-sm text-muted-foreground text-center">Live conversation</div>
               <h3 className="text-lg font-medium mt-1 text-center">Talk with {botName}</h3>
-              <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80">
-                <Orb
-                  className="h-full w-full"
-                  colors={["#CADCFC", "#91A7FF"]}
-                  agentState={orbState}
-                  volumeMode="manual"
-                  manualInput={voiceVolume}
-                  manualOutput={voiceVolume}
-                />
-              </div>
+              {trimmedVapiAssistantId ? (
+                <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80">
+                  <Orb
+                    className="h-full w-full"
+                    colors={["#CADCFC", "#91A7FF"]}
+                    agentState={orbState}
+                    volumeMode="manual"
+                    manualInput={voiceVolume}
+                    manualOutput={voiceVolume}
+                  />
+                </div>
+              ) : (
+                <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80 p-4 flex flex-col items-center justify-center text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Hey, you need to add VAPI Assistant ID.
+                  </p>
+                  <Button
+                    type="button"
+                    className="mt-3"
+                    onClick={() =>
+                      router.push(`/workspaces/${wid}/agents/${aid}?tab=settings`)
+                    }
+                  >
+                    Open Settings
+                  </Button>
+                </div>
+              )}
               <p className="mt-4 text-sm text-muted-foreground text-center">
-                {voiceState === "connecting"
+                {!trimmedVapiAssistantId
+                  ? "Add your VAPI Assistant ID to use Voice mode."
+                  : voiceState === "connecting"
                   ? "Connecting..."
                   : voiceState === "listening"
                     ? "Listening..."
@@ -219,9 +247,13 @@ export default function AgentPreviewTabs({
                   type="button"
                   className="mt-4 w-full"
                   onClick={handleStartVoice}
-                  disabled={voiceState === "connecting"}
+                  disabled={voiceState === "connecting" || !trimmedVapiAssistantId}
                 >
-                  {voiceState === "connecting" ? "Connecting..." : "Start"}
+                  {voiceState === "connecting"
+                    ? "Connecting..."
+                    : !trimmedVapiAssistantId
+                      ? "Add VAPI Assistant ID"
+                      : "Start"}
                 </Button>
               )}
             </div>

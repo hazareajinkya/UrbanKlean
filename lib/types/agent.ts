@@ -20,6 +20,7 @@ export interface IAgentSettings {
   temperature: number;
   model: string;
   systemPrompt: string;
+  vapiAssistantId: string;
 }
 
 export interface IAgentChatCustomization {
@@ -66,6 +67,7 @@ export const generateDefaultAgent = (
     settings: {
       temperature: 0.5,
       model: "gemini-3-pro-preview",
+      vapiAssistantId: "",
       systemPrompt: generateDefaultSystemPrompt(
         workspace.name,
         ` 

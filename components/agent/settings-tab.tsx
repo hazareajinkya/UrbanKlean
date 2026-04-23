@@ -32,6 +32,9 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
   const [model, setModel] = useState(agent.settings.model);
   const [temperature, setTemperature] = useState(agent.settings.temperature);
   const [systemPrompt, setSystemPrompt] = useState(agent.settings.systemPrompt);
+  const [vapiAssistantId, setVapiAssistantId] = useState(
+    agent.settings.vapiAssistantId || ""
+  );
   const [knowledgeFolders, setKnowledgeFolders] = useState<string[]>(
     agent.knowledgeFolders || []
   );
@@ -49,6 +52,7 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
           model,
           temperature: temperature,
           systemPrompt,
+          vapiAssistantId: vapiAssistantId.trim(),
         },
         knowledgeFolders,
       },
@@ -119,6 +123,20 @@ export default function SettingsTab({ agent }: SettingsTabProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="vapiAssistantId">VAPI Assistant ID</Label>
+                    <Input
+                      id="vapiAssistantId"
+                      value={vapiAssistantId}
+                      onChange={(e) => setVapiAssistantId(e.target.value)}
+                      placeholder="Paste your VAPI Assistant ID"
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Used by Voice mode in Playground.
+                    </p>
                   </div>
 
                   <div>

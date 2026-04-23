@@ -29,15 +29,17 @@ import {
   saveLocalDeviceId,
   saveLocalSession,
 } from "@/components/chat/chat-utils";
-import { VAPI_ASSISTANT_ID } from "@/lib/utils/conf";
 import { v4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 interface ChatTabProps {
   agent: IAgent;
 }
 
 export default function ChatTab({ agent }: ChatTabProps) {
+  const router = useRouter();
   const botName = agent.customization.name;
+  const vapiAssistantId = agent.settings.vapiAssistantId?.trim() || "";
   const fromPage =
     typeof window !== "undefined"
       ? encodeURIComponent(window.location.href)
@@ -112,6 +114,11 @@ export default function ChatTab({ agent }: ChatTabProps) {
       voiceState === "talking"
     )
       return;
+    if (!vapiAssistantId) {
+      setVoiceState("error");
+      setVoiceError("Hey, you need to add VAPI Assistant ID in settings.");
+      return;
+    }
     const sessionId = getLocalSession(agent.id) || v4();
     const deviceId = getLocalDeviceId(agent.wid) || v4();
     saveLocalSession(agent.id, sessionId);
@@ -119,7 +126,7 @@ export default function ChatTab({ agent }: ChatTabProps) {
     setVoiceError(null);
     setVoiceState("connecting");
     try {
-      await vapiRef.current.start(VAPI_ASSISTANT_ID, {
+      await vapiRef.current.start(vapiAssistantId, {
         variableValues: {
           aid: agent.id,
           wid: agent.wid,
@@ -199,18 +206,39 @@ export default function ChatTab({ agent }: ChatTabProps) {
                   <h3 className="text-lg font-medium mt-1 text-center">
                     Talk with {botName}
                   </h3>
-                  <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80">
-                    <Orb
-                      className="h-full w-full"
-                      colors={["#CADCFC", "#91A7FF"]}
-                      agentState={orbState}
-                      volumeMode="manual"
-                      manualInput={voiceVolume}
-                      manualOutput={voiceVolume}
-                    />
-                  </div>
+                  {vapiAssistantId ? (
+                    <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80">
+                      <Orb
+                        className="h-full w-full"
+                        colors={["#CADCFC", "#91A7FF"]}
+                        agentState={orbState}
+                        volumeMode="manual"
+                        manualInput={voiceVolume}
+                        manualOutput={voiceVolume}
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex-1 rounded-2xl border bg-slate-50/80 p-4 flex flex-col items-center justify-center text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Hey, you need to add VAPI Assistant ID.
+                      </p>
+                      <Button
+                        type="button"
+                        className="mt-3"
+                        onClick={() =>
+                          router.push(
+                            `/workspaces/${agent.wid}/agents/${agent.id}?tab=settings`
+                          )
+                        }
+                      >
+                        Open Settings
+                      </Button>
+                    </div>
+                  )}
                   <p className="mt-4 text-sm text-muted-foreground text-center">
-                    {voiceState === "connecting"
+                    {!vapiAssistantId
+                      ? "Add your VAPI Assistant ID to use Voice mode."
+                      : voiceState === "connecting"
                       ? "Connecting..."
                       : voiceState === "listening"
                         ? "Listening..."
@@ -265,9 +293,13 @@ export default function ChatTab({ agent }: ChatTabProps) {
                       type="button"
                       className="mt-4 w-full"
                       onClick={handleStartVoice}
-                      disabled={voiceState === "connecting"}
+                      disabled={voiceState === "connecting" || !vapiAssistantId}
                     >
-                      {voiceState === "connecting" ? "Connecting..." : "Start"}
+                      {voiceState === "connecting"
+                        ? "Connecting..."
+                        : !vapiAssistantId
+                          ? "Add VAPI Assistant ID"
+                          : "Start"}
                     </Button>
                   )}
                 </div>
