@@ -24,17 +24,39 @@ import {
   Star,
   MessageSquare,
   AlertCircle,
+  Languages,
+  BarChart3,
+  Bell,
+  Sunrise,
+  Sun,
+  Moon,
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { v4 } from "uuid";
 
-type DemoType = "booking" | "out_of_service" | "feedback";
+type DemoType = "booking" | "out_of_service" | "feedback" | "language_switch";
+
+type LangCode = "en" | "te" | "hi";
+
+type LangInfo = {
+  code: LangCode;
+  label: string;
+  nativeLabel: string;
+  flag: string;
+};
+
+const LANGUAGES: Record<LangCode, LangInfo> = {
+  en: { code: "en", label: "English", nativeLabel: "English", flag: "EN" },
+  te: { code: "te", label: "Telugu", nativeLabel: "తెలుగు", flag: "TE" },
+  hi: { code: "hi", label: "Hindi", nativeLabel: "हिन्दी", flag: "HI" },
+};
 
 type BookingStep =
   | "idle"
   | "greeting"
   | "service_selection"
   | "quantity_selection"
+  | "time_of_day_selection"
   | "slot_selection"
   | "confirmation"
   | "payment"
@@ -44,7 +66,10 @@ type BookingStep =
   | "feedback_intro"
   | "feedback_rating"
   | "feedback_comments"
-  | "feedback_complete";
+  | "feedback_complete"
+  | "language_intro"
+  | "language_switching"
+  | "language_saved";
 
 type Service = {
   id: string;
@@ -54,10 +79,20 @@ type Service = {
   selected?: boolean;
 };
 
+type TimeOfDay = "morning" | "afternoon" | "evening";
+
 type TimeSlot = {
   date: string;
   time: string;
+  period: TimeOfDay;
   available: boolean;
+};
+
+type PeriodInfo = {
+  id: TimeOfDay;
+  label: string;
+  range: string;
+  icon: React.ComponentType<{ className?: string }>;
 };
 
 const SERVICES: Service[] = [
@@ -67,15 +102,22 @@ const SERVICES: Service[] = [
   { id: "home", name: "Full Home Cleaning", icon: <Home className="size-6" />, price: 2500 },
 ];
 
+const PERIODS: PeriodInfo[] = [
+  { id: "morning", label: "Morning", range: "8 AM – 12 PM", icon: Sunrise },
+  { id: "afternoon", label: "Afternoon", range: "12 PM – 5 PM", icon: Sun },
+  { id: "evening", label: "Evening", range: "5 PM – 8 PM", icon: Moon },
+];
+
 const TIME_SLOTS: TimeSlot[] = [
-  { date: "Apr 27, 2026", time: "9:00 AM", available: true },
-  { date: "Apr 27, 2026", time: "11:00 AM", available: true },
-  { date: "Apr 27, 2026", time: "2:00 PM", available: false },
-  { date: "Apr 27, 2026", time: "4:00 PM", available: true },
-  { date: "Apr 28, 2026", time: "9:00 AM", available: true },
-  { date: "Apr 28, 2026", time: "11:00 AM", available: true },
-  { date: "Apr 28, 2026", time: "2:00 PM", available: true },
-  { date: "Apr 28, 2026", time: "4:00 PM", available: false },
+  { date: "Apr 28, 2026", time: "9:00 AM", period: "morning", available: true },
+  { date: "Apr 28, 2026", time: "10:00 AM", period: "morning", available: false },
+  { date: "Apr 28, 2026", time: "11:00 AM", period: "morning", available: true },
+  { date: "Apr 28, 2026", time: "12:00 PM", period: "afternoon", available: true },
+  { date: "Apr 28, 2026", time: "2:00 PM", period: "afternoon", available: true },
+  { date: "Apr 28, 2026", time: "4:00 PM", period: "afternoon", available: false },
+  { date: "Apr 28, 2026", time: "5:00 PM", period: "evening", available: true },
+  { date: "Apr 28, 2026", time: "6:30 PM", period: "evening", available: true },
+  { date: "Apr 28, 2026", time: "7:30 PM", period: "evening", available: true },
 ];
 
 export default function UrbanCleanDemo() {
@@ -84,6 +126,7 @@ export default function UrbanCleanDemo() {
   const vapiRef = useRef<Vapi | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const userAudioRef = useRef<HTMLAudioElement | null>(null);
   const volumeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -108,12 +151,18 @@ export default function UrbanCleanDemo() {
   const [requestedServices, setRequestedServices] = useState<string[]>([]);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
-  const [lastBookingId, setLastBookingId] = useState("UC847291");
+  const [lastBookingId] = useState("UC847291");
+  const [typingText, setTypingText] = useState<{ role: "user" | "assistant"; text: string } | null>(null);
+  const [activeLanguage, setActiveLanguage] = useState<LangCode>("en");
+  const [languageHistory, setLanguageHistory] = useState<LangCode[]>([]);
+  const [savedLanguage, setSavedLanguage] = useState<LangCode | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimeOfDay | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       audioRef.current = new Audio();
-      
+      userAudioRef.current = new Audio();
+
       if (window.speechSynthesis) {
         synthRef.current = window.speechSynthesis;
         const loadVoices = () => {
@@ -132,6 +181,10 @@ export default function UrbanCleanDemo() {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      if (userAudioRef.current) {
+        userAudioRef.current.pause();
+        userAudioRef.current = null;
+      }
     };
   }, []);
 
@@ -145,56 +198,71 @@ export default function UrbanCleanDemo() {
     return availableVoices.find(v => v.lang.startsWith("en")) || availableVoices[0];
   }, [availableVoices]);
 
-  const speakWithElevenLabs = useCallback(async (text: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+  const speakWithElevenLabs = useCallback(
+    async (
+      text: string,
+      opts: { role?: "assistant" | "user"; animateOrb?: boolean } = {},
+    ): Promise<boolean> => {
+      const role = opts.role ?? "assistant";
+      const animateOrb = opts.animateOrb ?? role === "assistant";
+      const ref = role === "user" ? userAudioRef : audioRef;
+      try {
+        const response = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, role }),
+        });
 
-      if (!response.ok) {
-        console.warn("ElevenLabs unavailable, falling back to browser TTS");
-        return false;
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      return new Promise((resolve) => {
-        if (!audioRef.current) {
-          resolve(false);
-          return;
+        if (!response.ok) {
+          console.warn("ElevenLabs unavailable, falling back to browser TTS");
+          return false;
         }
 
-        audioRef.current.src = audioUrl;
-        
-        if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
-        volumeIntervalRef.current = setInterval(() => {
-          setVoiceVolume(0.3 + Math.random() * 0.5);
-        }, 80);
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
 
-        audioRef.current.onended = () => {
-          if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
-          setVoiceVolume(0);
-          URL.revokeObjectURL(audioUrl);
-          resolve(true);
-        };
+        return new Promise((resolve) => {
+          if (!ref.current) {
+            resolve(false);
+            return;
+          }
 
-        audioRef.current.onerror = () => {
-          if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
-          setVoiceVolume(0);
-          URL.revokeObjectURL(audioUrl);
-          resolve(false);
-        };
+          ref.current.src = audioUrl;
 
-        audioRef.current.play().catch(() => resolve(false));
-      });
-    } catch (error) {
-      console.warn("ElevenLabs error:", error);
-      return false;
-    }
-  }, []);
+          if (animateOrb) {
+            if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+            volumeIntervalRef.current = setInterval(() => {
+              setVoiceVolume(0.3 + Math.random() * 0.5);
+            }, 80);
+          }
+
+          ref.current.onended = () => {
+            if (animateOrb) {
+              if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+              setVoiceVolume(0);
+            }
+            URL.revokeObjectURL(audioUrl);
+            resolve(true);
+          };
+
+          ref.current.onerror = () => {
+            if (animateOrb) {
+              if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+              setVoiceVolume(0);
+            }
+            URL.revokeObjectURL(audioUrl);
+            resolve(false);
+          };
+
+          ref.current.play().catch(() => resolve(false));
+        });
+      } catch (error) {
+        console.warn("ElevenLabs error:", error);
+        return false;
+      }
+    },
+    [],
+  );
 
   const speakWithBrowser = useCallback((text: string): Promise<void> => {
     return new Promise((resolve) => {
@@ -232,18 +300,17 @@ export default function UrbanCleanDemo() {
   }, [getPreferredVoice, isSpeakerMuted]);
 
   const speak = useCallback(async (text: string): Promise<void> => {
-    // Check if simulation was aborted
     if (abortSimulationRef.current) {
       throw new Error("Simulation aborted");
     }
-    
+
     if (isSpeakerMuted) {
       await new Promise(resolve => setTimeout(resolve, text.length * 40));
       return;
     }
 
     if (useElevenLabs) {
-      const success = await speakWithElevenLabs(text);
+      const success = await speakWithElevenLabs(text, { role: "assistant" });
       if (success) return;
       setUseElevenLabs(false);
     }
@@ -251,11 +318,34 @@ export default function UrbanCleanDemo() {
     await speakWithBrowser(text);
   }, [isSpeakerMuted, useElevenLabs, speakWithElevenLabs, speakWithBrowser]);
 
+  const speakAsUser = useCallback(async (text: string): Promise<void> => {
+    if (abortSimulationRef.current) {
+      throw new Error("Simulation aborted");
+    }
+
+    if (isSpeakerMuted) return;
+
+    if (useElevenLabs) {
+      const success = await speakWithElevenLabs(text, {
+        role: "user",
+        animateOrb: false,
+      });
+      if (success) return;
+    }
+    // Silent fallback: when ElevenLabs is unavailable we just let the
+    // typed message convey the customer's line — no browser TTS to
+    // avoid a robotic-sounding male voice over the assistant's voice.
+  }, [isSpeakerMuted, useElevenLabs, speakWithElevenLabs]);
+
   const stopSpeaking = useCallback(() => {
     if (synthRef.current) synthRef.current.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    }
+    if (userAudioRef.current) {
+      userAudioRef.current.pause();
+      userAudioRef.current.currentTime = 0;
     }
     if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
     setVoiceVolume(0);
@@ -298,13 +388,14 @@ export default function UrbanCleanDemo() {
   }, [vapiKey]);
 
   const handleStartVoice = async () => {
-    // Always run simulation for demo
     if (demoType === "booking") {
       runBookingSimulation();
     } else if (demoType === "out_of_service") {
       runOutOfServiceSimulation();
     } else if (demoType === "feedback") {
       runFeedbackSimulation();
+    } else if (demoType === "language_switch") {
+      runLanguageSwitchSimulation();
     }
   };
 
@@ -335,6 +426,7 @@ export default function UrbanCleanDemo() {
     setVoiceVolume(0);
     setCurrentStep("idle");
     setTranscript([]);
+    setTypingText(null);
     setSelectedService(null);
     setQuantity(1);
     setSelectedSlot(null);
@@ -344,6 +436,10 @@ export default function UrbanCleanDemo() {
     setRequestedServices([]);
     setFeedbackRating(0);
     setFeedbackComment("");
+    setActiveLanguage("en");
+    setLanguageHistory([]);
+    setSavedLanguage(null);
+    setSelectedPeriod(null);
   };
 
   // Helper function to calculate user "speaking" time based on text length
@@ -352,151 +448,123 @@ export default function UrbanCleanDemo() {
     return Math.max(1500, words * 300); // ~300ms per word, minimum 1.5s
   };
 
+  // Type and speak simultaneously for assistant
+  const speakAndType = async (text: string) => {
+    await Promise.all([
+      speak(text),
+      typeText("assistant", text, 50) // Type slightly slower to match speech
+    ]);
+  };
+
+  // Type user message AND speak it with the male customer voice
+  const typeUserMessage = async (text: string) => {
+    await Promise.all([
+      speakAsUser(text),
+      typeText("user", text, 55),
+    ]);
+  };
+
   // ==================== BOOKING SIMULATION (Happy Path) ====================
   const runBookingSimulation = async () => {
     abortSimulationRef.current = false;
     setIsSimulating(true);
     setVoiceState("connecting");
-    
+
     try {
     await delay(1500);
-    
-    // Step 1: Greeting
-    const greeting = "Hi! I'm Priya from Urban Clean. Welcome! How can I assist you today?";
+
+    // Step 1: Short, focused greeting — no name asked yet
     setVoiceState("talking");
     setCurrentStep("greeting");
-    addTranscript("assistant", greeting);
-    await speak(greeting);
-    
-    setVoiceState("listening");
-    await delay(2000);
-    
-    const userMsg1 = "Hi, I need bathroom cleaning service";
-    addTranscript("user", userMsg1);
-    await delay(getUserSpeakTime(userMsg1));
-    
-    await delay(800);
-    const nameMsg = "Sure, I'd be happy to help with bathroom cleaning. May I know your name please?";
-    setVoiceState("talking");
-    addTranscript("assistant", nameMsg);
-    await speak(nameMsg);
-    
+    await speakAndType("Hi! I'm Priya from Urban Klean. How can I help you today?");
+
     setVoiceState("listening");
     await delay(1500);
-    
-    const userMsg2 = "My name is Ajinkya";
-    addTranscript("user", userMsg2);
-    setCustomerName("Ajinkya");
-    await delay(getUserSpeakTime(userMsg2));
-    
-    await delay(600);
-    const addressMsg = "Thank you Ajinkya! Could you please share your address for the service?";
-    setVoiceState("talking");
-    addTranscript("assistant", addressMsg);
-    await speak(addressMsg);
-    
-    setVoiceState("listening");
-    await delay(2000);
-    
-    const userMsg3 = "Block 1, Flat 1101, My Home Mangala, Kondapur";
-    addTranscript("user", userMsg3);
-    setCustomerAddress(userMsg3);
-    await delay(getUserSpeakTime(userMsg3));
-    
-    await delay(800);
-    const serviceMsg = "Perfect! I'm displaying our services on your screen. We have Bathroom Cleaning at 500 rupees, Deep Cleaning, Sofa Cleaning, and Full Home Cleaning. Which service would you like?";
-    setVoiceState("talking");
-    setCurrentStep("service_selection");
-    addTranscript("assistant", serviceMsg.replace("500 rupees", "₹500"));
-    await speak(serviceMsg);
-    
-    setVoiceState("listening");
-    await delay(3000);
-    
-    const userMsg4 = "Bathroom cleaning please";
-    addTranscript("user", userMsg4);
+    await typeUserMessage("Hi, I need a bathroom cleaning");
+
+    // Step 2: Jump straight to quantity — bathroom already heard
     setSelectedService(SERVICES[0]);
-    await delay(getUserSpeakTime(userMsg4));
-    
-    await delay(600);
-    const quantityMsg = "Great choice! How many bathrooms would you like us to clean?";
+    await delay(500);
     setVoiceState("talking");
     setCurrentStep("quantity_selection");
-    addTranscript("assistant", quantityMsg);
-    await speak(quantityMsg);
-    
+    await speakAndType("Sure! Bathroom cleaning is 500 rupees per bathroom. How many bathrooms would you like us to clean?");
+
     setVoiceState("listening");
     await delay(1500);
-    
-    const userMsg5 = "2 bathrooms";
-    addTranscript("user", userMsg5);
+    await typeUserMessage("2 bathrooms");
     setQuantity(2);
-    await delay(getUserSpeakTime(userMsg5));
-    
-    await delay(800);
+
+    // Step 3: Quick price summary, then ask period
+    await delay(500);
     const total = 500 * 2;
     const gst = Math.round(total * 0.18);
     const grandTotal = total + gst;
-    const slotMsg = `Perfect! 2 Bathroom Cleaning will be ${total} rupees plus 18% GST, which comes to ${grandTotal} rupees. I'm now displaying available time slots on your screen. Please select your preferred date and time.`;
+    setVoiceState("talking");
+    setCurrentStep("time_of_day_selection");
+    await speakAndType(`Got it — 2 bathrooms, that comes to ${grandTotal} rupees including GST. What time of day works best for you — morning, afternoon, or evening?`);
+
+    setVoiceState("listening");
+    await delay(1800);
+    await typeUserMessage("Morning works best");
+    setSelectedPeriod("morning");
+
+    // Step 4: Show only morning slots
+    await delay(500);
     setVoiceState("talking");
     setCurrentStep("slot_selection");
-    addTranscript("assistant", slotMsg.replace(`${total} rupees`, `₹${total}`).replace(`${grandTotal} rupees`, `₹${grandTotal}`));
-    await speak(slotMsg);
-    
+    await speakAndType("Perfect! Here are tomorrow's morning slots. 9 AM and 11 AM are open — 10 AM is already booked. Which one would you prefer?");
+
     setVoiceState("listening");
-    await delay(3500);
-    
-    const userMsg6 = "Tomorrow at 11 AM please";
-    addTranscript("user", userMsg6);
-    setSelectedSlot(TIME_SLOTS[1]);
-    await delay(getUserSpeakTime(userMsg6));
-    
-    await delay(800);
-    const confirmMsg = `I'm displaying your booking summary on screen. You've selected 2 Bathroom Cleaning for ${TIME_SLOTS[1].date} at ${TIME_SLOTS[1].time}, total ${grandTotal} rupees. The service will be at Block 1, Flat 1101, My Home Mangala, Kondapur. Please review and confirm.`;
+    await delay(2000);
+    await typeUserMessage("11 AM please");
+    setSelectedSlot(TIME_SLOTS[2]); // 11:00 AM morning slot
+
+    // Step 5: Now ask for name + flat (only when needed)
+    await delay(500);
+    setVoiceState("talking");
+    await speakAndType("Locked in for tomorrow at 11 AM. Could you share your name and flat details for the booking?");
+
+    setVoiceState("listening");
+    await delay(2000);
+    await typeUserMessage("Ajinkya, Block 1, Flat 1101, My Home Mangala, Kondapur");
+    setCustomerName("Ajinkya");
+    setCustomerAddress("Block 1, Flat 1101, My Home Mangala, Kondapur");
+
+    // Step 6: Confirmation summary
+    await delay(500);
     setVoiceState("talking");
     setCurrentStep("confirmation");
-    addTranscript("assistant", confirmMsg.replace(`${grandTotal} rupees`, `₹${grandTotal}`));
-    await speak(confirmMsg);
-    
+    await speakAndType(`Thanks Ajinkya ji! Quick recap on your screen: 2 bathrooms tomorrow at 11 AM, total ${grandTotal} rupees, at My Home Mangala. Shall I confirm?`);
+
     setVoiceState("listening");
-    await delay(2500);
-    
-    const userMsg7 = "Yes, confirmed";
-    addTranscript("user", userMsg7);
-    await delay(getUserSpeakTime(userMsg7));
-    
-    await delay(600);
-    const paymentMsg = "Excellent! I'm sending you the payment link now. Please complete the payment to confirm your booking.";
+    await delay(2000);
+    await typeUserMessage("Yes, confirmed");
+
+    // Step 7: Payment
+    await delay(500);
     setVoiceState("talking");
     setCurrentStep("payment");
-    addTranscript("assistant", paymentMsg);
-    await speak(paymentMsg);
+    await speakAndType("Wonderful! I've sent the payment link to your WhatsApp. Just a moment while it processes.");
     
     setVoiceState("listening");
-    await delay(5000);
+    await delay(4000);
     
     const newBookingId = `UC${Date.now().toString().slice(-6)}`;
     setBookingId(newBookingId);
     setCurrentStep("success");
-    
+
+    const bookedSlot = TIME_SLOTS[2]; // 11:00 AM morning slot
     await delay(500);
-    const successMsg = `Payment received! Your booking is confirmed. Your booking ID is ${newBookingId}. Our team will arrive at ${TIME_SLOTS[1].time} on ${TIME_SLOTS[1].date}. Thank you for choosing Urban Clean! Is there anything else I can help you with?`;
     setVoiceState("talking");
-    addTranscript("assistant", successMsg);
-    await speak(successMsg);
+    await speakAndType(`Payment received! Your booking is confirmed — our Sevak will arrive tomorrow at ${bookedSlot.time}. You'll get a WhatsApp reminder an hour before. Anything else I can help you with?`);
     
     setVoiceState("listening");
-    await delay(2000);
+    await delay(1500);
+    await typeUserMessage("No, that's all. Thank you!");
     
-    const userMsg8 = "No, that's all. Thank you!";
-    addTranscript("user", userMsg8);
-    await delay(getUserSpeakTime(userMsg8));
-    
-    await delay(600);
-    const byeMsg = "You're most welcome! We appreciate your trust in Urban Clean. Have a wonderful day!";
+    await delay(500);
     setVoiceState("talking");
-    addTranscript("assistant", byeMsg);
-    await speak(byeMsg);
+    await speakAndType("You're most welcome! We appreciate your trust in Urban Clean. Have a wonderful day!");
     
     await delay(2000);
     setVoiceState("idle");
@@ -515,95 +583,63 @@ export default function UrbanCleanDemo() {
     try {
     await delay(1500);
     
-    const greeting = "Hi! I'm Priya from Urban Clean. Welcome! How can I assist you today?";
     setVoiceState("talking");
     setCurrentStep("greeting");
-    addTranscript("assistant", greeting);
-    await speak(greeting);
-    
-    setVoiceState("listening");
-    await delay(2000);
-    
-    const userMsg1 = "Hi, I want to book a deep cleaning service";
-    addTranscript("user", userMsg1);
-    await delay(getUserSpeakTime(userMsg1));
-    
-    await delay(800);
-    const nameMsg = "Sure, I'd love to help! May I know your name please?";
-    setVoiceState("talking");
-    addTranscript("assistant", nameMsg);
-    await speak(nameMsg);
+    await speakAndType("Hi! I'm Priya from Urban Klean — your friendly home-care helper. How can I assist you today?");
     
     setVoiceState("listening");
     await delay(1500);
+    await typeUserMessage("Hi, I want to book a deep cleaning service");
     
-    const userMsg2 = "I'm Ajinkya";
-    addTranscript("user", userMsg2);
-    setCustomerName("Ajinkya");
-    await delay(getUserSpeakTime(userMsg2));
-    
-    await delay(600);
-    const addressMsg = "Nice to meet you Ajinkya! Could you share your address so I can check service availability?";
+    await delay(500);
     setVoiceState("talking");
-    addTranscript("assistant", addressMsg);
-    await speak(addressMsg);
+    await speakAndType("Sure, I'd love to help! May I know your name please?");
     
     setVoiceState("listening");
-    await delay(2500);
-    
-    const userMsg3 = "Tower B, Flat 2304, GHR Titania, Gachibowli";
-    addTranscript("user", userMsg3);
-    setCustomerAddress(userMsg3);
-    await delay(getUserSpeakTime(userMsg3));
-    
     await delay(1000);
-    setCurrentStep("out_of_area");
-    const outOfAreaMsg = "I appreciate your interest Ajinkya! Unfortunately, we're not yet servicing the GHR Titania area in Gachibowli. But don't worry, we're expanding soon! To help us prioritize, could you tell me which services you would like in your community?";
+    await typeUserMessage("I'm Ajinkya");
+    setCustomerName("Ajinkya");
+    
+    await delay(500);
     setVoiceState("talking");
-    addTranscript("assistant", outOfAreaMsg);
-    await speak(outOfAreaMsg);
-    
-    setVoiceState("listening");
-    await delay(3000);
-    
-    const userMsg4 = "I would really want deep cleaning and bathroom cleaning services";
-    addTranscript("user", userMsg4);
-    setRequestedServices(["Deep Cleaning", "Bathroom Cleaning"]);
-    await delay(getUserSpeakTime(userMsg4));
-    
-    await delay(800);
-    setCurrentStep("collecting_preferences");
-    const prefMsg = "Thank you for sharing that! I've noted your interest in Deep Cleaning and Bathroom Cleaning. Are there any other services you'd like us to offer in your area?";
-    setVoiceState("talking");
-    addTranscript("assistant", prefMsg);
-    await speak(prefMsg);
-    
-    setVoiceState("listening");
-    await delay(2500);
-    
-    const userMsg5 = "Maybe sofa cleaning as well, that would be helpful";
-    addTranscript("user", userMsg5);
-    setRequestedServices(prev => [...prev, "Sofa Cleaning"]);
-    await delay(getUserSpeakTime(userMsg5));
-    
-    await delay(600);
-    const confirmMsg = "Perfect! I've recorded your preferences for Deep Cleaning, Bathroom Cleaning, and Sofa Cleaning. Our team is working hard to expand to your area. We'll notify you as soon as we start servicing GHR Titania. Is there anything else I can help you with?";
-    setVoiceState("talking");
-    addTranscript("assistant", confirmMsg);
-    await speak(confirmMsg);
+    await speakAndType("Nice to meet you Ajinkya! Could you share your address so I can check service availability?");
     
     setVoiceState("listening");
     await delay(2000);
+    await typeUserMessage("Tower B, Flat 2304, GHR Titania, Gachibowli");
+    setCustomerAddress("Tower B, Flat 2304, GHR Titania, Gachibowli");
     
-    const userMsg6 = "No, that's it. Thanks for the information!";
-    addTranscript("user", userMsg6);
-    await delay(getUserSpeakTime(userMsg6));
-    
-    await delay(600);
-    const byeMsg = "You're welcome Ajinkya! Thank you for your interest in Urban Clean. We truly value your feedback and will reach out soon. Have a great day!";
+    await delay(800);
+    setCurrentStep("out_of_area");
     setVoiceState("talking");
-    addTranscript("assistant", byeMsg);
-    await speak(byeMsg);
+    await speakAndType("I appreciate your interest Ajinkya! Unfortunately, we're not yet servicing the GHR Titania area in Gachibowli. But don't worry, we're expanding soon! To help us prioritize, could you tell me which services you would like in your community?");
+    
+    setVoiceState("listening");
+    await delay(2000);
+    await typeUserMessage("I would really want deep cleaning and bathroom cleaning services");
+    setRequestedServices(["Deep Cleaning", "Bathroom Cleaning"]);
+    
+    await delay(500);
+    setCurrentStep("collecting_preferences");
+    setVoiceState("talking");
+    await speakAndType("Thank you for sharing that! I've noted your interest in Deep Cleaning and Bathroom Cleaning. Are there any other services you'd like us to offer in your area?");
+    
+    setVoiceState("listening");
+    await delay(2000);
+    await typeUserMessage("Maybe sofa cleaning as well, that would be helpful");
+    setRequestedServices(prev => [...prev, "Sofa Cleaning"]);
+    
+    await delay(500);
+    setVoiceState("talking");
+    await speakAndType("Perfect! I've recorded your preferences for Deep Cleaning, Bathroom Cleaning, and Sofa Cleaning. Our team is working hard to expand to your area. We'll notify you as soon as we start servicing GHR Titania. Is there anything else I can help you with?");
+    
+    setVoiceState("listening");
+    await delay(1500);
+    await typeUserMessage("No, that's it. Thanks for the information!");
+    
+    await delay(500);
+    setVoiceState("talking");
+    await speakAndType("You're welcome Ajinkya! Thank you for your interest in Urban Clean. We truly value your feedback and will reach out soon. Have a great day!");
     
     await delay(2000);
     setVoiceState("idle");
@@ -624,89 +660,151 @@ export default function UrbanCleanDemo() {
     await delay(1500);
     
     setCurrentStep("feedback_intro");
-    const greeting = `Hi Ajinkya! This is Priya from Urban Clean. I'm calling to check on your recent bathroom cleaning service, booking ID ${lastBookingId}. Do you have a moment to share your feedback?`;
     setVoiceState("talking");
-    addTranscript("assistant", greeting);
-    await speak(greeting);
+    await speakAndType("Hi Ajinkya ji! This is Priya from Urban Klean. I'm calling to check on your bathroom cleaning service which you had on Saturday at 11 AM. Do you have a moment to share your feedback?");
     
     setVoiceState("listening");
-    await delay(2000);
-    
-    const userMsg1 = "Yes, sure. I have a few minutes";
-    addTranscript("user", userMsg1);
-    await delay(getUserSpeakTime(userMsg1));
-    
-    await delay(800);
-    setCurrentStep("feedback_rating");
-    const ratingMsg = "Wonderful! On a scale of 1 to 5, where 5 is excellent, how would you rate your overall experience with our cleaning service?";
-    setVoiceState("talking");
-    addTranscript("assistant", ratingMsg);
-    await speak(ratingMsg);
-    
-    setVoiceState("listening");
-    await delay(2500);
-    
-    const userMsg2 = "I would give it a 4 out of 5";
-    addTranscript("user", userMsg2);
-    setFeedbackRating(4);
-    await delay(getUserSpeakTime(userMsg2));
-    
-    await delay(600);
-    const thankRatingMsg = "Thank you! A 4 out of 5 is great feedback. We're always striving to improve. Could you share what we could do better to earn that 5th star?";
-    setVoiceState("talking");
-    addTranscript("assistant", thankRatingMsg);
-    await speak(thankRatingMsg);
-    
-    setVoiceState("listening");
-    await delay(3000);
-    
-    setCurrentStep("feedback_comments");
-    const userMsg3 = "The cleaning was thorough but the team arrived about 15 minutes late. Otherwise everything was perfect";
-    addTranscript("user", userMsg3);
-    setFeedbackComment("Team arrived 15 minutes late. Otherwise service was perfect.");
-    await delay(getUserSpeakTime(userMsg3));
-    
-    await delay(800);
-    const acknowledgeMsg = "I really appreciate you sharing that Ajinkya. Punctuality is very important to us, and I'll make sure this feedback reaches our operations team. We'll work on improving our arrival times.";
-    setVoiceState("talking");
-    addTranscript("assistant", acknowledgeMsg);
-    await speak(acknowledgeMsg);
+    await delay(1500);
+    await typeUserMessage("Yes, sure. I have a few minutes");
     
     await delay(500);
-    const followUpMsg = "Is there anything else you'd like to share about your experience?";
-    addTranscript("assistant", followUpMsg);
-    await speak(followUpMsg);
+    setCurrentStep("feedback_rating");
+    setVoiceState("talking");
+    await speakAndType("Wonderful! On a scale of 1 to 5, where 5 is excellent, how would you rate your overall experience with our cleaning service?");
     
     setVoiceState("listening");
     await delay(2000);
+    await typeUserMessage("I would give it a 4 out of 5");
+    setFeedbackRating(4);
     
-    const userMsg4 = "No, that's all. The cleaning quality was really good though";
-    addTranscript("user", userMsg4);
-    await delay(getUserSpeakTime(userMsg4));
+    await delay(500);
+    setVoiceState("talking");
+    await speakAndType("Thank you! A 4 out of 5 is great feedback. We're always striving to improve. Could you share what we could do better to earn that 5th star?");
     
-    await delay(600);
+    setVoiceState("listening");
+    await delay(2000);
+    setCurrentStep("feedback_comments");
+    await typeUserMessage("The cleaning was thorough but the team arrived about 15 minutes late. Otherwise everything was perfect");
+    setFeedbackComment("Team arrived 15 minutes late. Otherwise service was perfect.");
+    
+    await delay(500);
+    setVoiceState("talking");
+    await speakAndType("I really appreciate you sharing that Ajinkya. Punctuality is very important to us, and I'll make sure this feedback reaches our operations team. We'll work on improving our arrival times.");
+    
+    await delay(300);
+    await speakAndType("Is there anything else you'd like to share about your experience?");
+    
+    setVoiceState("listening");
+    await delay(1500);
+    await typeUserMessage("No, that's all. The cleaning quality was really good though");
+    
+    await delay(500);
     setCurrentStep("feedback_complete");
-    const completeMsg = "That's wonderful to hear! Your feedback has been recorded and will help us serve you better. As a thank you, we've added a 10% discount to your account for your next booking. Thank you for choosing Urban Clean, Ajinkya!";
     setVoiceState("talking");
-    addTranscript("assistant", completeMsg);
-    await speak(completeMsg);
+    await speakAndType("That's wonderful to hear! Your feedback has been recorded and will help us serve you better. As a thank you, we've added a 10% discount to your account for your next booking. Thank you for choosing Urban Clean, Ajinkya!");
     
     setVoiceState("listening");
-    await delay(2000);
+    await delay(1500);
+    await typeUserMessage("Oh that's nice! Thank you!");
     
-    const userMsg5 = "Oh that's nice! Thank you!";
-    addTranscript("user", userMsg5);
-    await delay(getUserSpeakTime(userMsg5));
-    
-    await delay(600);
-    const byeMsg = "You're welcome! Have a great day, and we look forward to serving you again soon!";
+    await delay(500);
     setVoiceState("talking");
-    addTranscript("assistant", byeMsg);
-    await speak(byeMsg);
+    await speakAndType("You're welcome! Have a great day, and we look forward to serving you again soon!");
     
     await delay(2000);
     setVoiceState("idle");
     setIsSimulating(false);
+    } catch {
+      console.log("Simulation ended by user");
+    }
+  };
+
+  // ==================== MULTI-LANGUAGE SWITCH SIMULATION ====================
+  const runLanguageSwitchSimulation = async () => {
+    abortSimulationRef.current = false;
+    setIsSimulating(true);
+    setVoiceState("connecting");
+    setActiveLanguage("en");
+    setLanguageHistory(["en"]);
+    setSavedLanguage(null);
+
+    try {
+      await delay(1500);
+
+      setCurrentStep("language_intro");
+      setVoiceState("talking");
+      await speakAndType(
+        "Hi! I'm Priya from Urban Klean — your friendly home-care helper. How can I assist you today?"
+      );
+
+      setVoiceState("listening");
+      await delay(1500);
+      await typeUserMessage("Hi, I want to book a deep cleaning service");
+
+      await delay(500);
+      setVoiceState("talking");
+      await speakAndType(
+        "Sure! May I know your name and address please?"
+      );
+
+      setVoiceState("listening");
+      await delay(2000);
+      await typeUserMessage(
+        "I'm Ajinkya. Block 1, Flat 1207, My Home Mangala. Also, can you please talk to me in Telugu?"
+      );
+      setCustomerName("Ajinkya");
+      setCustomerAddress("Block 1, Flat 1207, My Home Mangala");
+
+      await delay(800);
+      setCurrentStep("language_switching");
+      setActiveLanguage("te");
+      setLanguageHistory((prev) => [...prev, "te"]);
+      setVoiceState("talking");
+      // Speak in Telugu via ElevenLabs multilingual model
+      await speakAndType(
+        "తప్పకుండా అజింక్యా గారు! నేను ఇప్పుడు తెలుగులో మాట్లాడుతున్నాను. మీకు ఏ రోజు, ఏ సమయంలో డీప్ క్లీనింగ్ కావాలి?"
+      );
+
+      setVoiceState("listening");
+      await delay(2500);
+      await typeUserMessage(
+        "Actually, please continue in Hindi, that's easier for me"
+      );
+
+      await delay(800);
+      setActiveLanguage("hi");
+      setLanguageHistory((prev) => [...prev, "hi"]);
+      setVoiceState("talking");
+      // Speak in Hindi
+      await speakAndType(
+        "बिल्कुल अजिंक्या जी! मैं अब हिंदी में बात करूंगी। क्या आप कल सुबह 11 बजे का स्लॉट लेना चाहेंगे? डीप क्लीनिंग की कीमत 1500 रुपये है।"
+      );
+
+      setVoiceState("listening");
+      await delay(2000);
+      await typeUserMessage("Yes, tomorrow 11 AM works for me");
+      setSelectedService(SERVICES[1]); // deep cleaning
+      setSelectedSlot(TIME_SLOTS[2]); // 11:00 AM morning slot
+
+      await delay(500);
+      setVoiceState("talking");
+      await speakAndType(
+        "ठीक है! आपकी बुकिंग कन्फर्म हो गई है। पेमेंट लिंक भेज रही हूं।"
+      );
+
+      await delay(1500);
+      setCurrentStep("language_saved");
+      setSavedLanguage("hi");
+      setVoiceState("talking");
+      // Switch back to English for the wrap-up so the user understands the takeaway
+      setActiveLanguage("en");
+      await speakAndType(
+        "Booking confirmed! I've saved Hindi as your preferred language. Next time you call, I'll greet you in Hindi straight away. Have a great day!"
+      );
+
+      await delay(2000);
+      setVoiceState("idle");
+      setIsSimulating(false);
     } catch {
       console.log("Simulation ended by user");
     }
@@ -730,7 +828,31 @@ export default function UrbanCleanDemo() {
 
   const addTranscript = (role: "user" | "assistant", text: string) => {
     setTranscript(prev => [...prev, { role, text }]);
+    setTypingText(null);
   };
+
+  // Typewriter effect - types text progressively
+  const typeText = useCallback(async (role: "user" | "assistant", text: string, speedMs = 30): Promise<void> => {
+    if (abortSimulationRef.current) throw new Error("Simulation aborted");
+    
+    const words = text.split(' ');
+    let currentText = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      if (abortSimulationRef.current) throw new Error("Simulation aborted");
+      
+      currentText += (i === 0 ? '' : ' ') + words[i];
+      setTypingText({ role, text: currentText });
+      
+      // Vary the delay slightly for natural feel
+      const delay = speedMs + Math.random() * 20;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    // After typing complete, add to permanent transcript
+    setTranscript(prev => [...prev, { role, text }]);
+    setTypingText(null);
+  }, []);
 
   const calculateTotal = () => {
     if (!selectedService) return { subtotal: 0, gst: 0, total: 0 };
@@ -744,6 +866,7 @@ export default function UrbanCleanDemo() {
       case "booking": return "Happy Path - Booking";
       case "out_of_service": return "Out of Service Area";
       case "feedback": return "Post-Service Feedback";
+      case "language_switch": return "Multi-Language Switch";
     }
   };
 
@@ -751,7 +874,7 @@ export default function UrbanCleanDemo() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#6b21a8] text-white">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="size-11 rounded-full bg-[#facc15] flex items-center justify-center shadow-md">
               <span className="text-[#6b21a8] font-black text-sm">UK</span>
@@ -761,9 +884,30 @@ export default function UrbanCleanDemo() {
               <p className="text-xs text-white/80">AI Voice Booking</p>
             </div>
           </div>
-          
-          {/* Demo Type Selector - Subtle */}
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Cross-page navigation */}
+            <div className="flex bg-white/10 rounded-full p-0.5 mr-2">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#facc15] text-[#6b21a8]">
+                Voice Demo
+              </span>
+              <Link
+                href="/demo/urban-clean/triggers"
+                className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white flex items-center gap-1"
+              >
+                <Bell className="size-3" />
+                Triggers
+              </Link>
+              <Link
+                href="/demo/urban-clean/analytics"
+                className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white flex items-center gap-1"
+              >
+                <BarChart3 className="size-3" />
+                Analytics
+              </Link>
+            </div>
+
+            {/* Demo Type Selector */}
             <div className="flex bg-white/10 rounded-full p-0.5">
               <button
                 onClick={() => { resetDemo(); setDemoType("booking"); }}
@@ -795,6 +939,17 @@ export default function UrbanCleanDemo() {
               >
                 Feedback
               </button>
+              <button
+                onClick={() => { resetDemo(); setDemoType("language_switch"); }}
+                disabled={isSimulating}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1",
+                  demoType === "language_switch" ? "bg-[#facc15] text-[#6b21a8]" : "text-white/70 hover:text-white"
+                )}
+              >
+                <Languages className="size-3" />
+                Language
+              </button>
             </div>
             <span className={cn(
               "px-3 py-1 rounded-full text-xs font-medium ml-2",
@@ -816,9 +971,44 @@ export default function UrbanCleanDemo() {
                 {demoType === "booking" && "Complete booking flow with payment"}
                 {demoType === "out_of_service" && "Area not serviceable - collecting preferences"}
                 {demoType === "feedback" && "Post-service feedback collection"}
+                {demoType === "language_switch" && "Live language switching: English → Telugu → Hindi"}
               </p>
             </div>
-            
+
+            {/* About Priya — persona card */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 max-w-md mx-auto">
+              <div className="flex items-start gap-3">
+                <div className="size-12 rounded-full bg-gradient-to-br from-[#facc15] to-[#f59e0b] flex items-center justify-center shadow-sm shrink-0">
+                  <span className="text-[#6b21a8] font-black text-lg">P</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium text-gray-800">Priya</p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-[#6b21a8] font-medium">
+                      AI · Urban Klean
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-green-600">
+                      <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                      Online 24×7
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Your friendly home-care helper. Hyderabad-based, knows your community.
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 font-medium flex items-center gap-1">
+                      <Languages className="size-2.5" />
+                      EN · हिन्दी · తెలుగు
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-[#6b21a8] font-medium flex items-center gap-1">
+                      <MapPin className="size-2.5" />
+                      8,000+ homes
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Orb - No box around it */}
             <div className="aspect-square max-w-[340px] mx-auto relative">
               <Orb
@@ -884,27 +1074,29 @@ export default function UrbanCleanDemo() {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  className="w-full max-w-sm mx-auto block rounded-full bg-[#facc15] hover:bg-[#eab308] text-gray-900 font-semibold h-12 text-base shadow-sm"
-                  onClick={handleStartVoice}
-                  disabled={voiceState === "connecting"}
-                >
-                  {voiceState === "connecting" ? (
-                    <>
-                      <Loader2 className="size-4 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Phone className="size-4 mr-2" />
-                      Start Conversation
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    className="w-full max-w-sm rounded-full bg-[#facc15] hover:bg-[#eab308] text-gray-900 font-semibold h-12 text-base shadow-sm"
+                    onClick={handleStartVoice}
+                    disabled={voiceState === "connecting"}
+                  >
+                    {voiceState === "connecting" ? (
+                      <>
+                        <Loader2 className="size-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Phone className="size-4 mr-2" />
+                        Start Conversation
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
 
               {/* Transcript */}
-              {transcript.length > 0 && (
+              {(transcript.length > 0 || typingText) && (
                 <div className="max-h-44 overflow-y-auto space-y-2 bg-white rounded-2xl p-4 shadow-sm">
                   {transcript.map((msg, i) => (
                     <div
@@ -920,6 +1112,21 @@ export default function UrbanCleanDemo() {
                       {msg.text}
                     </div>
                   ))}
+                  {/* Currently typing message */}
+                  {typingText && (
+                    <div
+                      className={cn(
+                        "text-sm p-3 rounded-2xl",
+                        typingText.role === "assistant"
+                          ? "bg-purple-50 text-gray-700"
+                          : "bg-yellow-50 text-gray-700 ml-6"
+                      )}
+                    >
+                      <span className="font-medium text-gray-900">{typingText.role === "assistant" ? "Priya: " : "You: "}</span>
+                      {typingText.text}
+                      <span className="animate-pulse">|</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -947,26 +1154,13 @@ export default function UrbanCleanDemo() {
                 {/* Greeting */}
                 {currentStep === "greeting" && (
                   <div className="space-y-5 animate-in fade-in duration-500">
-                    <div className="text-center py-6">
+                    <div className="text-center py-8">
                       <div className="size-16 rounded-full bg-[#facc15] flex items-center justify-center mx-auto mb-4 shadow-md">
                         <span className="text-[#6b21a8] font-black text-xl">UK</span>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-1">Welcome to Urban Klean!</h3>
-                      <p className="text-gray-500 text-sm">How can we help you today?</p>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-1">Welcome to Urban Klean</h3>
+                      <p className="text-gray-500 text-sm">Tell Priya what you need — she's listening</p>
                     </div>
-                    {customerAddress ? (
-                      <div className="bg-purple-50 rounded-2xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MapPin className="size-4 text-[#6b21a8]" />
-                          <span className="text-gray-500 text-xs uppercase tracking-wide">Your Address</span>
-                        </div>
-                        <p className="text-gray-700">{customerAddress}</p>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                        <p className="text-gray-400 text-sm">Collecting customer details...</p>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -1029,15 +1223,74 @@ export default function UrbanCleanDemo() {
                   </div>
                 )}
 
-                {/* Slot Selection */}
+                {/* Time of Day Preference */}
+                {currentStep === "time_of_day_selection" && (
+                  <div className="space-y-4 animate-in fade-in duration-500">
+                    <div className="bg-purple-50 rounded-2xl p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-[#6b21a8] text-xs uppercase tracking-wide">Booking</p>
+                        <p className="text-gray-800 font-medium text-sm">
+                          {quantity}× Bathroom Cleaning
+                        </p>
+                      </div>
+                      <p className="text-[#6b21a8] font-semibold text-lg">
+                        ₹{calculateTotal().total}
+                      </p>
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-800">
+                      When works best for you?
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {PERIODS.map((p) => {
+                        const Icon = p.icon;
+                        const isActive = selectedPeriod === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => setSelectedPeriod(p.id)}
+                            className={cn(
+                              "flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 transition-all",
+                              isActive
+                                ? "border-[#facc15] bg-yellow-50"
+                                : "border-gray-200 bg-white hover:border-purple-200",
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                "size-7",
+                                isActive ? "text-[#6b21a8]" : "text-gray-500",
+                              )}
+                            />
+                            <p className="text-gray-800 font-medium text-sm">{p.label}</p>
+                            <p className="text-gray-400 text-[11px]">{p.range}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-center text-gray-400 text-xs">
+                      Just say morning, afternoon, or evening
+                    </p>
+                  </div>
+                )}
+
+                {/* Slot Selection — filtered by chosen period */}
                 {currentStep === "slot_selection" && (
                   <div className="space-y-4 animate-in fade-in duration-500">
-                    <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
-                      <Calendar className="size-4 text-[#6b21a8]" />
-                      Select Time Slot
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                        <Calendar className="size-4 text-[#6b21a8]" />
+                        Available Slots
+                      </h3>
+                      {selectedPeriod && (
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-purple-100 text-[#6b21a8] font-medium capitalize">
+                          {selectedPeriod}
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {TIME_SLOTS.map((slot, i) => (
+                      {TIME_SLOTS.filter(
+                        (s) => !selectedPeriod || s.period === selectedPeriod,
+                      ).map((slot, i) => (
                         <button
                           key={i}
                           disabled={!slot.available}
@@ -1048,7 +1301,7 @@ export default function UrbanCleanDemo() {
                               ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
                               : selectedSlot === slot
                                 ? "border-[#facc15] bg-yellow-50"
-                                : "border-gray-200 bg-white hover:border-purple-200"
+                                : "border-gray-200 bg-white hover:border-purple-200",
                           )}
                         >
                           <div className="flex items-center gap-2 mb-0.5">
@@ -1259,6 +1512,130 @@ export default function UrbanCleanDemo() {
                         <p className="text-gray-700 text-sm italic">"{feedbackComment}"</p>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Language Intro */}
+                {currentStep === "language_intro" && (
+                  <div className="space-y-5 animate-in fade-in duration-500">
+                    <div className="text-center py-2">
+                      <div className="size-16 rounded-full bg-[#facc15] flex items-center justify-center mx-auto mb-3 shadow-md">
+                        <Languages className="size-8 text-[#6b21a8]" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-1">Multi-Language AI</h3>
+                      <p className="text-gray-500 text-sm">Speaks 33+ languages. Switches mid-call.</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-2xl p-4">
+                      <p className="text-[#6b21a8] text-xs uppercase tracking-wide mb-3">Currently speaking</p>
+                      <div className="flex items-center gap-3">
+                        <div className="size-12 rounded-full bg-white border-2 border-[#6b21a8] flex items-center justify-center font-bold text-[#6b21a8]">
+                          {LANGUAGES[activeLanguage].flag}
+                        </div>
+                        <div>
+                          <p className="text-gray-800 font-medium">{LANGUAGES[activeLanguage].label}</p>
+                          <p className="text-gray-500 text-sm">{LANGUAGES[activeLanguage].nativeLabel}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {Object.values(LANGUAGES).map((lang) => (
+                        <div
+                          key={lang.code}
+                          className={cn(
+                            "p-3 rounded-xl border text-center transition-all",
+                            activeLanguage === lang.code
+                              ? "border-[#facc15] bg-yellow-50 scale-105"
+                              : "border-gray-200 bg-white opacity-60"
+                          )}
+                        >
+                          <p className="text-xs text-gray-500 mb-0.5">{lang.flag}</p>
+                          <p className="text-sm font-medium text-gray-800">{lang.nativeLabel}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Language Switching */}
+                {currentStep === "language_switching" && (
+                  <div className="space-y-5 animate-in fade-in duration-500">
+                    <div className="text-center py-2">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">Live Language Switch</h3>
+                      <p className="text-gray-500 text-sm">AI is adapting in real-time</p>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-purple-50 to-yellow-50 rounded-2xl p-5 text-center">
+                      <p className="text-[#6b21a8] text-xs uppercase tracking-wide mb-3">Now Speaking</p>
+                      <div className="size-20 rounded-full bg-[#facc15] mx-auto flex items-center justify-center mb-3 shadow-md transition-all duration-500">
+                        <span className="text-[#6b21a8] font-black text-lg">{LANGUAGES[activeLanguage].flag}</span>
+                      </div>
+                      <p className="text-2xl font-semibold text-gray-800">{LANGUAGES[activeLanguage].nativeLabel}</p>
+                      <p className="text-sm text-gray-500 mt-1">{LANGUAGES[activeLanguage].label}</p>
+                    </div>
+
+                    {languageHistory.length > 1 && (
+                      <div className="bg-white rounded-2xl p-4 border border-gray-100">
+                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-3">Conversation Path</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {languageHistory.map((lc, i) => (
+                            <div key={`${lc}-${i}`} className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "px-3 py-1.5 rounded-full text-xs font-medium border",
+                                  i === languageHistory.length - 1
+                                    ? "bg-[#facc15] text-[#6b21a8] border-[#facc15]"
+                                    : "bg-purple-50 text-[#6b21a8] border-purple-100"
+                                )}
+                              >
+                                {LANGUAGES[lc].label}
+                              </span>
+                              {i < languageHistory.length - 1 && (
+                                <span className="text-gray-300">→</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Language Saved */}
+                {currentStep === "language_saved" && savedLanguage && (
+                  <div className="space-y-5 animate-in fade-in duration-500">
+                    <div className="text-center py-2">
+                      <div className="size-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle2 className="size-9 text-green-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-800">Language Preference Saved</h3>
+                      <p className="text-gray-500 text-sm mt-1">Stored on customer profile</p>
+                    </div>
+
+                    <div className="bg-purple-50 rounded-2xl p-4">
+                      <p className="text-[#6b21a8] text-xs uppercase tracking-wide mb-3">Customer Profile</p>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="size-10 rounded-full bg-[#facc15] flex items-center justify-center text-[#6b21a8] font-bold">
+                          {customerName ? customerName[0] : "A"}
+                        </div>
+                        <div>
+                          <p className="text-gray-800 font-medium">{customerName || "Ajinkya"}</p>
+                          <p className="text-gray-500 text-xs">{customerAddress}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-purple-100 pt-3">
+                        <span className="text-gray-500 text-sm">Preferred Language</span>
+                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#facc15] text-[#6b21a8] flex items-center gap-1.5">
+                          <Languages className="size-3.5" />
+                          {LANGUAGES[savedLanguage].label} · {LANGUAGES[savedLanguage].nativeLabel}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 rounded-2xl p-4">
+                      <p className="text-gray-700 text-sm">
+                        <span className="font-medium">Next call:</span> Priya will greet Ajinkya in Hindi automatically.
+                      </p>
+                    </div>
                   </div>
                 )}
 
