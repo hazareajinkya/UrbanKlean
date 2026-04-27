@@ -1,7 +1,7 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -14,18 +14,25 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized yet
-const app =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const isFirebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
+
+if (isFirebaseConfigured) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+}
+
+export { auth, db, storage };
 
 export const analytics: Promise<Analytics | null> =
-  typeof window !== "undefined"
-    ? isSupported().then((yes) => (yes ? getAnalytics(app) : null))
+  typeof window !== "undefined" && isFirebaseConfigured && app
+    ? isSupported().then((yes) => (yes ? getAnalytics(app!) : null))
     : Promise.resolve(null);
 
 export default app;
