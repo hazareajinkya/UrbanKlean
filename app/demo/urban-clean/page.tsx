@@ -21,9 +21,14 @@ import {
   Loader2,
   Volume2,
   VolumeX,
+  Star,
+  MessageSquare,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v4 } from "uuid";
+
+type DemoType = "booking" | "out_of_service" | "feedback";
 
 type BookingStep =
   | "idle"
@@ -34,7 +39,12 @@ type BookingStep =
   | "confirmation"
   | "payment"
   | "success"
-  | "out_of_area";
+  | "out_of_area"
+  | "collecting_preferences"
+  | "feedback_intro"
+  | "feedback_rating"
+  | "feedback_comments"
+  | "feedback_complete";
 
 type Service = {
   id: string;
@@ -79,6 +89,7 @@ export default function UrbanCleanDemo() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const abortSimulationRef = useRef(false);
 
+  const [demoType, setDemoType] = useState<DemoType>("booking");
   const [voiceState, setVoiceState] = useState<"idle" | "connecting" | "listening" | "talking" | "error">("idle");
   const [voiceVolume, setVoiceVolume] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -94,6 +105,10 @@ export default function UrbanCleanDemo() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [useElevenLabs, setUseElevenLabs] = useState(true);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [requestedServices, setRequestedServices] = useState<string[]>([]);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [lastBookingId, setLastBookingId] = useState("UC847291");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -283,27 +298,13 @@ export default function UrbanCleanDemo() {
   }, [vapiKey]);
 
   const handleStartVoice = async () => {
-    if (isSimulating) {
-      runSimulation();
-      return;
-    }
-    
-    if (!vapiKey || !vapiRef.current || !vapiAssistantId) {
-      runSimulation();
-      return;
-    }
-    
-    setVoiceState("connecting");
-    try {
-      await vapiRef.current.start(vapiAssistantId, {
-        variableValues: {
-          sessionId: v4(),
-          customerName,
-          customerAddress,
-        },
-      });
-    } catch {
-      runSimulation();
+    // Always run simulation for demo
+    if (demoType === "booking") {
+      runBookingSimulation();
+    } else if (demoType === "out_of_service") {
+      runOutOfServiceSimulation();
+    } else if (demoType === "feedback") {
+      runFeedbackSimulation();
     }
   };
 
@@ -340,6 +341,9 @@ export default function UrbanCleanDemo() {
     setBookingId("");
     setCustomerName("");
     setCustomerAddress("");
+    setRequestedServices([]);
+    setFeedbackRating(0);
+    setFeedbackComment("");
   };
 
   // Helper function to calculate user "speaking" time based on text length
@@ -348,8 +352,8 @@ export default function UrbanCleanDemo() {
     return Math.max(1500, words * 300); // ~300ms per word, minimum 1.5s
   };
 
-  const runSimulation = async () => {
-    // Reset abort flag at start
+  // ==================== BOOKING SIMULATION (Happy Path) ====================
+  const runBookingSimulation = async () => {
     abortSimulationRef.current = false;
     setIsSimulating(true);
     setVoiceState("connecting");
@@ -357,57 +361,48 @@ export default function UrbanCleanDemo() {
     try {
     await delay(1500);
     
-    // Step 1: Greeting (don't assume we know the customer)
+    // Step 1: Greeting
     const greeting = "Hi! I'm Priya from Urban Clean. Welcome! How can I assist you today?";
     setVoiceState("talking");
     setCurrentStep("greeting");
     addTranscript("assistant", greeting);
     await speak(greeting);
     
-    // User thinks before responding
     setVoiceState("listening");
     await delay(2000);
     
-    // User responds - show text and wait for "speaking" time
     const userMsg1 = "Hi, I need bathroom cleaning service";
     addTranscript("user", userMsg1);
     await delay(getUserSpeakTime(userMsg1));
     
-    // Agent processes and responds
     await delay(800);
     const nameMsg = "Sure, I'd be happy to help with bathroom cleaning. May I know your name please?";
     setVoiceState("talking");
     addTranscript("assistant", nameMsg);
     await speak(nameMsg);
     
-    // User thinks
     setVoiceState("listening");
     await delay(1500);
     
-    // User provides name
-    const userMsg2 = "My name is Arwin";
+    const userMsg2 = "My name is Ajinkya";
     addTranscript("user", userMsg2);
-    setCustomerName("Arwin");
+    setCustomerName("Ajinkya");
     await delay(getUserSpeakTime(userMsg2));
     
-    // Agent responds
     await delay(600);
-    const addressMsg = "Thank you Arwin! Could you please share your address for the service?";
+    const addressMsg = "Thank you Ajinkya! Could you please share your address for the service?";
     setVoiceState("talking");
     addTranscript("assistant", addressMsg);
     await speak(addressMsg);
     
-    // User thinks
     setVoiceState("listening");
     await delay(2000);
     
-    // User provides address
     const userMsg3 = "Block 1, Flat 1101, My Home Mangala, Kondapur";
     addTranscript("user", userMsg3);
     setCustomerAddress(userMsg3);
     await delay(getUserSpeakTime(userMsg3));
     
-    // Step 2: Service Selection
     await delay(800);
     const serviceMsg = "Perfect! I'm displaying our services on your screen. We have Bathroom Cleaning at 500 rupees, Deep Cleaning, Sofa Cleaning, and Full Home Cleaning. Which service would you like?";
     setVoiceState("talking");
@@ -415,17 +410,14 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", serviceMsg.replace("500 rupees", "₹500"));
     await speak(serviceMsg);
     
-    // User looks at options
     setVoiceState("listening");
     await delay(3000);
     
-    // User selects service
     const userMsg4 = "Bathroom cleaning please";
     addTranscript("user", userMsg4);
     setSelectedService(SERVICES[0]);
     await delay(getUserSpeakTime(userMsg4));
     
-    // Step 3: Quantity Selection
     await delay(600);
     const quantityMsg = "Great choice! How many bathrooms would you like us to clean?";
     setVoiceState("talking");
@@ -433,17 +425,14 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", quantityMsg);
     await speak(quantityMsg);
     
-    // User thinks
     setVoiceState("listening");
     await delay(1500);
     
-    // User responds with quantity
     const userMsg5 = "2 bathrooms";
     addTranscript("user", userMsg5);
     setQuantity(2);
     await delay(getUserSpeakTime(userMsg5));
     
-    // Step 4: Slot Selection
     await delay(800);
     const total = 500 * 2;
     const gst = Math.round(total * 0.18);
@@ -454,17 +443,14 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", slotMsg.replace(`${total} rupees`, `₹${total}`).replace(`${grandTotal} rupees`, `₹${grandTotal}`));
     await speak(slotMsg);
     
-    // User looks at slots
     setVoiceState("listening");
     await delay(3500);
     
-    // User selects slot
     const userMsg6 = "Tomorrow at 11 AM please";
     addTranscript("user", userMsg6);
     setSelectedSlot(TIME_SLOTS[1]);
     await delay(getUserSpeakTime(userMsg6));
     
-    // Step 5: Confirmation
     await delay(800);
     const confirmMsg = `I'm displaying your booking summary on screen. You've selected 2 Bathroom Cleaning for ${TIME_SLOTS[1].date} at ${TIME_SLOTS[1].time}, total ${grandTotal} rupees. The service will be at Block 1, Flat 1101, My Home Mangala, Kondapur. Please review and confirm.`;
     setVoiceState("talking");
@@ -472,16 +458,13 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", confirmMsg.replace(`${grandTotal} rupees`, `₹${grandTotal}`));
     await speak(confirmMsg);
     
-    // User reviews
     setVoiceState("listening");
     await delay(2500);
     
-    // User confirms
     const userMsg7 = "Yes, confirmed";
     addTranscript("user", userMsg7);
     await delay(getUserSpeakTime(userMsg7));
     
-    // Step 6: Payment
     await delay(600);
     const paymentMsg = "Excellent! I'm sending you the payment link now. Please complete the payment to confirm your booking.";
     setVoiceState("talking");
@@ -489,11 +472,9 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", paymentMsg);
     await speak(paymentMsg);
     
-    // Wait for payment to complete (simulated)
     setVoiceState("listening");
     await delay(5000);
     
-    // Step 7: Success
     const newBookingId = `UC${Date.now().toString().slice(-6)}`;
     setBookingId(newBookingId);
     setCurrentStep("success");
@@ -504,16 +485,13 @@ export default function UrbanCleanDemo() {
     addTranscript("assistant", successMsg);
     await speak(successMsg);
     
-    // User thinks
     setVoiceState("listening");
     await delay(2000);
     
-    // User says goodbye
     const userMsg8 = "No, that's all. Thank you!";
     addTranscript("user", userMsg8);
     await delay(getUserSpeakTime(userMsg8));
     
-    // Final goodbye
     await delay(600);
     const byeMsg = "You're most welcome! We appreciate your trust in Urban Clean. Have a wonderful day!";
     setVoiceState("talking");
@@ -524,7 +502,212 @@ export default function UrbanCleanDemo() {
     setVoiceState("idle");
     setIsSimulating(false);
     } catch {
-      // Simulation was aborted - do nothing, cleanup already handled
+      console.log("Simulation ended by user");
+    }
+  };
+
+  // ==================== OUT OF SERVICE SIMULATION ====================
+  const runOutOfServiceSimulation = async () => {
+    abortSimulationRef.current = false;
+    setIsSimulating(true);
+    setVoiceState("connecting");
+    
+    try {
+    await delay(1500);
+    
+    const greeting = "Hi! I'm Priya from Urban Clean. Welcome! How can I assist you today?";
+    setVoiceState("talking");
+    setCurrentStep("greeting");
+    addTranscript("assistant", greeting);
+    await speak(greeting);
+    
+    setVoiceState("listening");
+    await delay(2000);
+    
+    const userMsg1 = "Hi, I want to book a deep cleaning service";
+    addTranscript("user", userMsg1);
+    await delay(getUserSpeakTime(userMsg1));
+    
+    await delay(800);
+    const nameMsg = "Sure, I'd love to help! May I know your name please?";
+    setVoiceState("talking");
+    addTranscript("assistant", nameMsg);
+    await speak(nameMsg);
+    
+    setVoiceState("listening");
+    await delay(1500);
+    
+    const userMsg2 = "I'm Ajinkya";
+    addTranscript("user", userMsg2);
+    setCustomerName("Ajinkya");
+    await delay(getUserSpeakTime(userMsg2));
+    
+    await delay(600);
+    const addressMsg = "Nice to meet you Ajinkya! Could you share your address so I can check service availability?";
+    setVoiceState("talking");
+    addTranscript("assistant", addressMsg);
+    await speak(addressMsg);
+    
+    setVoiceState("listening");
+    await delay(2500);
+    
+    const userMsg3 = "Tower B, Flat 2304, GHR Titania, Gachibowli";
+    addTranscript("user", userMsg3);
+    setCustomerAddress(userMsg3);
+    await delay(getUserSpeakTime(userMsg3));
+    
+    await delay(1000);
+    setCurrentStep("out_of_area");
+    const outOfAreaMsg = "I appreciate your interest Ajinkya! Unfortunately, we're not yet servicing the GHR Titania area in Gachibowli. But don't worry, we're expanding soon! To help us prioritize, could you tell me which services you would like in your community?";
+    setVoiceState("talking");
+    addTranscript("assistant", outOfAreaMsg);
+    await speak(outOfAreaMsg);
+    
+    setVoiceState("listening");
+    await delay(3000);
+    
+    const userMsg4 = "I would really want deep cleaning and bathroom cleaning services";
+    addTranscript("user", userMsg4);
+    setRequestedServices(["Deep Cleaning", "Bathroom Cleaning"]);
+    await delay(getUserSpeakTime(userMsg4));
+    
+    await delay(800);
+    setCurrentStep("collecting_preferences");
+    const prefMsg = "Thank you for sharing that! I've noted your interest in Deep Cleaning and Bathroom Cleaning. Are there any other services you'd like us to offer in your area?";
+    setVoiceState("talking");
+    addTranscript("assistant", prefMsg);
+    await speak(prefMsg);
+    
+    setVoiceState("listening");
+    await delay(2500);
+    
+    const userMsg5 = "Maybe sofa cleaning as well, that would be helpful";
+    addTranscript("user", userMsg5);
+    setRequestedServices(prev => [...prev, "Sofa Cleaning"]);
+    await delay(getUserSpeakTime(userMsg5));
+    
+    await delay(600);
+    const confirmMsg = "Perfect! I've recorded your preferences for Deep Cleaning, Bathroom Cleaning, and Sofa Cleaning. Our team is working hard to expand to your area. We'll notify you as soon as we start servicing GHR Titania. Is there anything else I can help you with?";
+    setVoiceState("talking");
+    addTranscript("assistant", confirmMsg);
+    await speak(confirmMsg);
+    
+    setVoiceState("listening");
+    await delay(2000);
+    
+    const userMsg6 = "No, that's it. Thanks for the information!";
+    addTranscript("user", userMsg6);
+    await delay(getUserSpeakTime(userMsg6));
+    
+    await delay(600);
+    const byeMsg = "You're welcome Ajinkya! Thank you for your interest in Urban Clean. We truly value your feedback and will reach out soon. Have a great day!";
+    setVoiceState("talking");
+    addTranscript("assistant", byeMsg);
+    await speak(byeMsg);
+    
+    await delay(2000);
+    setVoiceState("idle");
+    setIsSimulating(false);
+    } catch {
+      console.log("Simulation ended by user");
+    }
+  };
+
+  // ==================== FEEDBACK SIMULATION ====================
+  const runFeedbackSimulation = async () => {
+    abortSimulationRef.current = false;
+    setIsSimulating(true);
+    setVoiceState("connecting");
+    setCustomerName("Ajinkya");
+    
+    try {
+    await delay(1500);
+    
+    setCurrentStep("feedback_intro");
+    const greeting = `Hi Ajinkya! This is Priya from Urban Clean. I'm calling to check on your recent bathroom cleaning service, booking ID ${lastBookingId}. Do you have a moment to share your feedback?`;
+    setVoiceState("talking");
+    addTranscript("assistant", greeting);
+    await speak(greeting);
+    
+    setVoiceState("listening");
+    await delay(2000);
+    
+    const userMsg1 = "Yes, sure. I have a few minutes";
+    addTranscript("user", userMsg1);
+    await delay(getUserSpeakTime(userMsg1));
+    
+    await delay(800);
+    setCurrentStep("feedback_rating");
+    const ratingMsg = "Wonderful! On a scale of 1 to 5, where 5 is excellent, how would you rate your overall experience with our cleaning service?";
+    setVoiceState("talking");
+    addTranscript("assistant", ratingMsg);
+    await speak(ratingMsg);
+    
+    setVoiceState("listening");
+    await delay(2500);
+    
+    const userMsg2 = "I would give it a 4 out of 5";
+    addTranscript("user", userMsg2);
+    setFeedbackRating(4);
+    await delay(getUserSpeakTime(userMsg2));
+    
+    await delay(600);
+    const thankRatingMsg = "Thank you! A 4 out of 5 is great feedback. We're always striving to improve. Could you share what we could do better to earn that 5th star?";
+    setVoiceState("talking");
+    addTranscript("assistant", thankRatingMsg);
+    await speak(thankRatingMsg);
+    
+    setVoiceState("listening");
+    await delay(3000);
+    
+    setCurrentStep("feedback_comments");
+    const userMsg3 = "The cleaning was thorough but the team arrived about 15 minutes late. Otherwise everything was perfect";
+    addTranscript("user", userMsg3);
+    setFeedbackComment("Team arrived 15 minutes late. Otherwise service was perfect.");
+    await delay(getUserSpeakTime(userMsg3));
+    
+    await delay(800);
+    const acknowledgeMsg = "I really appreciate you sharing that Ajinkya. Punctuality is very important to us, and I'll make sure this feedback reaches our operations team. We'll work on improving our arrival times.";
+    setVoiceState("talking");
+    addTranscript("assistant", acknowledgeMsg);
+    await speak(acknowledgeMsg);
+    
+    await delay(500);
+    const followUpMsg = "Is there anything else you'd like to share about your experience?";
+    addTranscript("assistant", followUpMsg);
+    await speak(followUpMsg);
+    
+    setVoiceState("listening");
+    await delay(2000);
+    
+    const userMsg4 = "No, that's all. The cleaning quality was really good though";
+    addTranscript("user", userMsg4);
+    await delay(getUserSpeakTime(userMsg4));
+    
+    await delay(600);
+    setCurrentStep("feedback_complete");
+    const completeMsg = "That's wonderful to hear! Your feedback has been recorded and will help us serve you better. As a thank you, we've added a 10% discount to your account for your next booking. Thank you for choosing Urban Clean, Ajinkya!";
+    setVoiceState("talking");
+    addTranscript("assistant", completeMsg);
+    await speak(completeMsg);
+    
+    setVoiceState("listening");
+    await delay(2000);
+    
+    const userMsg5 = "Oh that's nice! Thank you!";
+    addTranscript("user", userMsg5);
+    await delay(getUserSpeakTime(userMsg5));
+    
+    await delay(600);
+    const byeMsg = "You're welcome! Have a great day, and we look forward to serving you again soon!";
+    setVoiceState("talking");
+    addTranscript("assistant", byeMsg);
+    await speak(byeMsg);
+    
+    await delay(2000);
+    setVoiceState("idle");
+    setIsSimulating(false);
+    } catch {
       console.log("Simulation ended by user");
     }
   };
@@ -556,6 +739,14 @@ export default function UrbanCleanDemo() {
     return { subtotal, gst, total: subtotal + gst };
   };
 
+  const getDemoTitle = () => {
+    switch (demoType) {
+      case "booking": return "Happy Path - Booking";
+      case "out_of_service": return "Out of Service Area";
+      case "feedback": return "Post-Service Feedback";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -570,9 +761,43 @@ export default function UrbanCleanDemo() {
               <p className="text-xs text-white/80">AI Voice Booking</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          
+          {/* Demo Type Selector - Subtle */}
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white/10 rounded-full p-0.5">
+              <button
+                onClick={() => { resetDemo(); setDemoType("booking"); }}
+                disabled={isSimulating}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-all",
+                  demoType === "booking" ? "bg-[#facc15] text-[#6b21a8]" : "text-white/70 hover:text-white"
+                )}
+              >
+                Booking
+              </button>
+              <button
+                onClick={() => { resetDemo(); setDemoType("out_of_service"); }}
+                disabled={isSimulating}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-all",
+                  demoType === "out_of_service" ? "bg-[#facc15] text-[#6b21a8]" : "text-white/70 hover:text-white"
+                )}
+              >
+                Out of Area
+              </button>
+              <button
+                onClick={() => { resetDemo(); setDemoType("feedback"); }}
+                disabled={isSimulating}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-all",
+                  demoType === "feedback" ? "bg-[#facc15] text-[#6b21a8]" : "text-white/70 hover:text-white"
+                )}
+              >
+                Feedback
+              </button>
+            </div>
             <span className={cn(
-              "px-3 py-1 rounded-full text-xs font-medium",
+              "px-3 py-1 rounded-full text-xs font-medium ml-2",
               isVoiceConnected ? "bg-[#facc15] text-[#6b21a8]" : "bg-white/10 text-white/70"
             )}>
               {isVoiceConnected ? "● Live" : "Ready"}
@@ -587,7 +812,11 @@ export default function UrbanCleanDemo() {
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-gray-800">Voice Assistant</h2>
-              <p className="text-sm text-gray-500">Talk to book your cleaning service</p>
+              <p className="text-sm text-gray-500">
+                {demoType === "booking" && "Complete booking flow with payment"}
+                {demoType === "out_of_service" && "Area not serviceable - collecting preferences"}
+                {demoType === "feedback" && "Post-service feedback collection"}
+              </p>
             </div>
             
             {/* Orb - No box around it */}
@@ -929,21 +1158,138 @@ export default function UrbanCleanDemo() {
 
                 {/* Out of Area */}
                 {currentStep === "out_of_area" && (
-                  <div className="space-y-4 animate-in fade-in duration-500 text-center py-6">
+                  <div className="space-y-4 animate-in fade-in duration-500 text-center py-4">
                     <div className="size-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
-                      <MapPin className="size-7 text-amber-500" />
+                      <AlertCircle className="size-7 text-amber-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800">Service Not Available</h3>
-                    <p className="text-gray-500 text-sm">We're not yet serviceable in your area.</p>
-                    <div className="bg-purple-50 rounded-2xl p-4 mt-4">
-                      <p className="text-gray-500 text-xs mb-3">What services would you like in your area?</p>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {["Bathroom Cleaning", "Deep Cleaning", "Sofa Cleaning"].map((s) => (
-                          <span key={s} className="px-3 py-1.5 bg-white text-[#6b21a8] rounded-full text-xs border border-purple-200">
+                    <h3 className="text-lg font-semibold text-gray-800">Service Not Available Yet</h3>
+                    <p className="text-gray-500 text-sm">We're not yet servicing <span className="font-medium">GHR Titania, Gachibowli</span></p>
+                    <div className="bg-amber-50 rounded-2xl p-4 mt-4 text-left">
+                      <p className="text-gray-600 text-xs uppercase tracking-wide mb-2">We're expanding soon!</p>
+                      <p className="text-gray-500 text-sm">Tell us which services you'd like in your area.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collecting Preferences */}
+                {currentStep === "collecting_preferences" && (
+                  <div className="space-y-4 animate-in fade-in duration-500">
+                    <div className="text-center py-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Preferences Recorded</h3>
+                      <p className="text-gray-500 text-sm">Thank you for your feedback!</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-2xl p-4">
+                      <p className="text-[#6b21a8] text-xs uppercase tracking-wide mb-3">Services You Want</p>
+                      <div className="flex flex-wrap gap-2">
+                        {requestedServices.map((s) => (
+                          <span key={s} className="px-3 py-1.5 bg-white text-[#6b21a8] rounded-full text-sm border border-purple-200 font-medium">
                             {s}
                           </span>
                         ))}
                       </div>
+                    </div>
+                    <div className="bg-yellow-50 rounded-2xl p-4 text-center">
+                      <p className="text-gray-600 text-sm">We'll notify you when we start servicing your area!</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Feedback Intro */}
+                {currentStep === "feedback_intro" && (
+                  <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
+                    <div className="size-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3">
+                      <MessageSquare className="size-8 text-[#6b21a8]" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Feedback Call</h3>
+                    <div className="bg-purple-50 rounded-2xl p-4">
+                      <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Previous Booking</p>
+                      <p className="text-[#6b21a8] font-mono font-semibold">#{lastBookingId}</p>
+                      <p className="text-gray-500 text-sm mt-2">Bathroom Cleaning Service</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Feedback Rating */}
+                {currentStep === "feedback_rating" && (
+                  <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Rate Your Experience</h3>
+                    <div className="flex justify-center gap-2 py-4">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={cn(
+                            "size-10 transition-all",
+                            star <= feedbackRating 
+                              ? "text-[#facc15] fill-[#facc15]" 
+                              : "text-gray-200"
+                          )}
+                        />
+                      ))}
+                    </div>
+                    {feedbackRating > 0 && (
+                      <p className="text-[#6b21a8] font-semibold text-lg">
+                        {feedbackRating}/5 - {feedbackRating >= 4 ? "Great!" : feedbackRating >= 3 ? "Good" : "Thanks for feedback"}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Feedback Comments */}
+                {currentStep === "feedback_comments" && (
+                  <div className="space-y-4 animate-in fade-in duration-500">
+                    <div className="text-center py-2">
+                      <div className="flex justify-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={cn(
+                              "size-6",
+                              star <= feedbackRating 
+                                ? "text-[#facc15] fill-[#facc15]" 
+                                : "text-gray-200"
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-800">Your Feedback</h3>
+                    </div>
+                    {feedbackComment && (
+                      <div className="bg-purple-50 rounded-2xl p-4">
+                        <p className="text-gray-400 text-xs uppercase tracking-wide mb-2">Comment</p>
+                        <p className="text-gray-700 text-sm italic">"{feedbackComment}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Feedback Complete */}
+                {currentStep === "feedback_complete" && (
+                  <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
+                    <div className="size-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="size-9 text-green-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800">Feedback Submitted!</h3>
+                    <div className="bg-purple-50 rounded-2xl p-4 space-y-3">
+                      <div className="flex justify-center gap-1 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={cn(
+                              "size-5",
+                              star <= feedbackRating 
+                                ? "text-[#facc15] fill-[#facc15]" 
+                                : "text-gray-200"
+                            )}
+                          />
+                        ))}
+                      </div>
+                      {feedbackComment && (
+                        <p className="text-gray-600 text-sm">"{feedbackComment}"</p>
+                      )}
+                    </div>
+                    <div className="bg-[#facc15] rounded-2xl p-4">
+                      <p className="text-gray-800 font-semibold">🎉 10% Discount Added!</p>
+                      <p className="text-gray-600 text-sm">For your next booking</p>
                     </div>
                   </div>
                 )}
