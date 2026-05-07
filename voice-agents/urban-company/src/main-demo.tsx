@@ -122,6 +122,10 @@ const TIME_SLOTS: TimeSlot[] = [
   { date: "May 4, 2026", time: "7:30 PM", period: "evening", available: true },
 ];
 
+/** Urban Company — black + dark purple accent */
+const UC_PURPLE = "#4c1d95";
+const UC_PURPLE_SOFT = "#a78bfa";
+
 export default function UrbanCompanyDemo() {
   const vapiKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
   const vapiAssistantId = process.env.NEXT_PUBLIC_URBAN_COMPANY_ASSISTANT_ID || "";
@@ -596,25 +600,23 @@ export default function UrbanCompanyDemo() {
 
   // ==================== RENDER ====================
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-[#1a0033] text-white">
+      <header className="bg-black text-white border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-[#4c1d95] flex items-center justify-center shadow-lg shadow-[#4c1d95]/40">
+            <div className="size-11 rounded-xl bg-black border-2 border-[#4c1d95] flex items-center justify-center shadow-sm">
               <span className="text-white font-black text-sm tracking-tight">UC</span>
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-wide">URBAN COMPANY</h1>
-              <p className="text-xs text-white/50">AI Voice Booking</p>
+              <p className="text-xs text-white/40">AI Voice Booking</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex bg-white/[0.08] rounded-full p-0.5 mr-2">
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#4c1d95] text-white">
-                Voice Demo
-              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#4c1d95] text-white">Voice Demo</span>
               <Link href="/demo/urban-company/triggers"
                 className="px-3 py-1 rounded-full text-xs font-medium text-white/50 hover:text-white flex items-center gap-1 transition-colors">
                 <Bell className="size-3" />Triggers
@@ -649,8 +651,8 @@ export default function UrbanCompanyDemo() {
           {/* Left: Voice Agent */}
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-medium text-gray-800">Voice Assistant</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-medium text-gray-900">Voice Assistant</h2>
+              <p className="text-sm text-gray-400">
                 {demoType === "booking" && "Complete booking flow with payment"}
                 {demoType === "out_of_service" && "Area not serviceable — collecting preferences"}
                 {demoType === "feedback" && "Post-service feedback collection"}
@@ -659,28 +661,25 @@ export default function UrbanCompanyDemo() {
             </div>
 
             {/* Kavya persona card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 max-w-md mx-auto">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 max-w-md mx-auto">
               <div className="flex items-start gap-3">
-                <div className="size-12 rounded-full bg-gradient-to-br from-[#2d0057] to-[#7c3aed] flex items-center justify-center shadow-sm shrink-0">
+                <div className="size-12 rounded-full bg-[#4c1d95] flex items-center justify-center shadow-sm shrink-0">
                   <span className="text-white font-black text-lg">K</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-gray-800">Kavya</p>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">
-                      AI · Urban Company
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] text-green-600">
-                      <span className="size-1.5 rounded-full bg-green-500 animate-pulse" />
-                      Online 24×7
+                    <p className="font-medium text-gray-900">Kavya</p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">AI · Urban Company</span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                      <span className="size-1.5 rounded-full bg-gray-400 animate-pulse" />Online 24×7
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">Your home services assistant. Pan-India, knows your neighbourhood.</p>
                   <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium flex items-center gap-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1">
                       <Languages className="size-2.5" />EN · हिन्दी · తెలుగు
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium flex items-center gap-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium flex items-center gap-1">
                       <MapPin className="size-2.5" />50,000+ homes
                     </span>
                   </div>
@@ -688,18 +687,18 @@ export default function UrbanCompanyDemo() {
               </div>
             </div>
 
-            {/* Orb — very dark purple */}
+            {/* Orb — monochrome black */}
             <div className="aspect-square max-w-[340px] mx-auto relative">
               <Orb
                 className="h-full w-full"
-                colors={["#2d0057", "#7c3aed"]}
+                colors={[UC_PURPLE_SOFT, UC_PURPLE]}
                 agentState={orbState}
                 volumeMode="manual"
                 manualInput={voiceVolume}
                 manualOutput={voiceVolume}
               />
               <div className="absolute bottom-4 left-0 right-0 text-center">
-                <span className="inline-block px-4 py-2 bg-[#1a0033]/75 backdrop-blur-sm rounded-full text-sm text-white">
+                <span className="inline-block px-4 py-2 bg-[#4c1d95]/90 backdrop-blur-sm rounded-full text-sm text-white">
                   {voiceState === "connecting" && "Connecting..."}
                   {voiceState === "listening" && "Listening..."}
                   {voiceState === "talking" && "Kavya is speaking..."}
@@ -712,25 +711,25 @@ export default function UrbanCompanyDemo() {
             <div className="space-y-4">
               {isVoiceConnected || isSimulating ? (
                 <div className="flex gap-3 justify-center">
-                  <Button variant="outline" size="lg" className="rounded-full px-6 border-gray-200 text-gray-400" disabled>
+                  <Button variant="outline" size="lg" className="rounded-full px-6 border-gray-200 text-gray-300" disabled>
                     <Phone className="size-4 mr-2" />Start
                   </Button>
-                  <Button variant="outline" size="lg" className="rounded-full px-4 border-gray-200" onClick={handleToggleMute}>
+                  <Button variant="outline" size="lg" className="rounded-full px-4 border-gray-200 text-gray-700 hover:bg-gray-50" onClick={handleToggleMute}>
                     {isMuted ? <MicOff className="size-5" /> : <Mic className="size-5" />}
                   </Button>
                   <Button variant="outline" size="lg"
-                    className={cn("rounded-full px-4 border-gray-200", isSpeakerMuted && "bg-red-50 border-red-200 text-red-500")}
+                    className={cn("rounded-full px-4 border-gray-200 text-gray-700 hover:bg-gray-50", isSpeakerMuted && "bg-gray-100 border-gray-300 text-gray-400")}
                     onClick={() => { setIsSpeakerMuted(!isSpeakerMuted); if (!isSpeakerMuted) stopSpeaking(); }}>
                     {isSpeakerMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                   </Button>
-                  <Button size="lg" className="rounded-full px-6 bg-red-500 hover:bg-red-600 text-white" onClick={handleEndVoice}>
+                  <Button size="lg" className="rounded-full px-6 bg-[#4c1d95] hover:bg-[#5b21b6] text-white" onClick={handleEndVoice}>
                     <PhoneOff className="size-4 mr-2" />End
                   </Button>
                 </div>
               ) : (
                 <div className="flex justify-center">
                   <Button
-                    className="w-full max-w-sm rounded-full bg-[#4c1d95] hover:bg-[#3b1578] text-white font-medium h-12 text-base shadow-lg shadow-[#4c1d95]/30"
+                    className="w-full max-w-sm rounded-full bg-[#4c1d95] hover:bg-[#5b21b6] text-white font-medium h-12 text-base"
                     onClick={handleStartVoice}
                     disabled={voiceState === "connecting"}
                   >
@@ -744,18 +743,18 @@ export default function UrbanCompanyDemo() {
               {/* Transcript */}
               {(transcript.length > 0 || typingText) && (
                 <div ref={transcriptScrollRef}
-                  className="max-h-72 min-h-32 overflow-y-auto overscroll-contain space-y-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                  className="max-h-72 min-h-32 overflow-y-auto overscroll-contain space-y-2 bg-gray-50 rounded-2xl p-4 border border-gray-200"
                   aria-label="Conversation transcript">
                   {transcript.map((msg, i) => (
                     <div key={i} className={cn("text-sm p-3 rounded-2xl",
-                      msg.role === "assistant" ? "bg-purple-50 text-gray-700" : "bg-violet-50 text-gray-700 ml-6")}>
+                      msg.role === "assistant" ? "bg-white text-gray-700 border border-gray-200" : "bg-gray-100 text-gray-700 ml-6")}>
                       <span className="font-medium text-gray-900">{msg.role === "assistant" ? "Kavya: " : "You: "}</span>
                       {msg.text}
                     </div>
                   ))}
                   {typingText && (
                     <div className={cn("text-sm p-3 rounded-2xl",
-                      typingText.role === "assistant" ? "bg-purple-50 text-gray-700" : "bg-violet-50 text-gray-700 ml-6")}>
+                      typingText.role === "assistant" ? "bg-white text-gray-700 border border-gray-200" : "bg-gray-100 text-gray-700 ml-6")}>
                       <span className="font-medium text-gray-900">{typingText.role === "assistant" ? "Kavya: " : "You: "}</span>
                       {typingText.text}<span className="animate-pulse">|</span>
                     </div>
@@ -768,17 +767,17 @@ export default function UrbanCompanyDemo() {
 
           {/* Right: Visual Display */}
           <div className="space-y-5">
-            <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden">
               <div className="p-5 border-b border-gray-100">
-                <h2 className="text-lg font-medium text-gray-800">Booking Display</h2>
-                <p className="text-sm text-gray-500">Visual elements shown during the call</p>
+                <h2 className="text-lg font-medium text-gray-900">Booking Display</h2>
+                <p className="text-sm text-gray-400">Visual elements shown during the call</p>
               </div>
 
               <div className="p-5 min-h-[480px]">
                 {currentStep === "idle" && (
                   <div className="h-full flex flex-col items-center justify-center text-center py-16">
-                    <div className="size-14 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-                      <Phone className="size-6 text-purple-400" />
+                    <div className="size-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <Phone className="size-6 text-gray-400" />
                     </div>
                     <p className="text-gray-400 text-sm">Start a conversation to see the booking flow</p>
                   </div>
@@ -787,26 +786,26 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "greeting" && (
                   <div className="space-y-5 animate-in fade-in duration-500">
                     <div className="text-center py-8">
-                      <div className="size-16 rounded-xl bg-[#4c1d95] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#4c1d95]/30">
+                      <div className="size-16 rounded-xl bg-[#4c1d95] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#4c1d95]/25">
                         <span className="text-white font-black text-xl">UC</span>
                       </div>
-                      <h3 className="text-xl font-medium text-gray-800 mb-1">Welcome to Urban Company</h3>
-                      <p className="text-gray-500 text-sm">Tell Kavya what you need — she&apos;s listening</p>
+                      <h3 className="text-xl font-medium text-gray-900 mb-1">Welcome to Urban Company</h3>
+                      <p className="text-gray-400 text-sm">Tell Kavya what you need — she&apos;s listening</p>
                     </div>
                   </div>
                 )}
 
                 {currentStep === "service_selection" && (
                   <div className="space-y-4 animate-in fade-in duration-500">
-                    <h3 className="text-base font-medium text-gray-800">Select a Service</h3>
+                    <h3 className="text-base font-medium text-gray-900">Select a Service</h3>
                     <div className="grid grid-cols-2 gap-3">
                       {SERVICES.map((service) => (
                         <button key={service.id} onClick={() => setSelectedService(service)}
                           className={cn("p-4 rounded-2xl border transition-all text-left",
-                            selectedService?.id === service.id ? "border-[#7c3aed] bg-purple-50 shadow-sm" : "border-gray-200 bg-white hover:border-purple-200")}>
-                          <div className="text-[#7c3aed] mb-2">{service.icon}</div>
-                          <p className="text-gray-800 font-medium text-sm">{service.name}</p>
-                          <p className="text-[#7c3aed] text-base font-medium mt-1">₹{service.price}<span className="text-xs text-gray-400 font-normal">/{service.unit}</span></p>
+                            selectedService?.id === service.id ? "border-[#4c1d95] bg-gray-50 shadow-sm" : "border-gray-200 hover:border-gray-400")}>
+                          <div className="text-gray-700 mb-2">{service.icon}</div>
+                          <p className="text-gray-900 font-medium text-sm">{service.name}</p>
+                          <p className="text-gray-800 text-base font-medium mt-1">₹{service.price}<span className="text-xs text-gray-400 font-normal">/{service.unit}</span></p>
                         </button>
                       ))}
                     </div>
@@ -815,22 +814,22 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "quantity_selection" && selectedService && (
                   <div className="space-y-5 animate-in fade-in duration-500">
-                    <div className="bg-purple-50 rounded-2xl p-4">
-                      <p className="text-[#7c3aed] text-xs uppercase tracking-wide mb-1">Selected Service</p>
-                      <p className="text-gray-800 font-medium">{selectedService.name}</p>
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Selected Service</p>
+                      <p className="text-gray-900 font-medium">{selectedService.name}</p>
                       <p className="text-gray-500 text-sm">₹{selectedService.price} per {selectedService.unit}</p>
                     </div>
                     <div>
-                      <h3 className="text-base font-medium text-gray-800 mb-4">How many {selectedService.unit}s?</h3>
+                      <h3 className="text-base font-medium text-gray-900 mb-4">How many {selectedService.unit}s?</h3>
                       <div className="flex items-center gap-4 justify-center py-2">
                         <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                          className="size-11 rounded-full bg-purple-100 text-[#7c3aed] text-xl hover:bg-purple-200 transition-colors font-medium">−</button>
-                        <span className="text-3xl font-medium text-gray-800 w-14 text-center">{quantity}</span>
+                          className="size-11 rounded-full bg-gray-100 text-gray-700 text-xl hover:bg-gray-200 transition-colors font-medium border border-gray-200">−</button>
+                        <span className="text-3xl font-medium text-gray-900 w-14 text-center">{quantity}</span>
                         <button onClick={() => setQuantity(quantity + 1)}
-                          className="size-11 rounded-full bg-purple-100 text-[#7c3aed] text-xl hover:bg-purple-200 transition-colors font-medium">+</button>
+                          className="size-11 rounded-full bg-gray-100 text-gray-700 text-xl hover:bg-gray-200 transition-colors font-medium border border-gray-200">+</button>
                       </div>
                     </div>
-                    <div className="bg-[#4c1d95] rounded-2xl p-4 text-center mt-4 shadow-lg shadow-[#4c1d95]/25">
+                    <div className="bg-[#4c1d95] rounded-2xl p-4 text-center mt-4">
                       <p className="text-white/70 text-xs uppercase tracking-wide">Estimated Total</p>
                       <p className="text-2xl font-bold text-white">₹{calculateTotal().total}</p>
                       <p className="text-white/60 text-xs">(incl. 18% GST)</p>
@@ -840,14 +839,14 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "time_of_day_selection" && (
                   <div className="space-y-4 animate-in fade-in duration-500">
-                    <div className="bg-purple-50 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 flex items-center justify-between">
                       <div>
-                        <p className="text-[#7c3aed] text-xs uppercase tracking-wide">Booking</p>
-                        <p className="text-gray-800 font-medium text-sm">{quantity}× {selectedService?.name ?? "Service"}</p>
+                        <p className="text-gray-500 text-xs uppercase tracking-wide">Booking</p>
+                        <p className="text-gray-900 font-medium text-sm">{quantity}× {selectedService?.name ?? "Service"}</p>
                       </div>
-                      <p className="text-[#7c3aed] font-medium text-lg">₹{calculateTotal().total}</p>
+                      <p className="text-gray-900 font-medium text-lg">₹{calculateTotal().total}</p>
                     </div>
-                    <h3 className="text-base font-medium text-gray-800">When works best for you?</h3>
+                    <h3 className="text-base font-medium text-gray-900">When works best for you?</h3>
                     <div className="grid grid-cols-3 gap-2">
                       {PERIODS.map((p) => {
                         const Icon = p.icon;
@@ -855,9 +854,9 @@ export default function UrbanCompanyDemo() {
                         return (
                           <button key={p.id} onClick={() => setSelectedPeriod(p.id)}
                             className={cn("flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 transition-all",
-                              isActive ? "border-[#7c3aed] bg-purple-50" : "border-gray-200 bg-white hover:border-purple-200")}>
-                            <Icon className={cn("size-7", isActive ? "text-[#7c3aed]" : "text-gray-400")} />
-                            <p className="text-gray-800 font-medium text-sm">{p.label}</p>
+                              isActive ? "border-[#4c1d95] bg-gray-50" : "border-gray-200 hover:border-gray-400")}>
+                            <Icon className={cn("size-7", isActive ? "text-[#4c1d95]" : "text-gray-400")} />
+                            <p className="text-gray-900 font-medium text-sm">{p.label}</p>
                             <p className="text-gray-400 text-[11px]">{p.range}</p>
                           </button>
                         );
@@ -870,26 +869,26 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "slot_selection" && (
                   <div className="space-y-4 animate-in fade-in duration-500">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-gray-800 flex items-center gap-2">
-                        <Calendar className="size-4 text-[#7c3aed]" />Available Slots
+                      <h3 className="text-base font-medium text-gray-900 flex items-center gap-2">
+                        <Calendar className="size-4 text-gray-600" />Available Slots
                       </h3>
                       {selectedPeriod && (
-                        <span className="text-xs px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 font-medium capitalize">{selectedPeriod}</span>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 font-medium capitalize">{selectedPeriod}</span>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {TIME_SLOTS.filter(s => !selectedPeriod || s.period === selectedPeriod).map((slot, i) => (
                         <button key={i} disabled={!slot.available} onClick={() => setSelectedSlot(slot)}
                           className={cn("p-3 rounded-xl border transition-all text-left",
-                            !slot.available ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
-                            : selectedSlot === slot ? "border-[#7c3aed] bg-purple-50"
-                            : "border-gray-200 bg-white hover:border-purple-200")}>
+                            !slot.available ? "border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed"
+                            : selectedSlot === slot ? "border-[#4c1d95] bg-gray-50"
+                            : "border-gray-200 hover:border-gray-400")}>
                           <div className="flex items-center gap-2 mb-0.5">
-                            <Clock className="size-3.5 text-[#7c3aed]" />
-                            <span className="text-gray-800 text-sm font-medium">{slot.time}</span>
+                            <Clock className="size-3.5 text-gray-600" />
+                            <span className="text-gray-900 text-sm font-medium">{slot.time}</span>
                           </div>
                           <p className="text-gray-400 text-xs">{slot.date}</p>
-                          {!slot.available && <span className="text-red-400 text-xs">Booked</span>}
+                          {!slot.available && <span className="text-gray-400 text-xs">Booked</span>}
                         </button>
                       ))}
                     </div>
@@ -898,24 +897,23 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "confirmation" && selectedService && selectedSlot && (
                   <div className="space-y-4 animate-in fade-in duration-500">
-                    <h3 className="text-base font-medium text-gray-800">Confirm Your Booking</h3>
+                    <h3 className="text-base font-medium text-gray-900">Confirm Your Booking</h3>
                     <div className="rounded-2xl divide-y divide-gray-100 border border-gray-200 overflow-hidden">
                       {[
                         { label: "Service", value: `${quantity}× ${selectedService.name}` },
                         { label: "Date & Time", value: `${selectedSlot.date} at ${selectedSlot.time}` },
                         { label: "Address", value: customerAddress },
                       ].map(row => (
-                        <div key={row.label} className="p-4 bg-white">
+                        <div key={row.label} className="p-4">
                           <p className="text-gray-400 text-xs uppercase tracking-wide">{row.label}</p>
-                          <p className="text-gray-800 font-medium">{row.value}</p>
+                          <p className="text-gray-900 font-medium">{row.value}</p>
                         </div>
                       ))}
-                      <div className="p-4 bg-purple-50">
+                      <div className="p-4 bg-gray-50">
                         <div className="flex justify-between text-gray-500 text-sm"><span>Subtotal</span><span>₹{calculateTotal().subtotal}</span></div>
                         <div className="flex justify-between text-gray-500 text-sm mt-1"><span>GST (18%)</span><span>₹{calculateTotal().gst}</span></div>
-                        <div className="flex justify-between text-gray-800 font-medium text-lg mt-3 pt-3 border-t border-purple-200">
-                          <span>Total</span>
-                          <span className="text-[#7c3aed]">₹{calculateTotal().total}</span>
+                        <div className="flex justify-between text-gray-900 font-medium text-lg mt-3 pt-3 border-t border-gray-200">
+                          <span>Total</span><span>₹{calculateTotal().total}</span>
                         </div>
                       </div>
                     </div>
@@ -926,19 +924,19 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "payment" && (
                   <div className="space-y-5 animate-in fade-in duration-500">
                     <div className="text-center py-4">
-                      <div className="size-14 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3">
-                        <CreditCard className="size-7 text-[#7c3aed]" />
+                      <div className="size-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                        <CreditCard className="size-7 text-gray-700" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-800 mb-1">Complete Payment</h3>
-                      <p className="text-gray-500 text-sm">Amount: <span className="font-medium text-[#7c3aed]">₹{calculateTotal().total}</span></p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">Complete Payment</h3>
+                      <p className="text-gray-500 text-sm">Amount: <span className="font-medium text-gray-900">₹{calculateTotal().total}</span></p>
                     </div>
-                    <div className="bg-[#1a0033] rounded-2xl p-5 text-center">
-                      <p className="text-white/50 text-xs uppercase tracking-wide mb-2">Payment Link</p>
-                      <div className="bg-white/10 rounded-xl p-3 mb-4">
+                    <div className="bg-[#4c1d95] rounded-2xl p-5 text-center">
+                      <p className="text-white/60 text-xs uppercase tracking-wide mb-2">Payment Link</p>
+                      <div className="bg-white/15 rounded-xl p-3 mb-4">
                         <p className="text-white font-mono text-sm break-all">pay.urbancompany.com/book/{Date.now().toString().slice(-6)}</p>
                       </div>
                       <div className="flex items-center justify-center gap-2">
-                        <Loader className="size-4 text-[#a78bfa] animate-spin" />
+                        <Loader className="size-4 text-white/50 animate-spin" />
                         <span className="text-white/80 text-sm">Waiting for payment...</span>
                       </div>
                     </div>
@@ -948,16 +946,16 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "success" && (
                   <div className="space-y-5 animate-in fade-in duration-500">
                     <div className="text-center py-4">
-                      <div className="size-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle2 className="size-9 text-green-500" />
+                      <div className="size-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle2 className="size-9 text-gray-700" />
                       </div>
-                      <h3 className="text-xl font-medium text-gray-800 mb-1">Booking Confirmed!</h3>
-                      <p className="text-[#7c3aed] font-mono font-medium">#{bookingId || `UCP${Date.now().toString().slice(-6)}`}</p>
+                      <h3 className="text-xl font-medium text-gray-900 mb-1">Booking Confirmed!</h3>
+                      <p className="text-gray-500 font-mono font-medium">#{bookingId || `UCP${Date.now().toString().slice(-6)}`}</p>
                     </div>
-                    <div className="bg-purple-50 rounded-2xl p-4 space-y-3">
-                      <div className="flex justify-between text-sm"><span className="text-gray-500">Service</span><span className="text-gray-800 font-medium">{quantity}× {selectedService?.name}</span></div>
-                      <div className="flex justify-between text-sm"><span className="text-gray-500">Date & Time</span><span className="text-gray-800 font-medium">{selectedSlot?.date} at {selectedSlot?.time}</span></div>
-                      <div className="flex justify-between text-sm pt-2 border-t border-purple-100"><span className="text-gray-500">Amount Paid</span><span className="text-green-600 font-medium">₹{calculateTotal().total}</span></div>
+                    <div className="bg-gray-50 rounded-2xl p-4 space-y-3 border border-gray-200">
+                      <div className="flex justify-between text-sm"><span className="text-gray-500">Service</span><span className="text-gray-900 font-medium">{quantity}× {selectedService?.name}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-gray-500">Date & Time</span><span className="text-gray-900 font-medium">{selectedSlot?.date} at {selectedSlot?.time}</span></div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-gray-200"><span className="text-gray-500">Amount Paid</span><span className="text-gray-900 font-medium">₹{calculateTotal().total}</span></div>
                     </div>
                     <p className="text-center text-gray-400 text-sm">Our professional will arrive at the scheduled time. Thank you!</p>
                   </div>
@@ -965,13 +963,13 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "out_of_area" && (
                   <div className="space-y-4 animate-in fade-in duration-500 text-center py-4">
-                    <div className="size-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
-                      <AlertCircle className="size-7 text-amber-500" />
+                    <div className="size-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                      <AlertCircle className="size-7 text-gray-500" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-800">Service Not Available Yet</h3>
-                    <p className="text-gray-500 text-sm">Salon at Home is currently unavailable in <span className="font-medium">Narsingi</span></p>
-                    <div className="bg-amber-50 rounded-2xl p-4 mt-4 text-left">
-                      <p className="text-amber-600 text-xs uppercase tracking-wide mb-2">Expanding soon!</p>
+                    <h3 className="text-lg font-medium text-gray-900">Service Not Available Yet</h3>
+                    <p className="text-gray-500 text-sm">Salon at Home is currently unavailable in <span className="font-medium text-gray-700">Narsingi</span></p>
+                    <div className="bg-gray-50 rounded-2xl p-4 mt-4 text-left border border-gray-200">
+                      <p className="text-gray-600 text-xs uppercase tracking-wide mb-2">Expanding soon!</p>
                       <p className="text-gray-500 text-sm">Tell us which services you&apos;d like in your area.</p>
                     </div>
                   </div>
@@ -980,18 +978,18 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "collecting_preferences" && (
                   <div className="space-y-4 animate-in fade-in duration-500">
                     <div className="text-center py-2">
-                      <h3 className="text-lg font-medium text-gray-800">Preferences Recorded</h3>
+                      <h3 className="text-lg font-medium text-gray-900">Preferences Recorded</h3>
                       <p className="text-gray-500 text-sm">Thank you for your feedback!</p>
                     </div>
-                    <div className="bg-purple-50 rounded-2xl p-4">
-                      <p className="text-[#7c3aed] text-xs uppercase tracking-wide mb-3">Services You Want</p>
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-3">Services You Want</p>
                       <div className="flex flex-wrap gap-2">
                         {requestedServices.map((s) => (
-                          <span key={s} className="px-3 py-1.5 bg-white text-[#7c3aed] rounded-full text-sm border border-purple-200 font-medium">{s}</span>
+                          <span key={s} className="px-3 py-1.5 bg-white text-gray-700 rounded-full text-sm border border-gray-200 font-medium">{s}</span>
                         ))}
                       </div>
                     </div>
-                    <div className="bg-amber-50 rounded-2xl p-4 text-center">
+                    <div className="bg-gray-50 rounded-2xl p-4 text-center border border-gray-200">
                       <p className="text-gray-600 text-sm">We&apos;ll notify you on WhatsApp when we go live in your area!</p>
                     </div>
                   </div>
@@ -999,13 +997,13 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "feedback_intro" && (
                   <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
-                    <div className="size-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3">
-                      <MessageSquare className="size-8 text-[#7c3aed]" />
+                    <div className="size-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                      <MessageSquare className="size-8 text-gray-600" />
                     </div>
-                    <h3 className="text-xl font-medium text-gray-800">Feedback Call</h3>
-                    <div className="bg-purple-50 rounded-2xl p-4">
+                    <h3 className="text-xl font-medium text-gray-900">Feedback Call</h3>
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                       <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Previous Booking</p>
-                      <p className="text-[#7c3aed] font-mono font-medium">#{lastBookingId}</p>
+                      <p className="text-gray-700 font-mono font-medium">#{lastBookingId}</p>
                       <p className="text-gray-500 text-sm mt-2">Home Cleaning Service</p>
                     </div>
                   </div>
@@ -1013,15 +1011,15 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "feedback_rating" && (
                   <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
-                    <h3 className="text-lg font-medium text-gray-800">Rate Your Experience</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Rate Your Experience</h3>
                     <div className="flex justify-center gap-2 py-4">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star key={star} className={cn("size-10 transition-all",
-                          star <= feedbackRating ? "text-[#7c3aed] fill-[#7c3aed]" : "text-gray-200")} />
+                          star <= feedbackRating ? "text-gray-800 fill-gray-800" : "text-gray-200")} />
                       ))}
                     </div>
                     {feedbackRating > 0 && (
-                      <p className="text-[#7c3aed] font-medium text-lg">
+                      <p className="text-gray-700 font-medium text-lg">
                         {feedbackRating}/5 — {feedbackRating >= 4 ? "Great!" : feedbackRating >= 3 ? "Good" : "Thanks for feedback"}
                       </p>
                     )}
@@ -1034,13 +1032,13 @@ export default function UrbanCompanyDemo() {
                       <div className="flex justify-center gap-1 mb-3">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star key={star} className={cn("size-6",
-                            star <= feedbackRating ? "text-[#7c3aed] fill-[#7c3aed]" : "text-gray-200")} />
+                            star <= feedbackRating ? "text-gray-800 fill-gray-800" : "text-gray-200")} />
                         ))}
                       </div>
-                      <h3 className="text-lg font-medium text-gray-800">Your Feedback</h3>
+                      <h3 className="text-lg font-medium text-gray-900">Your Feedback</h3>
                     </div>
                     {feedbackComment && (
-                      <div className="bg-purple-50 rounded-2xl p-4">
+                      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                         <p className="text-gray-400 text-xs uppercase tracking-wide mb-2">Comment</p>
                         <p className="text-gray-700 text-sm italic">&ldquo;{feedbackComment}&rdquo;</p>
                       </div>
@@ -1054,17 +1052,17 @@ export default function UrbanCompanyDemo() {
                       <div className="size-16 rounded-xl bg-[#4c1d95] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#4c1d95]/25">
                         <Languages className="size-8 text-white" />
                       </div>
-                      <h3 className="text-xl font-medium text-gray-800 mb-1">Multi-Language AI</h3>
+                      <h3 className="text-xl font-medium text-gray-900 mb-1">Multi-Language AI</h3>
                       <p className="text-gray-500 text-sm">Speaks 33+ languages. Switches mid-call.</p>
                     </div>
-                    <div className="bg-purple-50 rounded-2xl p-4">
-                      <p className="text-[#7c3aed] text-xs uppercase tracking-wide mb-3">Currently speaking</p>
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-3">Currently speaking</p>
                       <div className="flex items-center gap-3">
-                        <div className="size-12 rounded-full bg-white border-2 border-[#7c3aed] flex items-center justify-center font-bold text-[#7c3aed]">
+                        <div className="size-12 rounded-full bg-white border-2 border-[#4c1d95] flex items-center justify-center font-bold text-[#1a1a1a]">
                           {LANGUAGES[activeLanguage].flag}
                         </div>
                         <div>
-                          <p className="text-gray-800 font-medium">{LANGUAGES[activeLanguage].label}</p>
+                          <p className="text-gray-900 font-medium">{LANGUAGES[activeLanguage].label}</p>
                           <p className="text-gray-500 text-sm">{LANGUAGES[activeLanguage].nativeLabel}</p>
                         </div>
                       </div>
@@ -1072,7 +1070,7 @@ export default function UrbanCompanyDemo() {
                     <div className="grid grid-cols-3 gap-2">
                       {Object.values(LANGUAGES).map((lang) => (
                         <div key={lang.code} className={cn("p-3 rounded-xl border text-center transition-all",
-                          activeLanguage === lang.code ? "border-[#7c3aed] bg-purple-50 scale-105" : "border-gray-200 bg-white opacity-60")}>
+                          activeLanguage === lang.code ? "border-[#4c1d95] bg-gray-50 scale-105" : "border-gray-200 opacity-60")}>
                           <p className="text-xs text-gray-500 mb-0.5">{lang.flag}</p>
                           <p className="text-sm font-medium text-gray-800">{lang.nativeLabel}</p>
                         </div>
@@ -1084,27 +1082,25 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "language_switching" && (
                   <div className="space-y-5 animate-in fade-in duration-500">
                     <div className="text-center py-2">
-                      <h3 className="text-lg font-medium text-gray-800 mb-1">Live Language Switch</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">Live Language Switch</h3>
                       <p className="text-gray-500 text-sm">AI adapting in real-time</p>
                     </div>
-                    <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-5 text-center">
-                      <p className="text-[#7c3aed] text-xs uppercase tracking-wide mb-3">Now Speaking</p>
-                      <div className="size-20 rounded-xl bg-[#4c1d95] mx-auto flex items-center justify-center mb-3 shadow-lg shadow-[#4c1d95]/30 transition-all duration-500">
+                    <div className="bg-gray-50 rounded-2xl p-5 text-center border border-gray-200">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-3">Now Speaking</p>
+                      <div className="size-20 rounded-xl bg-[#4c1d95] mx-auto flex items-center justify-center mb-3 shadow-lg shadow-[#4c1d95]/25 transition-all duration-500">
                         <span className="text-white font-black text-lg">{LANGUAGES[activeLanguage].flag}</span>
                       </div>
-                      <p className="text-2xl font-medium text-gray-800">{LANGUAGES[activeLanguage].nativeLabel}</p>
+                      <p className="text-2xl font-medium text-gray-900">{LANGUAGES[activeLanguage].nativeLabel}</p>
                       <p className="text-sm text-gray-500 mt-1">{LANGUAGES[activeLanguage].label}</p>
                     </div>
                     {languageHistory.length > 1 && (
-                      <div className="bg-white rounded-2xl p-4 border border-gray-100">
+                      <div className="bg-white rounded-2xl p-4 border border-gray-200">
                         <p className="text-gray-400 text-xs uppercase tracking-wide mb-3">Conversation Path</p>
                         <div className="flex items-center gap-2 flex-wrap">
                           {languageHistory.map((lc, i) => (
                             <div key={`${lc}-${i}`} className="flex items-center gap-2">
                               <span className={cn("px-3 py-1.5 rounded-full text-xs font-medium border",
-                                i === languageHistory.length - 1
-                                  ? "bg-[#4c1d95] text-white border-[#4c1d95]"
-                                  : "bg-purple-50 text-purple-700 border-purple-100")}>
+                                i === languageHistory.length - 1 ? "bg-[#4c1d95] text-white border-[#4c1d95]" : "bg-gray-100 text-gray-700 border-gray-200")}>
                                 {LANGUAGES[lc].label}
                               </span>
                               {i < languageHistory.length - 1 && <span className="text-gray-300">→</span>}
@@ -1119,24 +1115,24 @@ export default function UrbanCompanyDemo() {
                 {currentStep === "language_saved" && savedLanguage && (
                   <div className="space-y-5 animate-in fade-in duration-500">
                     <div className="text-center py-2">
-                      <div className="size-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle2 className="size-9 text-green-500" />
+                      <div className="size-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                        <CheckCircle2 className="size-9 text-gray-700" />
                       </div>
-                      <h3 className="text-xl font-medium text-gray-800">Language Preference Saved</h3>
+                      <h3 className="text-xl font-medium text-gray-900">Language Preference Saved</h3>
                       <p className="text-gray-500 text-sm mt-1">Stored on customer profile</p>
                     </div>
-                    <div className="bg-purple-50 rounded-2xl p-4">
-                      <p className="text-[#7c3aed] text-xs uppercase tracking-wide mb-3">Customer Profile</p>
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-3">Customer Profile</p>
                       <div className="flex items-center gap-3 mb-4">
                         <div className="size-10 rounded-full bg-[#4c1d95] flex items-center justify-center text-white font-bold">
                           {customerName ? customerName[0] : "A"}
                         </div>
                         <div>
-                          <p className="text-gray-800 font-medium">{customerName || "Ajinkya"}</p>
+                          <p className="text-gray-900 font-medium">{customerName || "Ajinkya"}</p>
                           <p className="text-gray-500 text-xs">{customerAddress}</p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between border-t border-purple-200 pt-3">
+                      <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                         <span className="text-gray-500 text-sm">Preferred Language</span>
                         <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#4c1d95] text-white flex items-center gap-1.5">
                           <Languages className="size-3.5" />
@@ -1144,7 +1140,7 @@ export default function UrbanCompanyDemo() {
                         </span>
                       </div>
                     </div>
-                    <div className="bg-amber-50 rounded-2xl p-4">
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
                       <p className="text-gray-700 text-sm">
                         <span className="font-medium">Next call:</span> Kavya will greet {customerName || "Ajinkya"} in Hindi automatically.
                       </p>
@@ -1154,20 +1150,20 @@ export default function UrbanCompanyDemo() {
 
                 {currentStep === "feedback_complete" && (
                   <div className="space-y-5 animate-in fade-in duration-500 text-center py-4">
-                    <div className="size-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-                      <CheckCircle2 className="size-9 text-green-500" />
+                    <div className="size-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="size-9 text-gray-700" />
                     </div>
-                    <h3 className="text-xl font-medium text-gray-800">Feedback Submitted!</h3>
-                    <div className="bg-purple-50 rounded-2xl p-4 space-y-3">
+                    <h3 className="text-xl font-medium text-gray-900">Feedback Submitted!</h3>
+                    <div className="bg-gray-50 rounded-2xl p-4 space-y-3 border border-gray-200">
                       <div className="flex justify-center gap-1 mb-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star key={star} className={cn("size-5",
-                            star <= feedbackRating ? "text-[#7c3aed] fill-[#7c3aed]" : "text-gray-200")} />
+                            star <= feedbackRating ? "text-gray-800 fill-gray-800" : "text-gray-200")} />
                         ))}
                       </div>
                       {feedbackComment && <p className="text-gray-600 text-sm">&ldquo;{feedbackComment}&rdquo;</p>}
                     </div>
-                    <div className="bg-[#4c1d95] rounded-2xl p-4 shadow-lg shadow-[#4c1d95]/25">
+                    <div className="bg-[#4c1d95] rounded-2xl p-4">
                       <p className="text-white font-medium">🎉 10% Discount Added!</p>
                       <p className="text-white/70 text-sm">For your next booking</p>
                     </div>
@@ -1177,7 +1173,7 @@ export default function UrbanCompanyDemo() {
             </div>
 
             {/* Customer Info */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
               <p className="text-gray-400 text-xs uppercase tracking-wide mb-3">Customer Profile</p>
               {customerName ? (
                 <div className="space-y-3">
@@ -1186,13 +1182,13 @@ export default function UrbanCompanyDemo() {
                       {customerName[0]}
                     </div>
                     <div>
-                      <p className="text-gray-800 font-medium">{customerName}</p>
-                      <p className="text-green-600 text-xs">Verified</p>
+                      <p className="text-gray-900 font-medium">{customerName}</p>
+                      <p className="text-gray-500 text-xs">Verified</p>
                     </div>
                   </div>
                   {customerAddress && (
                     <div className="text-sm text-gray-500 pl-1">
-                      <MapPin className="size-3.5 inline mr-1 text-[#7c3aed]" />
+                      <MapPin className="size-3.5 inline mr-1 text-gray-500" />
                       {customerAddress}
                     </div>
                   )}

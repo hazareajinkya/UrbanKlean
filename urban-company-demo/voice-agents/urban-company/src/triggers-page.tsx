@@ -54,11 +54,11 @@ const SIGNAL_META: Record<SignalSource, {
   color: string;
   bg: string;
 }> = {
-  zomato: { label: "Zomato", icon: Pizza, color: "text-red-500", bg: "bg-red-50" },
-  blinkit: { label: "Blinkit", icon: ShoppingBag, color: "text-yellow-600", bg: "bg-yellow-50" },
-  mygate: { label: "MyGate", icon: Building2, color: "text-blue-500", bg: "bg-blue-50" },
-  pattern: { label: "Booking Pattern", icon: RefreshCw, color: "text-[#7c3aed]", bg: "bg-purple-50" },
-  calendar: { label: "Calendar", icon: Calendar, color: "text-green-600", bg: "bg-green-50" },
+  zomato: { label: "Zomato", icon: Pizza, color: "text-gray-700", bg: "bg-gray-100" },
+  blinkit: { label: "Blinkit", icon: ShoppingBag, color: "text-gray-700", bg: "bg-gray-100" },
+  mygate: { label: "MyGate", icon: Building2, color: "text-gray-700", bg: "bg-gray-100" },
+  pattern: { label: "Booking Pattern", icon: RefreshCw, color: "text-gray-700", bg: "bg-gray-100" },
+  calendar: { label: "Calendar", icon: Calendar, color: "text-gray-700", bg: "bg-gray-100" },
 };
 
 const SIGNAL_TEMPLATES: Omit<Signal, "id" | "timestamp">[] = [
@@ -220,23 +220,23 @@ export default function UrbanCompanyTriggersPage() {
   const conversionRate = stats.triggered > 0 ? Math.round((stats.converted / stats.triggered) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-[#1a0033] text-white">
+      <header className="bg-black text-white border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-[#4c1d95] flex items-center justify-center shadow-lg shadow-[#4c1d95]/40">
-              <span className="text-white font-black text-sm tracking-tight">UC</span>
+            <div className="size-11 rounded-xl bg-white flex items-center justify-center shadow-sm">
+              <span className="text-black font-black text-sm tracking-tight">UC</span>
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-wide">URBAN COMPANY</h1>
-              <p className="text-xs text-white/50">Smart Triggers · Proactive AI</p>
+              <p className="text-xs text-white/40">Smart Triggers · Proactive AI</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex bg-white/[0.08] rounded-full p-0.5">
               <Link href="/demo/urban-company" className="px-3 py-1 rounded-full text-xs font-medium text-white/50 hover:text-white transition-colors">Voice Demo</Link>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#4c1d95] text-white flex items-center gap-1">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-black flex items-center gap-1">
                 <Bell className="size-3" />Triggers
               </span>
               <Link href="/demo/urban-company/analytics" className="px-3 py-1 rounded-full text-xs font-medium text-white/50 hover:text-white flex items-center gap-1 transition-colors">
@@ -245,8 +245,8 @@ export default function UrbanCompanyTriggersPage() {
             </div>
             <button onClick={() => setIsLive(!isLive)}
               className={cn("px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all",
-                isLive ? "bg-[#4c1d95] text-white" : "bg-white/[0.08] text-white/50 hover:text-white")}>
-              <span className={cn("size-1.5 rounded-full", isLive ? "bg-white animate-pulse" : "bg-white/50")} />
+                isLive ? "bg-white text-black" : "bg-white/[0.08] text-white/50 hover:text-white")}>
+              <span className={cn("size-1.5 rounded-full", isLive ? "bg-black animate-pulse" : "bg-white/50")} />
               {isLive ? "Live" : "Paused"}
             </button>
           </div>
@@ -255,45 +255,44 @@ export default function UrbanCompanyTriggersPage() {
 
       <main className="max-w-7xl mx-auto p-6 lg:p-10 space-y-6">
         {/* Hero strip */}
-        <div className="bg-white rounded-3xl shadow-sm p-6 flex items-start justify-between gap-6 flex-wrap">
+        <div className="bg-white rounded-3xl border border-gray-200 p-6 flex items-start justify-between gap-6 flex-wrap">
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="size-5 text-[#7c3aed]" />
-              <h2 className="text-xl font-medium text-gray-800">Be part of your customer&apos;s daily life</h2>
+              <Sparkles className="size-5 text-gray-700" />
+              <h2 className="text-xl font-medium text-gray-900">Be part of your customer&apos;s daily life</h2>
             </div>
             <p className="text-gray-500 text-sm">
               Don&apos;t wait for customers to call. Connected signals from Zomato, Blinkit, MyGate and behavioural patterns trigger proactive outbound AI calls — turning everyday moments into bookings.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3 min-w-[420px]">
-            <StatCard label="Signals Today" value={stats.triggered.toString()} icon={Zap} color="text-[#7c3aed]" bg="bg-purple-50" />
-            <StatCard label="Converted" value={stats.converted.toString()} sublabel={`${conversionRate}% rate`} icon={TrendingUp} color="text-green-600" bg="bg-green-50" />
-            <StatCard label="Revenue" value={`₹${stats.revenue.toLocaleString("en-IN")}`} icon={IndianRupee} color="text-[#4c1d95]" bg="bg-purple-50" />
+            <StatCard label="Signals Today" value={stats.triggered.toString()} icon={Zap} color="text-gray-700" bg="bg-gray-100" />
+            <StatCard label="Converted" value={stats.converted.toString()} sublabel={`${conversionRate}% rate`} icon={TrendingUp} color="text-gray-700" bg="bg-gray-100" />
+            <StatCard label="Revenue" value={`₹${stats.revenue.toLocaleString("en-IN")}`} icon={IndianRupee} color="text-gray-700" bg="bg-gray-100" />
           </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Live Signal Feed */}
-          <section className="bg-white rounded-3xl shadow-sm overflow-hidden">
+          <section className="bg-white rounded-3xl border border-gray-200 overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-medium text-gray-800">Customer Signals</h3>
+                <h3 className="text-base font-medium text-gray-900">Customer Signals</h3>
                 <p className="text-xs text-gray-500">Live from connected platforms</p>
               </div>
-              <span className="size-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="size-2 rounded-full bg-gray-400 animate-pulse" />
             </div>
             <div className="p-4 space-y-3 min-h-[420px]">
               {signals.length === 0 && (
                 <div className="text-center py-12 text-gray-400 text-sm">
-                  <Bell className="size-10 mx-auto mb-3 text-gray-300" />
-                  Waiting for signals...
+                  <Bell className="size-10 mx-auto mb-3 text-gray-300" />Waiting for signals...
                 </div>
               )}
               {signals.map((signal) => {
                 const meta = SIGNAL_META[signal.source];
                 const Icon = meta.icon;
                 return (
-                  <div key={signal.id} className="rounded-2xl border border-gray-100 p-3 hover:border-purple-200 transition-all animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div key={signal.id} className="rounded-2xl border border-gray-100 p-3 hover:border-gray-300 transition-all animate-in fade-in slide-in-from-top-2 duration-500">
                     <div className="flex items-start gap-3">
                       <div className={cn("size-9 rounded-xl flex items-center justify-center shrink-0", meta.bg)}>
                         <Icon className={cn("size-4", meta.color)} />
@@ -303,13 +302,13 @@ export default function UrbanCompanyTriggersPage() {
                           <span className="text-xs font-medium text-gray-500">{meta.label}</span>
                           <span className="text-xs text-gray-400">{signal.timestamp}</span>
                         </div>
-                        <p className="text-sm font-medium text-gray-800 leading-tight">{signal.trigger}</p>
+                        <p className="text-sm font-medium text-gray-900 leading-tight">{signal.trigger}</p>
                         <p className="text-xs text-gray-500 mt-1">{signal.detail}</p>
                         <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
                           <span className="text-xs text-gray-600 truncate">
                             <Users className="size-3 inline mr-1" />{signal.customerName.split(" ")[0]}
                           </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium">₹{signal.estimatedValue}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-medium">₹{signal.estimatedValue}</span>
                         </div>
                       </div>
                     </div>
@@ -320,40 +319,38 @@ export default function UrbanCompanyTriggersPage() {
           </section>
 
           {/* Trigger Rules */}
-          <section className="bg-white rounded-3xl shadow-sm overflow-hidden">
+          <section className="bg-white rounded-3xl border border-gray-200 overflow-hidden">
             <div className="p-5 border-b border-gray-100">
-              <h3 className="text-base font-medium text-gray-800">Trigger Rules</h3>
+              <h3 className="text-base font-medium text-gray-900">Trigger Rules</h3>
               <p className="text-xs text-gray-500">Active automation workflows</p>
             </div>
             <div className="p-4 space-y-3">
-              <RuleCard icon={Pizza} color="text-red-500" bg="bg-red-50" title="Late-Night Order Pattern"
+              <RuleCard icon={Pizza} color="text-gray-700" bg="bg-gray-100" title="Late-Night Order Pattern"
                 description="If 3+ Zomato orders after 11 PM in a week → suggest home deep cleaning"
                 fired={signals.filter(s => s.source === "zomato").length} />
-              <RuleCard icon={Building2} color="text-blue-500" bg="bg-blue-50" title="Maid Absence"
+              <RuleCard icon={Building2} color="text-gray-700" bg="bg-gray-100" title="Maid Absence"
                 description="If maid not entered society for 3+ days via MyGate → offer UC home cleaning"
                 fired={signals.filter(s => s.source === "mygate").length} />
-              <RuleCard icon={ShoppingBag} color="text-yellow-600" bg="bg-yellow-50" title="Bulk Grocery Detection"
+              <RuleCard icon={ShoppingBag} color="text-gray-700" bg="bg-gray-100" title="Bulk Grocery Detection"
                 description="If non-veg + groceries ordered via Blinkit → suggest kitchen deep clean"
                 fired={signals.filter(s => s.source === "blinkit").length} />
-              <RuleCard icon={RefreshCw} color="text-[#7c3aed]" bg="bg-purple-50" title="Repeat Booking Pattern"
+              <RuleCard icon={RefreshCw} color="text-gray-700" bg="bg-gray-100" title="Repeat Booking Pattern"
                 description="If monthly service is due based on history → auto-suggest with loyalty discount"
                 fired={signals.filter(s => s.source === "pattern").length} />
-              <RuleCard icon={Calendar} color="text-green-600" bg="bg-green-50" title="Calendar Events"
+              <RuleCard icon={Calendar} color="text-gray-700" bg="bg-gray-100" title="Calendar Events"
                 description="Birthday / anniversary detected → suggest salon at home or full cleaning"
                 fired={signals.filter(s => s.source === "calendar").length} />
-              <button className="w-full p-3 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-purple-200 hover:text-[#7c3aed] transition-all text-sm flex items-center justify-center gap-2">
+              <button className="w-full p-3 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-all text-sm flex items-center justify-center gap-2">
                 <Sparkles className="size-4" />Add custom trigger
               </button>
             </div>
           </section>
 
           {/* Outbound AI Calls */}
-          <section className="bg-white rounded-3xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-medium text-gray-800">Outbound AI Calls</h3>
-                <p className="text-xs text-gray-500">Live conversion pipeline</p>
-              </div>
+          <section className="bg-white rounded-3xl border border-gray-200 overflow-hidden">
+            <div className="p-5 border-b border-gray-100">
+              <h3 className="text-base font-medium text-gray-900">Outbound AI Calls</h3>
+              <p className="text-xs text-gray-500">Live conversion pipeline</p>
             </div>
             <div className="p-4 space-y-3 min-h-[420px]">
               {callEvents.length === 0 && (
@@ -367,15 +364,15 @@ export default function UrbanCompanyTriggersPage() {
         </div>
 
         {/* Footer strip */}
-        <div className="bg-[#1a0033] rounded-3xl p-6 text-white flex items-center justify-between gap-6 flex-wrap">
+        <div className="bg-black rounded-3xl p-6 text-white flex items-center justify-between gap-6 flex-wrap">
           <div className="max-w-xl">
             <h3 className="text-lg font-medium mb-1">Why this matters</h3>
-            <p className="text-sm text-white/70">Most service businesses lose leads to peak-hour congestion or off-hours. Smart Triggers turn passive customers into active bookings — without a single human dial.</p>
+            <p className="text-sm text-white/60">Most service businesses lose leads to peak-hour congestion or off-hours. Smart Triggers turn passive customers into active bookings — without a single human dial.</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1.5 rounded-full bg-white/10 text-xs flex items-center gap-1.5"><Clock className="size-3" /> Runs 24×7</span>
             <span className="px-3 py-1.5 rounded-full bg-white/10 text-xs flex items-center gap-1.5"><PartyPopper className="size-3" /> No human required</span>
-            <span className="px-3 py-1.5 rounded-full bg-[#4c1d95] text-white text-xs font-medium flex items-center gap-1.5">
+            <span className="px-3 py-1.5 rounded-full bg-white text-black text-xs font-medium flex items-center gap-1.5">
               <TrendingUp className="size-3" /> Converts at {conversionRate}%
             </span>
           </div>
@@ -389,14 +386,14 @@ const StatCard = ({ label, value, sublabel, icon: Icon, color, bg }: {
   label: string; value: string; sublabel?: string;
   icon: React.ComponentType<{ className?: string }>; color: string; bg: string;
 }) => (
-  <div className="rounded-2xl border border-gray-100 p-3">
+  <div className="rounded-2xl border border-gray-200 p-3">
     <div className="flex items-center gap-2 mb-1">
       <div className={cn("size-7 rounded-lg flex items-center justify-center", bg)}>
         <Icon className={cn("size-3.5", color)} />
       </div>
       <span className="text-xs text-gray-500">{label}</span>
     </div>
-    <p className="text-xl font-medium text-gray-800 tabular-nums">{value}</p>
+    <p className="text-xl font-medium text-gray-900 tabular-nums">{value}</p>
     {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
   </div>
 );
@@ -412,9 +409,9 @@ const RuleCard = ({ icon: Icon, color, bg, title, description, fired }: {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-1">
-          <p className="text-sm font-medium text-gray-800 truncate">{title}</p>
+          <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
           {fired > 0 && (
-            <span className="text-xs px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium tabular-nums">{fired}</span>
+            <span className="text-xs px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-700 font-medium tabular-nums">{fired}</span>
           )}
         </div>
         <p className="text-xs text-gray-500 leading-snug">{description}</p>
@@ -431,17 +428,17 @@ const CallCard = ({ call }: { call: CallEvent }) => {
     <div className="rounded-2xl border border-gray-100 p-3 animate-in fade-in slide-in-from-top-2 duration-500">
       <div className="flex items-start gap-3 mb-2">
         <div className={cn("size-9 rounded-xl flex items-center justify-center shrink-0",
-          isCalling && "bg-purple-50", isConverted && "bg-green-50", isDeclined && "bg-gray-100")}>
-          {isCalling && <PhoneIncoming className="size-4 text-[#7c3aed] animate-pulse" />}
-          {isConverted && <CheckCircle2 className="size-4 text-green-600" />}
+          isCalling && "bg-gray-100", isConverted && "bg-gray-100", isDeclined && "bg-gray-50")}>
+          {isCalling && <PhoneIncoming className="size-4 text-gray-600 animate-pulse" />}
+          {isConverted && <CheckCircle2 className="size-4 text-gray-700" />}
           {isDeclined && <XCircle className="size-4 text-gray-400" />}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-0.5">
-            <p className="text-sm font-medium text-gray-800 truncate">{call.signal.customerName}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{call.signal.customerName}</p>
             <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium",
-              isCalling && "bg-purple-100 text-purple-700",
-              isConverted && "bg-green-100 text-green-700",
+              isCalling && "bg-gray-100 text-gray-700",
+              isConverted && "bg-black text-white",
               isDeclined && "bg-gray-100 text-gray-500")}>
               {isCalling && "Calling..."}{isConverted && "Booked"}{isDeclined && "Passed"}
             </span>
@@ -449,10 +446,10 @@ const CallCard = ({ call }: { call: CallEvent }) => {
           <p className="text-xs text-gray-500">{call.signal.suggestedService}</p>
         </div>
       </div>
-      <div className="text-xs text-gray-600 bg-purple-50 rounded-xl p-2 italic">&ldquo;{call.pitch}&rdquo;</div>
+      <div className="text-xs text-gray-600 bg-gray-50 rounded-xl p-2 italic border border-gray-100">&ldquo;{call.pitch}&rdquo;</div>
       {call.customerReply && (
         <div className={cn("text-xs mt-2 rounded-xl p-2 italic",
-          isConverted ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-500")}>
+          isConverted ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-500")}>
           <span className="font-medium not-italic">{call.signal.customerName.split(" ")[0]}: </span>
           &ldquo;{call.customerReply}&rdquo;
         </div>
@@ -460,7 +457,7 @@ const CallCard = ({ call }: { call: CallEvent }) => {
       {isConverted && (
         <div className="mt-2 flex items-center justify-between text-xs">
           <span className="text-gray-500">Booking confirmed</span>
-          <span className="font-medium text-green-600">+₹{call.signal.estimatedValue}</span>
+          <span className="font-medium text-gray-900">+₹{call.signal.estimatedValue}</span>
         </div>
       )}
     </div>
